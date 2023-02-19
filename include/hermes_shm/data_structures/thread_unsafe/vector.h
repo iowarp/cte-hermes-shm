@@ -420,8 +420,14 @@ class vector : public ShmContainer {
     shm_init_allocator(alloc);
     shm_init_header(header);
     reserve(other.size());
-    for (auto iter = other.cbegin(); iter != other.cend(); ++iter) {
-      emplace_back((**iter));
+    if constexpr(std::is_pod<T>()) {
+      memcpy(data_ar(), other.data_ar_const(),
+             other.size() * sizeof(T));
+      header_->length_ = other.size();
+    } else {
+      for (auto iter = other.cbegin(); iter != other.cend(); ++iter) {
+        emplace_back((**iter));
+      }
     }
   }
 
