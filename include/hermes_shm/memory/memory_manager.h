@@ -43,7 +43,7 @@ class MemoryManager {
   MemoryManager() {
     root_allocator_id_.bits_.major_ = 0;
     root_allocator_id_.bits_.minor_ = -1;
-    root_backend_.shm_init(HERMES_SYSTEM_INFO->ram_size_);
+    root_backend_.shm_init(MEGABYTES(128));
     root_backend_.Own();
     root_allocator_.shm_init(&root_backend_, root_allocator_id_, 0);
     default_allocator_ = &root_allocator_;
