@@ -1,0 +1,10 @@
+//
+// Created by lukemartinlogan on 12/21/22.
+//
+
+#ifndef HERMES_SRC_MEMORY_MEMORY_INTERCEPT_H_
+#define HERMES_SRC_MEMORY_MEMORY_INTERCEPT_H_
+
+
+
+#endif //HERMES_SRC_MEMORY_MEMORY_INTERCEPT_H_

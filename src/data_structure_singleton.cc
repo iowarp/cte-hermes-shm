@@ -1,0 +1,11 @@
+#include <hermes_shm/constants/macros.h>
+#include <hermes_shm/util/singleton.h>
+#include <hermes_shm/thread/lock/mutex.h>
+#include <hermes_shm/constants/data_structure_singleton_macros.h>
+
+#include <hermes_shm/introspect/system_info.h>
+template<> hermes::SystemInfo scs::Singleton<hermes::SystemInfo>::obj_ = hermes::SystemInfo();
+#include <hermes_shm/memory/memory_manager.h>
+template<> hermes::ipc::MemoryManager scs::Singleton<hermes::ipc::MemoryManager>::obj_ = hermes::ipc::MemoryManager();
+#include <hermes_shm/thread/thread_manager.h>
+template<> hermes::ThreadManager scs::Singleton<hermes::ThreadManager>::obj_ = hermes::ThreadManager();
