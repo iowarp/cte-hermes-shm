@@ -115,7 +115,7 @@ add_custom_target(preamble COMMAND python3 ${CMAKE_SOURCE_DIR}/scripts/preamble.
 set(TEST_MAIN ${CMAKE_SOURCE_DIR}/test/unit)
 enable_testing()
 add_subdirectory(test)
-#add_subdirectory(benchmark)
+add_subdirectory(benchmark)
 
 ##################Install hermes
 install(DIRECTORY include DESTINATION ${CMAKE_INSTALL_PREFIX})
