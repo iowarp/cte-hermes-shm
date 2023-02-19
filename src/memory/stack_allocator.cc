@@ -16,20 +16,24 @@
 
 namespace hermes::ipc {
 
-void StackAllocator::shm_init(MemoryBackend *backend,
-                             allocator_id_t id,
-                             size_t custom_header_size) {
-  backend_ = backend;
-  header_ = reinterpret_cast<StackAllocatorHeader*>(backend_->data_);
+void StackAllocator::shm_init(allocator_id_t id,
+                              size_t custom_header_size,
+                              char *buffer,
+                              size_t buffer_size) {
+  buffer_ = buffer;
+  buffer_size_ = buffer_size;
+  header_ = reinterpret_cast<StackAllocatorHeader*>(buffer_);
   custom_header_ = reinterpret_cast<char*>(header_ + 1);
-  size_t region_off = (custom_header_ - backend_->data_) + custom_header_size;
-  size_t region_size = backend_->data_size_ - region_off;
+  size_t region_off = (custom_header_ - buffer_) + custom_header_size;
+  size_t region_size = buffer_size_ - region_off;
   header_->Configure(id, custom_header_size, region_off, region_size);
 }
 
-void StackAllocator::shm_deserialize(MemoryBackend *backend) {
-  backend_ = backend;
-  header_ = reinterpret_cast<StackAllocatorHeader*>(backend_->data_);
+void StackAllocator::shm_deserialize(char *buffer,
+                                     size_t buffer_size) {
+  buffer_ = buffer;
+  buffer_size_ = buffer_size;
+  header_ = reinterpret_cast<StackAllocatorHeader*>(buffer_);
   custom_header_ = reinterpret_cast<char*>(header_ + 1);
 }
 

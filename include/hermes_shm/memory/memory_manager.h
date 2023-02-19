@@ -45,7 +45,9 @@ class MemoryManager {
     root_allocator_id_.bits_.minor_ = -1;
     root_backend_.shm_init(MEGABYTES(128));
     root_backend_.Own();
-    root_allocator_.shm_init(&root_backend_, root_allocator_id_, 0);
+    root_allocator_.shm_init(root_allocator_id_, 0,
+                             root_backend_.data_,
+                             root_backend_.data_size_);
     default_allocator_ = &root_allocator_;
   }
 
@@ -114,7 +116,7 @@ class MemoryManager {
                                 allocators_.size());
     }
     auto alloc = AllocatorFactory::shm_init<AllocT>(
-      backend, alloc_id, custom_header_size, std::forward<Args>(args)...);
+      alloc_id, custom_header_size, backend, std::forward<Args>(args)...);
     RegisterAllocator(alloc);
     return GetAllocator(alloc_id);
   }

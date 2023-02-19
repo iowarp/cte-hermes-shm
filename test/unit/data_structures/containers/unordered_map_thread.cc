@@ -15,7 +15,6 @@
 #include "test_init.h"
 #include "hermes_shm/data_structures/thread_safe/unordered_map.h"
 #include "hermes_shm/data_structures/string.h"
-#include "hermes_shm/memory/allocator/page_allocator.h"
 #include "hermes_shm/util/errors.h"
 #include <sstream>
 

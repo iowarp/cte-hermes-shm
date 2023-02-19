@@ -16,7 +16,6 @@
 #include "basic_test.h"
 #include "test_init.h"
 #include "hermes_shm/data_structures/string.h"
-#include "hermes_shm/memory/allocator/page_allocator.h"
 #include "smart_ptr.h"
 
 using hermes::ipc::string;

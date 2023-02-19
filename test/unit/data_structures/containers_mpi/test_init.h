@@ -14,7 +14,6 @@
 #ifndef HERMES_TEST_UNIT_DATA_STRUCTURES_TEST_INIT_H_
 #define HERMES_TEST_UNIT_DATA_STRUCTURES_TEST_INIT_H_
 
-#include "hermes_shm/memory/allocator/page_allocator.h"
 #include "hermes_shm/data_structures/data_structure.h"
 #include <mpi.h>
 

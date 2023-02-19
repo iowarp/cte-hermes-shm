@@ -55,7 +55,8 @@ struct AllocatorHeader {
  * */
 class Allocator {
  protected:
-  MemoryBackend *backend_;
+  char *buffer_;
+  size_t buffer_size_;
   char *custom_header_;
 
  public:
@@ -77,13 +78,20 @@ class Allocator {
    * each allocator has its own arguments to this method. Though each
    * allocator must have "id" as its first argument.
    * */
-  // virtual void shm_init(MemoryBackend *backend,
-  //                       allocator_id_t id, Args ...args) = 0;
+  // virtual void shm_init(allocator_id_t id, Args ...args) = 0;
 
   /**
-   * Attach the allocator to the slot and backend passed in the constructor.
+   * Deserialize allocator from a buffer.
    * */
-  virtual void shm_deserialize(MemoryBackend *backend) = 0;
+  virtual void shm_deserialize(char *buffer,
+                               size_t buffer_size) = 0;
+
+  /**
+   * Deserialize allocator from a MemoryBackend
+   * */
+  void shm_deserialize(MemoryBackend *backend) {
+    shm_deserialize(backend->data_, backend->data_size_);
+  }
 
   /**
    * Allocate a region of memory of \a size size
@@ -207,7 +215,7 @@ class Allocator {
   inline T* AllocatePtr(size_t size, POINTER_T &p, size_t alignment = 0) {
     p = Allocate<POINTER_T>(size, alignment);
     if (p.IsNull()) { return nullptr; }
-    return reinterpret_cast<T*>(backend_->data_ + p.off_.load());
+    return reinterpret_cast<T*>(buffer_ + p.off_.load());
   }
 
   /**
@@ -236,7 +244,7 @@ class Allocator {
   inline T* ClearAllocatePtr(size_t size, POINTER_T &p, size_t alignment = 0) {
     p = Allocate<POINTER_T>(size, alignment);
     if (p.IsNull()) { return nullptr; }
-    auto ptr = reinterpret_cast<T*>(backend_->data_ + p.off_.load());
+    auto ptr = reinterpret_cast<T*>(buffer_ + p.off_.load());
     if (ptr) {
       memset(ptr, 0, size);
     }
@@ -460,7 +468,7 @@ class Allocator {
   template<typename T, typename POINTER_T=Pointer>
   inline T* Convert(const POINTER_T &p) {
     if (p.IsNull()) { return nullptr; }
-    return reinterpret_cast<T*>(backend_->data_ + p.off_.load());
+    return reinterpret_cast<T*>(buffer_ + p.off_.load());
   }
 
   /**
@@ -474,7 +482,7 @@ class Allocator {
     if (ptr == nullptr) { return POINTER_T::GetNull(); }
     return POINTER_T(GetId(),
                      reinterpret_cast<size_t>(ptr) -
-                     reinterpret_cast<size_t>(backend_->data_));
+                     reinterpret_cast<size_t>(buffer_));
   }
 
   /**
@@ -487,7 +495,7 @@ class Allocator {
   template<typename T = void>
   inline bool ContainsPtr(T *ptr) {
     return  reinterpret_cast<size_t>(ptr) >=
-            reinterpret_cast<size_t>(backend_->data_);
+            reinterpret_cast<size_t>(buffer_);
   }
 };
 

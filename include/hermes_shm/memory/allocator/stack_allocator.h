@@ -59,14 +59,16 @@ class StackAllocator : public Allocator {
   /**
    * Initialize the allocator in shared memory
    * */
-  void shm_init(MemoryBackend *backend,
-                allocator_id_t id,
-                size_t custom_header_size);
+  void shm_init(allocator_id_t id,
+                size_t custom_header_size,
+                char *buffer,
+                size_t buffer_size);
 
   /**
    * Attach an existing allocator from shared memory
    * */
-  void shm_deserialize(MemoryBackend *backend) override;
+  void shm_deserialize(char *buffer,
+                       size_t buffer_size) override;
 
   /**
    * Allocate a memory of \a size size. The page allocator cannot allocate

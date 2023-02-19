@@ -16,7 +16,6 @@
 
 #include "basic_test.h"
 #include "omp.h"
-#include "hermes_shm/memory/allocator/page_allocator.h"
 #include "hermes_shm/memory/memory_manager.h"
 
 using hermes::ipc::MemoryBackendType;

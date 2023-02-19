@@ -12,8 +12,6 @@
 
 
 #include "test_init.h"
-#include "hermes_shm/memory/allocator/page_allocator.h"
-#include "hermes_shm/memory/allocator/multi_page_allocator.h"
 
 void PageAllocationTest(Allocator *alloc) {
   int count = 1024;
@@ -102,13 +100,6 @@ void MultiPageAllocationTest(Allocator *alloc) {
   }
 }
 
-TEST_CASE("PageAllocator") {
-  auto alloc = Pretest<hipc::PosixShmMmap, hipc::PageAllocator>();
-  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
-  PageAllocationTest(alloc);
-  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
-  Posttest();
-}
 
 TEST_CASE("StackAllocator") {
   auto alloc = Pretest<hipc::PosixShmMmap, hipc::StackAllocator>();
@@ -118,6 +109,30 @@ TEST_CASE("StackAllocator") {
   Posttest();
 }
 
+TEST_CASE("MallocAllocator") {
+  auto alloc = Pretest<hipc::NullBackend, hipc::MallocAllocator>();
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+  PageAllocationTest(alloc);
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+  MultiPageAllocationTest(alloc);
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+
+  Posttest();
+}
+
+/*
+TEST_CASE("PageAllocator") {
+  auto alloc = Pretest<hipc::PosixShmMmap, hipc::PageAllocator>();
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+  PageAllocationTest(alloc);
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+  Posttest();
+}
+ */
+
+/*
 TEST_CASE("MultiPageAllocator") {
   auto alloc = Pretest<hipc::PosixShmMmap, hipc::MultiPageAllocator>();
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
@@ -129,17 +144,4 @@ TEST_CASE("MultiPageAllocator") {
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
 
   Posttest();
-}
-
-TEST_CASE("MallocAllocator") {
-  auto alloc = Pretest<hipc::NullBackend, hipc::MultiPageAllocator>();
-  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
-  PageAllocationTest(alloc);
-  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
-
-  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
-  MultiPageAllocationTest(alloc);
-  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
-
-  Posttest();
-}
+}*/

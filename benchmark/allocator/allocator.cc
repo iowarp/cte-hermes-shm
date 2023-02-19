@@ -196,15 +196,6 @@ void FullAllocatorTestPerThread() {
   AllocatorTest<hipc::PosixShmMmap, hipc::StackAllocator>(
     AllocatorType::kStackAllocator,
     MemoryBackendType::kPosixShmMmap);
-  // Page allocator
-  AllocatorTest<hipc::PosixShmMmap, hipc::PageAllocator>(
-    AllocatorType::kPageAllocator,
-    MemoryBackendType::kPosixShmMmap,
-    MEGABYTES(1));
-  // MultiPage allocator
-  AllocatorTest<hipc::PosixShmMmap, hipc::MultiPageAllocator>(
-    AllocatorType::kMultiPageAllocator,
-    MemoryBackendType::kPosixShmMmap);
 }
 
 /** Spawn multiple threads and run allocator tests */

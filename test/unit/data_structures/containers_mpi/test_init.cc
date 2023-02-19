@@ -14,8 +14,6 @@
 #include "basic_test.h"
 #include "test_init.h"
 
-#include "hermes_shm/memory/allocator/page_allocator.h"
-
 Allocator *alloc_g = nullptr;
 
 template<typename AllocT>

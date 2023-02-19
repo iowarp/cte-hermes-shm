@@ -14,7 +14,6 @@
 #include "test_init.h"
 #include "hermes_shm/data_structures/thread_unsafe/unordered_map.h"
 #include "hermes_shm/data_structures/string.h"
-#include "hermes_shm/memory/allocator/page_allocator.h"
 
 using hermes::ipc::MemoryBackendType;
 using hermes::ipc::MemoryBackend;

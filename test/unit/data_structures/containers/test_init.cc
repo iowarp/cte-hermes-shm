@@ -15,8 +15,6 @@
 #include "test_init.h"
 #include <mpi.h>
 
-#include "hermes_shm/memory/allocator/page_allocator.h"
-
 Allocator *alloc_g = nullptr;
 
 void Posttest() {
