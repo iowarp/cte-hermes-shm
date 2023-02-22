@@ -30,12 +30,13 @@ template<typename T>
 struct list_entry {
  public:
   OffsetPointer next_ptr_, prior_ptr_;
-  ShmHeaderOrT<T> data_;
+  ShmArchiveOrT<T> data_;
 
   /** Constructor */
   template<typename ...Args>
-  explicit list_entry(Allocator *alloc, Args ...args)
-  : data_(alloc, std::forward<Args>(args)...) {}
+  explicit list_entry(Allocator *alloc, Args&& ...args) {
+    data_.shm_init(alloc, std::forward<Args>(args)...);
+  }
 
   /** Destructor */
   void shm_destroy(Allocator *alloc) {

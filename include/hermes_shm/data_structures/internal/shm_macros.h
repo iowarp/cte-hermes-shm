@@ -46,7 +46,7 @@
   SHM_X_OR_Y(T, T, T*)
 
 /**
- * ShmHeaderOrT: Returns TypedPointer<T> if SHM_ARCHIVEABLE, and T
+ * ShmArchiveOrT: Returns TypedPointer<T> if SHM_ARCHIVEABLE, and T
  * otherwise. Used to construct an hipc::ShmRef<T>.
  *
  * @param T The type being stored in the shmem data structure

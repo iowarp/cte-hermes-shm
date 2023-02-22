@@ -61,7 +61,7 @@ void shm_init(TYPED_HEADER &header,
 inline void shm_init_allocator(hipc::Allocator *alloc) {
   if (IsValid()) { return; }
   if (alloc == nullptr) {
-    alloc_ = HERMES_MEMORY_MANAGER->GetDefaultAllocator();
+    alloc_ = HERMES_MEMORY_REGISTRY->GetDefaultAllocator();
   } else {
     alloc_ = alloc;
   }
@@ -129,7 +129,7 @@ SHM_SERIALIZE_OPS((TYPED_CLASS))
 /** Deserialize object from a raw pointer */
 bool shm_deserialize(const hipc::TypedPointer<TYPED_CLASS> &ar) {
   return shm_deserialize(
-    HERMES_MEMORY_MANAGER->GetAllocator(ar.allocator_id_),
+    HERMES_MEMORY_REGISTRY->GetAllocator(ar.allocator_id_),
     ar.ToOffsetPointer()
   );
 }

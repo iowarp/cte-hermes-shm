@@ -166,7 +166,7 @@ struct ShmHeader<TYPED_CLASS> : public ShmBaseHeader {
   using BUCKET_T = hipc::list<COLLISION_T>;
 
  public:
-  ShmHeaderOrT<vector<BUCKET_T>> buckets_;
+  ShmArchiveOrT<vector<BUCKET_T>> buckets_;
   RealNumber max_capacity_;
   RealNumber growth_;
   hipc::atomic<size_t> length_;
@@ -178,7 +178,8 @@ struct ShmHeader<TYPED_CLASS> : public ShmBaseHeader {
   explicit ShmHeader(Allocator *alloc,
                      int num_buckets,
                      RealNumber max_capacity,
-                     RealNumber growth) : buckets_(alloc, num_buckets) {
+                     RealNumber growth) {
+    buckets_.shm_init(alloc, num_buckets);
     max_capacity_ = max_capacity;
     growth_ = growth;
     length_ = 0;
@@ -196,7 +197,7 @@ struct ShmHeader<TYPED_CLASS> : public ShmBaseHeader {
     (*GetBuckets(alloc)) = std::move(*other.GetBuckets(other_alloc));
     max_capacity_ = other.max_capacity_;
     growth_ = other.growth_;
-    length_ = other.length_.load();/**/
+    length_ = other.length_.load();
   }
 
   /** Get a reference to the buckets */

@@ -16,7 +16,8 @@
 
 #include "allocator.h"
 #include "hermes_shm/thread/lock.h"
-#include "hermes_shm/data_structures/internal/shm_archive_or_t.h"
+#include "hermes_shm/data_structures/thread_unsafe/vector.h"
+#include "hermes_shm/data_structures/thread_unsafe/list.h"
 #include "mp_page.h"
 
 namespace hermes::ipc {
@@ -25,7 +26,7 @@ struct FixedPageAllocatorHeader : public AllocatorHeader {
   std::atomic<size_t> region_off_;
   std::atomic<size_t> region_size_;
   std::atomic<size_t> total_alloc_;
-  ShmHeaderOrT<list<MpPage>> free_lists_;
+  ShmArchiveOrT<vector<list<MpPage>>> free_lists_;
 
   FixedPageAllocatorHeader() = default;
 

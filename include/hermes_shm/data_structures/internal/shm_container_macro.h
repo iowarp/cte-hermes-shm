@@ -1,18 +1,18 @@
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- * Distributed under BSD 3-Clause license.                                   *
- * Copyright by The HDF Group.                                               *
- * Copyright by the Illinois Institute of Technology.                        *
- * All rights reserved.                                                      *
- *                                                                           *
- * This file is part of Hermes. The full Hermes copyright notice, including  *
- * terms governing use, modification, and redistribution, is contained in    *
- * the COPYING file, which can be found at the top directory. If you do not  *
- * have access to the file, you may request a copy from help@hdfgroup.org.   *
- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-
 #ifndef HERMES_DATA_STRUCTURES_INTERNAL_SHM_CONTAINER_MACRO_H_
 #define HERMES_DATA_STRUCTURES_INTERNAL_SHM_CONTAINER_MACRO_H_
 #define SHM_CONTAINER_TEMPLATE(CLASS_NAME,TYPED_CLASS,TYPED_HEADER)\
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *\
+ * Distributed under BSD 3-Clause license.                                   *\
+ * Copyright by The HDF Group.                                               *\
+ * Copyright by the Illinois Institute of Technology.                        *\
+ * All rights reserved.                                                      *\
+ *                                                                           *\
+ * This file is part of Hermes. The full Hermes copyright notice, including  *\
+ * terms governing use, modification, and redistribution, is contained in    *\
+ * the COPYING file, which can be found at the top directory. If you do not  *\
+ * have access to the file, you may request a copy from help@hdfgroup.org.   *\
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */\
+\
 public:\
 /**====================================\
  * Variables & Types\
@@ -64,7 +64,7 @@ void shm_init(TYPE_UNWRAP(TYPED_HEADER) &header,\
 inline void shm_init_allocator(hipc::Allocator *alloc) {\
   if (IsValid()) { return; }\
   if (alloc == nullptr) {\
-    alloc_ = HERMES_MEMORY_MANAGER->GetDefaultAllocator();\
+    alloc_ = HERMES_MEMORY_REGISTRY->GetDefaultAllocator();\
   } else {\
     alloc_ = alloc;\
   }\
@@ -132,7 +132,7 @@ SHM_SERIALIZE_OPS((TYPE_UNWRAP(TYPED_CLASS)))\
 /** Deserialize object from a raw pointer */\
 bool shm_deserialize(const hipc::TypedPointer<TYPE_UNWRAP(TYPED_CLASS)> &ar) {\
   return shm_deserialize(\
-    HERMES_MEMORY_MANAGER->GetAllocator(ar.allocator_id_),\
+    HERMES_MEMORY_REGISTRY->GetAllocator(ar.allocator_id_),\
     ar.ToOffsetPointer()\
   );\
 }\
