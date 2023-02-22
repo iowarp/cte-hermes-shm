@@ -16,7 +16,7 @@
 
 #include "hermes_shm/memory/memory.h"
 #include "hermes_shm/memory/allocator/allocator.h"
-#include "hermes_shm/memory/memory_manager.h"
+#include "hermes_shm/memory/memory_registry.h"
 #include "hermes_shm/data_structures/internal/shm_macros.h"
 #include <hermes_shm/constants/data_structure_singleton_macros.h>
 

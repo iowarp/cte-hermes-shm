@@ -14,7 +14,6 @@
 #ifndef HERMES_DATA_STRUCTURES_SHM_ARCHIVE_H_
 #define HERMES_DATA_STRUCTURES_SHM_ARCHIVE_H_
 
-#include "hermes_shm/memory/memory_manager.h"
 #include "shm_macros.h"
 
 namespace hermes::ipc {

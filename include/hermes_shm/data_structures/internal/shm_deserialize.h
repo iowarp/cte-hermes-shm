@@ -13,7 +13,7 @@
 #ifndef HERMES_INCLUDE_HERMES_DATA_STRUCTURES_INTERNAL_DESERIALIZE_H_
 #define HERMES_INCLUDE_HERMES_DATA_STRUCTURES_INTERNAL_DESERIALIZE_H_
 
-#include "hermes_shm/memory/memory_manager.h"
+#include "hermes_shm/memory/memory_registry.h"
 
 namespace hermes::ipc {
 
@@ -33,7 +33,7 @@ struct ShmDeserialize {
 
   /** Construct from TypedPointer */
   ShmDeserialize(const TypedPointer<ContainerT> &ar) {
-    alloc_ = HERMES_MEMORY_MANAGER->GetAllocator(ar.allocator_id_);
+    alloc_ = HERMES_MEMORY_REGISTRY->GetAllocator(ar.allocator_id_);
     header_ = alloc_->Convert<
       TypedPointer<ContainerT>,
       OffsetPointer>(ar.ToOffsetPointer());
