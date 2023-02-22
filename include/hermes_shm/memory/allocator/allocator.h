@@ -24,10 +24,9 @@ namespace hermes::ipc {
  * Used to reconstruct allocator from shared memory
  * */
 enum class AllocatorType {
-  kPageAllocator,
-  kMultiPageAllocator,
   kStackAllocator,
   kMallocAllocator,
+  kFixedPageAllocator
 };
 
 /**

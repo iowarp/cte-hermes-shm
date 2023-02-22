@@ -3,7 +3,10 @@ project(hermes_shm)
 
 set(CMAKE_CXX_STANDARD 17)
 
-set (EXAMPLES vector list)
+set (EXAMPLES
+        allocator
+        vector
+        list)
 foreach (EXAMPLE ${EXAMPLES})
     add_executable(example_${EXAMPLE}
             ${CMAKE_CURRENT_SOURCE_DIR}/${EXAMPLE}.cc)

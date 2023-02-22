@@ -37,16 +37,8 @@ class AllocatorTestSuite {
         alloc_type_ = "hipc::StackAllocator";
         break;
       }
-      case AllocatorType::kPageAllocator: {
-        alloc_type_ = "hipc::PageAllocator";
-        break;
-      }
       case AllocatorType::kMallocAllocator: {
         alloc_type_ = "hipc::MallocAllocator";
-        break;
-      }
-      case AllocatorType::kMultiPageAllocator: {
-        alloc_type_ = "hipc::MultiPageAllocator";
         break;
       }
     }

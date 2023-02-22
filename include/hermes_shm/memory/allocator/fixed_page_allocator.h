@@ -34,7 +34,8 @@ struct FixedPageAllocatorHeader : public AllocatorHeader {
                  size_t custom_header_size,
                  size_t region_off,
                  size_t region_size) {
-    AllocatorHeader::Configure(alloc_id, AllocatorType::kStackAllocator,
+    AllocatorHeader::Configure(alloc_id,
+                               AllocatorType::kFixedPageAllocator,
                                custom_header_size);
     region_off_ = region_off;
     region_size_ = region_size;

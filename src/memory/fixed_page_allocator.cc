@@ -17,12 +17,12 @@
 namespace hermes::ipc {
 
 void FixedPageAllocator::shm_init(allocator_id_t id,
-                              size_t custom_header_size,
-                              char *buffer,
-                              size_t buffer_size) {
+                                  size_t custom_header_size,
+                                  char *buffer,
+                                  size_t buffer_size) {
   buffer_ = buffer;
   buffer_size_ = buffer_size;
-  header_ = reinterpret_cast<StackAllocatorHeader*>(buffer_);
+  header_ = reinterpret_cast<FixedPageAllocatorHeader*>(buffer_);
   custom_header_ = reinterpret_cast<char*>(header_ + 1);
   size_t region_off = (custom_header_ - buffer_) + custom_header_size;
   size_t region_size = buffer_size_ - region_off;
