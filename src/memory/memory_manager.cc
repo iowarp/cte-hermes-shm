@@ -19,29 +19,11 @@
 
 namespace hermes::ipc {
 
-MemoryBackend* MemoryManager::GetBackend(const std::string &url) {
-  return backends_[url].get();
-}
-
-void MemoryManager::DestroyBackend(const std::string &url) {
-  auto backend = GetBackend(url);
-  backend->shm_destroy();
-  backends_.erase(url);
-}
-
 void MemoryManager::ScanBackends() {
-  for (auto &[url, backend] : backends_) {
+  for (auto &[url, backend] : HERMES_MEMORY_REGISTRY->backends_) {
     auto alloc = AllocatorFactory::shm_deserialize(backend.get());
     RegisterAllocator(alloc);
   }
-}
-
-void MemoryManager::RegisterAllocator(std::unique_ptr<Allocator> &alloc) {
-  if (default_allocator_ == nullptr ||
-      default_allocator_ == &root_allocator_) {
-    default_allocator_ = alloc.get();
-  }
-  allocators_.emplace(alloc->GetId(), std::move(alloc));
 }
 
 }  // namespace hermes::ipc

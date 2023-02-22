@@ -10,6 +10,7 @@ add_library(hermes_shm_data_structures
         thread/rwlock.cc
         memory/malloc_allocator.cc
         memory/stack_allocator.cc
+        memory/memory_registry.cc
         memory/memory_manager.cc
         data_structure_singleton.cc)
 target_link_libraries(hermes_shm_data_structures

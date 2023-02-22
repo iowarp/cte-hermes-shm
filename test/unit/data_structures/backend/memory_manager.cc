@@ -71,9 +71,6 @@ TEST_CASE("MemoryManager") {
     REQUIRE(VerifyBuffer(page, page_size, nonce));
   }
   MPI_Barrier(MPI_COMM_WORLD);
-  if (rank == 0) {
-    mem_mngr->DestroyBackend(shm_url);
-  }
 
   HERMES_ERROR_HANDLE_END()
 }

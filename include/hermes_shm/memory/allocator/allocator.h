@@ -14,8 +14,8 @@
 #define HERMES_MEMORY_ALLOCATOR_ALLOCATOR_H_
 
 #include <cstdint>
-#include <hermes_shm/memory/backend/memory_backend_factory.h>
 #include <hermes_shm/memory/memory.h>
+#include <hermes_shm/util/errors.h>
 
 namespace hermes::ipc {
 
@@ -85,13 +85,6 @@ class Allocator {
    * */
   virtual void shm_deserialize(char *buffer,
                                size_t buffer_size) = 0;
-
-  /**
-   * Deserialize allocator from a MemoryBackend
-   * */
-  void shm_deserialize(MemoryBackend *backend) {
-    shm_deserialize(backend->data_, backend->data_size_);
-  }
 
   /**
    * Allocate a region of memory of \a size size

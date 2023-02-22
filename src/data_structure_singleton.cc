@@ -17,6 +17,8 @@
 
 #include <hermes_shm/introspect/system_info.h>
 template<> hermes::SystemInfo scs::Singleton<hermes::SystemInfo>::obj_ = hermes::SystemInfo();
+#include <hermes_shm/memory/memory_registry.h>
+template<> hermes::ipc::MemoryRegistry scs::Singleton<hermes::ipc::MemoryRegistry>::obj_ = hermes::ipc::MemoryRegistry();
 #include <hermes_shm/memory/memory_manager.h>
 template<> hermes::ipc::MemoryManager scs::Singleton<hermes::ipc::MemoryManager>::obj_ = hermes::ipc::MemoryManager();
 #include <hermes_shm/thread/thread_manager.h>

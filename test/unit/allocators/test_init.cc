@@ -16,7 +16,6 @@
 void Posttest() {
   std::string shm_url = "test_allocators";
   auto mem_mngr = HERMES_MEMORY_MANAGER;
-  mem_mngr->DestroyBackend(shm_url);
 }
 
 void MainPretest() {}

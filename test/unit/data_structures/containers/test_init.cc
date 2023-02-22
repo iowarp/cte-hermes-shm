@@ -20,7 +20,6 @@ Allocator *alloc_g = nullptr;
 void Posttest() {
   std::string shm_url = "test_allocators";
   auto mem_mngr = HERMES_MEMORY_MANAGER;
-  mem_mngr->DestroyBackend(shm_url);
   alloc_g = nullptr;
 }
 

@@ -166,7 +166,6 @@ void Posttest() {
   if (rank == 0) {
     std::string shm_url = "test_allocators";
     auto mem_mngr = HERMES_MEMORY_MANAGER;
-    mem_mngr->DestroyBackend(shm_url);
   }
 }
 

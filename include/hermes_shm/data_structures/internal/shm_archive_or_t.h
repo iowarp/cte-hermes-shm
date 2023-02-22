@@ -15,8 +15,6 @@
 #define HERMES_DATA_STRUCTURES_SHM_AR_H_
 
 #include "hermes_shm/memory/memory.h"
-#include "hermes_shm/data_structures/data_structure.h"
-#include "hermes_shm/types/tuple_base.h"
 
 namespace hermes::ipc {
 
