@@ -26,7 +26,7 @@ void FixedPageAllocator::shm_init(allocator_id_t id,
   custom_header_ = reinterpret_cast<char*>(header_ + 1);
   size_t region_off = (custom_header_ - buffer_) + custom_header_size;
   size_t region_size = buffer_size_ - region_off;
-  alloc_.shm_init(id, custom_header_size, buffer + region_off, region_size);
+  alloc_.shm_init(id, 0, buffer + region_off, region_size);
   header_->Configure(id, custom_header_size, &alloc_);
   free_lists_->shm_deserialize(header_->free_lists_.internal_ref(&alloc_));
 }
@@ -74,7 +74,8 @@ OffsetPointer FixedPageAllocator::AllocateOffset(size_t size) {
 
   // Mark as allocated
   header_->total_alloc_.fetch_add(size);
-  return Convert<MpPage, OffsetPointer>(page);
+  auto p = Convert<MpPage, OffsetPointer>(page);
+  return p;
 }
 
 OffsetPointer FixedPageAllocator::AlignedAllocateOffset(size_t size,

@@ -50,7 +50,7 @@ class AllocatorFactory {
                       std::forward<Args>(args)...);
       return alloc;
     } else if constexpr(std::is_same_v<FixedPageAllocator, AllocT>) {
-      // Malloc Allocator
+      // Fixed Page Allocator
       auto alloc = std::make_unique<FixedPageAllocator>();
       alloc->shm_init(alloc_id,
                       custom_header_size,
@@ -80,6 +80,13 @@ class AllocatorFactory {
       // Malloc Allocator
       case AllocatorType::kMallocAllocator: {
         auto alloc = std::make_unique<MallocAllocator>();
+        alloc->shm_deserialize(backend->data_,
+                               backend->data_size_);
+        return alloc;
+      }
+      // Fixed Page Allocator
+      case AllocatorType::kFixedPageAllocator: {
+        auto alloc = std::make_unique<FixedPageAllocator>();
         alloc->shm_deserialize(backend->data_,
                                backend->data_size_);
         return alloc;
