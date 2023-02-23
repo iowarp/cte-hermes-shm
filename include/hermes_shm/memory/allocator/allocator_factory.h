@@ -17,6 +17,7 @@
 #include "allocator.h"
 #include "stack_allocator.h"
 #include "malloc_allocator.h"
+#include "fixed_page_allocator.h"
 
 namespace hermes::ipc {
 
@@ -42,6 +43,15 @@ class AllocatorFactory {
     } else if constexpr(std::is_same_v<MallocAllocator, AllocT>) {
       // Malloc Allocator
       auto alloc = std::make_unique<MallocAllocator>();
+      alloc->shm_init(alloc_id,
+                      custom_header_size,
+                      backend->data_,
+                      backend->data_size_,
+                      std::forward<Args>(args)...);
+      return alloc;
+    } else if constexpr(std::is_same_v<FixedPageAllocator, AllocT>) {
+      // Malloc Allocator
+      auto alloc = std::make_unique<FixedPageAllocator>();
       alloc->shm_init(alloc_id,
                       custom_header_size,
                       backend->data_,

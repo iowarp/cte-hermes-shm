@@ -13,8 +13,7 @@
 #ifndef HERMES_INCLUDE_HERMES_DATA_STRUCTURES_PAIR_H_
 #define HERMES_INCLUDE_HERMES_DATA_STRUCTURES_PAIR_H_
 
-#include "data_structure.h"
-#include "internal/shm_archive_or_t.h"
+#include "internal/shm_internal.h"
 
 namespace hermes::ipc {
 

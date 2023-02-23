@@ -16,29 +16,27 @@
 
 #include "allocator.h"
 #include "hermes_shm/thread/lock.h"
+#include "hermes_shm/data_structures/pair.h"
 #include "hermes_shm/data_structures/thread_unsafe/vector.h"
 #include "hermes_shm/data_structures/thread_unsafe/list.h"
+#include <hermes_shm/memory/allocator/stack_allocator.h>
 #include "mp_page.h"
 
 namespace hermes::ipc {
 
 struct FixedPageAllocatorHeader : public AllocatorHeader {
-  std::atomic<size_t> region_off_;
-  std::atomic<size_t> region_size_;
+  ShmArchiveOrT<vector<list<OffsetPointer>>> free_lists_;
   std::atomic<size_t> total_alloc_;
-  ShmArchiveOrT<vector<list<MpPage>>> free_lists_;
 
   FixedPageAllocatorHeader() = default;
 
   void Configure(allocator_id_t alloc_id,
                  size_t custom_header_size,
-                 size_t region_off,
-                 size_t region_size) {
+                 Allocator *alloc) {
     AllocatorHeader::Configure(alloc_id,
                                AllocatorType::kFixedPageAllocator,
                                custom_header_size);
-    region_off_ = region_off;
-    region_size_ = region_size;
+    free_lists_.shm_init(alloc);
     total_alloc_ = 0;
   }
 };
@@ -46,6 +44,8 @@ struct FixedPageAllocatorHeader : public AllocatorHeader {
 class FixedPageAllocator : public Allocator {
  private:
   FixedPageAllocatorHeader *header_;
+  hipc::ShmRef<vector<list<OffsetPointer>>> free_lists_;
+  StackAllocator alloc_;
 
  public:
   /**

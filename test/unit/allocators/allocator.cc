@@ -122,19 +122,8 @@ TEST_CASE("MallocAllocator") {
   Posttest();
 }
 
-/*
-TEST_CASE("PageAllocator") {
-  auto alloc = Pretest<hipc::PosixShmMmap, hipc::PageAllocator>();
-  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
-  PageAllocationTest(alloc);
-  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
-  Posttest();
-}
- */
-
-/*
-TEST_CASE("MultiPageAllocator") {
-  auto alloc = Pretest<hipc::PosixShmMmap, hipc::MultiPageAllocator>();
+TEST_CASE("FixedPageAllocator") {
+  auto alloc = Pretest<hipc::PosixShmMmap, hipc::FixedPageAllocator>();
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
   PageAllocationTest(alloc);
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
@@ -144,4 +133,4 @@ TEST_CASE("MultiPageAllocator") {
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
 
   Posttest();
-}*/
+}

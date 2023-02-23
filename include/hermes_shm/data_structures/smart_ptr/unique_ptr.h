@@ -20,7 +20,7 @@
 #define HERMES_DATA_STRUCTURES_UNIQUE_PTR_H_
 
 #include "hermes_shm/memory/memory.h"
-#include "hermes_shm/data_structures/data_structure.h"
+#include "hermes_shm/data_structures/internal/shm_internal.h"
 
 namespace hermes::ipc {
 

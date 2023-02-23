@@ -40,8 +40,7 @@ namespace bipc = boost::interprocess;
     VAR = hipc::string(std::to_string(VAL));\
   } else if constexpr(std::is_same_v<TYPE, std::string>) {\
     VAR = std::string(std::to_string(VAL));\
-  }\
-  else {\
+  } else {\
     VAR = VAL;\
   }
 

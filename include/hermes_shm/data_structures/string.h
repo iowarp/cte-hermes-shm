@@ -14,7 +14,7 @@
 #ifndef HERMES_DATA_STRUCTURES_LOCKLESS_STRING_H_
 #define HERMES_DATA_STRUCTURES_LOCKLESS_STRING_H_
 
-#include "data_structure.h"
+#include "internal/shm_internal.h"
 #include <string>
 
 namespace hermes::ipc {

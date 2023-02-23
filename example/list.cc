@@ -5,6 +5,7 @@
 #include <mpi.h>
 #include <cassert>
 #include "hermes_shm/data_structures/thread_unsafe/list.h"
+#include "hermes_shm/data_structures/data_structure.h"
 
 struct CustomHeader {
   hipc::TypedPointer<hipc::list<int>> obj_;

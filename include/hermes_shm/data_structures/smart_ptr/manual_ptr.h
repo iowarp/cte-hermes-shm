@@ -15,9 +15,8 @@
 #define HERMES_DATA_STRUCTURES_PTR_H_
 
 #include "hermes_shm/memory/memory.h"
-#include "hermes_shm/data_structures/data_structure.h"
 #include "unique_ptr.h"
-#include "hermes_shm/data_structures/internal/shm_archive_or_t.h"
+#include "hermes_shm/data_structures/internal/shm_internal.h"
 
 namespace hermes::ipc {
 

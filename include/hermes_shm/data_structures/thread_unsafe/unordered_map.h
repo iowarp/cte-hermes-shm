@@ -18,8 +18,8 @@
 #include "hermes_shm/data_structures/thread_unsafe/vector.h"
 #include "hermes_shm/data_structures/thread_unsafe/list.h"
 #include "hermes_shm/data_structures/pair.h"
-#include "hermes_shm/data_structures/data_structure.h"
 #include "hermes_shm/types/atomic.h"
+#include "hermes_shm/data_structures/internal/shm_internal.h"
 
 namespace hermes::ipc {
 
