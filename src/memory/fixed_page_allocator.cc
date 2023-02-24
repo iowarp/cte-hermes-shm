@@ -52,15 +52,14 @@ OffsetPointer FixedPageAllocator::AllocateOffset(size_t size) {
   size_t size_mp = size + sizeof(MpPage);
 
   // Check if page of this size is already cached
-  for (hipc::ShmRef<list<OffsetPointer>> free_list : *free_lists_) {
+  for (hipc::ShmRef<iqueue<MpPage>> free_list : *free_lists_) {
     if (free_list->size()) {
-      auto iter = free_list->begin();
-      hipc::ShmRef<OffsetPointer> page_ref = *iter;
-      page = Convert<MpPage>(*page_ref);
-      if (page->page_size_ != size_mp) {
+      auto test_page = free_list->peek();
+      if (test_page->page_size_ != size_mp) {
         continue;
       }
-      free_list->erase(iter);
+      page = free_list->dequeue();
+      break;
     }
   }
 
@@ -73,8 +72,9 @@ OffsetPointer FixedPageAllocator::AllocateOffset(size_t size) {
   }
 
   // Mark as allocated
-  header_->total_alloc_.fetch_add(size);
+  header_->total_alloc_.fetch_add(page->page_size_);
   auto p = Convert<MpPage, OffsetPointer>(page);
+  page->SetAllocated();
   return p + sizeof(MpPage);
 }
 
@@ -99,24 +99,22 @@ void FixedPageAllocator::FreeOffsetNoNullCheck(OffsetPointer p) {
   header_->total_alloc_.fetch_sub(hdr->page_size_);
 
   // Append to a free list
-  for (hipc::ShmRef<list<OffsetPointer>> free_list : *free_lists_) {
+  for (hipc::ShmRef<iqueue<MpPage>> free_list : *free_lists_) {
     if (free_list->size()) {
-      auto iter = free_list->begin();
-      hipc::ShmRef<OffsetPointer> page_ref = *iter;
-      auto page = Convert<MpPage>(*page_ref);
+      MpPage *page = free_list->peek();
       if (page->page_size_ != hdr->page_size_) {
         continue;
       }
     }
-    free_list->emplace_back(hdr_offset);
+    free_list->enqueue(hdr);
     return;
   }
 
   // Extend the set of cached pages
   free_lists_->emplace_back();
-  hipc::ShmRef<list<OffsetPointer>> free_list =
+  hipc::ShmRef<iqueue<MpPage>> free_list =
     (*free_lists_)[free_lists_->size() - 1];
-  free_list->emplace_back(hdr_offset);
+  free_list->enqueue(hdr);
 }
 
 }  // namespace hermes::ipc

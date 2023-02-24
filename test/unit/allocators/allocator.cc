@@ -81,7 +81,9 @@ void MultiPageAllocationTest(Allocator *alloc) {
     }
     REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
   }
+}
 
+void ReallocationTest(Allocator *alloc) {
   // Aligned allocate 4KB pages
   {
     for (size_t i = 0; i < 1024; ++i) {
@@ -99,7 +101,6 @@ void MultiPageAllocationTest(Allocator *alloc) {
     alloc->Free(p);
   }
 }
-
 
 TEST_CASE("StackAllocator") {
   auto alloc = Pretest<hipc::PosixShmMmap, hipc::StackAllocator>();

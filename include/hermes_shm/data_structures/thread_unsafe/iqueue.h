@@ -282,6 +282,14 @@ class iqueue : public ShmContainer {
     return reinterpret_cast<T*>(entry);
   }
 
+  /** Peek the first element of the queue */
+  T* peek() {
+    if (size() == 0) { return nullptr; }
+    auto entry = alloc_->
+      template Convert<iqueue_entry>(header_->head_ptr_);
+    return reinterpret_cast<T*>(entry);
+  }
+
   /** Destroy all elements in the iqueue */
   void clear() {
     while (size()) {
