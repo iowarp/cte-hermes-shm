@@ -12,6 +12,7 @@ add_executable(test_data_structure_exec
         list.cc
         slist.cc
         vector.cc
+        iqueue.cc
         manual_ptr.cc
         unique_ptr.cc
         unordered_map.cc

@@ -13,9 +13,12 @@
 #ifndef HERMES_INCLUDE_HERMES_MEMORY_ALLOCATOR_MP_PAGE_H_
 #define HERMES_INCLUDE_HERMES_MEMORY_ALLOCATOR_MP_PAGE_H_
 
+#include "hermes_shm/data_structures/thread_unsafe/iqueue.h"
+
 namespace hermes::ipc {
 
 struct MpPage {
+  iqueue_entry entry_;  /**< Position of page in free list */
   size_t page_size_;    /**< The size of the page allocated */
   int flags_;           /**< Page flags (e.g., is_allocated?) */
   uint32_t off_;        /**< The offset within the page */

@@ -12,48 +12,27 @@
 
 #include "basic_test.h"
 #include "test_init.h"
-#include "list.h"
-#include "hermes_shm/data_structures/thread_unsafe/list.h"
-#include "hermes_shm/data_structures/string.h"
+#include "iqueue.h"
+#include "hermes_shm/data_structures/thread_unsafe/iqueue.h"
 
-using hermes::ipc::list;
+using hermes::ipc::iqueue;
 
 template<typename T>
-void ListTest() {
+void IqueueTest() {
   Allocator *alloc = alloc_g;
-  list<T> lp(alloc);
-  ListTestSuite<T, list<T>> test(lp, alloc);
+  iqueue<T> lp(alloc);
+  IqueueTestSuite<T, iqueue<T>> test(lp, alloc);
 
-  test.EmplaceTest(30);
+  test.EnqueueTest(30);
   test.ForwardIteratorTest();
   test.ConstForwardIteratorTest();
-  test.CopyConstructorTest();
-  test.CopyAssignmentTest();
-  test.MoveConstructorTest();
-  test.MoveAssignmentTest();
-  test.EmplaceFrontTest();
-  test.ModifyEntryCopyIntoTest();
-  test.ModifyEntryMoveIntoTest();
+  test.DequeueTest(30);
   test.EraseTest();
 }
 
-TEST_CASE("IqueueOfInt") {
+TEST_CASE("IqueueOfMpPage") {
   Allocator *alloc = alloc_g;
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
-  ListTest<int>();
-  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
-}
-
-TEST_CASE("IqueueOfString") {
-  Allocator *alloc = alloc_g;
-  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
-  ListTest<hipc::string>();
-  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
-}
-
-TEST_CASE("ListOfStdString") {
-  Allocator *alloc = alloc_g;
-  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
-  ListTest<std::string>();
+  IqueueTest<MpPage>();
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
 }
