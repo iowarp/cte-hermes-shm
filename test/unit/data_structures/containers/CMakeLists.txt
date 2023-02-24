@@ -10,8 +10,7 @@ add_executable(test_data_structure_exec
         pair.cc
         #tuple.cc
         list.cc
-        #locked_list.cc
-        #slist.cc
+        slist.cc
         vector.cc
         manual_ptr.cc
         unique_ptr.cc

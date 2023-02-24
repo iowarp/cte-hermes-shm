@@ -13,16 +13,16 @@
 #include "basic_test.h"
 #include "test_init.h"
 #include "list.h"
-#include "hermes_shm/data_structures/thread_unsafe/slist.h"
+#include "hermes_shm/data_structures/thread_unsafe/list.h"
 #include "hermes_shm/data_structures/string.h"
 
-using hermes::ipc::slist;
+using hermes::ipc::list;
 
 template<typename T>
 void ListTest() {
   Allocator *alloc = alloc_g;
-  slist<T> lp(alloc);
-  ListTestSuite<T, slist<T>> test(lp, alloc);
+  list<T> lp(alloc);
+  ListTestSuite<T, list<T>> test(lp, alloc);
 
   test.EmplaceTest(30);
   test.ForwardIteratorTest();
@@ -37,21 +37,21 @@ void ListTest() {
   test.EraseTest();
 }
 
-TEST_CASE("SlistOfInt") {
+TEST_CASE("IqueueOfInt") {
   Allocator *alloc = alloc_g;
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
   ListTest<int>();
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
 }
 
-TEST_CASE("SlistOfString") {
+TEST_CASE("IqueueOfString") {
   Allocator *alloc = alloc_g;
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
   ListTest<hipc::string>();
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
 }
 
-TEST_CASE("SlistOfStdString") {
+TEST_CASE("ListOfStdString") {
   Allocator *alloc = alloc_g;
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
   ListTest<std::string>();

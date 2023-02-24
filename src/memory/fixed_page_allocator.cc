@@ -48,8 +48,8 @@ size_t FixedPageAllocator::GetCurrentlyAllocatedSize() {
 }
 
 OffsetPointer FixedPageAllocator::AllocateOffset(size_t size) {
-  size += sizeof(MpPage);
   MpPage *page = nullptr;
+  size_t size_mp = size + sizeof(MpPage);
 
   // Check if page of this size is already cached
   for (hipc::ShmRef<list<OffsetPointer>> free_list : *free_lists_) {
@@ -57,7 +57,7 @@ OffsetPointer FixedPageAllocator::AllocateOffset(size_t size) {
       auto iter = free_list->begin();
       hipc::ShmRef<OffsetPointer> page_ref = *iter;
       page = Convert<MpPage>(*page_ref);
-      if (page->page_size_ != size) {
+      if (page->page_size_ != size_mp) {
         continue;
       }
       free_list->erase(iter);
@@ -66,7 +66,7 @@ OffsetPointer FixedPageAllocator::AllocateOffset(size_t size) {
 
   // Allocate from stack if no page found
   if (page == nullptr){
-    page = alloc_.AllocatePtr<MpPage>(size);
+    page = alloc_.Convert<MpPage>(alloc_.AllocateOffset(size) - sizeof(MpPage));
   }
   if (page == nullptr) {
     throw OUT_OF_MEMORY;
@@ -75,7 +75,7 @@ OffsetPointer FixedPageAllocator::AllocateOffset(size_t size) {
   // Mark as allocated
   header_->total_alloc_.fetch_add(size);
   auto p = Convert<MpPage, OffsetPointer>(page);
-  return p;
+  return p + sizeof(MpPage);
 }
 
 OffsetPointer FixedPageAllocator::AlignedAllocateOffset(size_t size,

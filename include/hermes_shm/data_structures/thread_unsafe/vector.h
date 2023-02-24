@@ -37,16 +37,8 @@ struct vector_iterator_templ {
   vector_iterator_templ() = default;
 
   /** Construct an iterator */
-  inline explicit vector_iterator_templ(TypedPointer<vector<T>> vec)
+  inline explicit vector_iterator_templ(ShmDeserialize<vector<T>> &&vec)
   : vec_(vec) {}
-
-  /** Construct end iterator */
-  inline explicit vector_iterator_templ(size_t i)
-  : i_(static_cast<off64_t>(i)) {}
-
-  /** Construct an iterator at \a i offset */
-  inline explicit vector_iterator_templ(TypedPointer<vector<T>> vec, size_t i)
-  : vec_(vec), i_(static_cast<off64_t>(i)) {}
 
   /** Construct an iterator at \a i offset */
   inline explicit vector_iterator_templ(const hipc::ShmRef<vector<T>> &vec,
@@ -666,56 +658,56 @@ class vector : public ShmContainer {
  public:
   /** Beginning of the forward iterator */
   vector_iterator<T> begin() {
-    vector_iterator<T> iter(GetShmPointer<TypedPointer<vector<T>>>());
+    vector_iterator<T> iter(ShmDeserialize<vector<T>>(alloc_, header_));
     iter.set_begin();
     return iter;
   }
 
   /** End of the forward iterator */
   vector_iterator<T> const end() {
-    vector_iterator<T> iter(GetShmPointer<TypedPointer<vector<T>>>());
+    vector_iterator<T> iter(ShmDeserialize<vector<T>>(alloc_, header_));
     iter.set_end();
     return iter;
   }
 
   /** Beginning of the constant forward iterator */
   vector_citerator<T> cbegin() const {
-    vector_citerator<T> iter(GetShmPointer<TypedPointer<vector<T>>>());
+    vector_citerator<T> iter(ShmDeserialize<vector<T>>(alloc_, header_));
     iter.set_begin();
     return iter;
   }
 
   /** End of the forward iterator */
   vector_citerator<T> cend() const {
-    vector_citerator<T> iter(GetShmPointer<TypedPointer<vector<T>>>());
+    vector_citerator<T> iter(ShmDeserialize<vector<T>>(alloc_, header_));
     iter.set_end();
     return iter;
   }
 
   /** Beginning of the reverse iterator */
   vector_riterator<T> rbegin() {
-    vector_riterator<T> iter(GetShmPointer<TypedPointer<vector<T>>>());
+    vector_riterator<T> iter(ShmDeserialize<vector<T>>(alloc_, header_));
     iter.set_begin();
     return iter;
   }
 
   /** End of the reverse iterator */
   vector_riterator<T> rend() {
-    vector_citerator<T> iter(GetShmPointer<TypedPointer<vector<T>>>());
+    vector_citerator<T> iter(ShmDeserialize<vector<T>>(alloc_, header_));
     iter.set_end();
     return iter;
   }
 
   /** Beginning of the constant reverse iterator */
   vector_criterator<T> crbegin() const {
-    vector_criterator<T> iter(GetShmPointer<TypedPointer<vector<T>>>());
+    vector_criterator<T> iter(ShmDeserialize(alloc_, header_));
     iter.set_begin();
     return iter;
   }
 
   /** End of the constant reverse iterator */
   vector_criterator<T> crend() const {
-    vector_criterator<T> iter(GetShmPointer<TypedPointer<vector<T>>>());
+    vector_criterator<T> iter(ShmDeserialize(alloc_, header_));
     iter.set_end();
     return iter;
   }
