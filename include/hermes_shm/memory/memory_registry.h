@@ -33,6 +33,9 @@ class MemoryRegistry {
   MemoryBackend* RegisterBackend(const std::string &url,
                                  std::unique_ptr<MemoryBackend> &backend) {
     auto ptr = backend.get();
+    if (backends_.find(url) != backends_.end()) {
+      backends_.erase(url);
+    }
     backends_.emplace(url, std::move(backend));
     return ptr;
   }
@@ -57,8 +60,12 @@ class MemoryRegistry {
   Allocator* RegisterAllocator(std::unique_ptr<Allocator> &alloc) {
     auto ptr = alloc.get();
     if (default_allocator_ == nullptr ||
-      default_allocator_ == root_allocator_.get()) {
+        default_allocator_ == root_allocator_.get() ||
+        default_allocator_->GetId() == alloc->GetId()) {
       default_allocator_ = alloc.get();
+    }
+    if (allocators_.find(alloc->GetId()) != allocators_.end()) {
+      allocators_.erase(alloc->GetId());
     }
     allocators_.emplace(alloc->GetId(), std::move(alloc));
     return ptr;
@@ -66,6 +73,9 @@ class MemoryRegistry {
 
   /** Unregisters an allocator */
   void UnregisterAllocator(allocator_id_t alloc_id) {
+    if (alloc_id == default_allocator_->GetId()) {
+      default_allocator_ = root_allocator_.get();
+    }
     allocators_.erase(alloc_id);
   }
 

@@ -182,7 +182,7 @@ void FullAllocatorTestPerThread() {
   // Malloc allocator
   AllocatorTest<hipc::NullBackend, hipc::MallocAllocator>(
     AllocatorType::kMallocAllocator,
-    MemoryBackendType::kNullBackend);/**/
+    MemoryBackendType::kNullBackend);
   // Stack allocator
   AllocatorTest<hipc::PosixShmMmap, hipc::StackAllocator>(
     AllocatorType::kStackAllocator,

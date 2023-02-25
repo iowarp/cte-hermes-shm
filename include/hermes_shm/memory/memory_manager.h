@@ -68,6 +68,22 @@ class MemoryManager {
   }
 
   /**
+   * Unregister backend
+   * */
+  void UnregisterBackend(const std::string &url) {
+    HERMES_MEMORY_REGISTRY->UnregisterBackend(url);
+  }
+
+  /**
+   * Destroy backend
+   * */
+  void DestroyBackend(const std::string &url) {
+    auto backend = GetBackend(url);
+    backend->Own();
+    UnregisterBackend(url);
+  }
+
+  /**
    * Scans all attached backends for new memory allocators.
    * */
   void ScanBackends();
