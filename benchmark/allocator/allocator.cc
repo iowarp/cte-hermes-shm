@@ -41,6 +41,10 @@ class AllocatorTestSuite {
         alloc_type_ = "hipc::MallocAllocator";
         break;
       }
+      case AllocatorType::kFixedPageAllocator: {
+        alloc_type_ = "hipc::FixedPageAllocator";
+        break;
+      }
     }
   }
 
@@ -186,6 +190,10 @@ void FullAllocatorTestPerThread() {
   // Stack allocator
   AllocatorTest<hipc::PosixShmMmap, hipc::StackAllocator>(
     AllocatorType::kStackAllocator,
+    MemoryBackendType::kPosixShmMmap);
+  // Fixed page allocator
+  AllocatorTest<hipc::PosixShmMmap, hipc::FixedPageAllocator>(
+    AllocatorType::kFixedPageAllocator,
     MemoryBackendType::kPosixShmMmap);
 }
 
