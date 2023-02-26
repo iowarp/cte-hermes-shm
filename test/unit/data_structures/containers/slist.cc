@@ -16,7 +16,7 @@
 #include "hermes_shm/data_structures/thread_unsafe/slist.h"
 #include "hermes_shm/data_structures/string.h"
 
-using hermes::ipc::slist;
+using hermes_shm::ipc::slist;
 
 template<typename T>
 void ListTest() {

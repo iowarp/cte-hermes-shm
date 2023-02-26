@@ -17,7 +17,7 @@
 #include "internal/shm_internal.h"
 #include <string>
 
-namespace hermes::ipc {
+namespace hermes_shm::ipc {
 
 /** forward declaration for string */
 class string;
@@ -275,14 +275,14 @@ class string : public ShmContainer {
 /** Consider the string as an uniterpreted set of bytes */
 typedef string charbuf;
 
-}  // namespace hermes::ipc
+}  // namespace hermes_shm::ipc
 
 namespace std {
 
 /** Hash function for string */
 template<>
-struct hash<hermes::ipc::string> {
-  size_t operator()(const hermes::ipc::string &text) const {
+struct hash<hermes_shm::ipc::string> {
+  size_t operator()(const hermes_shm::ipc::string &text) const {
     size_t sum = 0;
     for (size_t i = 0; i < text.size(); ++i) {
       auto shift = static_cast<size_t>(i % sizeof(size_t));

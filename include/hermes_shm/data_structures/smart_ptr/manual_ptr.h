@@ -18,7 +18,7 @@
 #include "unique_ptr.h"
 #include "hermes_shm/data_structures/internal/shm_internal.h"
 
-namespace hermes::ipc {
+namespace hermes_shm::ipc {
 
 /**
  * MACROS to simplify the ptr namespace
@@ -93,7 +93,7 @@ static mptr<T> make_mptr(Args&& ...args) {
   return ptr;
 }
 
-}  // namespace hermes::ipc
+}  // namespace hermes_shm::ipc
 
 #undef CLASS_NAME
 #undef TYPED_CLASS
@@ -102,8 +102,8 @@ namespace std {
 
 /** Hash function for ptr */
 template<typename T>
-struct hash<hermes::ipc::manual_ptr<T>> {
-  size_t operator()(const hermes::ipc::manual_ptr<T> &obj) const {
+struct hash<hermes_shm::ipc::manual_ptr<T>> {
+  size_t operator()(const hermes_shm::ipc::manual_ptr<T> &obj) const {
     return std::hash<T>{}(obj.get_ref_const());
   }
 };

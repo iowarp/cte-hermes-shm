@@ -17,9 +17,9 @@
 #include "hermes_shm/data_structures/string.h"
 #include "vector.h"
 
-using hermes::ipc::vector;
-using hermes::ipc::list;
-using hermes::ipc::string;
+using hermes_shm::ipc::vector;
+using hermes_shm::ipc::list;
+using hermes_shm::ipc::string;
 
 template<typename T>
 void VectorTest() {

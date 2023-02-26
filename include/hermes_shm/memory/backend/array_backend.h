@@ -29,7 +29,7 @@
 #include <hermes_shm/constants/macros.h>
 #include <hermes_shm/introspect/system_info.h>
 
-namespace hermes::ipc {
+namespace hermes_shm::ipc {
 
 class ArrayBackend : public MemoryBackend {
  public:
@@ -60,6 +60,6 @@ class ArrayBackend : public MemoryBackend {
   void shm_destroy() override {}
 };
 
-}  // namespace hermes::ipc
+}  // namespace hermes_shm::ipc
 
 #endif  // HERMES_INCLUDE_HERMES_MEMORY_BACKEND_ARRAY_BACKEND_H_

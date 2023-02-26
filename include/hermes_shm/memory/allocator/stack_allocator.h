@@ -17,7 +17,7 @@
 #include "allocator.h"
 #include "hermes_shm/thread/lock.h"
 
-namespace hermes::ipc {
+namespace hermes_shm::ipc {
 
 struct StackAllocatorHeader : public AllocatorHeader {
   std::atomic<size_t> region_off_;
@@ -102,6 +102,6 @@ class StackAllocator : public Allocator {
   size_t GetCurrentlyAllocatedSize() override;
 };
 
-}  // namespace hermes::ipc
+}  // namespace hermes_shm::ipc
 
 #endif  // HERMES_MEMORY_ALLOCATOR_STACK_ALLOCATOR_H_

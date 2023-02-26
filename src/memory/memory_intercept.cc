@@ -14,8 +14,8 @@
 #include <stdlib.h>
 #include "hermes_shm/memory/memory_manager.h"
 
-using hermes::ipc::Pointer;
-using hermes::ipc::Allocator;
+using hermes_shm::ipc::Pointer;
+using hermes_shm::ipc::Allocator;
 
 /** Allocate SIZE bytes of memory. */
 void* malloc(size_t size) {
@@ -70,7 +70,7 @@ void* valloc(size_t size) {
  * that is, round up size to nearest pagesize.
  * */
 void* pvalloc(size_t size) {
-  size_t new_size = hermes::ipc::NextPageSizeMultiple(size);
+  size_t new_size = hermes_shm::ipc::NextPageSizeMultiple(size);
   return valloc(new_size);
 }
 
@@ -89,5 +89,5 @@ int posix_memalign(void **memptr, size_t alignment, size_t size) {
  * alignment
  * */
 void *aligned_alloc(size_t alignment, size_t size) {
-  return memalign(alignment, hermes::ipc::NextAlignmentMultiple(alignment, size));
+  return memalign(alignment, hermes_shm::ipc::NextAlignmentMultiple(alignment, size));
 }

@@ -13,7 +13,7 @@
 
 #include <hermes_shm/memory/allocator/malloc_allocator.h>
 
-namespace hermes::ipc {
+namespace hermes_shm::ipc {
 
 struct MallocPage {
   size_t page_size_;
@@ -80,4 +80,4 @@ void MallocAllocator::FreeOffsetNoNullCheck(OffsetPointer p) {
   free(page);
 }
 
-}  // namespace hermes::ipc
+}  // namespace hermes_shm::ipc

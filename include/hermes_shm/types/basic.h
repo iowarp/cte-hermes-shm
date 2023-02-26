@@ -44,7 +44,7 @@ struct labstor_credentials {
 
 #ifdef __cplusplus
 
-namespace hermes {
+namespace hermes_shm {
 
 typedef labstor_credentials UserCredentials;
 
@@ -141,12 +141,12 @@ struct id {
 
 typedef int32_t off_t;
 
-}  // namespace hermes
+}  // namespace hermes_shm
 
 namespace std {
 template<>
-struct hash<hermes::id> {
-  size_t operator()(const hermes::id &id) const {
+struct hash<hermes_shm::id> {
+  size_t operator()(const hermes_shm::id &id) const {
     size_t sum = 0;
     int len = strnlen(id.key_, MODULE_KEY_SIZE);
     for (int i = 0; i < len; ++i) {

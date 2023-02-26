@@ -22,7 +22,7 @@
 
 #include "hermes_shm/data_structures/internal/shm_archive.h"
 
-namespace hermes::ipc {
+namespace hermes_shm::ipc {
 
 /**
  * Indicates a data structure represents a memory paradigm for Shm.
@@ -114,7 +114,7 @@ class ShmSmartPtr : public ShmSmartPointer {
 
 
 
-}  // namespace hermes::ipc
+}  // namespace hermes_shm::ipc
 
 /**
  * Namespace simplification for a SHM data structure pointer

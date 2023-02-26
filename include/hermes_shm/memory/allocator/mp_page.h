@@ -15,7 +15,7 @@
 
 #include "hermes_shm/data_structures/thread_unsafe/iqueue.h"
 
-namespace hermes::ipc {
+namespace hermes_shm::ipc {
 
 struct MpPage {
   iqueue_entry entry_;  /**< Position of page in free list */
@@ -36,6 +36,6 @@ struct MpPage {
   }
 };
 
-}  // namespace hermes::ipc
+}  // namespace hermes_shm::ipc
 
 #endif  // HERMES_INCLUDE_HERMES_MEMORY_ALLOCATOR_MP_PAGE_H_

@@ -22,7 +22,7 @@
 
 namespace thallium {
 
-namespace hipc = hermes::ipc;
+namespace hipc = hermes_shm::ipc;
 
 /**
  *  Lets Thallium know how to serialize an hipc::allocator_id.

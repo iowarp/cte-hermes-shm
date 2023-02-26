@@ -14,7 +14,7 @@
 #include <hermes_shm/memory/allocator/scalable_page_allocator.h>
 #include <hermes_shm/memory/allocator/mp_page.h>
 
-namespace hermes::ipc {
+namespace hermes_shm::ipc {
 
 void ScalablePageAllocator::shm_init(allocator_id_t id,
                                      size_t custom_header_size,
@@ -276,4 +276,4 @@ void ScalablePageAllocator::FreeOffsetNoNullCheck(OffsetPointer p) {
   last_free_list->second_->enqueue(hdr);
 }
 
-}  // namespace hermes::ipc
+}  // namespace hermes_shm::ipc

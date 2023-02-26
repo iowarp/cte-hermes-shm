@@ -15,8 +15,8 @@
 #include "omp.h"
 #include "hermes_shm/thread/lock.h"
 
-using hermes::Mutex;
-using hermes::RwLock;
+using hermes_shm::Mutex;
+using hermes_shm::RwLock;
 
 void MutexTest() {
   int nthreads = 8;

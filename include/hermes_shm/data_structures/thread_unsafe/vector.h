@@ -18,7 +18,7 @@
 
 #include <vector>
 
-namespace hermes::ipc {
+namespace hermes_shm::ipc {
 
 /** forward pointer for vector */
 template<typename T>
@@ -713,7 +713,7 @@ class vector : public ShmContainer {
   }
 };
 
-}  // namespace hermes::ipc
+}  // namespace hermes_shm::ipc
 
 #undef CLASS_NAME
 #undef TYPED_CLASS

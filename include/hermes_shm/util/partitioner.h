@@ -21,7 +21,7 @@
 #include <sched.h>
 #include <string>
 
-namespace hermes {
+namespace hermes_shm {
 
 class ProcessAffiner {
  private:
@@ -151,6 +151,6 @@ class ProcessAffiner {
   }
 };
 
-}  // namespace hermes
+}  // namespace hermes_shm
 
 #endif  // HERMES_PARTITIONER_H

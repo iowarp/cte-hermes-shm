@@ -40,7 +40,7 @@ class ShmContainerExample {
   typedef TYPED_HEADER header_t; /** Header type query */
   header_t *header_; /**< Header of the shared-memory data structure */
   hipc::Allocator *alloc_; /**< hipc::Allocator used for this data structure */
-  hermes::bitfield32_t flags_; /**< Flags used data structure status */
+  hermes_shm::bitfield32_t flags_; /**< Flags used data structure status */
 
  public:
   /**====================================
@@ -430,7 +430,7 @@ class ShmContainerExample {
   }
 };
 
-}  // namespace hermes::ipc
+}  // namespace hermes_shm::ipc
 
 #undef CLASS_NAME
 #undef TYPED_CLASS

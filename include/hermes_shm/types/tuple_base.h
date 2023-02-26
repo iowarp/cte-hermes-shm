@@ -17,7 +17,7 @@
 #include "basic.h"
 #include "argpack.h"
 
-namespace hermes {
+namespace hermes_shm {
 
 /** The null container wrapper */
 template<typename T>
@@ -242,6 +242,6 @@ using ForwardIterateTuple = IterateTuple<false>;
 /** Reverse iterate over tuple and apply function */
 using ReverseIterateTuple = IterateTuple<true>;
 
-}  // namespace hermes
+}  // namespace hermes_shm
 
 #endif //HERMES_INCLUDE_HERMES_DATA_STRUCTURES_TupleBase_H_

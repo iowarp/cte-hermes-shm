@@ -22,7 +22,7 @@
 #include "hermes_shm/memory/memory.h"
 #include "hermes_shm/data_structures/internal/shm_internal.h"
 
-namespace hermes::ipc {
+namespace hermes_shm::ipc {
 
 /**
  * MACROS to simplify the unique_ptr namespace
@@ -94,7 +94,7 @@ static uptr<T> make_uptr(Args&& ...args) {
   return ptr;
 }
 
-}  // namespace hermes::ipc
+}  // namespace hermes_shm::ipc
 
 #undef CLASS_NAME
 #undef TYPED_CLASS
@@ -103,8 +103,8 @@ namespace std {
 
 /** Hash function for unique_ptr */
 template<typename T>
-struct hash<hermes::ipc::unique_ptr<T>> {
-  size_t operator()(const hermes::ipc::unique_ptr<T> &obj) const {
+struct hash<hermes_shm::ipc::unique_ptr<T>> {
+  size_t operator()(const hermes_shm::ipc::unique_ptr<T> &obj) const {
     return std::hash<T>{}(obj.get_ref_const());
   }
 };

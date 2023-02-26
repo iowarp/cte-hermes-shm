@@ -15,9 +15,9 @@
 
 #if defined(HERMES_DEBUG) && defined(__cplusplus)
 #define AUTO_TRACE(...) \
-  hermes::AutoTrace auto_tracer(false, __PRETTY_FUNCTION__, __VA_ARGS__);
+  hermes_shm::AutoTrace auto_tracer(false, __PRETTY_FUNCTION__, __VA_ARGS__);
 #define TRACEPOINT(...) \
-  hermes::AutoTrace(true, __PRETTY_FUNCTION__, __VA_ARGS__);
+  hermes_shm::AutoTrace(true, __PRETTY_FUNCTION__, __VA_ARGS__);
 #elif defined(KERNEL_BUILD) && defined(DEBUG)
 #define AUTO_TRACE(...) pr_info(__VA_ARGS__);
 #define TRACEPOINT(...) pr_info(__VA_ARGS__);
@@ -34,14 +34,14 @@
 #include <sched.h>
 #include <unistd.h>
 
-namespace hermes {
+namespace hermes_shm {
 
 class AutoTrace {
  private:
   std::string base_text_;
   bool tracepoint_;
-  hermes::HighResCpuTimer t_cpu_;
-  hermes::HighResMonotonicTimer t_total_;
+  hermes_shm::HighResCpuTimer t_cpu_;
+  hermes_shm::HighResMonotonicTimer t_total_;
 
  public:
   template<typename ...Args>
@@ -70,7 +70,7 @@ class AutoTrace {
   }
 };
 
-}  // namespace hermes
+}  // namespace hermes_shm
 
 #endif
 

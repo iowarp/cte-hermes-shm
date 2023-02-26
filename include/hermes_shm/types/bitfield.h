@@ -15,7 +15,7 @@
 
 #include <cstdint>
 
-namespace hermes {
+namespace hermes_shm {
 
 #define BIT_OPT(T, n) (((T)1) << n)
 
@@ -70,6 +70,6 @@ typedef bitfield<uint32_t> bitfield32_t;
     BITFIELD_VAR.CopyBits(field, mask);\
   }
 
-}  // namespace hermes
+}  // namespace hermes_shm
 
 #endif //HERMES_INCLUDE_HERMES_TYPES_BITFIELD_H_

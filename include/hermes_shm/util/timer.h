@@ -17,7 +17,7 @@
 #include <vector>
 #include <functional>
 
-namespace hermes {
+namespace hermes_shm {
 
 template<typename T>
 class TimerBase {
@@ -91,6 +91,6 @@ typedef TimerBase<std::chrono::high_resolution_clock> HighResCpuTimer;
 typedef TimerBase<std::chrono::steady_clock> HighResMonotonicTimer;
 typedef HighResMonotonicTimer Timer;
 
-}  // namespace hermes
+}  // namespace hermes_shm
 
 #endif  // HERMES_TIMER_H

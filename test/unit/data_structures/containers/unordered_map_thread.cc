@@ -18,15 +18,15 @@
 #include "hermes_shm/util/errors.h"
 #include <sstream>
 
-using hermes::ipc::MemoryBackendType;
-using hermes::ipc::MemoryBackend;
-using hermes::ipc::allocator_id_t;
-using hermes::ipc::AllocatorType;
-using hermes::ipc::Allocator;
-using hermes::ipc::MemoryManager;
-using hermes::ipc::Pointer;
-using hermes::ipc::unordered_map;
-using hermes::ipc::string;
+using hermes_shm::ipc::MemoryBackendType;
+using hermes_shm::ipc::MemoryBackend;
+using hermes_shm::ipc::allocator_id_t;
+using hermes_shm::ipc::AllocatorType;
+using hermes_shm::ipc::Allocator;
+using hermes_shm::ipc::MemoryManager;
+using hermes_shm::ipc::Pointer;
+using hermes_shm::ipc::unordered_map;
+using hermes_shm::ipc::string;
 
 void UnorderedMapParallelInsert() {
   Allocator *alloc = alloc_g;

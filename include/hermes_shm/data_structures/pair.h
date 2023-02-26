@@ -15,7 +15,7 @@
 
 #include "internal/shm_internal.h"
 
-namespace hermes::ipc {
+namespace hermes_shm::ipc {
 
 /** forward declaration for string */
 template<typename FirstT, typename SecondT>
@@ -205,6 +205,6 @@ class pair : public ShmContainer {
 #undef TYPED_CLASS
 #undef TYPED_HEADER
 
-}  // namespace hermes::ipc
+}  // namespace hermes_shm::ipc
 
 #endif //HERMES_INCLUDE_HERMES_DATA_STRUCTURES_PAIR_H_

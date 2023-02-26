@@ -16,7 +16,7 @@
 #include "basic.h"
 #include  <functional>
 
-namespace hermes {
+namespace hermes_shm {
 
 /** Type which indicates that a constructor takes ArgPacks as input */
 struct PiecewiseConstruct {};
@@ -229,6 +229,6 @@ class ProductArgPacks {
   }
 };
 
-}  // namespace hermes
+}  // namespace hermes_shm
 
 #endif //HERMES_INCLUDE_HERMES_TYPES_ARGPACK_H_

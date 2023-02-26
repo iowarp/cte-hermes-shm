@@ -15,7 +15,7 @@
 
 #include "hermes_shm/memory/memory_registry.h"
 
-namespace hermes::ipc {
+namespace hermes_shm::ipc {
 
 /**
  * The parameters used to deserialize an object.
@@ -87,6 +87,6 @@ struct ShmDeserialize {
   }
 };
 
-}  // namespace hermes::ipc
+}  // namespace hermes_shm::ipc
 
 #endif //HERMES_INCLUDE_HERMES_DATA_STRUCTURES_INTERNAL_DESERIALIZE_H_

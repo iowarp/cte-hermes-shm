@@ -24,7 +24,7 @@
 #define NUMBER_SERIAL(type) \
     return std::to_string(num_.type);
 
-namespace hermes {
+namespace hermes_shm {
 
 class Formattable {
  public:
@@ -95,6 +95,6 @@ class Formatter {
   }
 };
 
-}  // namespace hermes
+}  // namespace hermes_shm
 
 #endif  //HERMES_ERROR_SERIALIZER_H

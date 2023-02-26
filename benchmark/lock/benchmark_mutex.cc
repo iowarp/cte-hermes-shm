@@ -13,7 +13,7 @@ TEST_CASE("TestMutex") {
   t.Resume();
   int j = 0;
   size_t ops = (1ull << 26);
-  hermes::Mutex lock;
+  hermes_shm::Mutex lock;
   for (size_t i = 0; i < ops; ++i) {
     lock.TryLock();
   }

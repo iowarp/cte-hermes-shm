@@ -18,12 +18,12 @@
 #include "hermes_shm/data_structures/string.h"
 #include "smart_ptr.h"
 
-using hermes::ipc::string;
-using hermes::ipc::unique_ptr;
-using hermes::ipc::make_uptr;
-using hermes::ipc::uptr;
-using hermes::ipc::mptr;
-using hermes::ipc::TypedPointer;
+using hermes_shm::ipc::string;
+using hermes_shm::ipc::unique_ptr;
+using hermes_shm::ipc::make_uptr;
+using hermes_shm::ipc::uptr;
+using hermes_shm::ipc::mptr;
+using hermes_shm::ipc::TypedPointer;
 
 template<typename T>
 void UniquePtrTest() {

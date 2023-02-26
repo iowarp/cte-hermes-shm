@@ -20,7 +20,7 @@
 #include "hermes_shm/constants/macros.h"
 #include <limits>
 
-namespace hermes::ipc {
+namespace hermes_shm::ipc {
 
 struct MemoryBackendHeader {
   size_t data_size_;
@@ -85,6 +85,6 @@ class MemoryBackend {
   virtual void shm_destroy() = 0;
 };
 
-}  // namespace hermes::ipc
+}  // namespace hermes_shm::ipc
 
 #endif  // HERMES_MEMORY_H

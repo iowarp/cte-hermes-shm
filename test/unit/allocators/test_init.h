@@ -18,13 +18,13 @@
 #include "omp.h"
 #include "hermes_shm/memory/memory_manager.h"
 
-using hermes::ipc::MemoryBackendType;
-using hermes::ipc::MemoryBackend;
-using hermes::ipc::allocator_id_t;
-using hermes::ipc::AllocatorType;
-using hermes::ipc::Allocator;
-using hermes::ipc::MemoryManager;
-using hermes::ipc::Pointer;
+using hermes_shm::ipc::MemoryBackendType;
+using hermes_shm::ipc::MemoryBackend;
+using hermes_shm::ipc::allocator_id_t;
+using hermes_shm::ipc::AllocatorType;
+using hermes_shm::ipc::Allocator;
+using hermes_shm::ipc::MemoryManager;
+using hermes_shm::ipc::Pointer;
 
 #define HEADER_CHECKSUM 8482942
 

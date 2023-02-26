@@ -18,7 +18,7 @@
 
 #include <list>
 
-namespace hermes::ipc {
+namespace hermes_shm::ipc {
 
 /** forward pointer for list */
 template<typename T>
@@ -505,7 +505,7 @@ class list : public ShmContainer {
   }
 };
 
-}  // namespace hermes::ipc
+}  // namespace hermes_shm::ipc
 
 #undef CLASS_NAME
 #undef TYPED_CLASS

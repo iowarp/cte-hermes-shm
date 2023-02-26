@@ -29,7 +29,7 @@
 #include <hermes_shm/constants/macros.h>
 #include <hermes_shm/introspect/system_info.h>
 
-namespace hermes::ipc {
+namespace hermes_shm::ipc {
 
 class NullBackend : public MemoryBackend {
  private:
@@ -76,6 +76,6 @@ class NullBackend : public MemoryBackend {
   }
 };
 
-}  // namespace hermes::ipc
+}  // namespace hermes_shm::ipc
 
 #endif //HERMES_INCLUDE_HERMES_MEMORY_BACKEND_NULL_H_

@@ -17,7 +17,7 @@
 #include "hermes_shm/memory/memory_registry.h"
 #include <string>
 
-namespace hermes {
+namespace hermes_shm {
 
 /** An uninterpreted array of bytes */
 struct charbuf {
@@ -199,6 +199,6 @@ struct charbuf {
 
 typedef charbuf string;
 
-}  // namespace hermes
+}  // namespace hermes_shm
 
 #endif //HERMES_INCLUDE_HERMES_TYPES_CHARBUF_H_

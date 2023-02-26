@@ -16,7 +16,7 @@
 
 #include "shm_macros.h"
 
-namespace hermes::ipc {
+namespace hermes_shm::ipc {
 
 /**
  * Indicates that a data structure can be stored directly in memory or
@@ -100,6 +100,6 @@ class ShmArchiveable : public ShmPredictable {
   SHM_DESERIALIZE_OPS(AR_TYPE)
 
 
-}  // namespace hermes::ipc
+}  // namespace hermes_shm::ipc
 
 #endif  // HERMES_DATA_STRUCTURES_SHM_ARCHIVE_H_

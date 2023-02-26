@@ -20,7 +20,7 @@
 #include "fixed_page_allocator.h"
 #include "scalable_page_allocator.h"
 
-namespace hermes::ipc {
+namespace hermes_shm::ipc {
 
 class AllocatorFactory {
  public:
@@ -113,6 +113,6 @@ class AllocatorFactory {
   }
 };
 
-}  // namespace hermes::ipc
+}  // namespace hermes_shm::ipc
 
 #endif  // HERMES_MEMORY_ALLOCATOR_ALLOCATOR_FACTORY_H_

@@ -16,7 +16,7 @@
 #include "formatter.h"
 #include "timer.h"
 
-namespace hermes {
+namespace hermes_shm {
 
 #define AUTO_TRACE() AutoTrace(__PRETTY_FUNCTION__);
 
@@ -47,6 +47,6 @@ class AutoTrace {
   }
 };
 
-}  // namespace hermes
+}  // namespace hermes_shm
 
 #endif //HERMES_INCLUDE_HERMES_UTIL_AUTO_TRACE_H_

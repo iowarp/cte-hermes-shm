@@ -16,7 +16,7 @@
 
 #include "hermes_shm/data_structures/internal/shm_internal.h"
 
-namespace hermes::ipc {
+namespace hermes_shm::ipc {
 
 /** forward pointer for slist */
 template<typename T>
@@ -507,7 +507,7 @@ class slist : public ShmContainer {
   }
 };
 
-}  // namespace hermes::ipc
+}  // namespace hermes_shm::ipc
 
 #undef CLASS_NAME
 #undef TYPED_CLASS

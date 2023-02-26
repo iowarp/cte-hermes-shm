@@ -6,7 +6,7 @@
 #include "hermes_shm/memory/allocator/stack_allocator.h"
 #include "hermes_shm/memory/backend/posix_mmap.h"
 
-namespace hermes::ipc {
+namespace hermes_shm::ipc {
 
 MemoryRegistry::MemoryRegistry() {
   root_allocator_id_.bits_.major_ = 0;
@@ -23,4 +23,4 @@ MemoryRegistry::MemoryRegistry() {
   default_allocator_ = root_allocator_.get();
 }
 
-}  // hermes::ipc
+}  // hermes_shm::ipc

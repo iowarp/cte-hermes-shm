@@ -16,7 +16,7 @@
 
 #include "hermes_shm/memory/memory.h"
 
-namespace hermes::ipc {
+namespace hermes_shm::ipc {
 
 /**
  * Constructs a TypedPointer in-place
@@ -100,7 +100,7 @@ class _ShmArchiveOrT_T {
   /** Construct + store object (hermes rval argpack) */
   template<typename ArgPackT>
   void shm_init_piecewise(Allocator *alloc, ArgPackT &&args) {
-    hermes::PassArgPack::Call(
+    hermes_shm::PassArgPack::Call(
       MergeArgPacks::Merge(
         make_argpack(internal_ref(alloc)),
         std::forward<ArgPackT>(args)),
@@ -182,6 +182,6 @@ class ShmArchiveOrT {
   }
 };
 
-}  // namespace hermes::ipc
+}  // namespace hermes_shm::ipc
 
 #endif  // HERMES_DATA_STRUCTURES_SHM_AR_H_

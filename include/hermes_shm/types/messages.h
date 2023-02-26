@@ -13,7 +13,7 @@
 #ifndef HERMES_MESSAGES_H
 #define HERMES_MESSAGES_H
 
-namespace hermes {
+namespace hermes_shm {
 
 enum {
   HERMES_ADMIN_REGISTER_QP
@@ -44,6 +44,6 @@ struct setup_reply : public admin_reply {
   uint32_t namespace_max_entries_;
 };
 
-}  // namespace hermes
+}  // namespace hermes_shm
 
 #endif  // HERMES_MESSAGES_H

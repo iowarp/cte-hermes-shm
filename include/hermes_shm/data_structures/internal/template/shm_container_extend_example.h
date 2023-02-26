@@ -23,7 +23,7 @@
 
 #include "hermes_shm/data_structures/internal/shm_container.h"
 
-namespace hermes::ipc {
+namespace hermes_shm::ipc {
 
 template<typename ContainerT>
 class ShmContainerExtendExample;
@@ -307,7 +307,7 @@ class ShmContainerExtendExample : public ShmContainer {
   }
 };
 
-}  // namespace hermes::ipc
+}  // namespace hermes_shm::ipc
 
 #undef CLASS_NAME
 #undef TYPED_CLASS

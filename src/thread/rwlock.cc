@@ -14,7 +14,7 @@
 #include "hermes_shm/thread/lock/rwlock.h"
 #include "hermes_shm/thread/thread_manager.h"
 
-namespace hermes {
+namespace hermes_shm {
 
 /**
  * Acquire the read lock
@@ -192,4 +192,4 @@ void ScopedRwWriteLock::Unlock() {
   }
 }
 
-}  // namespace hermes
+}  // namespace hermes_shm

@@ -14,7 +14,7 @@
 #include "test_init.h"
 #include "hermes_shm/data_structures/string.h"
 
-using hermes::ipc::string;
+using hermes_shm::ipc::string;
 
 void TestString() {
   Allocator *alloc = alloc_g;

@@ -22,9 +22,9 @@
 #include "shm_ref.h"
 #include "shm_deserialize.h"
 
-namespace hipc = hermes::ipc;
+namespace hipc = hermes_shm::ipc;
 
-namespace hermes::ipc {
+namespace hermes_shm::ipc {
 
 /** Bits used for determining how to destroy an object */
 /// The container's header has been allocated
@@ -80,6 +80,6 @@ static inline T* typed_nullptr() {
   return reinterpret_cast<T*>(NULL);
 }
 
-}  // namespace hermes::ipc
+}  // namespace hermes_shm::ipc
 
 #endif  // HERMES_SHM_CONTAINER_H_

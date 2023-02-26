@@ -16,7 +16,7 @@
 
 #include <atomic>
 
-namespace hermes {
+namespace hermes_shm {
 
 union RwLockPayload {
   struct {
@@ -95,6 +95,6 @@ struct ScopedRwWriteLock {
   void Unlock();
 };
 
-}  // namespace hermes
+}  // namespace hermes_shm
 
 #endif  // HERMES_THREAD_RWLOCK_H_

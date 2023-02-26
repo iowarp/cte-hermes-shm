@@ -17,12 +17,12 @@
 #include "hermes_shm/data_structures/string.h"
 #include "smart_ptr.h"
 
-using hermes::ipc::string;
-using hermes::ipc::mptr;
-using hermes::ipc::uptr;
-using hermes::ipc::mptr;
-using hermes::ipc::make_mptr;
-using hermes::ipc::TypedPointer;
+using hermes_shm::ipc::string;
+using hermes_shm::ipc::mptr;
+using hermes_shm::ipc::uptr;
+using hermes_shm::ipc::mptr;
+using hermes_shm::ipc::make_mptr;
+using hermes_shm::ipc::TypedPointer;
 
 template<typename T>
 void ManualPtrTest() {

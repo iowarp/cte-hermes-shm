@@ -18,7 +18,7 @@
 #include "shm_archive.h"
 #include "shm_deserialize.h"
 
-namespace hermes::ipc {
+namespace hermes_shm::ipc {
 
 /**
  * A ShmReference to a shared-memory object
@@ -202,6 +202,6 @@ struct ShmRef {
   }
 };
 
-}  // namespace hermes::ipc
+}  // namespace hermes_shm::ipc
 
 #endif //HERMES_INCLUDE_HERMES_DATA_STRUCTURES_INTERNAL_SHM_ShmRef_H_

@@ -15,7 +15,7 @@
 #include "iqueue.h"
 #include "hermes_shm/data_structures/thread_unsafe/iqueue.h"
 
-using hermes::ipc::iqueue;
+using hermes_shm::ipc::iqueue;
 
 template<typename T>
 void IqueueTest() {

@@ -23,7 +23,7 @@
 #include <hermes_shm/memory/allocator/stack_allocator.h>
 #include "mp_page.h"
 
-namespace hermes::ipc {
+namespace hermes_shm::ipc {
 
 struct FreeListStats {
   size_t page_size_;  /**< Page size stored in this free list */
@@ -180,6 +180,6 @@ class ScalablePageAllocator : public Allocator {
   size_t RoundUp(size_t num, int &exp);
 };
 
-}  // namespace hermes::ipc
+}  // namespace hermes_shm::ipc
 
 #endif  // HERMES_MEMORY_ALLOCATOR_SCALABLE_PAGE_ALLOCATOR_H
