@@ -38,7 +38,7 @@ void ScalablePageAllocator::shm_init(allocator_id_t id,
   for (size_t i = 0; i < HERMES_SYSTEM_INFO->ncpu_; ++i) {
     for (size_t j = 0; j < num_free_lists_; ++j) {
       hipc::ShmRef<pair<FreeListStats, iqueue<MpPage>>>
-        free_list = (*free_lists_)[i * ncpu + j];
+        free_list = (*free_lists_)[i * num_free_lists_ + j];
       free_list->first_->page_size_ = sizeof(MpPage) +
         min_cached_size_ * (1 << j);
       free_list->first_->lock_.Init();
@@ -50,6 +50,8 @@ void ScalablePageAllocator::shm_init(allocator_id_t id,
       }
     }
   }
+  // NOTE(llogan): needed in order to initialize Thread singleton
+  auto node_id = NodeThreadId();
 }
 
 void ScalablePageAllocator::shm_deserialize(char *buffer,
@@ -74,7 +76,7 @@ size_t ScalablePageAllocator::RoundUp(size_t num, int &exp) {
   for (exp = 0; exp < num_caches_; ++exp) {
     round = 1 << (exp + min_cached_size_exp_);
     round += sizeof(MpPage);
-    if (num < round) {
+    if (num <= round) {
       return round;
     }
   }
@@ -82,7 +84,7 @@ size_t ScalablePageAllocator::RoundUp(size_t num, int &exp) {
 }
 
 OffsetPointer ScalablePageAllocator::AllocateOffset(size_t size) {
-  MpPage *page;
+  MpPage *page = nullptr;
   size_t size_mp = size + sizeof(MpPage);
 
   // Case 1: Can we re-use an existing page?
@@ -116,7 +118,6 @@ OffsetPointer ScalablePageAllocator::AllocateOffset(size_t size) {
 MpPage *ScalablePageAllocator::CheckCaches(size_t size_mp) {
   MpPage *page;
   ScopedRwReadLock coalesce_lock(header_->coalesce_lock_);
-  auto node_id = NodeThreadId();
   uint32_t cpu = NodeThreadId().hash() % HERMES_SYSTEM_INFO->ncpu_;
   uint32_t cpu_start = cpu * num_free_lists_;
   hipc::ShmRef<pair<FreeListStats, iqueue<MpPage>>> first_free_list =
@@ -136,8 +137,7 @@ MpPage *ScalablePageAllocator::CheckCaches(size_t size_mp) {
       DividePage(free_list->first_,
                  free_list->second_,
                  page, rem_page, size_mp,
-                 free_list->first_->max_alloc_ -
-                 free_list->first_->cur_alloc_);
+                 16);
       return page;
     }
 
@@ -151,8 +151,7 @@ MpPage *ScalablePageAllocator::CheckCaches(size_t size_mp) {
         DividePage(free_list->first_,
                    free_list->second_,
                    page, rem_page, size_mp,
-                   free_list->first_->max_alloc_ -
-                   free_list->first_->cur_alloc_);
+                   16);
         if (rem_page) {
           hipc::ShmRef<pair<FreeListStats, iqueue<MpPage>>> last_free_list =
             (*free_lists_)[cpu_start + num_caches_];
@@ -201,12 +200,13 @@ void ScalablePageAllocator::DividePage(hipc::ShmRef<FreeListStats> &stats,
   stats->AddAlloc();
 
   // Case 1: The remaining size can't be cached
+  rem_page = nullptr;
   if (rem_size < min_cached_size_) {
-    rem_page = nullptr;
     return;
   }
 
   // Case 2: Divide the remaining space into units of size_mp
+  fit_page->page_size_ = size_mp;
   rem_page = (MpPage *) ((char *) fit_page + size_mp);
   if (max_divide > 0 && rem_size >= size_mp) {
     size_t num_divisions = (rem_size - size_mp) / size_mp;
@@ -264,7 +264,8 @@ void ScalablePageAllocator::FreeOffsetNoNullCheck(OffsetPointer p) {
     for (size_t i = 0; i < num_caches_; ++i) {
       hipc::ShmRef<pair<FreeListStats, iqueue<MpPage>>> free_list =
         (*free_lists_)[cpu_start + i];
-      if (free_list->first_->page_size_ == hdr->page_size_) {
+      size_t page_size = free_list->first_->page_size_;
+      if (page_size == hdr->page_size_) {
         free_list->second_->enqueue(hdr);
         return;
       }
