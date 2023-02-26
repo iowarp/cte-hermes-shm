@@ -7,6 +7,7 @@ set (EXAMPLES
         allocator
         vector
         list)
+set (EXAMPLES)
 foreach (EXAMPLE ${EXAMPLES})
     add_executable(example_${EXAMPLE}
             ${CMAKE_CURRENT_SOURCE_DIR}/${EXAMPLE}.cc)

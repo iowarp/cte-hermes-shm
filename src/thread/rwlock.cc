@@ -24,17 +24,20 @@ void RwLock::ReadLock() {
   RwLockPayload expected, desired;
   auto thread_info = HERMES_THREAD_MANAGER->GetThreadStatic();
   do {
-    expected.as_int_ = payload_.load();
-    if (expected.IsWriteLocked()) {
-      thread_info->Yield();
-      continue;
+    for (int i = 0; i < US_TO_CLOCKS(8); ++i) {
+      expected.as_int_ = payload_.load();
+      if (expected.IsWriteLocked()) {
+        continue;
+      }
+      desired = expected;
+      desired.bits_.r_ += 1;
+      ret = payload_.compare_exchange_weak(
+        expected.as_int_,
+        desired.as_int_);
+      if (ret) { return; }
     }
-    desired = expected;
-    desired.bits_.r_ += 1;
-    ret = payload_.compare_exchange_weak(
-      expected.as_int_,
-      desired.as_int_);
-  } while (!ret);
+    thread_info->Yield();
+  } while (true);
 }
 
 /**
@@ -61,21 +64,20 @@ void RwLock::WriteLock() {
   RwLockPayload expected, desired;
   auto thread_info = HERMES_THREAD_MANAGER->GetThreadStatic();
   do {
-    expected.as_int_ = payload_.load();
-    if (expected.IsReadLocked()) {
-      thread_info->Yield();
-      continue;
+    for (int i = 0; i < US_TO_CLOCKS(8); ++i) {
+      expected.as_int_ = payload_.load();
+      if (expected.IsReadLocked() || expected.IsWriteLocked()) {
+        continue;
+      }
+      desired = expected;
+      desired.bits_.w_ += 1;
+      ret = payload_.compare_exchange_weak(
+        expected.as_int_,
+        desired.as_int_);
+      if (ret) { return; }
     }
-    if (expected.IsWriteLocked()) {
-      thread_info->Yield();
-      continue;
-    }
-    desired = expected;
-    desired.bits_.w_ += 1;
-    ret = payload_.compare_exchange_weak(
-      expected.as_int_,
-      desired.as_int_);
-  } while (!ret);
+    thread_info->Yield();
+  } while (true);
 }
 
 /**
