@@ -255,6 +255,9 @@ void ScalablePageAllocator::FreeOffsetNoNullCheck(OffsetPointer p) {
   // Get the free list to start from
   uint32_t cpu = NodeThreadId().hash() % HERMES_SYSTEM_INFO->ncpu_;
   uint32_t cpu_start = cpu * num_free_lists_;
+  hipc::ShmRef<pair<FreeListStats, iqueue<MpPage>>> first_free_list =
+    (*free_lists_)[cpu_start];
+  ScopedMutex first_list_lock(first_free_list->first_->lock_);
 
   // Append to small buffer cache free list
   if (hdr->page_size_ <= max_cached_size_) {
@@ -262,7 +265,6 @@ void ScalablePageAllocator::FreeOffsetNoNullCheck(OffsetPointer p) {
       hipc::ShmRef<pair<FreeListStats, iqueue<MpPage>>> free_list =
         (*free_lists_)[cpu_start + i];
       if (free_list->first_->page_size_ == hdr->page_size_) {
-        ScopedMutex list_lock(free_list->first_->lock_);
         free_list->second_->enqueue(hdr);
         return;
       }
@@ -272,7 +274,6 @@ void ScalablePageAllocator::FreeOffsetNoNullCheck(OffsetPointer p) {
   // Append to arbitrary free list
   hipc::ShmRef<pair<FreeListStats, iqueue<MpPage>>> last_free_list =
     (*free_lists_)[cpu_start + num_caches_];
-  ScopedMutex last_list_lock(last_free_list->first_->lock_);
   last_free_list->second_->enqueue(hdr);
 }
 
