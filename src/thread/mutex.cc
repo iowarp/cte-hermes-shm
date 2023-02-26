@@ -55,6 +55,7 @@ void Mutex::Unlock() {
  * */
 ScopedMutex::ScopedMutex(Mutex &lock)
 : lock_(lock), is_locked_(false) {
+  Lock();
 }
 
 /**

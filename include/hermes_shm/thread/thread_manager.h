@@ -21,7 +21,7 @@
 
 namespace hermes {
 
-struct NodeThreadId;
+union NodeThreadId;
 
 class ThreadManager {
  public:
@@ -42,8 +42,8 @@ class ThreadManager {
   }
 };
 
-struct NodeThreadId {
-  union {
+union NodeThreadId {
+  struct {
     uint32_t tid_;
     uint32_t pid_;
   } bits_;

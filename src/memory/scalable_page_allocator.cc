@@ -39,7 +39,8 @@ void ScalablePageAllocator::shm_init(allocator_id_t id,
     for (size_t j = 0; j < num_caches_; ++j) {
       hipc::ShmRef<pair<FreeListStats, iqueue<MpPage>>>
         free_list = (*free_lists_)[i * ncpu + j];
-      free_list->first_->page_size_ = min_cached_size_ * (1 << j);
+      free_list->first_->page_size_ = sizeof(MpPage) +
+        min_cached_size_ * (1 << j);
       free_list->first_->cur_alloc_ = 0;
       free_list->first_->max_alloc_ =
         max_cached_size_ / free_list->first_->page_size_;
@@ -71,6 +72,7 @@ size_t ScalablePageAllocator::RoundUp(size_t num, int &exp) {
   int round;
   for (exp = 0; exp < num_caches_; ++exp) {
     round = 1 << (exp + min_cached_size_exp_);
+    round += sizeof(MpPage);
     if (num < round) {
       return round;
     }
@@ -160,7 +162,7 @@ MpPage *ScalablePageAllocator::CheckCaches(size_t size_mp) {
   hipc::ShmRef<pair<FreeListStats, iqueue<MpPage>>> last_free_list =
     (*free_lists_)[cpu_start + num_caches_];
   ScopedMutex(last_free_list->first_->lock_);
-  page = FindFirstFit(size_mp, last_free_list->second_);
+  page = FindFirstFit(size_mp, last_free_list->first_, last_free_list->second_);
   return page;
 }
 
@@ -195,7 +197,8 @@ void ScalablePageAllocator::DividePage(hipc::ShmRef<FreeListStats> &stats,
   stats->AddAlloc();
 
   // Case 1: The remaining size can't be cached
-  if (rem_size < 32) {
+  if (rem_size < min_cached_size_) {
+    rem_page = nullptr;
     return;
   }
 
