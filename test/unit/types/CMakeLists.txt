@@ -14,4 +14,4 @@ target_link_libraries(test_types
 #        bash ${CMAKE_CURRENT_SOURCE_DIR}/test_connect.sh
 #            ${CMAKE_BINARY_DIR}/labstor_runtime
 #            ${CMAKE_CURRENT_BINARY_DIR}/test_connect_exec
-#            ${CMAKE_SOURCE_DIR}/config/config.yaml)
+#            ${HERMES_SHM_ROOT}/config/config.yaml)

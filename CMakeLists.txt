@@ -3,7 +3,9 @@ project(hermes_shm)
 
 set(CMAKE_CXX_STANDARD 17)
 
-include_directories(${CMAKE_SOURCE_DIR}/include)
+###################GLOBAL VARIABLES
+set(HERMES_SHM_ROOT ${CMAKE_CURRENT_SOURCE_DIR})
+include_directories(${HERMES_SHM_ROOT}/include)
 
 ###################OPTIONS
 option(BUILD_SHARED_LIBS "Build shared libraries (.dll/.so) instead of static ones (.lib/.a)" ON)
@@ -108,11 +110,11 @@ endif()
 
 add_subdirectory(src)
 
-add_custom_target(shm_lint COMMAND bash ${CMAKE_SOURCE_DIR}/scripts/lint.sh ${CMAKE_SOURCE_DIR})
-add_custom_target(shm_preamble COMMAND python3 ${CMAKE_SOURCE_DIR}/scripts/preamble.py ${CMAKE_SOURCE_DIR})
+add_custom_target(shm_lint COMMAND bash ${HERMES_SHM_ROOT}/scripts/lint.sh ${HERMES_SHM_ROOT})
+add_custom_target(shm_preamble COMMAND python3 ${HERMES_SHM_ROOT}/scripts/preamble.py ${HERMES_SHM_ROOT})
 
 ##################MODULES & TESTS
-set(TEST_MAIN ${CMAKE_SOURCE_DIR}/test/unit)
+set(TEST_MAIN ${HERMES_SHM_ROOT}/test/unit)
 enable_testing()
 add_subdirectory(test)
 add_subdirectory(benchmark)
