@@ -43,6 +43,9 @@ size_t StackAllocator::GetCurrentlyAllocatedSize() {
 
 OffsetPointer StackAllocator::AllocateOffset(size_t size) {
   size += sizeof(MpPage);
+  if (header_->region_size_ < size) {
+    return OffsetPointer::GetNull();
+  }
   OffsetPointer p(header_->region_off_.fetch_add(size));
   auto hdr = Convert<MpPage>(p);
   hdr->SetAllocated();

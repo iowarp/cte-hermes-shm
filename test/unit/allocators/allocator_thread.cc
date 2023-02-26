@@ -23,9 +23,10 @@ void MultiThreadedPageAllocationTest(Allocator *alloc) {
 #pragma omp barrier
     PageAllocationTest(alloc);
 #pragma omp barrier
+    // MultiPageAllocationTest(alloc);
+#pragma omp barrier
   }
 }
-
 
 TEST_CASE("StackAllocatorMultithreaded") {
   auto alloc = Pretest<hipc::PosixShmMmap, hipc::StackAllocator>();
@@ -35,19 +36,10 @@ TEST_CASE("StackAllocatorMultithreaded") {
   Posttest();
 }
 
-/*
-TEST_CASE("PageAllocatorMultithreaded") {
-  auto alloc = Pretest<hipc::PosixShmMmap, hipc::PageAllocator>();
+TEST_CASE("ScalablePageAllocatorMultithreaded") {
+  auto alloc = Pretest<hipc::PosixShmMmap, hipc::ScalablePageAllocator>();
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
   MultiThreadedPageAllocationTest(alloc);
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
   Posttest();
 }
-
-TEST_CASE("MultiPageAllocatorMultithreaded") {
-  auto alloc = Pretest<hipc::PosixShmMmap, hipc::MultiPageAllocator>();
-  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
-  MultiThreadedPageAllocationTest(alloc);
-  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
-  Posttest();
-}*/

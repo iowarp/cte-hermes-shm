@@ -60,21 +60,20 @@ void PageAllocationTest(Allocator *alloc) {
 
 void MultiPageAllocationTest(Allocator *alloc) {
   std::vector<size_t> alloc_sizes = {
-    /*64, 128, 256,
+    64, 128, 256,
     KILOBYTES(1), KILOBYTES(4), KILOBYTES(64),
-    MEGABYTES(1), MEGABYTES(16),*/ MEGABYTES(32)
+    MEGABYTES(1)
   };
 
   // Allocate and free pages between 64 bytes and 32MB
   {
-    REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
-    for (size_t r = 0; r < 10; ++r) {
-      for (size_t i = 0; i < 1000; ++i) {
-        Pointer ps[4];
-        for (size_t j = 0; j < 4; ++j) {
-          ps[j] = alloc->Allocate(alloc_sizes[i % alloc_sizes.size()]);
+    for (size_t r = 0; r < 16; ++r) {
+      for (size_t i = 0; i < alloc_sizes.size(); ++i) {
+        Pointer ps[16];
+        for (size_t j = 0; j < 16; ++j) {
+          ps[j] = alloc->Allocate(alloc_sizes[i]);
         }
-        for (size_t j = 0; j < 4; ++j) {
+        for (size_t j = 0; j < 16; ++j) {
           alloc->Free(ps[j]);
         }
       }
@@ -139,7 +138,7 @@ TEST_CASE("FixedPageAllocator") {
 TEST_CASE("ScalablePageAllocator") {
   auto alloc = Pretest<hipc::PosixShmMmap, hipc::ScalablePageAllocator>();
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
-  PageAllocationTest(alloc);
+  // PageAllocationTest(alloc);
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
 
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);

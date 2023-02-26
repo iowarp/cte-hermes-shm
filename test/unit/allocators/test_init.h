@@ -49,5 +49,6 @@ Allocator* Pretest() {
 
 void Posttest();
 void PageAllocationTest(Allocator *alloc);
+void MultiPageAllocationTest(Allocator *alloc);
 
 #endif  // HERMES_TEST_UNIT_ALLOCATORS_TEST_INIT_H_

@@ -94,7 +94,10 @@ OffsetPointer ScalablePageAllocator::AllocateOffset(size_t size) {
 
   // Case 3: Allocate from stack if no page found
   if (page == nullptr){
-    page = alloc_.Convert<MpPage>(alloc_.AllocateOffset(size) - sizeof(MpPage));
+    auto off = alloc_.AllocateOffset(size);
+    if (!off.IsNull()) {
+      page = alloc_.Convert<MpPage>(off - sizeof(MpPage));
+    }
   }
 
   // Case 4: Completely out of memory
