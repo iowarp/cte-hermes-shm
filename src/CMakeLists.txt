@@ -27,3 +27,18 @@ install(
 if(HERMES_ENABLE_COVERAGE)
     set_coverage_flags(hermes_shm_data_structures)
 endif()
+
+#-----------------------------------------------------------------------------
+# Export all exported targets to the build tree for use by parent project
+#-----------------------------------------------------------------------------
+set(HERMES_EXPORTED_LIBS
+        hermes_shm_data_structures
+        ${HERMES_EXPORTED_LIBS})
+if(NOT HERMES_EXTERNALLY_CONFIGURED)
+    EXPORT (
+            TARGETS
+            ${HERMES_EXPORTED_LIBS}
+            FILE
+            ${HERMES_EXPORTED_TARGETS}.cmake
+    )
+endif()
