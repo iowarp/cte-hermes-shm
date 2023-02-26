@@ -405,6 +405,11 @@ class ShmContainerExample {
     return alloc_->Convert<TYPED_HEADER, POINTER_T>(header_);
   }
 
+  /** Get a ShmDeserialize object */
+  hipc::ShmDeserialize<CLASS_NAME> GetShmDeserialize() const {
+    return hipc::ShmDeserialize<CLASS_NAME>(alloc_, header_);
+  }
+
   /**====================================
    * Query Operations
    * ===================================*/

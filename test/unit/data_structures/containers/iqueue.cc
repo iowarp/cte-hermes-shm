@@ -27,6 +27,7 @@ void IqueueTest() {
   test.ForwardIteratorTest();
   test.ConstForwardIteratorTest();
   test.DequeueTest(30);
+  test.DequeueMiddleTest();
   test.EraseTest();
 }
 

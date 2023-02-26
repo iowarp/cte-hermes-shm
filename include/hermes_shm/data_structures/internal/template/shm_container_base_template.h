@@ -20,7 +20,6 @@ header_t *header_; /**< Header of the shared-memory data structure */
 hipc::Allocator *alloc_; /**< hipc::Allocator used for this data structure */
 hermes::bitfield32_t flags_; /**< Flags used data structure status */
 
-public:
 /**====================================
  * Constructors
  * ===================================*/
@@ -344,6 +343,11 @@ bool IsNull() const {
 template<typename POINTER_T>
 POINTER_T GetShmPointer() const {
   return alloc_->Convert<TYPED_HEADER, POINTER_T>(header_);
+}
+
+/** Get a ShmDeserialize object */
+hipc::ShmDeserialize<CLASS_NAME> GetShmDeserialize() const {
+  return hipc::ShmDeserialize<CLASS_NAME>(alloc_, header_);
 }
 
 /**====================================

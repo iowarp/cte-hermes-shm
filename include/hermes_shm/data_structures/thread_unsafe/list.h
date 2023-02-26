@@ -74,11 +74,7 @@ struct list_iterator_templ {
   : entry_(nullptr), entry_ptr_(OffsetPointer::GetNull()) {}
 
   /** Construct an iterator  */
-  explicit list_iterator_templ(TypedPointer<list<T>> list)
-  : list_(list), entry_(nullptr), entry_ptr_(OffsetPointer::GetNull()) {}
-
-  /** Construct an iterator  */
-  explicit list_iterator_templ(TypedPointer<list<T>> list,
+  explicit list_iterator_templ(ShmDeserialize<list<T>> list,
                                list_entry<T> *entry,
                                OffsetPointer entry_ptr)
     : list_(list), entry_(entry), entry_ptr_(entry_ptr) {}
@@ -476,7 +472,7 @@ class list : public ShmContainer {
     if (size() == 0) { return end(); }
     auto head = alloc_->template
       Convert<list_entry<T>>(header_->head_ptr_);
-    return list_iterator<T>(GetShmPointer<TypedPointer<list<T>>>(),
+    return list_iterator<T>(GetShmDeserialize(),
       head, header_->head_ptr_);
   }
 
@@ -490,7 +486,7 @@ class list : public ShmContainer {
     if (size() == 0) { return cend(); }
     auto head = alloc_->template
       Convert<list_entry<T>>(header_->head_ptr_);
-    return list_citerator<T>(GetShmPointer<TypedPointer<list<T>>>(),
+    return list_citerator<T>(GetShmDeserialize(),
       head, header_->head_ptr_);
   }
 

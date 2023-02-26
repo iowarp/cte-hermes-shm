@@ -35,7 +35,7 @@ class IqueueTestSuite {
       hipc::OffsetPointer p;
       auto page = alloc_->template
         AllocateConstructObjs<T>(1, p);
-      page->page_size_ = i;
+      page->page_size_ = count - i - 1;
       obj_.enqueue(page);
     }
     REQUIRE(obj_.size() == count);
@@ -56,22 +56,39 @@ class IqueueTestSuite {
 
   /// Forward iterator
   void ForwardIteratorTest(int count = 30) {
-    int fcur = count - 1;
+    int fcur = 0;
     for (T *page : obj_) {
       REQUIRE(page->page_size_ == fcur);
-      --fcur;
+      ++fcur;
     }
   }
 
   /// Constant Forward iterator
   void ConstForwardIteratorTest(int count = 30) {
     const Container &obj = obj_;
-    int fcur = count - 1;
+    int fcur = 0;
     for (auto iter = obj.cbegin(); iter != obj.cend(); ++iter) {
       T *page = *iter;
       REQUIRE(page->page_size_ == fcur);
-      --fcur;
+      ++fcur;
     }
+  }
+
+  /// Dequeue an element in the middle of the queue
+  void DequeueMiddleTest() {
+    int count = obj_.size();
+    int mid = obj_.size() / 2;
+    auto iter = obj_.begin();
+    for (int i = 0; i < mid; ++i) {
+      ++iter;
+    }
+    auto page = obj_.dequeue(iter);
+    REQUIRE(page->page_size_ == mid);
+    REQUIRE(obj_.size() == count - 1);
+    for (T *page : obj_) {
+      REQUIRE(page->page_size_ != mid);
+    }
+    obj_.enqueue(page);
   }
 
   /// Verify erase

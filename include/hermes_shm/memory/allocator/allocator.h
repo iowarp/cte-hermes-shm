@@ -26,7 +26,8 @@ namespace hermes::ipc {
 enum class AllocatorType {
   kStackAllocator,
   kMallocAllocator,
-  kFixedPageAllocator
+  kFixedPageAllocator,
+  kScalablePageAllocator,
 };
 
 /**

@@ -71,12 +71,8 @@ struct slist_iterator_templ {
   explicit slist_iterator_templ(bool)
   : entry_(nullptr), entry_ptr_(OffsetPointer::GetNull()) {}
 
-  /** Construct an iterator  */
-  explicit slist_iterator_templ(TypedPointer<slist<T>> slist)
-  : slist_(slist), entry_(nullptr), entry_ptr_(OffsetPointer::GetNull()) {}
-
-  /** Construct an iterator  */
-  explicit slist_iterator_templ(TypedPointer<slist<T>> slist,
+  /** Construct an iterator */
+  explicit slist_iterator_templ(ShmDeserialize<slist<T>> slist,
                                slist_entry<T> *entry,
                                OffsetPointer entry_ptr)
     : slist_(slist), entry_(entry), entry_ptr_(entry_ptr) {}
@@ -469,7 +465,7 @@ class slist : public ShmContainer {
     if (size() == 0) { return end(); }
     auto head = alloc_->template
       Convert<slist_entry<T>>(header_->head_ptr_);
-    return slist_iterator<T>(GetShmPointer<TypedPointer<slist<T>>>(),
+    return slist_iterator<T>(GetShmDeserialize(),
       head, header_->head_ptr_);
   }
 
@@ -483,8 +479,8 @@ class slist : public ShmContainer {
     if (size() == 0) { return end(); }
     auto tail = alloc_->template
       Convert<slist_entry<T>>(header_->tail_ptr_);
-    return slist_iterator<T>(GetShmPointer<TypedPointer<slist<T>>>(),
-                             tail, header_->head_ptr_);
+    return slist_iterator<T>(GetShmDeserialize(),
+                             tail, header_->tail_ptr_);
   }
 
   /** Constant forward iterator begin */
@@ -492,7 +488,7 @@ class slist : public ShmContainer {
     if (size() == 0) { return cend(); }
     auto head = alloc_->template
       Convert<slist_entry<T>>(header_->head_ptr_);
-    return slist_citerator<T>(GetShmPointer<TypedPointer<slist<T>>>(),
+    return slist_citerator<T>(GetShmDeserialize(),
       head, header_->head_ptr_);
   }
 

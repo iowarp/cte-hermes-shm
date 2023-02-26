@@ -37,31 +37,26 @@ struct iqueue_iterator_templ {
   hipc::ShmRef<iqueue<T>> iqueue_;
   /**< A pointer to the entry in shared memory */
   iqueue_entry *entry_;
-  /**< The offset of the entry in the shared-memory allocator */
-  OffsetPointer entry_ptr_;
+  /**< A pointer to the entry prior to this one */
+  iqueue_entry *prior_entry_;
 
   /** Default constructor */
   iqueue_iterator_templ() = default;
 
-  /** End iterator */
+  /** Construct end iterator */
   explicit iqueue_iterator_templ(bool)
-  : entry_(nullptr), entry_ptr_(OffsetPointer::GetNull()) {}
+  : entry_(nullptr) {}
 
-  /** Construct an iterator  */
-  explicit iqueue_iterator_templ(TypedPointer<iqueue<T>> iqueue)
-  : iqueue_(iqueue), entry_(nullptr), entry_ptr_(OffsetPointer::GetNull()) {}
-
-  /** Construct an iterator  */
-  explicit iqueue_iterator_templ(TypedPointer<iqueue<T>> iqueue,
-                               iqueue_entry *entry,
-                               OffsetPointer entry_ptr)
-    : iqueue_(iqueue), entry_(entry), entry_ptr_(entry_ptr) {}
+  /** Construct begin iterator  */
+  explicit iqueue_iterator_templ(ShmDeserialize<iqueue<T>> iqueue,
+                                 iqueue_entry *entry)
+    : iqueue_(iqueue), entry_(entry), prior_entry_(nullptr) {}
 
   /** Copy constructor */
   iqueue_iterator_templ(const iqueue_iterator_templ &other) {
     iqueue_ = other.iqueue_;
     entry_ = other.entry_;
-    entry_ptr_ = other.entry_ptr_;
+    prior_entry_ = other.prior_entry_;
   }
 
   /** Assign this iterator from another iterator */
@@ -69,7 +64,7 @@ struct iqueue_iterator_templ {
     if (this != &other) {
       iqueue_ = other.iqueue_;
       entry_ = other.entry_;
-      entry_ptr_ = other.entry_ptr_;
+      prior_entry_ = other.prior_entry_;
     }
     return *this;
   }
@@ -87,7 +82,7 @@ struct iqueue_iterator_templ {
   /** Get the next iterator (in place) */
   iqueue_iterator_templ& operator++() {
     if (is_end()) { return *this; }
-    entry_ptr_ = entry_->next_ptr_;
+    prior_entry_ = entry_;
     entry_ = iqueue_->alloc_->template
       Convert<iqueue_entry>(entry_->next_ptr_);
     return *this;
@@ -113,7 +108,7 @@ struct iqueue_iterator_templ {
   void operator+=(size_t count) {
     iqueue_iterator_templ pos = (*this) + count;
     entry_ = pos.entry_;
-    entry_ptr_ = pos.entry_ptr_;
+    prior_entry_ = pos.prior_entry_;
   }
 
   /** Determine if two iterators are equal */
@@ -142,7 +137,7 @@ struct iqueue_iterator_templ {
   /** Determine whether this iterator is the begin iterator */
   bool is_begin() const {
     if (entry_) {
-      return entry_ptr_ == iqueue_->header_->head_ptr_;
+      return prior_entry_ == nullptr;
     } else {
       return false;
     }
@@ -272,12 +267,25 @@ class iqueue : public ShmContainer {
     ++header_->length_;
   }
 
-  /** Erase all elements between first and last */
+  /** Dequeue the first element */
   T* dequeue() {
     if (size() == 0) { return nullptr; }
     auto entry = alloc_->
       template Convert<iqueue_entry>(header_->head_ptr_);
     header_->head_ptr_ = entry->next_ptr_;
+    --header_->length_;
+    return reinterpret_cast<T*>(entry);
+  }
+
+  /** Dequeue the element at the iterator position */
+  T* dequeue(iqueue_iterator_templ<T> pos) {
+    if (pos.prior_entry_ == nullptr) {
+      return dequeue();
+    }
+    auto entry = *pos;
+    auto prior_cast = reinterpret_cast<iqueue_entry*>(pos.prior_entry_);
+    auto pos_cast = reinterpret_cast<iqueue_entry*>(pos.entry_);
+    prior_cast->next_ptr_ = pos_cast->next_ptr_;
     --header_->length_;
     return reinterpret_cast<T*>(entry);
   }
@@ -314,8 +322,7 @@ class iqueue : public ShmContainer {
     if (size() == 0) { return end(); }
     auto head = alloc_->template
       Convert<iqueue_entry>(header_->head_ptr_);
-    return iqueue_iterator<T>(GetShmPointer<TypedPointer<iqueue<T>>>(),
-      head, header_->head_ptr_);
+    return iqueue_iterator<T>(GetShmDeserialize(), head);
   }
 
   /** Forward iterator end */
@@ -328,22 +335,12 @@ class iqueue : public ShmContainer {
     if (size() == 0) { return cend(); }
     auto head = alloc_->template
       Convert<iqueue_entry>(header_->head_ptr_);
-    return iqueue_citerator<T>(GetShmPointer<TypedPointer<iqueue<T>>>(),
-      head, header_->head_ptr_);
+    return iqueue_citerator<T>(GetShmDeserialize(), head);
   }
 
   /** Constant forward iterator end */
   static iqueue_citerator<T> const cend() {
     return iqueue_citerator<T>::end();
-  }
-
- private:
-  template<typename ...Args>
-  iqueue_entry* _create_entry(OffsetPointer &p, Args&& ...args) {
-    auto entry = alloc_->template
-      AllocateConstructObjs<iqueue_entry>(
-        1, p, alloc_, std::forward<Args>(args)...);
-    return entry;
   }
 };
 
