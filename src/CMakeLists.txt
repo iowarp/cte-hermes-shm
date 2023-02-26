@@ -19,9 +19,13 @@ target_link_libraries(hermes_shm_data_structures
         yaml-cpp pthread -lrt -ldl OpenMP::OpenMP_CXX)
 
 ##################Install hermes
-install(
-        TARGETS hermes_shm_data_structures
-        DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
+install(TARGETS
+        hermes_shm_data_structures
+        EXPORT
+        ${HERMES_EXPORTED_TARGETS}
+        LIBRARY DESTINATION ${HERMES_INSTALL_LIB_DIR}
+        ARCHIVE DESTINATION ${HERMES_INSTALL_LIB_DIR}
+        RUNTIME DESTINATION ${HERMES_INSTALL_BIN_DIR})
 
 ##################COVERAGE
 if(HERMES_ENABLE_COVERAGE)

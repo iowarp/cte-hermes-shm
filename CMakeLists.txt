@@ -17,6 +17,22 @@ option(HERMES_ENABLE_COVERAGE "Check how well tests cover code" ON)
 option(HERMES_ENABLE_DOXYGEN "Check how well the code is documented" ON)
 option(HERMES_CXX_PROFILE "Generate profiling data from benchmarks" OFF)
 
+#------------------------------------------------------------------------------
+# Setup install and output Directories
+#------------------------------------------------------------------------------
+if(NOT HERMES_INSTALL_BIN_DIR)
+    set(HERMES_INSTALL_BIN_DIR ${CMAKE_INSTALL_PREFIX}/bin)
+endif()
+if(NOT HERMES_INSTALL_LIB_DIR)
+    set(HERMES_INSTALL_LIB_DIR ${CMAKE_INSTALL_PREFIX}/lib)
+endif()
+if(NOT HERMES_INSTALL_INCLUDE_DIR)
+    set(HERMES_INSTALL_INCLUDE_DIR ${CMAKE_INSTALL_PREFIX}/include)
+endif()
+if(NOT HERMES_INSTALL_DATA_DIR)
+    set(HERMES_INSTALL_DATA_DIR ${CMAKE_INSTALL_PREFIX}/share)
+endif()
+
 ##################CMAKE MODULES
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/CMake)
 
