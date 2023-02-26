@@ -108,8 +108,8 @@ endif()
 
 add_subdirectory(src)
 
-add_custom_target(lint COMMAND bash ${CMAKE_SOURCE_DIR}/scripts/lint.sh ${CMAKE_SOURCE_DIR})
-add_custom_target(preamble COMMAND python3 ${CMAKE_SOURCE_DIR}/scripts/preamble.py ${CMAKE_SOURCE_DIR})
+add_custom_target(shm_lint COMMAND bash ${CMAKE_SOURCE_DIR}/scripts/lint.sh ${CMAKE_SOURCE_DIR})
+add_custom_target(shm_preamble COMMAND python3 ${CMAKE_SOURCE_DIR}/scripts/preamble.py ${CMAKE_SOURCE_DIR})
 
 ##################MODULES & TESTS
 set(TEST_MAIN ${CMAKE_SOURCE_DIR}/test/unit)
