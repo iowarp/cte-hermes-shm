@@ -36,11 +36,12 @@ void ScalablePageAllocator::shm_init(allocator_id_t id,
   size_t ncpu = HERMES_SYSTEM_INFO->ncpu_;
   free_lists_->resize(ncpu * num_free_lists_);
   for (size_t i = 0; i < HERMES_SYSTEM_INFO->ncpu_; ++i) {
-    for (size_t j = 0; j < num_caches_; ++j) {
+    for (size_t j = 0; j < num_free_lists_; ++j) {
       hipc::ShmRef<pair<FreeListStats, iqueue<MpPage>>>
         free_list = (*free_lists_)[i * ncpu + j];
       free_list->first_->page_size_ = sizeof(MpPage) +
         min_cached_size_ * (1 << j);
+      free_list->first_->lock_.Init();
       free_list->first_->cur_alloc_ = 0;
       free_list->first_->max_alloc_ =
         max_cached_size_ / free_list->first_->page_size_;
@@ -115,8 +116,12 @@ OffsetPointer ScalablePageAllocator::AllocateOffset(size_t size) {
 MpPage *ScalablePageAllocator::CheckCaches(size_t size_mp) {
   MpPage *page;
   ScopedRwReadLock coalesce_lock(header_->coalesce_lock_);
-  uint32_t cpu = NodeThreadId().as_int_ % HERMES_SYSTEM_INFO->ncpu_;
+  auto node_id = NodeThreadId();
+  uint32_t cpu = NodeThreadId().hash() % HERMES_SYSTEM_INFO->ncpu_;
   uint32_t cpu_start = cpu * num_free_lists_;
+  hipc::ShmRef<pair<FreeListStats, iqueue<MpPage>>> first_free_list =
+    (*free_lists_)[cpu_start];
+  ScopedMutex first_list_lock(first_free_list->first_->lock_);
 
   // Check the small buffer caches
   if (size_mp <= max_cached_size_) {
@@ -125,7 +130,6 @@ MpPage *ScalablePageAllocator::CheckCaches(size_t size_mp) {
     size_mp = RoundUp(size_mp, exp);
     hipc::ShmRef<pair<FreeListStats, iqueue<MpPage>>> free_list =
       (*free_lists_)[cpu_start + exp];
-    ScopedMutex(free_list->first_->lock_);
     if (free_list->second_->size()) {
       MpPage *rem_page;
       page = free_list->second_->dequeue();
@@ -140,8 +144,7 @@ MpPage *ScalablePageAllocator::CheckCaches(size_t size_mp) {
     // Check all upper buffer caches
     for (int i = exp + 1; i < num_caches_; ++i) {
       hipc::ShmRef<pair<FreeListStats, iqueue<MpPage>>> high_free_list =
-        (*free_lists_)[cpu_start + exp];
-      ScopedMutex(high_free_list->first_->lock_);
+        (*free_lists_)[cpu_start + i];
       if (high_free_list->second_->size()) {
         MpPage *rem_page;
         page = high_free_list->second_->dequeue();
@@ -153,7 +156,6 @@ MpPage *ScalablePageAllocator::CheckCaches(size_t size_mp) {
         if (rem_page) {
           hipc::ShmRef<pair<FreeListStats, iqueue<MpPage>>> last_free_list =
             (*free_lists_)[cpu_start + num_caches_];
-          ScopedMutex(last_free_list->first_->lock_);
           last_free_list->second_->enqueue(rem_page);
         }
         return page;
@@ -164,7 +166,6 @@ MpPage *ScalablePageAllocator::CheckCaches(size_t size_mp) {
   // Check the arbitrary buffer cache
   hipc::ShmRef<pair<FreeListStats, iqueue<MpPage>>> last_free_list =
     (*free_lists_)[cpu_start + num_caches_];
-  ScopedMutex(last_free_list->first_->lock_);
   page = FindFirstFit(size_mp, last_free_list->first_, last_free_list->second_);
   return page;
 }
@@ -252,7 +253,7 @@ void ScalablePageAllocator::FreeOffsetNoNullCheck(OffsetPointer p) {
   header_->total_alloc_.fetch_sub(hdr->page_size_);
 
   // Get the free list to start from
-  uint32_t cpu = NodeThreadId().as_int_ % HERMES_SYSTEM_INFO->ncpu_;
+  uint32_t cpu = NodeThreadId().hash() % HERMES_SYSTEM_INFO->ncpu_;
   uint32_t cpu_start = cpu * num_free_lists_;
 
   // Append to small buffer cache free list
@@ -271,7 +272,7 @@ void ScalablePageAllocator::FreeOffsetNoNullCheck(OffsetPointer p) {
   // Append to arbitrary free list
   hipc::ShmRef<pair<FreeListStats, iqueue<MpPage>>> last_free_list =
     (*free_lists_)[cpu_start + num_caches_];
-  ScopedMutex(last_free_list->first_->lock_);
+  ScopedMutex last_list_lock(last_free_list->first_->lock_);
   last_free_list->second_->enqueue(hdr);
 }
 

@@ -54,10 +54,10 @@ if(BUILD_MPI_TESTS)
 endif()
 
 # OpenMP
-if(BUILD_OpenMP_TESTS)
-    find_package(OpenMP REQUIRED COMPONENTS C CXX)
-    message(STATUS "found omp.h at ${OpenMP_CXX_INCLUDE_DIRS}")
-endif()
+#if(BUILD_OpenMP_TESTS)
+find_package(OpenMP REQUIRED COMPONENTS C CXX)
+message(STATUS "found omp.h at ${OpenMP_CXX_INCLUDE_DIRS}")
+#endif()
 
 # thallium
 if(HERMES_RPC_THALLIUM)

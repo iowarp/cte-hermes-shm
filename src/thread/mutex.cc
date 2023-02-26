@@ -21,9 +21,10 @@ namespace hermes {
  * */
 void Mutex::Lock() {
   auto thread_info = HERMES_THREAD_MANAGER->GetThreadStatic();
-  while (!TryLock()) {
-    thread_info->Yield();
+  for (int i = 0; i < US_TO_CLOCKS(16); ++i) {
+    if (TryLock()) { return; }
   }
+  thread_info->Yield();
 }
 
 /**

@@ -19,6 +19,8 @@
 #include <hermes_shm/constants/data_structure_singleton_macros.h>
 #include <hermes_shm/introspect/system_info.h>
 
+#define US_TO_CLOCKS(x) (x * 56)
+
 namespace hermes {
 
 union NodeThreadId;
@@ -52,6 +54,10 @@ union NodeThreadId {
   NodeThreadId() {
     bits_.tid_ = HERMES_THREAD_MANAGER->GetThreadStatic()->GetTid();
     bits_.pid_ = HERMES_SYSTEM_INFO->pid_;
+  }
+
+  uint32_t hash() {
+    return as_int_;
   }
 };
 

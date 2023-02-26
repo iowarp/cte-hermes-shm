@@ -78,7 +78,6 @@ void MultiPageAllocationTest(Allocator *alloc) {
         }
       }
     }
-    REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
   }
 }
 

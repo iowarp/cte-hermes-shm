@@ -3,3 +3,4 @@ project(hermes_shm)
 
 add_subdirectory(data_structure)
 add_subdirectory(allocator)
+add_subdirectory(lock)

@@ -16,6 +16,7 @@
 #include "thread.h"
 #include <errno.h>
 #include <hermes_shm/util/errors.h>
+#include <omp.h>
 
 namespace hermes {
 
@@ -91,7 +92,8 @@ class PthreadStatic : public ThreadStatic {
   }
 
   tid_t GetTid() override {
-    return static_cast<tid_t>(pthread_self());
+    return omp_get_thread_num();
+    // return static_cast<tid_t>(pthread_self());
   }
 };
 
