@@ -27,7 +27,20 @@ namespace hermes::ipc {
 
 struct FreeListStats {
   size_t page_size_;  /**< Page size stored in this free list */
-  size_t count_;      /**< Number of allocations before coalesce */
+  size_t cur_alloc_;  /**< Number of pages currently allocated */
+  size_t max_alloc_;  /**< Maximum number of pages allocated at a time */
+  Mutex lock_;        /**< The enqueue / dequeue lock */
+
+  void AddAlloc() {
+    cur_alloc_ += 1;
+    if (cur_alloc_ > max_alloc_) {
+      max_alloc_ += 1;
+    }
+  }
+
+  void AddFree() {
+    cur_alloc_ -= 1;
+  }
 };
 
 struct ScalablePageAllocatorHeader : public AllocatorHeader {
@@ -61,16 +74,21 @@ class ScalablePageAllocator : public Allocator {
   ScalablePageAllocatorHeader *header_;
   hipc::ShmRef<vector<pair<FreeListStats, iqueue<MpPage>>>> free_lists_;
   StackAllocator alloc_;
+  /** The power-of-two exponent of the minimum size that can be cached */
+  static const size_t min_cached_size_exp_ = 5;
+  /** The minimum size that can be cached directly (32 bytes) */
+  static const size_t min_cached_size_ = (1 << min_cached_size_exp_);
+  /** The power-of-two exponent of the minimum size that can be cached */
+  static const size_t max_cached_size_exp_ = 14;
+  /** The maximum size that can be cached directly (16KB) */
+  static const size_t max_cached_size_ = (1 << max_cached_size_exp_);
+  /** Cache every size between 16 (2^4) BYTES and 16KB (2^14): (11 entries) */
+  static const size_t num_caches_ = 14 - 5 + 1;
   /**
-   * Cache every size between 16 (2^4) BYTES and 16KB (2^14): (11 entries)
+   * The last free list stores sizes larger than 16KB or sizes which are
+   * not exactly powers-of-two.
    * */
-  static const size_t num_caches_ = 11;
-  /**
-   * Cache every size between 16 (2^4) BYTES and 16KB (2^14): (11 entries)
-   * Store every size larger than 16KB exactly in a free list. (1 entry)
-   * Total of 12 entries.
-   * */
-  static const size_t num_free_lists_ = 12;
+  static const size_t num_free_lists_ = num_caches_ + 1;
 
  public:
   /**
@@ -108,6 +126,30 @@ class ScalablePageAllocator : public Allocator {
    * */
   OffsetPointer AllocateOffset(size_t size) override;
 
+ private:
+
+  /** Check if a cached page can be re-used */
+  MpPage *CheckCaches(size_t size_mp);
+
+  /**
+   * Find the first fit of an element in a free list
+   * */
+  MpPage* FindFirstFit(size_t size_mp,
+                       hipc::ShmRef<FreeListStats> &stats,
+                       hipc::ShmRef<iqueue<MpPage>> &free_list);
+
+  /**
+   * Divide a page into smaller pages and cache them
+   * */
+  void DividePage(hipc::ShmRef<FreeListStats> &stats,
+                  hipc::ShmRef<iqueue<MpPage>> &free_list,
+                  MpPage *fit_page,
+                  MpPage *&rem_page,
+                  size_t size_mp,
+                  size_t max_divide);
+
+
+ public:
   /**
    * Allocate a memory of \a size size, which is aligned to \a
    * alignment.

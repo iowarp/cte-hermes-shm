@@ -18,6 +18,7 @@
 #include "stack_allocator.h"
 #include "malloc_allocator.h"
 #include "fixed_page_allocator.h"
+#include "scalable_page_allocator.h"
 
 namespace hermes::ipc {
 
@@ -58,6 +59,15 @@ class AllocatorFactory {
                       backend->data_size_,
                       std::forward<Args>(args)...);
       return alloc;
+    } else if constexpr(std::is_same_v<ScalablePageAllocator, AllocT>) {
+      // Scalable Page Allocator
+      auto alloc = std::make_unique<ScalablePageAllocator>();
+      alloc->shm_init(alloc_id,
+                      custom_header_size,
+                      backend->data_,
+                      backend->data_size_,
+                      std::forward<Args>(args)...);
+      return alloc;
     } else {
       // Default
       throw std::logic_error("Not a valid allocator");
@@ -87,6 +97,13 @@ class AllocatorFactory {
       // Fixed Page Allocator
       case AllocatorType::kFixedPageAllocator: {
         auto alloc = std::make_unique<FixedPageAllocator>();
+        alloc->shm_deserialize(backend->data_,
+                               backend->data_size_);
+        return alloc;
+      }
+      // Scalable Page Allocator
+      case AllocatorType::kScalablePageAllocator: {
+        auto alloc = std::make_unique<ScalablePageAllocator>();
         alloc->shm_deserialize(backend->data_,
                                backend->data_size_);
         return alloc;
