@@ -50,8 +50,6 @@ void ScalablePageAllocator::shm_init(allocator_id_t id,
       }
     }
   }
-  // NOTE(llogan): needed in order to initialize Thread singleton
-  auto node_id = NodeThreadId();
 }
 
 void ScalablePageAllocator::shm_deserialize(char *buffer,
