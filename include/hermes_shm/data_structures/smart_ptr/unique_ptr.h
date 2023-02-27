@@ -80,6 +80,11 @@ class unique_ptr : public ShmSmartPtr<T> {
     obj_.shm_deserialize(ar);
   }
 
+  /** Constructor. From a ShmDeserialize. */
+  explicit unique_ptr(const ShmDeserialize<T> &ar) {
+    obj_.shm_deserialize(ar);
+  }
+
   /** Serialize into a TypedPointer<unique_ptr> */
   SHM_SERIALIZE_DESERIALIZE_WRAPPER(unique_ptr)
 };
