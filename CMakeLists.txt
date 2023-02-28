@@ -132,8 +132,10 @@ endif()
 
 add_subdirectory(src)
 
-add_custom_target(shm_lint COMMAND bash ${HERMES_SHM_ROOT}/scripts/lint.sh ${HERMES_SHM_ROOT})
-add_custom_target(shm_preamble COMMAND python3 ${HERMES_SHM_ROOT}/scripts/preamble.py ${HERMES_SHM_ROOT})
+if (NOT IS_HERMES_MAIN)
+    add_custom_target(lint COMMAND bash ${HERMES_SHM_ROOT}/scripts/lint.sh ${HERMES_SHM_ROOT})
+    add_custom_target(preamble COMMAND python3 ${HERMES_SHM_ROOT}/scripts/preamble.py ${HERMES_SHM_ROOT})
+endif()
 
 ##################MODULES & TESTS
 set(TEST_MAIN ${HERMES_SHM_ROOT}/test/unit)
