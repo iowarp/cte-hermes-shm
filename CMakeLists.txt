@@ -12,7 +12,6 @@ option(BUILD_SHARED_LIBS "Build shared libraries (.dll/.so) instead of static on
 option(BUILD_MPI_TESTS "Build tests which depend on MPI" ON)
 option(BUILD_OpenMP_TESTS "Build tests which depend on OpenMP" ON)
 option(BUILD_Boost_TESTS "Build tests which depend on libboost" ON)
-option(HERMES_RPC_THALLIUM "Enable compatability for mochi" ON)
 option(HERMES_ENABLE_COVERAGE "Check how well tests cover code" ON)
 option(HERMES_ENABLE_DOXYGEN "Check how well the code is documented" ON)
 option(HERMES_CXX_PROFILE "Generate profiling data from benchmarks" OFF)
@@ -34,7 +33,10 @@ if(NOT HERMES_INSTALL_DATA_DIR)
 endif()
 
 ##################CMAKE MODULES
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/CMake)
+if (NOT IS_HERMES_MAIN)
+    set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/CMake)
+    message(${CMAKE_MODULE_PATH})
+endif()
 
 ##################OPTIMIZATION
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
@@ -109,10 +111,10 @@ if (NOT IS_HERMES_MAIN)
 endif()
 
 ##################DOCUMENTATION
+
 if (NOT IS_HERMES_MAIN)
     if(HERMES_ENABLE_DOXYGEN)
         include(UseDoxygenDoc)
-
         add_doxygen_doc(
                 BUILD_DIR
                 ${CMAKE_CURRENT_BINARY_DIR}/_build
