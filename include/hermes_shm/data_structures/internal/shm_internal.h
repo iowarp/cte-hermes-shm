@@ -11,8 +11,8 @@
 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 
-#ifndef HERMES_SHM_INCLUDE_HERMES_SHM_DATA_STRUCTURES_INTERNAL_SHM_INTERNAL_H_
-#define HERMES_SHM_INCLUDE_HERMES_SHM_DATA_STRUCTURES_INTERNAL_SHM_INTERNAL_H_
+#ifndef HERMES_HERMES_SHM_DATA_STRUCTURES_INTERNAL_SHM_INTERNAL_H_
+#define HERMES_HERMES_SHM_DATA_STRUCTURES_INTERNAL_SHM_INTERNAL_H_
 
 #include "shm_archive.h"
 #include "shm_container.h"
@@ -21,4 +21,4 @@
 #include "shm_container.h"
 #include "shm_archive_or_t.h"
 
-#endif  // HERMES_SHM_INCLUDE_HERMES_SHM_DATA_STRUCTURES_INTERNAL_SHM_INTERNAL_H_
+#endif  // HERMES_HERMES_SHM_DATA_STRUCTURES_INTERNAL_SHM_INTERNAL_H_
