@@ -35,14 +35,14 @@ jobs:
         uses: actions/setup-python@v1
 
       - name: Run cpplint
-        run: pip install cpplint==1.5.4 && bash ci/lint.sh `pwd`
+        run: pip install cpplint==1.5.4 && bash scripts/ci/lint.sh `pwd`
 
       - name: Cache Spack packages
         uses: actions/cache@v2
         id: spack-cache
         with:
           path: ~/${{ env.LOCAL }}
-          key: ${{ runner.os }}-${{ hashFiles('ci/**') }}
+          key: ${{ runner.os }}-${{ hashFiles('scripts/ci/**') }}
 
       - name: Install APT Dependencies
         run: |
@@ -58,10 +58,10 @@ jobs:
 
       - name: Build And Install Dependencies
         if: steps.spack-cache.outputs.cache-hit != 'true'
-        run: ci/install_deps.sh
+        run: scripts/ci/install_deps.sh
 
       - name: Build and Test
-        run: ci/install_hshm.sh
+        run: scripts/ci/install_hshm.sh
 
       - name: Install
         run: pushd build && make install && popd
