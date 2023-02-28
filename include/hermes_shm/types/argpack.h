@@ -82,7 +82,7 @@ struct ArgPack {
   static constexpr const size_t size_ = sizeof...(Args);
 
   /** General Constructor. */
-  ArgPack(Args&& ...args)
+  ArgPack(Args&& ...args)  // NOLINT
   : recur_(std::forward<Args>(args)...) {}
 
   /** Get forward reference */
