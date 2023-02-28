@@ -44,10 +44,10 @@ jobs:
 
       - name: Build And Install Dependencies
         if: steps.spack-cache.outputs.cache-hit != 'true'
-        run: scripts/ci/install_deps.sh
+        run: bash scripts/ci/install_deps.sh
 
       - name: Build and Test
-        run: scripts/ci/install_docs.sh
+        run: bash scripts/ci/install_docs.sh
 
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
