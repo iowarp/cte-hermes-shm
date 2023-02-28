@@ -10,7 +10,7 @@ class HermesShm(CMakePackage):
     depends_on('glog@0.4:')
     depends_on('yaml-cpp')
     depends_on('boost@1.7:')
-    depends_on('doxygen@1.9.5')
+    depends_on('doxygen@1.9.3')
 
     def cmake_args(self):
         return []
