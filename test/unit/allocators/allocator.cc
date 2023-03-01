@@ -91,7 +91,7 @@ void ReallocationTest(Allocator *alloc) {
   for (auto &[small_size, large_size] : sizes) {
     Pointer p;
     char *ptr = alloc->AllocatePtr<char>(small_size, p);
-    memset(ptr, 10, KILOBYTES(4));
+    memset(ptr, 10, small_size);
     char *new_ptr = alloc->ReallocatePtr<char>(p, large_size);
     for (size_t i = 0; i < small_size; ++i) {
       REQUIRE(ptr[i] == 10);
