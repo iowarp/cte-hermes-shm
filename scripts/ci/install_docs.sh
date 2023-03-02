@@ -1,11 +1,11 @@
 #!/bin/bash
 
-# set -x
-# set -e
-# set -o pipefail
+# CD into git workspace
+cd ${GITHUB_WORKSPACE}
 
+# Make build directory
 mkdir build
-pushd build
+cd build
 
 INSTALL_PREFIX="${HOME}/${LOCAL}"
 
@@ -25,5 +25,3 @@ make dox >& out.txt
 rec="$( grep warning build/out.txt | grep -v "ignoring unsupported tag" |  wc -l )"
 echo "$rec"
 exit "$rec"
-
-popd
