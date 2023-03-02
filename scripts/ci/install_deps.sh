@@ -25,7 +25,8 @@ cd ${SPACK_DIR}
 git checkout v${SPACK_VERSION}
 
 set +x
-. ${SPACK_DIR}/share/spack/setup-env.sh
+echo ". ${SPACK_DIR}/share/spack/setup-env.sh" >> ${HOME}/.bashrc
+source ${HOME}/.bashrc
 set -x
 
 # This will allow Spack to skip building some packages that are directly
