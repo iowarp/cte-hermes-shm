@@ -20,7 +20,6 @@ mkdir -p ${INSTALL_DIR}
 git clone https://github.com/spack/spack ${SPACK_DIR}
 pushd ${SPACK_DIR}
 git checkout v${SPACK_VERSION}
-popd
 
 set +x
 . ${SPACK_DIR}/share/spack/setup-env.sh
@@ -34,7 +33,4 @@ cp scripts/ci/packages.yaml ${SPACK_DIR}/etc/spack/packages.yaml
 # Install hermes_shm (needed for dependencies)
 spack repo add scripts/hermes_shm
 spack install hermes_shm
-
-popd
-popd
 popd

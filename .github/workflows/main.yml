@@ -64,7 +64,7 @@ jobs:
         run: bash scripts/ci/install_hshm.sh
 
       - name: Install
-        run: pushd build && make install && popd
+        run: cd build && make install
 
       - name: Generate coverage file
         run: |
