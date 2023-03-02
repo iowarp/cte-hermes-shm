@@ -19,14 +19,15 @@ SPACK_VERSION=0.18.1
 echo "Installing dependencies at ${INSTALL_DIR}"
 mkdir -p ${INSTALL_DIR}
 
-# Spack
+# Load Spack
 git clone https://github.com/spack/spack ${SPACK_DIR}
 cd ${SPACK_DIR}
 git checkout v${SPACK_VERSION}
 
+# Set spack env
 set +x
-echo ". ${SPACK_DIR}/share/spack/setup-env.sh" >> ${HOME}/.bashrc
-source ${HOME}/.bashrc
+SPACK_DIR=${INSTALL_DIR}/spack
+. ${SPACK_DIR}/share/spack/setup-env.sh
 set -x
 
 # This will allow Spack to skip building some packages that are directly

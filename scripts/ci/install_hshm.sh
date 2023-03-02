@@ -3,6 +3,12 @@
 # CD into git workspace
 cd ${GITHUB_WORKSPACE}
 
+# Set spack env
+set +x
+SPACK_DIR=${INSTALL_DIR}/spack
+. ${SPACK_DIR}/share/spack/setup-env.sh
+set -x
+
 set -x
 set -e
 set -o pipefail
