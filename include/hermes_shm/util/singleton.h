@@ -10,8 +10,8 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef SCS_SINGLETON_H
-#define SCS_SINGLETON_H
+#ifndef HERMES_SHM_SINGLETON_H
+#define HERMES_SHM_SINGLETON_H
 
 #include <memory>
 #include "hermes_shm/thread/lock/mutex.h"
@@ -43,6 +43,12 @@ class Singleton {
     return obj_.get();
   }
 };
+#define DEFINE_SINGLETON_CC(T)\
+  template<> std::unique_ptr<T>\
+    hermes_shm::Singleton<T>::obj_ = nullptr;\
+  template<> hermes_shm::Mutex\
+    hermes_shm::Singleton<T>::lock_ =\
+    hermes_shm::Mutex();
 
 /**
  * Makes a singleton. Constructs during initialization of program.
@@ -58,6 +64,9 @@ class GlobalSingleton {
     return &obj_;
   }
 };
+#define DEFINE_GLOBAL_SINGLETON_CC(T)\
+  template<> T\
+    hermes_shm::GlobalSingleton<T>::obj_ = T();
 
 /**
  * A class to represent singleton pattern
@@ -106,6 +115,6 @@ class EasyGlobalSingleton {
 template <typename T>
 T EasyGlobalSingleton<T>::obj_;
 
-}  // namespace scs
+}  // namespace hermes_shm
 
-#endif  // SCS_SINGLETON_H
+#endif  // HERMES_SHM_SINGLETON_H
