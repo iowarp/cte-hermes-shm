@@ -26,7 +26,7 @@ void Mutex::Lock() {
       if (TryLock()) { return; }
     }
     thread_info->Yield();
-  } while(true);
+  } while (true);
 }
 
 /**

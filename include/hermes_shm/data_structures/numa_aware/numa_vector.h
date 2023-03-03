@@ -15,4 +15,4 @@
 
 #include "hermes_shm/data_structures/internal/shm_internal.h"
 
-#endif //HERMES_SHM_INCLUDE_HERMES_SHM_DATA_STRUCTURES_NUMA_AWARE_VECTOR_H_
+#endif  // HERMES_SHM_INCLUDE_HERMES_SHM_DATA_STRUCTURES_NUMA_AWARE_VECTOR_H_

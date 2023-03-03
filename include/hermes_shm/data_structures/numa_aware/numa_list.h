@@ -42,7 +42,7 @@ template<typename T>
 class numa_list : public ShmContainer {
  public:
   SHM_CONTAINER_TEMPLATE((CLASS_NAME), (TYPED_CLASS), (TYPED_HEADER))
-  
+
  public:
   /**====================================
    * Shm Overrides
@@ -164,6 +164,6 @@ class numa_list : public ShmContainer {
   static list_citerator<T> const cend() {
   }
 };
-}  // namespace hermes_shm::ipc::numa
+}  // namespace hermes_shm::ipc
 
-#endif //HERMES_SHM_INCLUDE_HERMES_SHM_DATA_STRUCTURES_NUMA_AWARE_LIST_H_
+#endif  // HERMES_SHM_INCLUDE_HERMES_SHM_DATA_STRUCTURES_NUMA_AWARE_LIST_H_
