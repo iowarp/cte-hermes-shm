@@ -97,6 +97,8 @@ class EasySingleton {
 };
 template <typename T>
 std::unique_ptr<T> EasySingleton<T>::obj_ = nullptr;
+template <typename T>
+hermes_shm::Mutex EasySingleton<T>::lock_ = hermes_shm::Mutex();
 
 /**
  * Makes a singleton. Constructs during initialization of program.
