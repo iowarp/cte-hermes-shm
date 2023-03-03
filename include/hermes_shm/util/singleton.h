@@ -16,7 +16,7 @@
 #include <memory>
 #include "hermes_shm/thread/lock/mutex.h"
 
-namespace scs {
+namespace hermes_shm {
 
 /**
  * Makes a singleton. Constructs the first time GetInstance is called.
