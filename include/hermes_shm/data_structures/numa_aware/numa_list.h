@@ -31,7 +31,7 @@ class ShmHeader;
 
 template<typename T>
 class ShmHeader<numa_list<T>> : public hipc::ShmBaseHeader {
-  ShmArchiveOrT<vector<list<T>>> numa_lists_;
+  ShmArchive<vector<list<T>>> numa_lists_;
 
   explicit ShmHeader(Allocator *alloc, int num_numa) {
     numa_lists_.shm_init(alloc, num_numa);

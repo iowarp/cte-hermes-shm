@@ -44,7 +44,7 @@ struct FreeListStats {
 };
 
 struct ScalablePageAllocatorHeader : public AllocatorHeader {
-  ShmArchiveOrT<vector<pair<FreeListStats, iqueue<MpPage>>>> free_lists_;
+  ShmArchive<vector<pair<FreeListStats, iqueue<MpPage>>>> free_lists_;
   std::atomic<size_t> total_alloc_;
   size_t coalesce_trigger_;
   size_t coalesce_window_;

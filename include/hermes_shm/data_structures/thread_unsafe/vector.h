@@ -432,7 +432,7 @@ class vector : public ShmContainer {
 
   /** Index the vector at position i */
   hipc::ShmRef<T> operator[](const size_t i) {
-    ShmArchiveOrT<T> *vec = data_ar();
+    ShmArchive<T> *vec = data_ar();
     return hipc::ShmRef<T>(vec[i].internal_ref(alloc_));
   }
 
@@ -448,14 +448,14 @@ class vector : public ShmContainer {
 
   /** Index the vector at position i */
   const hipc::ShmRef<T> operator[](const size_t i) const {
-    ShmArchiveOrT<T> *vec = data_ar_const();
+    ShmArchive<T> *vec = data_ar_const();
     return hipc::ShmRef<T>(vec[i].internal_ref(alloc_));
   }
 
   /** Construct an element at the back of the vector */
   template<typename... Args>
   void emplace_back(Args&& ...args) {
-    ShmArchiveOrT<T> *vec = data_ar();
+    ShmArchive<T> *vec = data_ar();
     if (header_->length_ == header_->max_length_) {
       vec = grow_vector(vec, 0, false);
     }
@@ -476,7 +476,7 @@ class vector : public ShmContainer {
       emplace_back(std::forward<Args>(args)...);
       return;
     }
-    ShmArchiveOrT<T> *vec = data_ar();
+    ShmArchive<T> *vec = data_ar();
     if (header_->length_ == header_->max_length_) {
       vec = grow_vector(vec, 0, false);
     }
@@ -541,17 +541,17 @@ class vector : public ShmContainer {
   /**
    * Retreives a pointer to the array from the process-independent pointer.
    * */
-  ShmArchiveOrT<T>* data_ar() {
+  ShmArchive<T>* data_ar() {
     return alloc_->template
-      Convert<ShmArchiveOrT<T>>(header_->vec_ptr_);
+      Convert<ShmArchive<T>>(header_->vec_ptr_);
   }
 
   /**
    * Retreives a pointer to the array from the process-independent pointer.
    * */
-  ShmArchiveOrT<T>* data_ar_const() const {
+  ShmArchive<T>* data_ar_const() const {
     return alloc_->template
-      Convert<ShmArchiveOrT<T>>(header_->vec_ptr_);
+      Convert<ShmArchive<T>>(header_->vec_ptr_);
   }
 
  private:
@@ -564,7 +564,7 @@ class vector : public ShmContainer {
    * @param args the arguments used to construct the elements of the vector
    * */
   template<typename ...Args>
-  ShmArchiveOrT<T>* grow_vector(ShmArchiveOrT<T> *vec, size_t max_length,
+  ShmArchive<T>* grow_vector(ShmArchive<T> *vec, size_t max_length,
                                    bool resize, Args&& ...args) {
     // Grow vector by 25%
     if (max_length == 0) {
@@ -578,16 +578,16 @@ class vector : public ShmContainer {
     }
 
     // Allocate new shared-memory vec
-    ShmArchiveOrT<T> *new_vec;
+    ShmArchive<T> *new_vec;
     if constexpr(std::is_pod<T>() || IS_SHM_ARCHIVEABLE(T)) {
       // Use reallocate for well-behaved objects
       new_vec = alloc_->template
-        ReallocateObjs<ShmArchiveOrT<T>>(header_->vec_ptr_, max_length);
+        ReallocateObjs<ShmArchive<T>>(header_->vec_ptr_, max_length);
     } else {
       // Use std::move for unpredictable objects
       Pointer new_p;
       new_vec = alloc_->template
-        AllocateObjs<ShmArchiveOrT<T>>(max_length, new_p);
+        AllocateObjs<ShmArchive<T>>(max_length, new_p);
       for (size_t i = 0; i < header_->length_; ++i) {
         hipc::ShmRef<T> old = (*this)[i];
         new_vec[i].shm_init(alloc_, std::move(*old));
@@ -599,7 +599,7 @@ class vector : public ShmContainer {
     }
     if (new_vec == nullptr) {
       throw OUT_OF_MEMORY.format("vector::emplace_back",
-                                 max_length*sizeof(ShmArchiveOrT<T>));
+                                 max_length*sizeof(ShmArchive<T>));
     }
     if (resize) {
       for (size_t i = header_->length_; i < max_length; ++i) {
@@ -621,14 +621,14 @@ class vector : public ShmContainer {
    * @param count the amount to shift left by
    * */
   void shift_left(const vector_iterator<T> pos, int count = 1) {
-    ShmArchiveOrT<T> *vec = data_ar();
+    ShmArchive<T> *vec = data_ar();
     for (int i = 0; i < count; ++i) {
       vec[pos.i_ + i].shm_destroy(alloc_);
     }
     auto dst = vec + pos.i_;
     auto src = dst + count;
     for (auto i = pos.i_ + count; i < size(); ++i) {
-      memcpy(dst, src, sizeof(ShmArchiveOrT<T>));
+      memcpy(dst, src, sizeof(ShmArchive<T>));
       dst += 1; src += 1;
     }
   }
@@ -646,7 +646,7 @@ class vector : public ShmContainer {
     auto dst = src + count;
     auto sz = static_cast<off64_t>(size());
     for (auto i = sz - 1; i >= pos.i_; --i) {
-      memcpy(dst, src, sizeof(ShmArchiveOrT<T>));
+      memcpy(dst, src, sizeof(ShmArchive<T>));
       dst -= 1; src -= 1;
     }
   }

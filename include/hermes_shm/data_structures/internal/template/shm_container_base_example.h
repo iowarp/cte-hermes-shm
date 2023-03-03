@@ -237,7 +237,13 @@ class ShmContainerExample {
   }
 
   /** Override >> operators */
-  SHM_DESERIALIZE_OPS((TYPED_CLASS))
+  void operator>>(hipc::TypedPointer<TYPE_UNWRAP(TYPED_CLASS)> &ar) const {
+    shm_serialize(ar);
+  }
+  void operator>>(
+      hipc::TypedAtomicPointer<TYPE_UNWRAP(TYPED_CLASS)> &ar) const {
+    shm_serialize(ar);
+  }
 
   /**====================================
    * Destructors
