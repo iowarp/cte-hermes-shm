@@ -63,6 +63,7 @@ struct FreeListStats {
     max_alloc_ = other.max_alloc_;
   }
 
+  /** Increment allocation count */
   void AddAlloc() {
     cur_alloc_ += 1;
     if (cur_alloc_ > max_alloc_) {
@@ -70,6 +71,7 @@ struct FreeListStats {
     }
   }
 
+  /** Decrement allocation count */
   void AddFree() {
     cur_alloc_ -= 1;
   }

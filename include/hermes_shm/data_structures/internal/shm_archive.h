@@ -188,6 +188,19 @@ class ShmArchive {
   void shm_destroy(Allocator *alloc) {
     obj_.shm_destroy(alloc);
   }
+
+  /** Copy constructor */
+  ShmArchive(const ShmArchive &other) = delete;
+
+  /** Copy assignment operator */
+  ShmArchive& operator=(const ShmArchive &other) = delete;
+
+  /** Move constructor */
+  ShmArchive(ShmArchive &&other) = delete;
+
+  /** Move assignment operator */
+  ShmArchive& operator=(ShmArchive &&other) = delete;
+
 };
 
 }  // namespace hermes_shm::ipc
