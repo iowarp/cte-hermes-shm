@@ -31,6 +31,38 @@ struct FreeListStats {
   size_t max_alloc_;  /**< Maximum number of pages allocated at a time */
   Mutex lock_;        /**< The enqueue / dequeue lock */
 
+  /** Default constructor */
+  FreeListStats() = default;
+
+  /** Copy constructor */
+  FreeListStats(const FreeListStats &other) {
+    strong_copy(other);
+  }
+
+  /** Copy assignment operator */
+  FreeListStats& operator=(const FreeListStats &other) {
+    strong_copy(other);
+    return *this;
+  }
+
+  /** Move constructor */
+  FreeListStats(FreeListStats &&other) {
+    strong_copy(other);
+  }
+
+  /** Move assignment operator */
+  FreeListStats& operator=(FreeListStats &&other) {
+    strong_copy(other);
+    return *this;
+  }
+
+  /** Internal copy */
+  void strong_copy(const FreeListStats &other) {
+    page_size_ = other.page_size_;
+    cur_alloc_ = other.cur_alloc_;
+    max_alloc_ = other.max_alloc_;
+  }
+
   void AddAlloc() {
     cur_alloc_ += 1;
     if (cur_alloc_ > max_alloc_) {

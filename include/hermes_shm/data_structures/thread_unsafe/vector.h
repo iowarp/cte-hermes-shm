@@ -576,7 +576,7 @@ class vector : public ShmContainer {
 
     // Allocate new shared-memory vec
     ShmArchive<T> *new_vec;
-    if constexpr(std::is_pod<T>() || IS_SHM_ARCHIVEABLE(T)) {
+    if constexpr(std::is_pod<T>() && !IS_SHM_ARCHIVEABLE(T)) {
       // Use reallocate for well-behaved objects
       new_vec = alloc_->template
         ReallocateObjs<ShmArchive<T>>(header_->vec_ptr_, max_length);
