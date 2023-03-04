@@ -371,7 +371,7 @@ class vector : public ShmContainer {
                             Allocator *alloc, const vector &other) {
     shm_init_main(header, alloc);
     reserve(other.size());
-    if constexpr(std::is_pod<T>()) {
+    if constexpr(std::is_pod<T>() && !IS_SHM_ARCHIVEABLE(T)) {
       memcpy(data_ar(), other.data_ar_const(),
              other.size() * sizeof(T));
       header_->length_ = other.size();
