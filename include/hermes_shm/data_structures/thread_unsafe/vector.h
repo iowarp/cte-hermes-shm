@@ -316,15 +316,6 @@ class vector : public ShmContainer {
   vector() = default;
 
   /** Construct the vector in shared memory */
-  template<typename ...Args>
-  void shm_init_main(TYPED_HEADER *header,
-                     Allocator *alloc, size_t length, Args&& ...args) {
-    shm_init_allocator(alloc);
-    shm_init_header(header);
-    resize(length, std::forward<Args>(args)...);
-  }
-
-  /** Construct the vector in shared memory */
   void shm_init_main(TYPED_HEADER *header,
                      Allocator *alloc) {
     shm_init_allocator(alloc);
@@ -334,11 +325,18 @@ class vector : public ShmContainer {
     header_->vec_ptr_.SetNull();
   }
 
+  /** Construct the vector in shared memory */
+  template<typename ...Args>
+  void shm_init_main(TYPED_HEADER *header,
+                     Allocator *alloc, size_t length, Args&& ...args) {
+    shm_init_main(header, alloc);
+    resize(length, std::forward<Args>(args)...);
+  }
+
   /** Copy from std::vector */
   void shm_init_main(TYPED_HEADER *header,
                      Allocator *alloc, std::vector<T> &other) {
-    shm_init_allocator(alloc);
-    shm_init_header(header);
+    shm_init_main(header, alloc);
     reserve(other.size());
     for (auto &entry : other) {
       emplace_back(entry);
