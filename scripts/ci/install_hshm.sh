@@ -1,7 +1,5 @@
 #!/bin/bash
 
-exit
-
 # CD into git workspace
 cd ${GITHUB_WORKSPACE}
 
