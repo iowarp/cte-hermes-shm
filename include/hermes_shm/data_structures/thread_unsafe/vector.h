@@ -369,8 +369,7 @@ class vector : public ShmContainer {
   /** Copy a vector */
   void shm_strong_copy_main(TYPED_HEADER *header,
                             Allocator *alloc, const vector &other) {
-    shm_init_allocator(alloc);
-    shm_init_header(header);
+    shm_init_main(header, alloc);
     reserve(other.size());
     if constexpr(std::is_pod<T>()) {
       memcpy(data_ar(), other.data_ar_const(),
