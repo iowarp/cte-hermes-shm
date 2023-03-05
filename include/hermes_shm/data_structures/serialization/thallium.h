@@ -16,6 +16,7 @@
 
 #include <thallium.hpp>
 #include <hermes_shm/data_structures/string.h>
+#include <hermes_shm/data_structures/data_structure.h>
 #include <hermes_shm/data_structures/thread_unsafe/vector.h>
 #include <hermes_shm/data_structures/thread_unsafe/list.h>
 #include <hermes_shm/types/charbuf.h>

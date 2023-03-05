@@ -3,19 +3,27 @@ project(hermes_shm)
 
 set(CMAKE_CXX_STANDARD 17)
 
-add_executable(test_thallium
-        ${TEST_MAIN}/main.cc
-        test_init.cc
-        thallium.cc)
-add_dependencies(test_thallium
-        hermes_shm_data_structures)
-target_link_libraries(test_thallium
+set (LIBS
         hermes_shm_data_structures
         Catch2::Catch2
         MPI::MPI_CXX
         OpenMP::OpenMP_CXX
         thallium)
 
+add_executable(test_thallium_server server.cc)
+add_dependencies(test_thallium_server
+        hermes_shm_data_structures)
+target_link_libraries(test_thallium_server ${LIBS})
+
+add_executable(test_thallium_exec
+        ${TEST_MAIN}/main.cc
+        test_init.cc
+        test_thallium.cc)
+add_dependencies(test_thallium_exec
+        hermes_shm_data_structures)
+target_link_libraries(test_thallium_exec ${LIBS})
+
 add_test(NAME test_thallium COMMAND
-        ${CMAKE_CURRENT_BINARY_DIR}/test_thallium)
+        bash ${CMAKE_CURRENT_SOURCE_DIR}/test_thallium.sh
+        "${CMAKE_CURRENT_BINARY_DIR}")
 
