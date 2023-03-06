@@ -73,8 +73,8 @@ void load(A &ar, hipc::vector<T> &vec) {
   auto alloc = HERMES_MEMORY_MANAGER->GetAllocator(alloc_id);
   vec.shm_init(alloc);
   vec.resize(size);
-  for (auto iter = vec.begin(); iter != vec.end(); ++iter) {
-    vec.emplace_back(std::move(**iter));
+  for (int i = 0; i < size; ++i) {
+    ar >> *(vec[i]);
   }
 }
 

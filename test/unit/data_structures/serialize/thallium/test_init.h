@@ -33,11 +33,18 @@ using thallium::request;
 
 static const char* kTestString = "012344823723642364723874623";
 static const char* kServerName = "ofi+sockets://127.0.0.1:8080";
-static const char* kStringTest0 = "string_test0";
-static const char* kStringTestLarge = "string_test_large";
-static const char* kCharbufTest0 = "charbuf_test0";
-static const char* kCharbufTestLarge = "charbuf_test_large";
 
+/** Test cases */
+static const char* kStringTest0 = "kStringTest0";
+static const char* kStringTestLarge = "kStringTestLarge";
+static const char* kCharbufTest0 = "kCharbufTest0";
+static const char* kCharbufTestLarge = "kCharbufTestLarge";
+static const char* kVecOfInt0Test = "kVecOfInt0Test";
+static const char* kVecOfIntLargeTest = "kVecOfIntLargeTest";
+static const char* kVecOfString0Test = "kVecOfString0Test";
+static const char* kVecOfStringLargeTest = "kVecOfStringLargeTest";
+
+/** Test init */
 template<typename AllocT>
 void ServerPretest() {
   std::string shm_url = "test_serializers";

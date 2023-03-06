@@ -11,6 +11,22 @@
 std::unique_ptr<tl::engine> client_;
 std::unique_ptr<tl::engine> server_;
 
+template<typename T>
+bool VerifyVector(hipc::vector<T> &vec) {
+  for (int i = 0; i < 20; ++i) {
+    if constexpr(std::is_same_v<T, int>) {
+      if (*vec[i] != i) {
+        return false;
+      }
+    } else {
+      if (*vec[i] != std::to_string(i)) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
 int main() {
   // Pretest
   ServerPretest<hipc::StackAllocator>();
@@ -53,6 +69,38 @@ int main() {
     req.respond(ret);
   };
   server_->define(kCharbufTestLarge, charbuf_test1);
+
+  // Test transfer of empty vector
+  auto vec_of_int0_test = [](const request &req,
+                             hipc::vector<int> &vec) {
+    bool ret = vec.size() == 0;
+    req.respond(ret);
+  };
+  server_->define(kVecOfInt0Test, vec_of_int0_test);
+
+  // Test transfer of large vector
+  auto vec_of_int_large_test = [](const request &req,
+                                  hipc::vector<int> &vec) {
+    bool ret = VerifyVector(vec);
+    req.respond(ret);
+  };
+  server_->define(kVecOfIntLargeTest, vec_of_int_large_test);
+
+  // Test transfer of empty string vector
+  auto vec_of_string0_test = [](const request &req,
+                                hipc::vector<hipc::string> &vec) {
+    bool ret = vec.size() == 0;
+    req.respond(ret);
+  };
+  server_->define(kVecOfString0Test, vec_of_string0_test);
+
+  // Test transfer of large string vector
+  auto vec_of_string_large_test = [](const request &req,
+                                     hipc::vector<hipc::string> &vec) {
+    bool ret = VerifyVector(vec);
+    req.respond(ret);
+  };
+  server_->define(kVecOfStringLargeTest, vec_of_string_large_test);
 
   // Start daemon
   server_->enable_remote_shutdown();

@@ -38,5 +38,34 @@ TEST_CASE("SerializeCharBuf") {
   REQUIRE(string_large_proc.on(server)(large_str));
 }
 
-TEST_CASE("SerializeVector") {
+TEST_CASE("SerializeVectorOfInt") {
+  tl::endpoint server = client_->lookup(kServerName);
+  tl::remote_procedure vec_int0_proc = client_->define(kVecOfInt0Test);
+  tl::remote_procedure vec_int_proc = client_->define(kVecOfIntLargeTest);
+
+  // Send empty vector
+  hipc::vector<int> vec_int(0);
+  REQUIRE(vec_int0_proc.on(server)(vec_int));
+
+  // Send initialized vector
+  for(int i = 0; i < 20; ++i) {
+    vec_int.emplace_back(i);
+  }
+  REQUIRE(vec_int_proc.on(server)(vec_int));
+}
+
+TEST_CASE("SerializeVectorOfString") {
+  tl::endpoint server = client_->lookup(kServerName);
+  tl::remote_procedure vec_string0_proc = client_->define(kVecOfString0Test);
+  tl::remote_procedure vec_string_proc = client_->define(kVecOfStringLargeTest);
+
+  // Send empty vector
+  hipc::vector<hipc::string> vec_string(0);
+  REQUIRE(vec_string0_proc.on(server)(vec_string));
+
+  // Send initialized vector
+  for(int i = 0; i < 20; ++i) {
+    vec_string.emplace_back(std::to_string(i));
+  }
+  REQUIRE(vec_string_proc.on(server)(vec_string));
 }
