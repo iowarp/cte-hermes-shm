@@ -48,7 +48,7 @@ TEST_CASE("SerializeVectorOfInt") {
   REQUIRE(vec_int0_proc.on(server)(vec_int));
 
   // Send initialized vector
-  for(int i = 0; i < 20; ++i) {
+  for (int i = 0; i < 20; ++i) {
     vec_int.emplace_back(i);
   }
   REQUIRE(vec_int_proc.on(server)(vec_int));
@@ -64,7 +64,7 @@ TEST_CASE("SerializeVectorOfString") {
   REQUIRE(vec_string0_proc.on(server)(vec_string));
 
   // Send initialized vector
-  for(int i = 0; i < 20; ++i) {
+  for (int i = 0; i < 20; ++i) {
     vec_string.emplace_back(std::to_string(i));
   }
   REQUIRE(vec_string_proc.on(server)(vec_string));
