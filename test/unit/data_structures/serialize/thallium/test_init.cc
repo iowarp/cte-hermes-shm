@@ -17,19 +17,17 @@
 #include "hermes_shm/types/charbuf.h"
 #include <memory>
 
-namespace tl = thallium;
-namespace hshm = hermes_shm;
-using thallium::request;
-
 std::unique_ptr<tl::engine> client_;
+std::unique_ptr<tl::engine> server_;
 
 void MainPretest() {
+  ClientPretest<hipc::StackAllocator>();
   client_ = std::make_unique<tl::engine>(
     "ofi+sockets",
     THALLIUM_CLIENT_MODE);
 }
 
 void MainPosttest() {
-  tl::endpoint server = client_->lookup("ofi+sockets://127.0.0.1:8080");
+  tl::endpoint server = client_->lookup(kServerName);
   client_->shutdown_remote_engine(server);
 }

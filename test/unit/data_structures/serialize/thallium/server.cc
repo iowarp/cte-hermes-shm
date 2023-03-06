@@ -8,11 +8,16 @@
 #include "hermes_shm/types/charbuf.h"
 #include <memory>
 
+std::unique_ptr<tl::engine> client_;
 std::unique_ptr<tl::engine> server_;
 
 int main() {
+  // Pretest
+  ServerPretest<hipc::StackAllocator>();
+
+  // Create thallium server
   server_ = std::make_unique<tl::engine>(
-    "ofi+sockets://127.0.0.1:8080",
+    kServerName,
     THALLIUM_SERVER_MODE,
     true, 1);
   std::cout << "Server running at address " << server_->self() << std::endl;
@@ -22,14 +27,14 @@ int main() {
                          hipc::string &text) {
     req.respond(text == "");
   };
-  server_->define("string_test0", string_test0);
+  server_->define(kStringTest0, string_test0);
 
   // Test transfer of long string
   auto string_test1 = [](const request &req,
                          hipc::string &text) {
-    req.respond(text == "012344823723642364723874623");
+    req.respond(text == kTestString);
   };
-  server_->define("string_test1", string_test0);
+  server_->define(kStringTestLarge, string_test0);
 
   // Test transfer of 0-length charbuf
   auto charbuf_test0 = [](const request &req,
@@ -41,7 +46,7 @@ int main() {
   // Test transfer of long charbuf
   auto charbuf_test1 = [](const request &req,
                           hshm::charbuf &text) {
-    req.respond(text == "012344823723642364723874623");
+    req.respond(text == kTestString);
   };
   server_->define("charbuf_test1", string_test0);
 

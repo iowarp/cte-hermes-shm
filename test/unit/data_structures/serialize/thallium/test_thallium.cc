@@ -12,12 +12,30 @@
 
 #include "basic_test.h"
 #include "test_init.h"
+#include "hermes_shm/data_structures/string.h"
 
 TEST_CASE("SerializeString") {
+  tl::endpoint server = client_->lookup(kServerName);
+  tl::remote_procedure string0_proc = client_->define(kStringTest0);
+  tl::remote_procedure string_large_proc = client_->define(kStringTestLarge);
 
+  hipc::string empty_str(nullptr);
+  hipc::string large_str(kTestString);
+
+  REQUIRE(string0_proc.on(server)(empty_str));
+  REQUIRE(string0_proc.on(server)(large_str));
 }
 
 TEST_CASE("SerializeCharBuf") {
+  tl::endpoint server = client_->lookup(kServerName);
+  tl::remote_procedure string0_proc = client_->define(kCharbufTest0);
+  tl::remote_procedure string_large_proc = client_->define(kCharbufTestLarge);
+
+  hipc::string empty_str(nullptr);
+  hipc::string large_str(kTestString);
+
+  REQUIRE(string0_proc.on(server)(empty_str));
+  REQUIRE(string0_proc.on(server)(large_str));
 }
 
 TEST_CASE("SerializeVector") {
