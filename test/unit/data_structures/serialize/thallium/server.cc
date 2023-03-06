@@ -25,30 +25,34 @@ int main() {
   // Test transfer of 0-length string
   auto string_test0 = [](const request &req,
                          hipc::string &text) {
-    req.respond(text == "");
+    bool ret = (text == "");
+    req.respond(ret);
   };
   server_->define(kStringTest0, string_test0);
 
   // Test transfer of long string
   auto string_test1 = [](const request &req,
                          hipc::string &text) {
-    req.respond(text == kTestString);
+    bool ret = (text == kTestString);
+    req.respond(ret);
   };
-  server_->define(kStringTestLarge, string_test0);
+  server_->define(kStringTestLarge, string_test1);
 
   // Test transfer of 0-length charbuf
   auto charbuf_test0 = [](const request &req,
                           hshm::charbuf &text) {
-    req.respond(text == "");
+    bool ret = (text == "");
+    req.respond(ret);
   };
-  server_->define("charbuf_test0", string_test0);
+  server_->define(kCharbufTest0, charbuf_test0);
 
   // Test transfer of long charbuf
   auto charbuf_test1 = [](const request &req,
                           hshm::charbuf &text) {
-    req.respond(text == kTestString);
+    bool ret = (text == kTestString);
+    req.respond(ret);
   };
-  server_->define("charbuf_test1", string_test0);
+  server_->define(kCharbufTestLarge, charbuf_test1);
 
   // Start daemon
   server_->enable_remote_shutdown();

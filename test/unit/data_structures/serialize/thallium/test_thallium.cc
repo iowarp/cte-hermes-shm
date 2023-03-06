@@ -19,11 +19,11 @@ TEST_CASE("SerializeString") {
   tl::remote_procedure string0_proc = client_->define(kStringTest0);
   tl::remote_procedure string_large_proc = client_->define(kStringTestLarge);
 
-  hipc::string empty_str(nullptr);
+  hipc::string empty_str("");
   hipc::string large_str(kTestString);
 
   REQUIRE(string0_proc.on(server)(empty_str));
-  REQUIRE(string0_proc.on(server)(large_str));
+  REQUIRE(string_large_proc.on(server)(large_str));
 }
 
 TEST_CASE("SerializeCharBuf") {

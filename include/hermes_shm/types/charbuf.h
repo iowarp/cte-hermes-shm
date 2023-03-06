@@ -45,6 +45,11 @@ struct charbuf {
     Allocate(HERMES_MEMORY_REGISTRY->GetDefaultAllocator(), size);
   }
 
+  /** Allocator + Size-based constructor */
+  explicit charbuf(hipc::Allocator *alloc, size_t size) {
+    Allocate(alloc, size);
+  }
+
   /** String-based constructor */
   explicit charbuf(const std::string &data) {
     Allocate(HERMES_MEMORY_REGISTRY->GetDefaultAllocator(), data.size());
@@ -150,6 +155,11 @@ struct charbuf {
   /** Get allocator */
   hipc::Allocator* GetAllocator() {
     return alloc_;
+  }
+
+  /** Convert to std::string */
+  std::string str() {
+    return std::string(data(), size());
   }
 
   /**====================================

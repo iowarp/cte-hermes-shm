@@ -142,7 +142,7 @@ void load(A &ar, hshm::charbuf &text) {
   ar >> alloc_id;
   ar >> size;
   auto alloc = HERMES_MEMORY_MANAGER->GetAllocator(alloc_id);
-  text = hshm::charbuf(alloc);
+  text = hshm::charbuf(alloc, size);
   ar.read(text.data(), size);
 }
 
