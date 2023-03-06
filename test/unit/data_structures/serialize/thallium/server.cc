@@ -102,6 +102,13 @@ int main() {
   };
   server_->define(kVecOfStringLargeTest, vec_of_string_large_test);
 
+  // Test transfer of bitfield
+  auto bitfield_test = [](const request &req, hshm::bitfield32_t &field) {
+    bool ret = field.OrBits(0x8);
+    req.respond(ret);
+  };
+  server_->define(kBitfieldTest, bitfield_test);
+
   // Start daemon
   server_->enable_remote_shutdown();
   server_->wait_for_finalize();

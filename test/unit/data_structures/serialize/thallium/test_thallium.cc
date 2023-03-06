@@ -69,3 +69,13 @@ TEST_CASE("SerializeVectorOfString") {
   }
   REQUIRE(vec_string_proc.on(server)(vec_string));
 }
+
+TEST_CASE("SerializeBitfield") {
+  tl::endpoint server = client_->lookup(kServerName);
+  tl::remote_procedure bitfield_proc = client_->define(kBitfieldTest);
+
+  // Send bitfield
+  hshm::bitfield32_t field;
+  field.SetBits(0x8);
+  REQUIRE(bitfield_proc.on(server)(field));
+}

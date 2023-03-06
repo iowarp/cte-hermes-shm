@@ -152,11 +152,27 @@ void load(A &ar, hshm::charbuf &text) {
  * This function is called implicitly by Thallium.
  *
  * @param ar An archive provided by Thallium.
- * @param text The string to serialize
+ * @param field the bitfield to serialize
  */
 template <typename A>
-void serialize(A &ar, hshm::bitfield32_t bitfield) {
-  ar &bitfield.bits_;
+void save(A &ar, hshm::bitfield32_t &field) {
+  uint32_t bits = field.bits_;
+  ar << bits;
+}
+
+/**
+ *  Lets Thallium know how to deserialize a bitfield.
+ *
+ * This function is called implicitly by Thallium.
+ *
+ * @param ar An archive provided by Thallium.
+ * @param field the bitfield to serialize
+ */
+template <typename A>
+void load(A &ar, hshm::bitfield32_t &field) {
+  uint32_t bits;
+  ar >> bits;
+  field.bits_ = bits;
 }
 
 }  // namespace thallium
