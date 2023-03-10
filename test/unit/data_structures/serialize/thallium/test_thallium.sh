@@ -10,6 +10,6 @@ ${CMAKE_CURRENT_BINARY_DIR}/test_thallium_server &
 sleep 1
 
 # Run test
-echo "Starting thallium server: ${CMAKE_CURRENT_BINARY_DIR}/test_thallium_exec"
+echo "Thallium test: ${CMAKE_CURRENT_BINARY_DIR}/test_thallium_exec"
 ${CMAKE_CURRENT_BINARY_DIR}/test_thallium_exec
 

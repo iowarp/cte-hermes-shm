@@ -52,6 +52,7 @@ static const char* kVecOfIntLargeTest = "kVecOfIntLargeTest";
 static const char* kVecOfString0Test = "kVecOfString0Test";
 static const char* kVecOfStringLargeTest = "kVecOfStringLargeTest";
 static const char* kBitfieldTest = "kBitfieldTest";
+static const char* kVecOfIntRefTest = "kVecOfIntRefTest";
 
 /** Test init */
 template<typename AllocT>

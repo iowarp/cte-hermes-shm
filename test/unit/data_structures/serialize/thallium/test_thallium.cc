@@ -79,3 +79,17 @@ TEST_CASE("SerializeBitfield") {
   field.SetBits(0x8);
   REQUIRE(bitfield_proc.on(server)(field));
 }
+
+TEST_CASE("SerializeVectorOfIntRef") {
+  tl::endpoint server = client_->lookup(kServerName);
+  tl::remote_procedure vec_int_proc = client_->define(kVecOfIntRefTest);
+
+  // Send empty vector
+  hipc::vector<int> vec_int(0);
+  for (int i = 0; i < 20; ++i) {
+    vec_int.emplace_back(i);
+  }
+
+  hipc::ShmRef<hipc::vector<int>> vec_ref(vec_int.GetShmDeserialize());
+  REQUIRE(vec_int_proc.on(server)(vec_ref));
+}

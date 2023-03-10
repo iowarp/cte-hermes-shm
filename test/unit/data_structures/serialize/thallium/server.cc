@@ -117,6 +117,14 @@ int main() {
   };
   server_->define(kBitfieldTest, bitfield_test);
 
+  // Test transfer of bitfield
+  auto shm_ref_test = [](const request &req,
+                         hipc::ShmRef<hipc::vector<int>> &vec) {
+    bool ret = VerifyVector(*vec);
+    req.respond(ret);
+  };
+  server_->define(kVecOfIntRefTest, shm_ref_test);
+
   // Start daemon
   server_->enable_remote_shutdown();
   server_->wait_for_finalize();
