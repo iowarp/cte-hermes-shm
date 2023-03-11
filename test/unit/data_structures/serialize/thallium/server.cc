@@ -117,7 +117,7 @@ int main() {
   };
   server_->define(kBitfieldTest, bitfield_test);
 
-  // Test transfer of bitfield
+  // Test transfer of ShmRef of a vector
   auto shm_ref_test = [](const request &req,
                          hipc::ShmRef<hipc::vector<int>> &vec) {
     bool ret = VerifyVector(*vec);
