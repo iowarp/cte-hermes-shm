@@ -279,6 +279,7 @@ class unordered_map : public ShmContainer {
   void shm_destroy_main() {
     hipc::ShmRef<vector<BUCKET_T>> buckets = GetBuckets();
     buckets->shm_destroy();
+    header_->length_ = 0;
   }
 
   ////////////////////////////
