@@ -89,9 +89,9 @@ class string : public ShmContainer {
   size_t length_;
 
  public:
-  ////////////////////////////
-  /// SHM Overrides
-  ////////////////////////////
+  /**====================================
+   * Shm Overrides
+   * ===================================*/
 
   /** Default constructor */
   string() : length_(0) {}
@@ -120,7 +120,7 @@ class string : public ShmContainer {
 
   /** Move constructor */
   void shm_weak_move_main(TYPED_HEADER *header,
-                          Allocator *alloc, string &other) {
+                          Allocator *alloc, string &&other) {
     shm_init_main(header, alloc);
     header_->length_ = other.header_->length_;
     header_->text_ = other.header_->text_;
@@ -184,9 +184,9 @@ class string : public ShmContainer {
     length_ = header_->length_;
   }
 
-  ////////////////////////////
-  /// String Operations
-  ////////////////////////////
+  /**====================================
+   * String Operations
+   * ===================================*/
 
   /** Get character at index i in the string */
   char& operator[](size_t i) const {
@@ -229,9 +229,9 @@ class string : public ShmContainer {
     return text_;
   }
 
-  /**
-   * Comparison operators
-   * */
+  /**====================================
+   * Comparison Operations
+   * ===================================*/
 
   int _strncmp(const char *a, size_t len_a,
                const char *b, size_t len_b) const {

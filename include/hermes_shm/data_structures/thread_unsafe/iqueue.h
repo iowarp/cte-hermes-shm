@@ -248,7 +248,7 @@ class iqueue : public ShmContainer {
 
   /** Move constructor */
   void shm_weak_move_main(TYPED_HEADER *header,
-                          Allocator *alloc, iqueue &other) {}
+                          Allocator *alloc, iqueue &&other) {}
 
   /** Copy constructor */
   void shm_strong_copy_main(TYPED_HEADER *header,

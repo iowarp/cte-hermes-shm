@@ -253,7 +253,7 @@ class unordered_map : public ShmContainer {
 
   /** Move constructor */
   void shm_weak_move_main(TYPED_HEADER *header,
-                          Allocator *alloc, unordered_map &other) {
+                          Allocator *alloc, unordered_map &&other) {
     shm_init_allocator(alloc);
     shm_init_header(header,
                     alloc_,

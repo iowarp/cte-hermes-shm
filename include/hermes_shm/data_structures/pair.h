@@ -146,7 +146,7 @@ class pair : public ShmContainer {
 
   /** Move constructor */
   void shm_weak_move_main(TYPED_HEADER *header,
-                          Allocator *alloc, pair &other) {
+                          Allocator *alloc, pair &&other) {
     shm_init_main(header,
                   alloc,
                   std::move(*other.first_),

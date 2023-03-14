@@ -60,7 +60,7 @@ class ShmContainerExample {
   /** Move constructor */
   void shm_weak_move_main(TYPED_HEADER *header,
                           hipc::Allocator *alloc,
-                          CLASS_NAME &other) {
+                          CLASS_NAME &&other) {
     shm_init_main(header, alloc);
   }
 
@@ -93,7 +93,6 @@ class ShmContainerExample {
   /** Constructor. Allocate header with default allocator. */
   template<typename ...Args>
   void shm_init(Args&& ...args) {
-    shm_destroy(false);
     shm_init_main(hipc::typed_nullptr<TYPED_HEADER>(),
                   hipc::typed_nullptr<hipc::Allocator>(),
                   std::forward<Args>(args)...);
@@ -102,7 +101,6 @@ class ShmContainerExample {
   /** Constructor. Allocate header with specific allocator. */
   template<typename ...Args>
   void shm_init(hipc::Allocator *alloc, Args&& ...args) {
-    shm_destroy(false);
     shm_init_main(hipc::typed_nullptr<TYPED_HEADER>(),
                   alloc,
                   std::forward<Args>(args)...);
@@ -112,7 +110,6 @@ class ShmContainerExample {
   template<typename ...Args>
   void shm_init(TYPED_HEADER &header,
                 hipc::Allocator *alloc, Args&& ...args) {
-    shm_destroy(false);
     shm_init_main(&header, alloc, std::forward<Args>(args)...);
   }
 
@@ -289,7 +286,7 @@ class ShmContainerExample {
     shm_weak_move(
       hipc::typed_nullptr<TYPED_HEADER>(),
       hipc::typed_nullptr<hipc::Allocator>(),
-      other);
+      std::forward<CLASS_NAME>(other));
   }
 
   /** Move assignment operator */
@@ -298,7 +295,7 @@ class ShmContainerExample {
       shm_weak_move(
         hipc::typed_nullptr<TYPED_HEADER>(),
         hipc::typed_nullptr<hipc::Allocator>(),
-        other);
+        std::forward<CLASS_NAME>(other));
     }
     return *this;
   }
@@ -307,13 +304,13 @@ class ShmContainerExample {
   void shm_init_main(TYPED_HEADER *header,
                      hipc::Allocator *alloc,
                      CLASS_NAME &&other) noexcept {
-    shm_weak_move(header, alloc, other);
+    shm_weak_move(header, alloc, std::forward<CLASS_NAME>(other));
   }
 
   /** Move operation */
   void shm_weak_move(TYPED_HEADER *header,
                      hipc::Allocator *alloc,
-                     CLASS_NAME &other) {
+                     CLASS_NAME &&other) {
     if (other.IsNull()) { return; }
     if (IsValid() && other.GetAllocator() != GetAllocator()) {
       shm_strong_copy(header, alloc, other);
@@ -321,7 +318,8 @@ class ShmContainerExample {
       return;
     }
     shm_destroy(false);
-    shm_weak_move_main(header, alloc, other);
+    shm_weak_move_main(header, alloc,
+                       std::forward<CLASS_NAME>(other));
     if (!other.IsDestructable()) {
       UnsetDestructable();
     }

@@ -319,7 +319,7 @@ class list : public ShmContainer {
 
   /** Move constructor */
   void shm_weak_move_main(TYPED_HEADER *header,
-                          Allocator *alloc, list &other) {
+                          Allocator *alloc, list &&other) {
     shm_init_allocator(alloc);
     shm_init_header(header);
     *header_ = *(other.header_);
