@@ -219,25 +219,23 @@ class iqueue : public ShmContainer {
   SHM_CONTAINER_TEMPLATE((CLASS_NAME), (TYPED_CLASS), (TYPED_HEADER))
 
  public:
-  ////////////////////////////
-  /// SHM Overrides
-  ////////////////////////////
+  /**====================================
+   * SHM Overrides
+   * ===================================*/
 
-  /** Default constructor */
-  iqueue() = default;
-
-  /** Initialize iqueue in shared memory */
-  void shm_init_main(TYPED_HEADER *header,
-                     Allocator *alloc) {
-    shm_init_allocator(alloc);
-    shm_init_header(header);
+  /** Constructor. Empty. */
+  explicit iqueue(TYPED_HEADER *header,
+                  Allocator *alloc) {
+    shm_init_header(header, alloc);
     header_->length_ = 0;
     header_->head_ptr_.SetNull();
   }
 
   /** Destroy all shared memory allocated by the iqueue */
-  void shm_destroy_main() {
-    clear();
+  void shm_destroy() {
+    if (!IsNull()) {
+      clear();
+    }
   }
 
   /** Store into shared memory */
@@ -246,17 +244,19 @@ class iqueue : public ShmContainer {
   /** Load from shared memory */
   void shm_deserialize_main() {}
 
-  /** Move constructor */
-  void shm_weak_move_main(TYPED_HEADER *header,
-                          Allocator *alloc, iqueue &&other) {}
+  /** Check if the iqueue is null */
+  bool IsNull() {
+    return header_->length_ == 0;
+  }
 
-  /** Copy constructor */
-  void shm_strong_copy_main(TYPED_HEADER *header,
-                            Allocator *alloc, const iqueue &other) {}
+  /** Set the iqueue to null */
+  void SetNull() {
+    header_->length_ = 0;
+  }
 
-  ////////////////////////////
-  /// iqueue Methods
-  ////////////////////////////
+  /**====================================
+   * iqueue Methods
+   * ===================================*/
 
   /** Construct an element at \a pos position in the iqueue */
   void enqueue(T *entry) {
@@ -307,15 +307,12 @@ class iqueue : public ShmContainer {
 
   /** Get the number of elements in the iqueue */
   size_t size() const {
-    if (!IsNull()) {
-      return header_->length_;
-    }
-    return 0;
+    return header_->length_;
   }
 
-  /**
-   * ITERATORS
-   * */
+  /**====================================
+  * Iterators
+  * ===================================*/
 
   /** Forward iterator begin */
   iqueue_iterator<T> begin() {

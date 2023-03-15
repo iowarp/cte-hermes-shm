@@ -254,48 +254,15 @@ using vector_criterator = vector_iterator_templ<T, false>;
  * */
 template<typename T>
 struct ShmHeader<TYPED_CLASS> : public ShmBaseHeader {
+  SHM_CONTAINER_HEADER_TEMPLATE(ShmHeader)
   AtomicPointer vec_ptr_;
   size_t max_length_, length_;
-
-  /** Default constructor */
-  ShmHeader() = default;
-
-  /** Copy constructor */
-  ShmHeader(const ShmHeader &other) {
-    strong_copy(other);
-  }
-
-  /** Copy assignment operator */
-  ShmHeader& operator=(const ShmHeader &other) {
-    if (this != &other) {
-      strong_copy(other);
-    }
-    return *this;
-  }
 
   /** Strong copy operation */
   void strong_copy(const ShmHeader &other) {
     vec_ptr_ = other.vec_ptr_;
     max_length_ = other.max_length_;
     length_ = other.length_;
-  }
-
-  /** Move constructor */
-  ShmHeader(ShmHeader &&other) {
-    weak_move(other);
-  }
-
-  /** Move operator */
-  ShmHeader& operator=(ShmHeader &&other) {
-    if (this != &other) {
-      weak_move(other);
-    }
-    return *this;
-  }
-
-  /** Move operation */
-  void weak_move(ShmHeader &other) {
-    strong_copy(other);
   }
 };
 
@@ -308,68 +275,83 @@ class vector : public ShmContainer {
   SHM_CONTAINER_TEMPLATE((CLASS_NAME), (TYPED_CLASS), (TYPED_HEADER))
 
  public:
-  ////////////////////////////
-  /// SHM Overrides
-  ////////////////////////////
+  /**====================================
+   * SHM Overrides
+   * ===================================*/
 
-  /** Default constructor */
-  vector() = default;
-
-  /** Construct the vector in shared memory */
-  void shm_init_main(TYPED_HEADER *header,
-                     Allocator *alloc) {
-    shm_init_allocator(alloc);
-    shm_init_header(header);
+  /** Initialize the header state */
+  void init_header() {
     header_->length_ = 0;
     header_->max_length_ = 0;
     header_->vec_ptr_.SetNull();
   }
 
   /** Construct the vector in shared memory */
+  explicit vector(TYPED_HEADER *header, Allocator *alloc) {
+    shm_init_header(header, alloc);
+    init_header();
+  }
+
+  /** Construct the vector in shared memory */
   template<typename ...Args>
-  void shm_init_main(TYPED_HEADER *header,
-                     Allocator *alloc, size_t length, Args&& ...args) {
-    shm_init_main(header, alloc);
+  explicit vector(TYPED_HEADER *header, Allocator *alloc,
+                  size_t length, Args&& ...args) {
+    shm_init_header(header, alloc);
+    init_header();
     resize(length, std::forward<Args>(args)...);
   }
 
   /** Copy from std::vector */
-  void shm_init_main(TYPED_HEADER *header,
-                     Allocator *alloc, std::vector<T> &other) {
-    shm_init_main(header, alloc);
+  explicit vector(TYPED_HEADER *header, Allocator *alloc,
+                  std::vector<T> &other) {
+    shm_init_header(header, alloc);
+    init_header();
     reserve(other.size());
     for (auto &entry : other) {
       emplace_back(entry);
     }
   }
 
-  /** Destroy all shared memory allocated by the vector */
-  void shm_destroy_main() {
-    erase(begin(), end());
-    if (!header_->vec_ptr_.IsNull()) {
-      alloc_->Free(header_->vec_ptr_);
-    }
-  }
-
-  /** Store into shared memory */
-  void shm_serialize_main() const {}
-
-  /** Load from shared memory */
-  void shm_deserialize_main() {}
-
   /** Move constructor */
-  void shm_weak_move_main(TYPED_HEADER *header,
-                          Allocator *alloc, vector &&other) {
-    shm_init_allocator(alloc);
-    shm_init_header(header);
-    *header_ = *(other.header_);
-    other.header_->length_ = 0;
+  explicit vector(vector &&other) {
+    shm_init_header(other.header_, other.alloc_);
+    shm_deserialize_main();
+    other.RemoveHeader();
   }
 
-  /** Copy a vector */
-  void shm_strong_copy_main(TYPED_HEADER *header,
-                            Allocator *alloc, const vector &other) {
-    shm_init_main(header, alloc);
+  /** Move assignment operator */
+  vector& operator=(vector &&other) noexcept {
+    if (this == &other) {
+      return *this;
+    }
+    shm_destroy();
+    if (!other.IsNull()) {
+      if (other.alloc_ == alloc_) {
+        memcpy((void*)header_, (void*)other.header_, sizeof(*header_));
+        shm_deserialize_main();
+        other.SetNull();
+      } else {
+        shm_strong_copy_main(other);
+        other.shm_destroy();
+      }
+    }
+    return *this;
+  }
+
+  /** Copy assignment operator */
+  vector& operator=(const vector &other) {
+    if (this == &other) {
+      return *this;
+    }
+    shm_destroy();
+    if (!other.IsNull()) {
+      shm_strong_copy_main(other);
+    }
+    return *this;
+  }
+
+  /** Copy internal (no null check) */
+  void shm_strong_copy_main(const vector &other) {
     reserve(other.size());
     if constexpr(std::is_pod<T>() && !IS_SHM_ARCHIVEABLE(T)) {
       memcpy(data_ar(), other.data_ar_const(),
@@ -382,9 +364,33 @@ class vector : public ShmContainer {
     }
   }
 
-  ////////////////////////////
-  /// Vector Operations
-  ////////////////////////////
+  /** Destroy all shared memory allocated by the vector */
+  void shm_destroy() {
+    if (IsNull()) { return; }
+    erase(begin(), end());
+    alloc_->Free(header_->vec_ptr_);
+    SetNull();
+  }
+
+  /** Store into shared memory */
+  void shm_serialize_main() const {}
+
+  /** Load from shared memory */
+  void shm_deserialize_main() {}
+
+  /** Check if null */
+  bool IsNull() {
+    return header_ == nullptr || header_->vec_ptr_.IsNull();
+  }
+
+  /** Make null */
+  void SetNull() {
+    header_->vec_ptr.SetNull();
+  }
+
+  /**====================================
+   * Vector Operations
+   * ===================================*/
 
   /**
    * Convert to std::vector
@@ -407,7 +413,6 @@ class vector : public ShmContainer {
    * */
   template<typename ...Args>
   void reserve(size_t length, Args&& ...args) {
-    if (IsNull()) { shm_init(); }
     if (length == 0) { return; }
     grow_vector(data_ar(), length, false, std::forward<Args>(args)...);
   }
@@ -421,7 +426,6 @@ class vector : public ShmContainer {
    * */
   template<typename ...Args>
   void resize(size_t length, Args&& ...args) {
-    if (IsNull()) { shm_init(); }
     if (length == 0) { return; }
     grow_vector(data_ar(), length, true, std::forward<Args>(args)...);
     header_->length_ = length;
@@ -551,6 +555,9 @@ class vector : public ShmContainer {
       Convert<ShmArchive<T>>(header_->vec_ptr_);
   }
 
+  /**====================================
+   * Internal Operations
+   * ===================================*/
  private:
   /**
    * Grow a vector to a new size.
@@ -648,10 +655,9 @@ class vector : public ShmContainer {
     }
   }
 
-  ////////////////////////////
-  /// Iterators
-  ////////////////////////////
-
+  /**====================================
+   * Iterators
+   * ===================================*/
  public:
   /** Beginning of the forward iterator */
   vector_iterator<T> begin() {

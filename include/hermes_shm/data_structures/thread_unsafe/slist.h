@@ -223,48 +223,15 @@ using slist_citerator = slist_iterator_templ<T>;
  * */
 template<typename T>
 struct ShmHeader<slist<T>> : public ShmBaseHeader {
+  SHM_CONTAINER_HEADER_TEMPLATE(ShmHeader)
   OffsetPointer head_ptr_, tail_ptr_;
   size_t length_;
-
-  /** Default constructor */
-  ShmHeader() = default;
-
-  /** Copy constructor */
-  ShmHeader(const ShmHeader &other) {
-    strong_copy(other);
-  }
-
-  /** Copy assignment operator */
-  ShmHeader& operator=(const ShmHeader &other) {
-    if (this != &other) {
-      strong_copy(other);
-    }
-    return *this;
-  }
 
   /** Strong copy operation */
   void strong_copy(const ShmHeader &other) {
     head_ptr_ = other.head_ptr_;
     tail_ptr_ = other.tail_ptr_;
     length_ = other.length_;
-  }
-
-  /** Move constructor */
-  ShmHeader(ShmHeader &&other) {
-    weak_move(other);
-  }
-
-  /** Move operator */
-  ShmHeader& operator=(ShmHeader &&other) {
-    if (this != &other) {
-      weak_move(other);
-    }
-    return *this;
-  }
-
-  /** Move operation */
-  void weak_move(ShmHeader &other) {
-    strong_copy(other);
   }
 };
 
@@ -277,26 +244,68 @@ class slist : public ShmContainer {
   SHM_CONTAINER_TEMPLATE((CLASS_NAME), (TYPED_CLASS), (TYPED_HEADER))
 
  public:
-  ////////////////////////////
-  /// SHM Overrides
-  ////////////////////////////
-
-  /** Default constructor */
-  slist() = default;
+  /**====================================
+   * SHM Overrides
+   * ===================================*/
 
   /** Initialize slist in shared memory */
-  void shm_init_main(TYPED_HEADER *header,
-                     Allocator *alloc) {
-    shm_init_allocator(alloc);
-    shm_init_header(header);
-    header_->length_ = 0;
-    header_->head_ptr_.SetNull();
-    header_->tail_ptr_.SetNull();
+  explicit slist(TYPED_HEADER *header, Allocator *alloc) {
+    shm_init_header(header, alloc);
+    SetNull();
+  }
+
+  /** Move constructor */
+  explicit slist(slist &&other) {
+    shm_init_header(other.header_, other.alloc_);
+    if (!other.IsNull()) {
+      shm_deserialize_main();
+    }
+    other.RemoveHeader();
+  }
+
+  /** Move assignment operator */
+  slist& operator=(slist &&other) noexcept {
+    if (this == &other) {
+      return *this;
+    }
+    shm_destroy();
+    if (!other.IsNull()) {
+      if (alloc_ == other.alloc_) {
+        memcpy(header_, other.header_, sizeof(*header_));
+        shm_deserialize_main();
+        other.SetNull();
+      } else {
+        shm_strong_copy_main(other);
+        other.shm_destroy();
+      }
+    }
+    return *this;
+  }
+
+  /** Copy assignment operator */
+  CLASS_NAME& operator=(const slist &other) {
+    if (this == &other) {
+      return *this;
+    }
+    shm_destroy();
+    if (!other.IsNull()) {
+      shm_strong_copy_main(other);
+    }
+    return *this;
+  }
+
+  /** Internal copy operation */
+  void shm_strong_copy_main(const slist &other) {
+    for (auto iter = other.cbegin(); iter != other.cend(); ++iter) {
+      emplace_back(**iter);
+    }
   }
 
   /** Destroy all shared memory allocated by the slist */
-  void shm_destroy_main() {
+  void shm_destroy() {
+    if (IsNull()) { return; }
     clear();
+    SetNull();
   }
 
   /** Store into shared memory */
@@ -305,27 +314,21 @@ class slist : public ShmContainer {
   /** Load from shared memory */
   void shm_deserialize_main() {}
 
-  /** Move constructor */
-  void shm_weak_move_main(TYPED_HEADER *header,
-                          Allocator *alloc, slist &&other) {
-    shm_init_allocator(alloc);
-    shm_init_header(header);
-    *header_ = *(other.header_);
+  /** Check if the list is empty */
+  bool IsNull() {
+    return header_ == nullptr || header_->length_ == 0;
   }
 
-  /** Copy constructor */
-  void shm_strong_copy_main(TYPED_HEADER *header,
-                            Allocator *alloc, const slist &other) {
-    shm_init_allocator(alloc);
-    shm_init_header(header);
-    for (auto iter = other.cbegin(); iter != other.cend(); ++iter) {
-      emplace_back(**iter);
-    }
+  /** Sets this list as empty */
+  void SetNull() {
+    header_->length_ = 0;
+    header_->head_ptr_.SetNull();
+    header_->tail_ptr_.SetNull();
   }
 
-  ////////////////////////////
-  /// slist Methods
-  ////////////////////////////
+  /**====================================
+   * slist Methods
+   * ===================================*/
 
   /** Construct an element at the back of the slist */
   template<typename... Args>
@@ -456,9 +459,9 @@ class slist : public ShmContainer {
     return end();
   }
 
-  /**
-   * ITERATORS
-   * */
+  /**====================================
+  * Iterators
+  * ===================================*/
 
   /** Forward iterator begin */
   slist_iterator<T> begin() {

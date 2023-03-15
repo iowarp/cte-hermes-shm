@@ -102,7 +102,7 @@ struct charbuf {
   }
 
   /** Move assignment operator */
-  charbuf& operator=(charbuf &other) {
+  charbuf& operator=(charbuf &&other) {
     if (this != &other) {
       Free();
       alloc_ = other.alloc_;

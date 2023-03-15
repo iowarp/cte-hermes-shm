@@ -17,10 +17,6 @@ class ShmHeader<LockedVector> : public hipc::ShmBaseHeader {
  public:
   hermes_shm::Mutex lock_;
   hipc::ShmArchive<hipc::vector<int>> vec_;
-
-  ShmHeader(hipc::Allocator *alloc) {
-    vec_.shm_init(alloc);
-  }
 };
 
 class LockedVector {
@@ -47,6 +43,7 @@ class LockedVector {
     shm_init_allocator(alloc);
     shm_init_header(header, alloc_);
     shm_deserialize_main();
+    vec_->shm_init(alloc_);
   }
 
   /** Move constructor */

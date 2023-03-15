@@ -89,7 +89,8 @@ class _ShmArchive_Header {
 template<typename T>
 class _ShmArchive_T {
  public:
-  char obj_[sizeof(T)]; /**< Store object without constructing */
+  typedef T header_t;
+  char obj_hdr_[sizeof(T)]; /**< Store object without constructing */
 
  public:
   /** Default constructor. */
@@ -125,13 +126,13 @@ class _ShmArchive_T {
   /** Returns a reference to the internal object */
   T& internal_ref(Allocator *alloc) {
     (void) alloc;
-    return reinterpret_cast<T&>(obj_);
+    return reinterpret_cast<T&>(obj_hdr_);
   }
 
   /** Returns a reference to the internal object */
   T& internal_ref(Allocator *alloc) const {
     (void) alloc;
-    return reinterpret_cast<T&>(obj_);
+    return reinterpret_cast<T&>(obj_hdr_);
   }
 };
 
@@ -154,6 +155,7 @@ class ShmArchive {
  public:
   typedef SHM_ARCHIVE_OR_REF(T) T_Ar;
   typedef SHM_MAKE_HEADER_OR_T(T) T_Hdr;
+  typedef typename T_Hdr::header_t header_t;
   T_Hdr obj_;
 
   /** Default constructor */
@@ -182,6 +184,16 @@ class ShmArchive {
   /** Returns a reference to the internal object */
   T_Ar internal_ref(Allocator *alloc) const {
     return obj_.internal_ref(alloc);
+  }
+
+  /** returns a reference to the internal header of the object */
+  header_t& header_ref() {
+    return *reinterpret_cast<header_t*>(obj_.obj_hdr_);
+  }
+
+  /** returns a const reference to the internal header of the object */
+  header_t& header_ref() const {
+    return *reinterpret_cast<header_t*>(obj_.obj_hdr_);
   }
 
   /** Shm destructor */

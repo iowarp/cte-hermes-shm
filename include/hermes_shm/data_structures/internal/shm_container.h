@@ -28,42 +28,49 @@ namespace hermes_shm::ipc {
 
 /** Bits used for determining how to destroy an object */
 /// The container's header has been allocated
-#define SHM_CONTAINER_VALID BIT_OPT(uint16_t, 0)
+#define SHM_PRIVATE_IS_VALID BIT_OPT(uint16_t, 0)
 /// The container header is initialized
-#define SHM_CONTAINER_DATA_VALID BIT_OPT(uint16_t, 1)
+#define SHM_SHARED_IS_VALID BIT_OPT(uint16_t, 1)
 /// The header was allocated by this container
-#define SHM_CONTAINER_HEADER_DESTRUCTABLE BIT_OPT(uint16_t, 2)
+#define SHM_SHARED_HEADER_DESTRUCTABLE BIT_OPT(uint16_t, 2)
 /// The container should free all data when destroyed
-#define SHM_CONTAINER_DESTRUCTABLE BIT_OPT(uint16_t, 3)
+#define SHM_PRIVATE_IS_DESTRUCTABLE BIT_OPT(uint16_t, 3)
 
 /** The shared-memory header used for data structures */
 template<typename T>
 struct ShmHeader;
 
 /** The ShmHeader used for base containers */
-struct ShmBaseHeader {
-  bitfield32_t flags_;
-
-  /** Default constructor */
-  ShmBaseHeader() = default;
-
-  /** Copy constructor */
-  ShmBaseHeader(const ShmBaseHeader &other) {}
-
-  /** Copy assignment operator */
-  ShmBaseHeader& operator=(const ShmBaseHeader &other) {
-    return *this;
+struct ShmBaseHeader {};
+#define SHM_CONTAINER_HEADER_TEMPLATE(HEADER_NAME)\
+  /** Default constructor */\
+  TYPE_UNWRAP(HEADER_NAME)() = default;\
+  \
+  /** Copy constructor */\
+  TYPE_UNWRAP(HEADER_NAME)(const TYPE_UNWRAP(HEADER_NAME) &other) {\
+    strong_copy(other);\
+  }\
+  \
+  /** Copy assignment operator */\
+  TYPE_UNWRAP(HEADER_NAME)& operator=(const TYPE_UNWRAP(HEADER_NAME) &other) {\
+    if (this != &other) {\
+      strong_copy(other);\
+    }\
+    return *this;\
+  }\
+\
+  /** Move constructor */\
+  TYPE_UNWRAP(HEADER_NAME)(TYPE_UNWRAP(HEADER_NAME) &&other) {\
+    strong_copy(other);\
+  }\
+  \
+  /** Move operator */\
+  TYPE_UNWRAP(HEADER_NAME)& operator=(TYPE_UNWRAP(HEADER_NAME) &&other) {\
+    if (this != &other) {\
+      strong_copy(other);\
+    }\
+    return *this;\
   }
-
-  /**
-   * Disable copying of the flag field, as all flags
-   * pertain to a particular ShmHeader allocation.
-   * */
-  void strong_copy(const ShmBaseHeader &other) {}
-
-  /** Publicize bitfield operations */
-  INHERIT_BITFIELD_OPS(flags_, uint16_t)
-};
 
 /** The ShmHeader used for wrapper containers */
 struct ShmWrapperHeader {};

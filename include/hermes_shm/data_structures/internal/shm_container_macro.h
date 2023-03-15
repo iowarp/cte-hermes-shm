@@ -1,377 +1,157 @@
 #ifndef HERMES_DATA_STRUCTURES_INTERNAL_SHM_CONTAINER_MACRO_H_
 #define HERMES_DATA_STRUCTURES_INTERNAL_SHM_CONTAINER_MACRO_H_
 #define SHM_CONTAINER_TEMPLATE(CLASS_NAME,TYPED_CLASS,TYPED_HEADER)\
- public:\
-  /**====================================\
-   * Variables & Types\
-   * ===================================*/\
+/**====================================\
+ * Variables & Types\
+ * ===================================*/\
 \
-  typedef TYPE_UNWRAP(TYPED_HEADER) header_t; /** Header type query */\
-  header_t *header_; /**< Header of the shared-memory data structure */\
-  hipc::Allocator *alloc_; /**< hipc::Allocator used for this data structure */\
-  hermes_shm::bitfield32_t flags_; /**< Flags used data structure status */\
+typedef TYPE_UNWRAP(TYPED_HEADER) header_t; /** Header type query */\
+header_t *header_; /**< Header of the shared-memory data structure */\
+hipc::Allocator *alloc_; /**< hipc::Allocator used for this data structure */\
+hermes_shm::bitfield32_t flags_; /**< Flags used data structure status */\
 \
-  /**====================================\
-   * Constructors\
-   * ===================================*/\
+public:\
+/**====================================\
+ * Constructors\
+ * ===================================*/\
 \
-  /** Constructor. Allocate header with default allocator. */\
-  template<typename ...Args>\
-  explicit TYPE_UNWRAP(CLASS_NAME)(Args&& ...args) {\
-    shm_init(std::forward<Args>(args)...);\
-  }\
+/** Disable default constructor */\
+TYPE_UNWRAP(CLASS_NAME)() = delete;\
 \
-  /** Constructor. Allocate header with default allocator. */\
-  template<typename ...Args>\
-  void shm_init(Args&& ...args) {\
-    shm_init_main(hipc::typed_nullptr<TYPE_UNWRAP(TYPED_HEADER)>(),\
-                  hipc::typed_nullptr<hipc::Allocator>(),\
-                  std::forward<Args>(args)...);\
-  }\
+/** Disable copy constructor */\
+TYPE_UNWRAP(CLASS_NAME)(const TYPE_UNWRAP(CLASS_NAME) &other) = delete;\
 \
-  /** Constructor. Allocate header with specific allocator. */\
-  template<typename ...Args>\
-  void shm_init(hipc::Allocator *alloc, Args&& ...args) {\
-    shm_init_main(hipc::typed_nullptr<TYPE_UNWRAP(TYPED_HEADER)>(),\
-                  alloc,\
-                  std::forward<Args>(args)...);\
-  }\
+/** Default destructor */\
+~TYPE_UNWRAP(CLASS_NAME)() = default;\
 \
-  /** Constructor. Initialize an already-allocated header. */\
-  template<typename ...Args>\
-  void shm_init(TYPE_UNWRAP(TYPED_HEADER) &header,\
-                hipc::Allocator *alloc, Args&& ...args) {\
-    shm_init_main(&header, alloc, std::forward<Args>(args)...);\
-  }\
+/** Initialize header + allocator */\
+void shm_init_header(TYPE_UNWRAP(TYPE_UNWRAP(TYPED_HEADER)) *header,\
+                     hipc::Allocator *alloc) {\
+  header_ = header;\
+  alloc_ = alloc;\
+}\
 \
-  /** Initialize the data structure's allocator */\
-  inline void shm_init_allocator(hipc::Allocator *alloc) {\
-    if (IsValid()) { return; }\
-    if (alloc == nullptr) {\
-      alloc_ = HERMES_MEMORY_REGISTRY->GetDefaultAllocator();\
-    } else {\
-      alloc_ = alloc;\
-    }\
-  }\
+/**====================================\
+ * Serialization\
+ * ===================================*/\
 \
-  /**\
-   * Initialize a data structure's header.\
-   * A container will never re-set or re-allocate its header once it has\
-   * been set the first time.\
-   * */\
-  template<typename ...Args>\
-  void shm_init_header(TYPE_UNWRAP(TYPED_HEADER) *header,\
-                       Args&& ...args) {\
-    if (IsValid()) {\
-      header_->SetBits(SHM_CONTAINER_DATA_VALID);\
-    } else if (header == nullptr) {\
-      hipc::Pointer p;\
-      header_ = alloc_->template\
-        AllocateConstructObjs<TYPE_UNWRAP(TYPED_HEADER)>(\
-        1, p, std::forward<Args>(args)...);\
-      header_->SetBits(\
-        SHM_CONTAINER_DATA_VALID |\
-          SHM_CONTAINER_HEADER_DESTRUCTABLE);\
-      flags_.SetBits(\
-        SHM_CONTAINER_VALID |\
-          SHM_CONTAINER_DESTRUCTABLE);\
-    } else {\
-      hipc::Pointer header_ptr;\
-      header_ = header;\
-      hipc::Allocator::ConstructObj<TYPE_UNWRAP(TYPED_HEADER)>(\
-        *header_, std::forward<Args>(args)...);\
-      header_->SetBits(\
-        SHM_CONTAINER_DATA_VALID);\
-      flags_.SetBits(\
-        SHM_CONTAINER_VALID |\
-          SHM_CONTAINER_DESTRUCTABLE);\
-    }\
-  }\
+/** Serialize into a Pointer */\
+void shm_serialize(hipc::TypedPointer<TYPE_UNWRAP(TYPED_CLASS)> &ar) const {\
+  ar = alloc_->template\
+    Convert<TYPE_UNWRAP(TYPED_HEADER), hipc::Pointer>(header_);\
+  shm_serialize_main();\
+}\
 \
-  /**====================================\
-   * Serialization\
-   * ===================================*/\
+/** Serialize into an AtomicPointer */\
+void shm_serialize(hipc::TypedAtomicPointer<TYPE_UNWRAP(TYPED_CLASS)> &ar) const {\
+  ar = alloc_->template\
+    Convert<TYPE_UNWRAP(TYPED_HEADER), hipc::AtomicPointer>(header_);\
+  shm_serialize_main();\
+}\
 \
-  /** Serialize into a Pointer */\
-  void shm_serialize(hipc::TypedPointer<TYPE_UNWRAP(TYPED_CLASS)> &ar) const {\
-    ar = alloc_->template\
-      Convert<TYPE_UNWRAP(TYPED_HEADER), hipc::Pointer>(header_);\
-    shm_serialize_main();\
-  }\
+/** Override >> operators */\
+void operator>>(hipc::TypedPointer<TYPE_UNWRAP(TYPE_UNWRAP(TYPED_CLASS))> &ar) const {\
+  shm_serialize(ar);\
+}\
+void operator>>(\
+  hipc::TypedAtomicPointer<TYPE_UNWRAP(TYPE_UNWRAP(TYPED_CLASS))> &ar) const {\
+  shm_serialize(ar);\
+}\
 \
-  /** Serialize into an AtomicPointer */\
-  void shm_serialize(hipc::TypedAtomicPointer<TYPE_UNWRAP(TYPED_CLASS)> &ar) const {\
-    ar = alloc_->template\
-      Convert<TYPE_UNWRAP(TYPED_HEADER), hipc::AtomicPointer>(header_);\
-    shm_serialize_main();\
-  }\
+/**====================================\
+ * Deserialization\
+ * ===================================*/\
 \
-  /** Override >> operators */\
-  void operator>>(hipc::TypedPointer<TYPE_UNWRAP(TYPE_UNWRAP(TYPED_CLASS))> &ar) const {\
-    shm_serialize(ar);\
-  }\
-  void operator>>(\
-    hipc::TypedAtomicPointer<TYPE_UNWRAP(TYPE_UNWRAP(TYPED_CLASS))> &ar) const {\
-    shm_serialize(ar);\
-  }\
+/** Deserialize object from a raw pointer */\
+bool shm_deserialize(const hipc::TypedPointer<TYPE_UNWRAP(TYPED_CLASS)> &ar) {\
+  return shm_deserialize(\
+    HERMES_MEMORY_REGISTRY->GetAllocator(ar.allocator_id_),\
+    ar.ToOffsetPointer()\
+  );\
+}\
 \
-  /**====================================\
-   * Deserialization\
-   * ===================================*/\
+/** Deserialize object from allocator + offset */\
+bool shm_deserialize(hipc::Allocator *alloc, hipc::OffsetPointer header_ptr) {\
+  if (header_ptr.IsNull()) { return false; }\
+  return shm_deserialize(alloc->Convert<\
+                           TYPE_UNWRAP(TYPED_HEADER),\
+                           hipc::OffsetPointer>(header_ptr),\
+                         alloc);\
+}\
 \
-  /** Deserialize object from a raw pointer */\
-  bool shm_deserialize(const hipc::TypedPointer<TYPE_UNWRAP(TYPED_CLASS)> &ar) {\
-    return shm_deserialize(\
-      HERMES_MEMORY_REGISTRY->GetAllocator(ar.allocator_id_),\
-      ar.ToOffsetPointer()\
-    );\
-  }\
+/** Deserialize object from "Deserialize" object */\
+bool shm_deserialize(hipc::ShmDeserialize<TYPE_UNWRAP(TYPED_CLASS)> other) {\
+  return shm_deserialize(other.header_, other.alloc_);\
+}\
 \
-  /** Deserialize object from allocator + offset */\
-  bool shm_deserialize(hipc::Allocator *alloc, hipc::OffsetPointer header_ptr) {\
-    if (header_ptr.IsNull()) { return false; }\
-    return shm_deserialize(alloc,\
-                           alloc->Convert<\
-                             TYPE_UNWRAP(TYPED_HEADER),\
-                             hipc::OffsetPointer>(header_ptr));\
-  }\
+/** Deserialize object from allocator + header */\
+bool shm_deserialize(TYPE_UNWRAP(TYPED_HEADER) *header,\
+                     hipc::Allocator *alloc) {\
+  shm_init_header(header, alloc);\
+  shm_deserialize_main();\
+  return true;\
+}\
 \
-  /** Deserialize object from another object (weak copy) */\
-  bool shm_deserialize(const TYPE_UNWRAP(CLASS_NAME) &other) {\
-    if (other.IsNull()) { return false; }\
-    return shm_deserialize(other.GetAllocator(), other.header_);\
-  }\
+/** Constructor. Deserialize the object from the reference. */\
+explicit TYPE_UNWRAP(CLASS_NAME)(hipc::ShmRef<TYPE_UNWRAP(TYPED_CLASS)> &obj) {\
+  shm_deserialize(obj->header_, obj->GetAllocator());\
+}\
 \
-  /** Deserialize object from "Deserialize" object */\
-  bool shm_deserialize(hipc::ShmDeserialize<TYPE_UNWRAP(TYPED_CLASS)> other) {\
-    return shm_deserialize(other.alloc_, other.header_);\
-  }\
+/** Constructor. Deserialize the object deserialize reference. */\
+explicit TYPE_UNWRAP(CLASS_NAME)(hipc::ShmDeserialize<TYPE_UNWRAP(TYPED_CLASS)> other) {\
+  shm_deserialize(other);\
+}\
 \
-  /** Deserialize object from allocator + header */\
-  bool shm_deserialize(hipc::Allocator *alloc,\
-                       TYPE_UNWRAP(TYPED_HEADER) *header) {\
-    flags_.UnsetBits(SHM_CONTAINER_DESTRUCTABLE);\
-    alloc_ = alloc;\
-    header_ = header;\
-    flags_.SetBits(SHM_CONTAINER_VALID);\
-    shm_deserialize_main();\
-    return true;\
-  }\
+/** Override << operators */\
+void operator<<(const hipc::TypedPointer<TYPE_UNWRAP(TYPE_UNWRAP(TYPED_CLASS))> &ar) {\
+  shm_deserialize(ar);\
+}\
+void operator<<(\
+  const hipc::TypedAtomicPointer<TYPE_UNWRAP(TYPE_UNWRAP(TYPED_CLASS))> &ar) {\
+  shm_deserialize(ar);\
+}\
+void operator<<(\
+  const hipc::ShmDeserialize<TYPE_UNWRAP(TYPE_UNWRAP(TYPED_CLASS))> &ar) {\
+  shm_deserialize(ar);\
+}\
 \
-  /** Constructor. Deserialize the object from the reference. */\
-  template<typename ...Args>\
-  void shm_init(hipc::ShmRef<TYPE_UNWRAP(TYPED_CLASS)> &obj) {\
-    shm_deserialize(obj->GetAllocator(), obj->header_);\
-  }\
+/**====================================\
+ * Header Operations\
+ * ===================================*/\
 \
-  /** Constructor. Deserialize the object deserialize reference. */\
-  template<typename ...Args>\
-  void shm_init(hipc::ShmDeserialize<TYPE_UNWRAP(TYPED_CLASS)> other) {\
-    shm_deserialize(other);\
-  }\
+/** Set the header to null */\
+void RemoveHeader() {\
+  header_ = nullptr;\
+}\
 \
-  /** Override << operators */\
-  void operator<<(const hipc::TypedPointer<TYPE_UNWRAP(TYPE_UNWRAP(TYPED_CLASS))> &ar) {\
-    shm_deserialize(ar);\
-  }\
-  void operator<<(\
-    const hipc::TypedAtomicPointer<TYPE_UNWRAP(TYPE_UNWRAP(TYPED_CLASS))> &ar) {\
-    shm_deserialize(ar);\
-  }\
-  void operator<<(\
-    const hipc::ShmDeserialize<TYPE_UNWRAP(TYPE_UNWRAP(TYPED_CLASS))> &ar) {\
-    shm_deserialize(ar);\
-  }\
+/** Get a typed pointer to the object */\
+template<typename POINTER_T>\
+POINTER_T GetShmPointer() const {\
+  return alloc_->Convert<TYPE_UNWRAP(TYPED_HEADER), POINTER_T>(header_);\
+}\
 \
-  /**====================================\
-   * Destructors\
-   * ===================================*/\
+/** Get a ShmDeserialize object */\
+hipc::ShmDeserialize<TYPE_UNWRAP(CLASS_NAME)> GetShmDeserialize() const {\
+  return hipc::ShmDeserialize<TYPE_UNWRAP(CLASS_NAME)>(header_, alloc_);\
+}\
 \
-  /** Destructor */\
-  ~TYPE_UNWRAP(CLASS_NAME)() {\
-    if (IsDestructable()) {\
-      shm_destroy(true);\
-    }\
-  }\
+/**====================================\
+ * Query Operations\
+ * ===================================*/\
 \
-  /** Shm Destructor */\
-  void shm_destroy(bool destroy_header = true) {\
-    if (!IsValid()) { return; }\
-    if (IsDataValid()) {\
-      shm_destroy_main();\
-    }\
-    UnsetDataValid();\
-    if (destroy_header &&\
-      header_->OrBits(SHM_CONTAINER_HEADER_DESTRUCTABLE)) {\
-      alloc_->FreePtr<TYPE_UNWRAP(TYPED_HEADER)>(header_);\
-      UnsetValid();\
-    }\
-  }\
+/** Get the allocator for this container */\
+hipc::Allocator* GetAllocator() {\
+  return alloc_;\
+}\
 \
-  /**====================================\
-   * Move Operations\
-   * ===================================*/\
+/** Get the allocator for this container */\
+hipc::Allocator* GetAllocator() const {\
+  return alloc_;\
+}\
 \
-  /** Move constructor */\
-  TYPE_UNWRAP(CLASS_NAME)(TYPE_UNWRAP(CLASS_NAME) &&other) noexcept {\
-    shm_weak_move(\
-      hipc::typed_nullptr<TYPE_UNWRAP(TYPED_HEADER)>(),\
-      hipc::typed_nullptr<hipc::Allocator>(),\
-      std::forward<TYPE_UNWRAP(CLASS_NAME)>(other));\
-  }\
-\
-  /** Move assignment operator */\
-  TYPE_UNWRAP(CLASS_NAME)& operator=(TYPE_UNWRAP(CLASS_NAME) &&other) noexcept {\
-    if (this != &other) {\
-      shm_weak_move(\
-        hipc::typed_nullptr<TYPE_UNWRAP(TYPED_HEADER)>(),\
-        hipc::typed_nullptr<hipc::Allocator>(),\
-        std::forward<TYPE_UNWRAP(CLASS_NAME)>(other));\
-    }\
-    return *this;\
-  }\
-\
-  /** Move shm_init constructor */\
-  void shm_init_main(TYPE_UNWRAP(TYPED_HEADER) *header,\
-                     hipc::Allocator *alloc,\
-                     TYPE_UNWRAP(CLASS_NAME) &&other) noexcept {\
-    shm_weak_move(header, alloc, std::forward<TYPE_UNWRAP(CLASS_NAME)>(other));\
-  }\
-\
-  /** Move operation */\
-  void shm_weak_move(TYPE_UNWRAP(TYPED_HEADER) *header,\
-                     hipc::Allocator *alloc,\
-                     TYPE_UNWRAP(CLASS_NAME) &&other) {\
-    if (other.IsNull()) { return; }\
-    if (IsValid() && other.GetAllocator() != GetAllocator()) {\
-      shm_strong_copy(header, alloc, other);\
-      other.shm_destroy(true);\
-      return;\
-    }\
-    shm_destroy(false);\
-    shm_weak_move_main(header, alloc,\
-                       std::forward<TYPE_UNWRAP(CLASS_NAME)>(other));\
-    if (!other.IsDestructable()) {\
-      UnsetDestructable();\
-    }\
-    other.UnsetDataValid();\
-    other.shm_destroy(true);\
-  }\
-\
-  /**====================================\
-   * Copy Operations\
-   * ===================================*/\
-\
-  /** Copy constructor */\
-  TYPE_UNWRAP(CLASS_NAME)(const TYPE_UNWRAP(CLASS_NAME) &other) noexcept {\
-    shm_init(other);\
-  }\
-\
-  /** Copy assignment constructor */\
-  TYPE_UNWRAP(CLASS_NAME)& operator=(const TYPE_UNWRAP(CLASS_NAME) &other) {\
-    if (this != &other) {\
-      shm_strong_copy(\
-        hipc::typed_nullptr<TYPE_UNWRAP(TYPED_HEADER)>(),\
-        hipc::typed_nullptr<hipc::Allocator>(),\
-        other);\
-    }\
-    return *this;\
-  }\
-\
-  /** Copy shm_init constructor */\
-  void shm_init_main(TYPE_UNWRAP(TYPED_HEADER) *header,\
-                     hipc::Allocator *alloc,\
-                     const TYPE_UNWRAP(CLASS_NAME) &other) {\
-    shm_strong_copy(header, alloc, other);\
-  }\
-\
-  /** Strong Copy operation */\
-  void shm_strong_copy(TYPE_UNWRAP(TYPED_HEADER) *header,\
-                       hipc::Allocator *alloc,\
-                       const TYPE_UNWRAP(CLASS_NAME) &other) {\
-    if (other.IsNull()) { return; }\
-    shm_destroy(false);\
-    shm_strong_copy_main(header, alloc, other);\
-    SetDestructable();\
-  }\
-\
-  /**====================================\
-   * Container Flag Operations\
-   * ===================================*/\
-\
-  /** Sets this object as destructable */\
-  void SetDestructable() {\
-    flags_.SetBits(SHM_CONTAINER_DESTRUCTABLE);\
-  }\
-\
-  /** Sets this object as not destructable */\
-  void UnsetDestructable() {\
-    flags_.UnsetBits(SHM_CONTAINER_DESTRUCTABLE);\
-  }\
-\
-  /** Check if this container is destructable */\
-  bool IsDestructable() const {\
-    return flags_.OrBits(SHM_CONTAINER_DESTRUCTABLE);\
-  }\
-\
-  /** Check if container has a valid header */\
-  bool IsValid() const {\
-    return flags_.OrBits(SHM_CONTAINER_VALID);\
-  }\
-\
-  /** Set container header invalid */\
-  void UnsetValid() {\
-    flags_.UnsetBits(SHM_CONTAINER_VALID |\
-      SHM_CONTAINER_DESTRUCTABLE | SHM_CONTAINER_HEADER_DESTRUCTABLE);\
-  }\
-\
-  /**====================================\
-   * Header Flag Operations\
-   * ===================================*/\
-\
-  /** Check if header's data is valid */\
-  bool IsDataValid() const {\
-    return header_->OrBits(SHM_CONTAINER_DATA_VALID);\
-  }\
-\
-  /** Check if header's data is valid */\
-  void UnsetDataValid() const {\
-    header_->UnsetBits(SHM_CONTAINER_DATA_VALID);\
-  }\
-\
-  /** Check if null */\
-  bool IsNull() const {\
-    return !IsValid() || !IsDataValid();\
-  }\
-\
-  /** Get a typed pointer to the object */\
-  template<typename POINTER_T>\
-  POINTER_T GetShmPointer() const {\
-    return alloc_->Convert<TYPE_UNWRAP(TYPED_HEADER), POINTER_T>(header_);\
-  }\
-\
-  /** Get a ShmDeserialize object */\
-  hipc::ShmDeserialize<TYPE_UNWRAP(CLASS_NAME)> GetShmDeserialize() const {\
-    return hipc::ShmDeserialize<TYPE_UNWRAP(CLASS_NAME)>(header_, alloc_);\
-  }\
-\
-  /**====================================\
-   * Query Operations\
-   * ===================================*/\
-\
-  /** Get the allocator for this container */\
-  hipc::Allocator* GetAllocator() {\
-    return alloc_;\
-  }\
-\
-  /** Get the allocator for this container */\
-  hipc::Allocator* GetAllocator() const {\
-    return alloc_;\
-  }\
-\
-  /** Get the shared-memory allocator id */\
-  hipc::allocator_id_t GetAllocatorId() const {\
-    return alloc_->GetId();\
-  }\
+/** Get the shared-memory allocator id */\
+hipc::allocator_id_t GetAllocatorId() const {\
+  return alloc_->GetId();\
+}\
 
 #endif  // HERMES_DATA_STRUCTURES_INTERNAL_SHM_CONTAINER_MACRO_H_
