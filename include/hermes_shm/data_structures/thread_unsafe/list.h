@@ -31,12 +31,6 @@ struct list_entry {
   OffsetPointer next_ptr_, prior_ptr_;
   ShmArchive<T> data_;
 
-  /** Constructor */
-  template<typename ...Args>
-  explicit list_entry(Allocator *alloc, Args&& ...args) {
-    make_ref<T>(data_, alloc, std::forward<Args>(args)...);
-  }
-
   /** Returns the element stored in the list */
   Ref<T> internal_ref(Allocator *alloc) {
     return Ref<T>(data_, alloc);
@@ -219,7 +213,7 @@ using list_citerator = list_iterator_templ<T>;
  * The list shared-memory header
  * */
 template<typename T>
-struct ShmHeader<list<T>> : public ShmBaseHeader {
+struct ShmHeader<list<T>> {
   SHM_CONTAINER_HEADER_TEMPLATE(ShmHeader)
   OffsetPointer head_ptr_, tail_ptr_;
   size_t length_;
@@ -261,7 +255,6 @@ class list : public ShmContainer {
   /** Internal move operation */
   void shm_strong_move_main(list &&other) {
     memcpy(header_, other.header_, sizeof(*header_));
-    shm_deserialize_main();
   }
 
   /** Internal copy operation */
@@ -401,10 +394,7 @@ class list : public ShmContainer {
 
   /** Get the number of elements in the list */
   size_t size() const {
-    if (!IsNull()) {
-      return header_->length_;
-    }
-    return 0;
+    return header_->length_;
   }
 
   /** Find an element in this list */
@@ -454,8 +444,8 @@ class list : public ShmContainer {
   template<typename ...Args>
   list_entry<T>* _create_entry(OffsetPointer &p, Args&& ...args) {
     auto entry = alloc_->template
-      AllocateConstructObjs<list_entry<T>>(
-        1, p, alloc_, std::forward<Args>(args)...);
+      AllocateObjs<list_entry<T>>(1, p);
+    make_ref<T>(entry->data_, alloc_, std::forward<Args>(args)...);
     return entry;
   }
 };

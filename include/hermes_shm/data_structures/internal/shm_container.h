@@ -37,7 +37,6 @@ template<typename T>
 struct ShmHeader;
 
 /** The ShmHeader used for base containers */
-struct ShmBaseHeader {};
 #define SHM_CONTAINER_HEADER_TEMPLATE(HEADER_NAME)\
   /** Default constructor */\
   TYPE_UNWRAP(HEADER_NAME)() = default;\

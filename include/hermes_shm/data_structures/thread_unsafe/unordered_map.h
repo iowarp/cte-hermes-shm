@@ -160,7 +160,7 @@ struct unordered_map_iterator {
  * The unordered_map shared-memory header
  * */
 template<typename Key, typename T, class Hash>
-struct ShmHeader<TYPED_CLASS> : public ShmBaseHeader {
+struct ShmHeader<TYPED_CLASS> {
  public:
   SHM_CONTAINER_HEADER_TEMPLATE(ShmHeader)
   using COLLISION_T = hipc::pair<Key, T>;

@@ -31,7 +31,7 @@ class NullContainer;
 
 /** string shared-memory header */
 template<>
-struct ShmHeader<NullContainer> : public ShmBaseHeader {
+struct ShmHeader<NullContainer> {
   /** Default constructor */
   ShmHeader() = default;
 

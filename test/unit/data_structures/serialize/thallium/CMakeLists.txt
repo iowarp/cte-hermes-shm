@@ -27,3 +27,10 @@ add_test(NAME test_thallium COMMAND
         bash ${CMAKE_CURRENT_SOURCE_DIR}/test_thallium.sh
         "${CMAKE_CURRENT_BINARY_DIR}")
 
+#------------------------------------------------------------------------------
+# Code Coverage
+#------------------------------------------------------------------------------
+if(HERMES_ENABLE_COVERAGE)
+    set_coverage_flags(test_thallium_server)
+    set_coverage_flags(test_thallium_exec)
+endif()

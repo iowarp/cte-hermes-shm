@@ -291,7 +291,9 @@ class ShmContainerExample : public hipc::ShmContainer {
   /** Deserialize object from allocator + header */
   bool shm_deserialize(TYPED_HEADER *header,
                        hipc::Allocator *alloc) {
-    shm_make_header(header, alloc);
+    header_ = header;
+    alloc_ = alloc;
+    flags_.UnsetBits(SHM_PRIVATE_IS_DESTRUCTABLE | SHM_PRIVATE_OWNS_HEADER);
     shm_deserialize_main();
     return true;
   }

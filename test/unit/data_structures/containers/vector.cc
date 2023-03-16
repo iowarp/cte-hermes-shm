@@ -51,14 +51,24 @@ void VectorTest() {
   }
 }
 
-void VectorOfListOfStringTest() {
+void VectorOfVectorOfStringTest() {
   Allocator *alloc = alloc_g;
-  auto vec_p = hipc::make_uptr<vector<list<string>>>(alloc);
-  auto &vec = *vec_p;
+  vector<vector<string>> vec(alloc);
 
   vec.resize(10);
-  for (auto bkt : vec) {
-    (*bkt).emplace_back("hello");
+  for (hipc::Ref<vector<string>> bkt : vec) {
+    bkt->emplace_back("hello");
+  }
+  vec.clear();/**/
+}
+
+void VectorOfListOfStringTest() {
+  Allocator *alloc = alloc_g;
+  vector<list<string>> vec(alloc);
+
+  vec.resize(10);
+  for (hipc::Ref<list<string>> bkt : vec) {
+    bkt->emplace_back("hello");
   }
   vec.clear();
 }
@@ -84,6 +94,13 @@ TEST_CASE("VectorOfStdString") {
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
   VectorTest<std::string, false>();
   VectorTest<int, true>();
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+}
+
+TEST_CASE("VectorOfVectorOfString") {
+  Allocator *alloc = alloc_g;
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+  VectorOfVectorOfStringTest();
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
 }
 

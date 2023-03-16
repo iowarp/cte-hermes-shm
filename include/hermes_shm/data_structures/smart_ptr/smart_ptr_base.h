@@ -197,6 +197,7 @@ class _RefNoShm {
   void shm_destroy() {
     if constexpr(destructable) {
       if (obj_ != nullptr) {
+        Allocator::DestructObj<T>(*obj_);
         alloc_->FreePtr<T>(obj_);
       }
     }

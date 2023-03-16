@@ -217,7 +217,7 @@ using slist_citerator = slist_iterator_templ<T>;
  * The slist shared-memory header
  * */
 template<typename T>
-struct ShmHeader<slist<T>> : public ShmBaseHeader {
+struct ShmHeader<slist<T>> {
   SHM_CONTAINER_HEADER_TEMPLATE(ShmHeader)
   OffsetPointer head_ptr_, tail_ptr_;
   size_t length_;

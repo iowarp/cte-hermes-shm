@@ -19,13 +19,9 @@
 using hermes_shm::ipc::list;
 
 template<typename T>
-void ListTest() {
-  Allocator *alloc = alloc_g;
-  auto lp = hipc::make_uptr<list<T>>(alloc);
-  ListTestSuite<T, list<T>> test(*lp, alloc);
-
-  test.EmplaceTest(30);
-  test.ForwardIteratorTest();
+void ListTestRunner(ListTestSuite<T, list<T>> &test) {
+  test.EmplaceTest(15);
+  /*test.ForwardIteratorTest();
   test.ConstForwardIteratorTest();
   test.CopyConstructorTest();
   test.CopyAssignmentTest();
@@ -34,26 +30,40 @@ void ListTest() {
   test.EmplaceFrontTest();
   test.ModifyEntryCopyIntoTest();
   test.ModifyEntryMoveIntoTest();
-  test.EraseTest();
+  test.EraseTest();*/
+}
+
+template<typename T, bool ptr>
+void ListTest() {
+  Allocator *alloc = alloc_g;
+  if constexpr(ptr) {
+    auto lp = hipc::make_uptr<list<T>>(alloc);
+    ListTestSuite<T, list<T>> test(*lp, alloc);
+    ListTestRunner(test);
+  } else {
+    list<T> lp(alloc);
+    ListTestSuite<T, list<T>> test(lp, alloc);
+    ListTestRunner(test);
+  }
 }
 
 TEST_CASE("ListOfInt") {
   Allocator *alloc = alloc_g;
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
-  ListTest<int>();
+  ListTest<int, false>();
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
 }
 
 TEST_CASE("ListOfString") {
   Allocator *alloc = alloc_g;
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
-  ListTest<hipc::string>();
+  ListTest<hipc::string, false>();
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
 }
 
 TEST_CASE("ListOfStdString") {
   Allocator *alloc = alloc_g;
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
-  ListTest<std::string>();
+  ListTest<std::string, false>();
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
 }

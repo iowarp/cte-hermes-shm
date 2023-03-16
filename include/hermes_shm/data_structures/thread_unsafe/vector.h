@@ -251,7 +251,7 @@ using vector_criterator = vector_iterator_templ<T, false>;
  * The vector shared-memory header
  * */
 template<typename T>
-struct ShmHeader<TYPED_CLASS> : public ShmBaseHeader {
+struct ShmHeader<TYPED_CLASS> {
   SHM_CONTAINER_HEADER_TEMPLATE(ShmHeader)
   AtomicPointer vec_ptr_;
   size_t max_length_, length_;
@@ -550,8 +550,8 @@ class vector : public ShmContainer {
         AllocateObjs<ShmArchive<T>>(max_length, new_p);
       for (size_t i = 0; i < header_->length_; ++i) {
         hipc::Ref<T> old_entry = (*this)[i];
-        hipc::Ref<T> new_entry = make_ref<T>(new_vec[i], alloc_);
-        (*new_entry) = std::move(*old_entry);
+        hipc::Ref<T> new_entry = make_ref<T>(new_vec[i], alloc_,
+                                             std::move(*old_entry));
       }
       if (!header_->vec_ptr_.IsNull()) {
         alloc_->Free(header_->vec_ptr_);

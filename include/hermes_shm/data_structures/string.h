@@ -32,7 +32,7 @@ class string;
 
 /** string shared-memory header */
 template<>
-struct ShmHeader<string> : public ShmBaseHeader {
+struct ShmHeader<string> {
   SHM_CONTAINER_HEADER_TEMPLATE(ShmHeader)
   size_t length_;
   Pointer text_;

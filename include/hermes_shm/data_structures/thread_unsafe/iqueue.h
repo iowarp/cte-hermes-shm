@@ -165,7 +165,7 @@ using iqueue_citerator = iqueue_iterator_templ<T>;
  * The iqueue shared-memory header
  * */
 template<typename T>
-struct ShmHeader<iqueue<T>> : public ShmBaseHeader {
+struct ShmHeader<iqueue<T>> {
   SHM_CONTAINER_HEADER_TEMPLATE(ShmHeader)
   OffsetPointer head_ptr_;
   size_t length_;
