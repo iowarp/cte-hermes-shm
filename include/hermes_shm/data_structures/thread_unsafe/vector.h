@@ -77,14 +77,12 @@ struct vector_iterator_templ {
 
   /** Dereference the iterator */
   inline Ref<T> operator*() {
-    return Ref<T>(vec_->data_ar()[i_].internal_ref(
-      vec_->GetAllocator()));
+    return Ref<T>(vec_->data_ar()[i_], vec_->GetAllocator());
   }
 
   /** Dereference the iterator */
   inline const Ref<T> operator*() const {
-    return Ref<T>(vec_->data_ar_const()[i_].internal_ref(
-      vec_->GetAllocator()));
+    return Ref<T>(vec_->data_ar_const()[i_], vec_->GetAllocator());
   }
 
   /** Increment iterator in-place */
@@ -343,7 +341,7 @@ class vector : public ShmContainer {
 
   /** Make null */
   void SetNull() {
-    header_->vec_ptr.SetNull();
+    header_->vec_ptr_.SetNull();
   }
 
   /**====================================
@@ -392,7 +390,7 @@ class vector : public ShmContainer {
   /** Index the vector at position i */
   hipc::Ref<T> operator[](const size_t i) {
     ShmArchive<T> *vec = data_ar();
-    return hipc::Ref<T>(vec[i].internal_ref(alloc_));
+    return hipc::Ref<T>(vec[i], alloc_);
   }
 
   /** Get first element of vector */
@@ -408,7 +406,7 @@ class vector : public ShmContainer {
   /** Index the vector at position i */
   const hipc::Ref<T> operator[](const size_t i) const {
     ShmArchive<T> *vec = data_ar_const();
-    return hipc::Ref<T>(vec[i].internal_ref(alloc_));
+    return hipc::Ref<T>(vec[i], alloc_);
   }
 
   /** Construct an element at the back of the vector */
@@ -418,7 +416,7 @@ class vector : public ShmContainer {
     if (header_->length_ == header_->max_length_) {
       vec = grow_vector(vec, 0, false);
     }
-    vec[header_->length_].shm_init(alloc_, std::forward<Args>(args)...);
+    make_ref<T>(vec[header_->length_], alloc_, std::forward<Args>(args)...);
     ++header_->length_;
   }
 
@@ -440,7 +438,7 @@ class vector : public ShmContainer {
       vec = grow_vector(vec, 0, false);
     }
     shift_right(pos);
-    vec[pos.i_].shm_init(alloc_, std::forward<Args>(args)...);
+    make_ref<T>(vec[pos.i_], alloc_, std::forward<Args>(args)...);
     ++header_->length_;
   }
 
@@ -552,8 +550,7 @@ class vector : public ShmContainer {
         AllocateObjs<ShmArchive<T>>(max_length, new_p);
       for (size_t i = 0; i < header_->length_; ++i) {
         hipc::Ref<T> old_entry = (*this)[i];
-        new_vec[i].shm_init(alloc_);
-        hipc::Ref<T> new_entry(new_vec[i].internal_ref(alloc_));
+        hipc::Ref<T> new_entry = make_ref<T>(new_vec[i], alloc_);
         (*new_entry) = std::move(*old_entry);
       }
       if (!header_->vec_ptr_.IsNull()) {
@@ -567,7 +564,7 @@ class vector : public ShmContainer {
     }
     if (resize) {
       for (size_t i = header_->length_; i < max_length; ++i) {
-        new_vec[i].shm_init(alloc_, std::forward<Args>(args)...);
+        hipc::make_ref<T>(new_vec[i], alloc_, std::forward<Args>(args)...);
       }
     }
 
@@ -587,7 +584,7 @@ class vector : public ShmContainer {
   void shift_left(const vector_iterator<T> pos, int count = 1) {
     ShmArchive<T> *vec = data_ar();
     for (int i = 0; i < count; ++i) {
-      vec[pos.i_ + i].shm_destroy(alloc_);
+      hipc::Ref<T>(vec[pos.i_ + i], alloc_).shm_destroy();
     }
     auto dst = vec + pos.i_;
     auto src = dst + count;

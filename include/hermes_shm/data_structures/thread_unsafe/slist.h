@@ -32,22 +32,17 @@ struct slist_entry {
   /** Constructor */
   template<typename ...Args>
   explicit slist_entry(Allocator *alloc, Args&& ...args) {
-    data_.shm_init(alloc, std::forward<Args>(args)...);
-  }
-
-  /** Destructor */
-  void shm_destroy(Allocator *alloc) {
-    data_.shm_destroy(alloc);
+    make_ref<T>(data_, alloc, std::forward<Args>(args)...);
   }
 
   /** Returns the element stored in the slist */
   Ref<T> internal_ref(Allocator *alloc) {
-    return Ref<T>(data_.internal_ref(alloc));
+    return Ref<T>(data_, alloc);
   }
 
   /** Returns the element stored in the slist */
   Ref<T> internal_ref(Allocator *alloc) const {
-    return Ref<T>(data_.internal_ref(alloc));
+    return Ref<T>(data_, alloc);
   }
 };
 
@@ -275,7 +270,7 @@ class slist : public ShmContainer {
   void shm_deserialize_main() {}
 
   /** Check if the list is empty */
-  bool IsNull() {
+  bool IsNull() const {
     return header_ == nullptr || header_->length_ == 0;
   }
 
@@ -367,7 +362,7 @@ class slist : public ShmContainer {
     auto pos = first;
     while (pos != last) {
       auto next = pos + 1;
-      pos.entry_->shm_destroy(alloc_);
+      pos.entry_->internal_ref(alloc_).shm_destroy();
       Allocator::DestructObj<slist_entry<T>>(*pos.entry_);
       alloc_->Free(pos.entry_ptr_);
       --header_->length_;

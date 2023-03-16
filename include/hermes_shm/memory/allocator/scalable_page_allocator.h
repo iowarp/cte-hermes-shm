@@ -95,7 +95,7 @@ struct ScalablePageAllocatorHeader : public AllocatorHeader {
     AllocatorHeader::Configure(alloc_id,
                                AllocatorType::kScalablePageAllocator,
                                custom_header_size);
-    free_lists_.shm_init(alloc);
+    make_ref<vector<pair<FreeListStats, iqueue<MpPage>>>>(free_lists_, alloc);
     total_alloc_ = 0;
     coalesce_trigger_ = (coalesce_trigger * buffer_size).as_int();
     coalesce_window_ = coalesce_window;
@@ -106,7 +106,7 @@ struct ScalablePageAllocatorHeader : public AllocatorHeader {
 class ScalablePageAllocator : public Allocator {
  private:
   ScalablePageAllocatorHeader *header_;
-  hipc::mptr<vector<pair<FreeListStats, iqueue<MpPage>>>> free_lists_;
+  hipc::Ref<vector<pair<FreeListStats, iqueue<MpPage>>>> free_lists_;
   StackAllocator alloc_;
   /** The power-of-two exponent of the minimum size that can be cached */
   static const size_t min_cached_size_exp_ = 5;

@@ -72,8 +72,8 @@ class pair : public ShmContainer {
 
   /** SHM constructor. Copy parameters. */
   void shm_init(const FirstT &first, const SecondT &second) {
-    first_ = make_ref<FirstT>(alloc_, first);
-    second_ = make_ref<SecondT>(alloc_, second);
+    first_ = make_ref<FirstT>(header_->first_, alloc_, first);
+    second_ = make_ref<SecondT>(header_->second_, alloc_, second);
   }
 
   /** SHM constructor. Piecewise emplace. */
@@ -81,14 +81,10 @@ class pair : public ShmContainer {
   void shm_init(PiecewiseConstruct &&hint,
                 FirstArgPackT &&first,
                 SecondArgPackT &&second) {
-    first_ = make_ref_piecewise<FirstT>(make_argpack(alloc_), first);
-    second_ = make_ref_piecewise<SecondT>(make_argpack(alloc_), second);
-
-    header_->first_.shm_init_piecewise(alloc_,
-                                       std::forward<FirstArgPackT>(first));
-    header_->second_.shm_init_piecewise(alloc_,
-                                        std::forward<SecondArgPackT>(second));
-    shm_deserialize_main();
+    first_ = make_ref_piecewise<FirstT>(make_argpack(header_->first_, alloc_),
+                                        std::forward<FirstArgPackT>(first));
+    second_ = make_ref_piecewise<SecondT>(make_argpack(header_->second_, alloc_),
+                                          std::forward<SecondArgPackT>(second));
   }
 
   /** Internal move operation */
@@ -111,8 +107,8 @@ class pair : public ShmContainer {
 
   /** Load from shared memory */
   void shm_deserialize_main() {
-    first_ = hipc::Ref<FirstT>(header_->first_.internal_ref(alloc_));
-    second_ = hipc::Ref<SecondT>(header_->second_.internal_ref(alloc_));
+    first_ = hipc::Ref<FirstT>(header_->first_, alloc_);
+    second_ = hipc::Ref<SecondT>(header_->second_, alloc_);
   }
 
   /** Check if the pair is empty */

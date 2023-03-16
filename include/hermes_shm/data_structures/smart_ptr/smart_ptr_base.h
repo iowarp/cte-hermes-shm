@@ -38,10 +38,9 @@ class _RefShm {
   * Initialization
   * ===================================*/
 
-  /** Allocates + constructs an object in shared memory */
+  /** SHM Constructor. */
   template<typename ...Args>
   void shm_init(Args&& ...args) {
-    typedef typename T::header_t header_t;
     Allocator::ConstructObj<T>(
       *get(), std::forward<Args>(args)...);
   }
@@ -57,7 +56,7 @@ class _RefShm {
 
   /** Gets a pointer to the internal object */
   const T* get() const {
-    return reinterpret_cast<T*>(obj_);
+    return reinterpret_cast<const T*>(obj_);
   }
 
   /**====================================
@@ -66,7 +65,7 @@ class _RefShm {
 
   /** Internal copy operation */
   void shm_strong_copy(const _RefShm &other) {
-    obj_.shm_deserialize(other.obj_.GetShmDeserialize());
+    get()->shm_deserialize(other.get()->GetShmDeserialize());
   }
 
   /**====================================
@@ -75,18 +74,18 @@ class _RefShm {
 
   /** Deserialize from a ShmDeserialize. */
   void shm_deserialize(const ShmDeserialize<T> &ar) {
-    obj_.shm_deserialize(ar);
+    get()->shm_deserialize(ar);
   }
 
   /** Deserialize from an object. */
   void shm_deserialize(T &ar) {
-    obj_.shm_deserialize(ar.GetShmDeserialize());
+    get()->shm_deserialize(ar.GetShmDeserialize());
   }
 
   /** Serialize into a pointer type */
   template<typename PointerT>
-  void shm_serialize(PointerT &ar) {
-    obj_.shm_serialize(ar);
+  void shm_serialize(PointerT &ar) const {
+    get()->shm_serialize(ar);
   }
 
   /**====================================
@@ -96,14 +95,12 @@ class _RefShm {
   /** Destroy the data allocated by this pointer */
   void shm_destroy() {
     if constexpr(destructable) {
-      obj_.SetHeaderOwned();
+      get()->SetHeaderOwned();
     } else {
-      obj_.UnsetHeaderOwned();
+      get()->UnsetHeaderOwned();
     }
-    obj_.shm_destroy();
+    get()->shm_destroy();
   }
-
-
 };
 
 /**
@@ -120,18 +117,29 @@ class _RefNoShm {
   * Initialization
   * ===================================*/
 
-  /** Allocates + constructs an object in shared memory */
+  /** SHM constructor. Default allocator. */
   template<typename ...Args>
   void shm_init(Args&& ...args) {
     auto alloc = HERMES_MEMORY_REGISTRY->GetDefaultAllocator();
     shm_init(alloc, std::forward<Args>(args)...);
   }
 
-  /** Allocates + constructs an object in shared memory */
+  /** SHM constructor. Default non-default allocator */
   template<typename ...Args>
   void shm_init(Allocator *alloc, Args&& ...args) {
-    obj_ = alloc_->template AllocateConstructObjs<T>(
-      1, std::forward<Args>(args)...);
+    alloc_ = alloc;
+    OffsetPointer p;
+    obj_ = alloc_->template AllocateConstructObjs<T, OffsetPointer>(
+      1, p, std::forward<Args>(args)...);
+  }
+
+  /** SHM constructor. Header is preallocated. */
+  template<typename ...Args>
+  void shm_init(ShmArchive<T> &obj, Allocator *alloc, Args&& ...args) {
+    alloc_ = alloc;
+    obj_ = obj.get();
+    alloc_->template ConstructObj<T>(
+      *obj_, std::forward<Args>(args)...);
   }
 
   /**====================================
@@ -140,20 +148,12 @@ class _RefNoShm {
 
   /** Gets a pointer to the internal object */
   T* get() {
-    if constexpr(IS_SHM_ARCHIVEABLE(T)) {
-      return &obj_;
-    } else {
-      return obj_;
-    }
+    return obj_;
   }
 
   /** Gets a pointer to the internal object */
   const T* get() const {
-    if constexpr(IS_SHM_ARCHIVEABLE(T)) {
-      return &obj_;
-    } else {
-      return obj_;
-    }
+    return obj_;
   }
 
   /**====================================
@@ -184,7 +184,7 @@ class _RefNoShm {
 
   /** Serialize into a pointer type */
   template<typename PointerT>
-  void shm_serialize(PointerT &ar) {
+  void shm_serialize(PointerT &ar) const {
     ar.allocator_id_ = alloc_->GetId();
     ar.off_ = alloc_->template Convert<T, PointerT>(obj_);
   }
@@ -345,6 +345,11 @@ class smart_ptr_base {
     shm_deserialize(ar);
   }
 
+  /** Constructor. Deserialize from an Archive. */
+  explicit smart_ptr_base(ShmArchive<T> &ar, Allocator *alloc) {
+    shm_deserialize(ShmDeserialize<T>(ar.get(), alloc));
+  }
+
   /** Constructor. Deserialize from a ShmDeserialize. */
   explicit smart_ptr_base(const ShmDeserialize<T> &ar) {
     shm_deserialize(ar);
@@ -437,12 +442,12 @@ static PointerT make_ptr_base(Args&& ...args) {
 /** Creates a smart_ptr by merging two argpacks */
 template<typename PointerT, typename ArgPackT_1, typename ArgPackT_2>
 static PointerT make_piecewise(ArgPackT_1 &&args1, ArgPackT_2 &&args2) {
-  hermes_shm::PassArgPack::Call(
+  return hermes_shm::PassArgPack::Call(
     MergeArgPacks::Merge(
       std::forward<ArgPackT_1>(args1),
       std::forward<ArgPackT_2>(args2)),
     [](auto&& ...args) constexpr {
-      return make_ptr_base<PointerT>(std::forward<args>(args)...);
+      return make_ptr_base<PointerT>(std::forward<decltype(args)>(args)...);
     });
 }
 
@@ -455,7 +460,7 @@ Ref<T> make_ref(Args&& ...args) {
 /** Creates a reference from piecewise constructor */
 template<typename T, typename ArgPackT_1, typename ArgPackT_2>
 Ref<T> make_ref_piecewise(ArgPackT_1 &&args1, ArgPackT_2 &&args2) {
-  return make_ptr_base<Ref<T>>(
+  return make_piecewise<Ref<T>, ArgPackT_1, ArgPackT_2>(
     std::forward<ArgPackT_1>(args1),
     std::forward<ArgPackT_2>(args2)
   );

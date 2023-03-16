@@ -28,7 +28,7 @@ void FixedPageAllocator::shm_init(allocator_id_t id,
   size_t region_size = buffer_size_ - region_off;
   alloc_.shm_init(id, 0, buffer + region_off, region_size);
   header_->Configure(id, custom_header_size, &alloc_);
-  free_lists_->shm_deserialize(header_->free_lists_.internal_ref(&alloc_));
+  free_lists_ = Ref<vector<iqueue<MpPage>>>(header_->free_lists_, &alloc_);
 }
 
 void FixedPageAllocator::shm_deserialize(char *buffer,
@@ -40,7 +40,7 @@ void FixedPageAllocator::shm_deserialize(char *buffer,
   size_t region_off = (custom_header_ - buffer_) + header_->custom_header_size_;
   size_t region_size = buffer_size_ - region_off;
   alloc_.shm_deserialize(buffer + region_off, region_size);
-  free_lists_->shm_deserialize(header_->free_lists_.internal_ref(&alloc_));
+  free_lists_ = Ref<vector<iqueue<MpPage>>>(header_->free_lists_, &alloc_);
 }
 
 size_t FixedPageAllocator::GetCurrentlyAllocatedSize() {

@@ -177,10 +177,10 @@ class ShmContainerExample : public hipc::ShmContainer {
 
   /** Constructor. Header is pre-allocated. */
   template<typename ...Args>
-  explicit CLASS_NAME(TYPE_UNWRAP(TYPED_HEADER) *header,
+  explicit CLASS_NAME(hipc::ShmArchive<CLASS_NAME> &header,
                       hipc::Allocator *alloc,
                       Args&& ...args) {
-    shm_make_header(header, alloc);
+    shm_make_header(header.get(), alloc);
     shm_init(std::forward<Args>(args)...);
   }
 

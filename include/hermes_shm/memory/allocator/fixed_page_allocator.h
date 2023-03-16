@@ -36,7 +36,7 @@ struct FixedPageAllocatorHeader : public AllocatorHeader {
     AllocatorHeader::Configure(alloc_id,
                                AllocatorType::kFixedPageAllocator,
                                custom_header_size);
-    free_lists_.shm_init(alloc);
+    make_ref<vector<iqueue<MpPage>>>(free_lists_, alloc);
     total_alloc_ = 0;
   }
 };

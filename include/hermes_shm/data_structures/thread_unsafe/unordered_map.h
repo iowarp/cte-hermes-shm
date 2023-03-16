@@ -181,7 +181,7 @@ struct ShmHeader<TYPED_CLASS> : public ShmBaseHeader {
 
   /** Get a reference to the buckets */
   hipc::Ref<vector<BUCKET_T>> GetBuckets(Allocator *alloc) {
-    return hipc::Ref<vector<BUCKET_T>>(buckets_.internal_ref(alloc));
+    return hipc::Ref<vector<BUCKET_T>>(buckets_, alloc);
   }
 };
 
@@ -215,7 +215,7 @@ class unordered_map : public ShmContainer {
   void shm_init(int num_buckets = 20,
                 RealNumber max_capacity = RealNumber(4, 5),
                 RealNumber growth = RealNumber(5, 4)) {
-    header_->buckets_.shm_init(alloc_, num_buckets);
+    make_ref<vector<BUCKET_T>>(header_->buckets_, alloc_, num_buckets);
     header_->max_capacity_ = max_capacity;
     header_->growth_ = growth;
     header_->length_ = 0;
@@ -230,8 +230,8 @@ class unordered_map : public ShmContainer {
   /** Internal copy operation */
   void shm_strong_copy_main(const unordered_map &other) {
     int num_buckets = other.get_num_buckets();
-    header_->max_capacity = other.header_->max_capacity_;
-    header_->growth = other.header_->growth_;
+    header_->max_capacity_ = other.header_->max_capacity_;
+    header_->growth_ = other.header_->growth_;
     GetBuckets()->resize(num_buckets);
     for (hipc::Ref<hipc::pair<Key, T>> entry : other) {
       emplace_templ<false, true>(
@@ -250,7 +250,7 @@ class unordered_map : public ShmContainer {
 
   /** Check if the pair is empty */
   bool IsNull() {
-    return header_ == nullptr || header_->length == 0;
+    return header_ == nullptr || header_->length_.load() == 0;
   }
 
   /** Sets this pair as empty */

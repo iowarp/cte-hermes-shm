@@ -35,8 +35,7 @@ static bool VerifyBuffer(char *ptr, size_t size, char nonce) {
 /** var = TYPE(val) */
 #define SET_VAR_TO_INT_OR_STRING(TYPE, VAR, VAL)\
   if constexpr(std::is_same_v<TYPE, hipc::string>) {\
-    auto tmp(hipc::make_uptr<hipc::string>(std::to_string(VAL)));\
-    VAR = *tmp;\
+    VAR = hipc::string(std::to_string(VAL));\
   } else if constexpr(std::is_same_v<TYPE, std::string>) {\
     VAR = std::string(std::to_string(VAL));\
   } else {\

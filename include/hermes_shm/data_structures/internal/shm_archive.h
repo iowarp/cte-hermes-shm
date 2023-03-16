@@ -27,29 +27,7 @@ template<typename T>
 class _ShmArchive_Header {
  public:
   typedef typename T::header_t header_t;
-  char obj_hdr_[sizeof(header_t)];
-
- public:
-  /** Default constructor */
-  _ShmArchive_Header() = default;
-
-  /** Destructor */
-  ~_ShmArchive_Header() = default;
-
-  /** Returns a reference to the internal object */
-  ShmDeserialize<T> internal_ref(Allocator *alloc) {
-    return ShmDeserialize<T>(reinterpret_cast<header_t*>(obj_hdr_), alloc);
-  }
-
-  /** Returns a reference to the internal object */
-  ShmDeserialize<T> internal_ref(Allocator *alloc) const {
-    return ShmDeserialize<T>(reinterpret_cast<header_t*>(obj_hdr_), alloc);
-  }
-
-  /** Get reference to object */
-  T& get_ref() {
-    return reinterpret_cast<T&>(obj_hdr_);
-  }
+  char obj_hdr_[sizeof(header_t)];  /**< Store object without constructing */
 };
 
 /**
@@ -59,26 +37,7 @@ template<typename T>
 class _ShmArchive_T {
  public:
   typedef T header_t;
-  char obj_hdr_[sizeof(T)]; /**< Store object without constructing */
-
- public:
-  /** Default constructor. */
-  _ShmArchive_T() = default;
-
-  /** Destructor. Does nothing. */
-  ~_ShmArchive_T() = default;
-
-  /** Returns a reference to the internal object */
-  T& internal_ref(Allocator *alloc) {
-    (void) alloc;
-    return reinterpret_cast<T&>(obj_hdr_);
-  }
-
-  /** Returns a reference to the internal object */
-  T& internal_ref(Allocator *alloc) const {
-    (void) alloc;
-    return reinterpret_cast<T&>(obj_hdr_);
-  }
+  char obj_hdr_[sizeof(T)];  /**< Store object without constructing */
 };
 
 /**
@@ -104,19 +63,24 @@ class ShmArchive {
   /** Destructor */
   ~ShmArchive() = default;
 
-  /** Returns a reference to the internal object */
-  T_Ar internal_ref(Allocator *alloc) {
-    return obj_.internal_ref(alloc);
+  /** Pointer to internal object */
+  header_t* get() {
+    return &get_ref();
   }
 
-  /** Returns a reference to the internal object */
-  T_Ar internal_ref(Allocator *alloc) const {
-    return obj_.internal_ref(alloc);
+  /** Pointer to internal object (const) */
+  const header_t* get() const {
+    return &get_ref();
   }
 
-  /** Shm destructor */
-  void shm_destroy(Allocator *alloc) {
-    obj_.shm_destroy(alloc);
+  /** Reference to internal object */
+  header_t& get_ref() {
+    return reinterpret_cast<header_t&>(obj_.obj_hdr_);
+  }
+
+  /** Reference to internal object (const) */
+  const header_t& get_ref() const {
+    return reinterpret_cast<header_t&>(obj_.obj_hdr_);
   }
 
   /** Copy constructor */

@@ -22,6 +22,7 @@ void ScalablePageAllocator::shm_init(allocator_id_t id,
                                      size_t buffer_size,
                                      RealNumber coalesce_trigger,
                                      size_t coalesce_window) {
+  Allocator *alloc = &alloc_;
   buffer_ = buffer;
   buffer_size_ = buffer_size;
   header_ = reinterpret_cast<ScalablePageAllocatorHeader*>(buffer_);
@@ -31,7 +32,8 @@ void ScalablePageAllocator::shm_init(allocator_id_t id,
   alloc_.shm_init(id, 0, buffer + region_off, region_size);
   header_->Configure(id, custom_header_size, &alloc_,
                      buffer_size, coalesce_trigger, coalesce_window);
-  free_lists_->shm_deserialize(header_->free_lists_.internal_ref(&alloc_));
+  free_lists_ = make_ref<vector<pair<FreeListStats, iqueue<MpPage>>>>(
+    header_->free_lists_, alloc);
   // Cache every power-of-two between 32B and 16KB
   size_t ncpu = HERMES_SYSTEM_INFO->ncpu_;
   free_lists_->resize(ncpu * num_free_lists_);
@@ -54,6 +56,7 @@ void ScalablePageAllocator::shm_init(allocator_id_t id,
 
 void ScalablePageAllocator::shm_deserialize(char *buffer,
                                             size_t buffer_size) {
+  Allocator *alloc = &alloc_;
   buffer_ = buffer;
   buffer_size_ = buffer_size;
   header_ = reinterpret_cast<ScalablePageAllocatorHeader*>(buffer_);
@@ -61,7 +64,8 @@ void ScalablePageAllocator::shm_deserialize(char *buffer,
   size_t region_off = (custom_header_ - buffer_) + header_->custom_header_size_;
   size_t region_size = buffer_size_ - region_off;
   alloc_.shm_deserialize(buffer + region_off, region_size);
-  free_lists_->shm_deserialize(header_->free_lists_.internal_ref(&alloc_));
+  free_lists_ = make_ref<vector<pair<FreeListStats, iqueue<MpPage>>>>(
+    header_->free_lists_, alloc);
 }
 
 size_t ScalablePageAllocator::GetCurrentlyAllocatedSize() {

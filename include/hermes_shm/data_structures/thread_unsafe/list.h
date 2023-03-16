@@ -34,22 +34,17 @@ struct list_entry {
   /** Constructor */
   template<typename ...Args>
   explicit list_entry(Allocator *alloc, Args&& ...args) {
-    data_.shm_init(alloc, std::forward<Args>(args)...);
-  }
-
-  /** Destructor */
-  void shm_destroy(Allocator *alloc) {
-    data_.shm_destroy(alloc);
+    make_ref<T>(data_, alloc, std::forward<Args>(args)...);
   }
 
   /** Returns the element stored in the list */
   Ref<T> internal_ref(Allocator *alloc) {
-    return Ref<T>(data_.internal_ref(alloc));
+    return Ref<T>(data_, alloc);
   }
 
   /** Returns the element stored in the list */
   Ref<T> internal_ref(Allocator *alloc) const {
-    return Ref<T>(data_.internal_ref(alloc));
+    return Ref<T>(data_, alloc);
   }
 };
 
@@ -368,8 +363,7 @@ class list : public ShmContainer {
     auto pos = first;
     while (pos != last) {
       auto next = pos + 1;
-      pos.entry_->shm_destroy(alloc_);
-      Allocator::DestructObj<list_entry<T>>(*pos.entry_);
+      pos.entry_->internal_ref(alloc_).shm_destroy();
       alloc_->Free(pos.entry_ptr_);
       --header_->length_;
       pos = next;

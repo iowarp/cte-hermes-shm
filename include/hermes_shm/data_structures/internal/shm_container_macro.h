@@ -113,6 +113,15 @@ shm_make_header(header, alloc);\
 shm_init(std::forward<Args>(args)...);\
 }\
 \
+/** Constructor. Header is pre-allocated. */\
+template<typename ...Args>\
+explicit TYPE_UNWRAP(CLASS_NAME)(hipc::ShmArchive<TYPE_UNWRAP(CLASS_NAME)> &header,\
+hipc::Allocator *alloc,\
+  Args&& ...args) {\
+shm_make_header(header.get(), alloc);\
+shm_init(std::forward<Args>(args)...);\
+}\
+\
 /** Initialize header + allocator */\
 void shm_make_header(TYPE_UNWRAP(TYPE_UNWRAP(TYPED_HEADER)) *header,\
                      hipc::Allocator *alloc) {\
