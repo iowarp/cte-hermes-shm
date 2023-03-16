@@ -259,7 +259,7 @@ class list : public ShmContainer {
   }
 
   /** Internal move operation */
-  void shm_weak_move_main(list &&other) {
+  void shm_strong_move_main(list &&other) {
     memcpy(header_, other.header_, sizeof(*header_));
     shm_deserialize_main();
   }

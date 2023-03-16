@@ -60,9 +60,9 @@ class ListTestSuite {
 
   /// Copy constructor
   void CopyConstructorTest() {
-    /*int count = obj_.size();
+    int count = obj_.size();
     Container cpy(obj_);
-    VerifyCopy(obj_, cpy, count);*/
+    VerifyCopy(obj_, cpy, count);
   }
 
   /// Copy assignment
@@ -75,11 +75,11 @@ class ListTestSuite {
 
   /// Move constructor
   void MoveConstructorTest() {
-    /*int count = obj_.size();
+    int count = obj_.size();
     Container cpy(std::move(obj_));
     VerifyMove(obj_, cpy, count);
     obj_ = std::move(cpy);
-    VerifyMove(cpy, obj_, count);*/
+    VerifyMove(cpy, obj_, count);
   }
 
   /// Move assignment
@@ -178,7 +178,7 @@ class ListTestSuite {
     // Verify move into cpy worked
     {
       int fcur = 0;
-      REQUIRE(orig_obj.size() == 0);
+      REQUIRE(orig_obj.IsNull());
       REQUIRE(new_obj.size() == count);
       for (auto num : new_obj) {
         CREATE_SET_VAR_TO_INT_OR_STRING(T, fcur_conv, fcur);

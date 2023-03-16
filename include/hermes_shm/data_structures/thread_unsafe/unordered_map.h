@@ -222,7 +222,7 @@ class unordered_map : public ShmContainer {
   }
 
   /** Move assignment operator */
-  void shm_weak_move_main(CLASS_NAME &&other) {
+  void shm_strong_move_main(CLASS_NAME &&other) {
     *GetBuckets() = std::move(*other.GetBuckets());
     (*header_) = (*other.header_);
   }

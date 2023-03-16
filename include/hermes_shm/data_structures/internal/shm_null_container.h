@@ -93,7 +93,7 @@ class NullContainer : public ShmContainer {
   }
 
   /** Move constructor */
-  void shm_weak_move_main(TYPED_HEADER *header,
+  void shm_strong_move_main(TYPED_HEADER *header,
                           Allocator *alloc,
                           NullContainer &other) {}
 

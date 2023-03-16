@@ -297,37 +297,43 @@ class smart_ptr_base {
 
   /** Copy constructor (equivalent to move) */
   smart_ptr_base(const smart_ptr_base &other) {
+    static_assert(!unique, "Cannot use unique_ptr with copy operator");
     obj_.shm_strong_copy(other.obj_);
   };
 
   /** Copy assignment operator (equivalent to move) */
   smart_ptr_base& operator=(const smart_ptr_base &other) {
     if (this != &other) {
-      shm_strong_copy(other);
+      static_assert(!unique, "Cannot use unique_ptr with copy operator");
+      obj_.shm_strong_copy(other.obj_);
     }
     return *this;
   }
 
   /** Move constructor */
   smart_ptr_base(smart_ptr_base&& other) noexcept {
-    shm_strong_copy(other);
+    shm_strong_move(std::forward<smart_ptr_base>(other));
   }
 
   /** Move assignment operator */
   smart_ptr_base& operator=(smart_ptr_base&& other) noexcept {
     if (this != &other) {
-      shm_strong_copy(other);
+      shm_strong_move(std::forward<smart_ptr_base>(other));
     }
     return *this;
   }
 
-  /** Internal move operation */
+  /** Internal copy operation */
   void shm_strong_copy(const smart_ptr_base &other) {
+    obj_.shm_strong_copy(other.obj_);
+  }
+
+  /** Internal move operation */
+  void shm_strong_move(smart_ptr_base &&other) {
     obj_.shm_strong_copy(other.obj_);
     if constexpr(unique) {
       owner_ = other.owner_;
-      // TODO(llogan): fix
-      // other.owner_ = false;
+      other.owner_ = false;
     }
   }
 

@@ -306,7 +306,7 @@ class vector : public ShmContainer {
   }
 
   /** Move assignment operator */
-  void shm_weak_move_main(vector &&other) noexcept {
+  void shm_strong_move_main(vector &&other) noexcept {
     memcpy((void*)header_, (void*)other.header_, sizeof(*header_));
     shm_deserialize_main();
   }

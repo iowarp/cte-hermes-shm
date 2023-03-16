@@ -44,7 +44,7 @@ class LockedVector {
   }
 
   /** Move constructor */
-  void shm_weak_move_main(ShmHeader<LockedVector> *header,
+  void shm_strong_move_main(ShmHeader<LockedVector> *header,
                           hipc::Allocator *alloc,
                           LockedVector &other) {
     shm_init_main(header, alloc);

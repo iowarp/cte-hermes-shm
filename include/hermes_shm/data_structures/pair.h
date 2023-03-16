@@ -88,7 +88,7 @@ class pair : public ShmContainer {
   }
 
   /** Internal move operation */
-  void shm_weak_move_main(CLASS_NAME &&other) {
+  void shm_strong_move_main(CLASS_NAME &&other) {
     (*first_) = std::move(*other.first_);
     (*second_) = std::move(*other.second_);
   }

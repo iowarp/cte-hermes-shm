@@ -14,15 +14,21 @@ hermes_shm::bitfield32_t flags_; /**< Flags used data structure status */
 
 /** Move constructor */
 explicit CLASS_NAME(CLASS_NAME &&other) {
-shm_make_header(other.header_, other.alloc_);
-shm_deserialize_main();
-other.RemoveHeader();
+shm_weak_move_main(std::forward<CLASS_NAME>(other));
 }
 
 /** SHM Constructor. Move operator. */
 void shm_init(CLASS_NAME &&other) {
   SetNull();
-  shm_weak_move_main(std::forward<CLASS_NAME>(other));
+  shm_strong_move_main(std::forward<CLASS_NAME>(other));
+}
+
+/** Weak move of simply pointers */
+void shm_weak_move_main(CLASS_NAME &&other) {
+  shm_make_header(other.header_, other.alloc_);
+  flags_ = other.flags_;
+  shm_deserialize_main();
+  other.RemoveHeader();
 }
 
 /** Move assignment operator */
@@ -31,8 +37,10 @@ CLASS_NAME& operator=(CLASS_NAME &&other) {
     return *this;
   }
   shm_destroy();
-  if (alloc_ == other.alloc_) {
+  if (header_ == nullptr) {
     shm_weak_move_main(std::forward<CLASS_NAME>(other));
+  } else if (alloc_ == other.alloc_) {
+    shm_strong_move_main(std::forward<CLASS_NAME>(other));
     other.SetNull();
   } else {
     shm_strong_copy_main(other);
@@ -57,7 +65,7 @@ CLASS_NAME& operator=(const CLASS_NAME &other) {
   if (this == &other) {
     return *this;
   }
-  shm_destroy();
+  shm_erase_or_init(alloc_);
   shm_strong_copy_main(other);
   return *this;
 }
@@ -103,15 +111,6 @@ shm_init(std::forward<Args>(args)...);
 
 /** Constructor. Header is pre-allocated. */
 template<typename ...Args>
-explicit CLASS_NAME(TYPE_UNWRAP(TYPED_HEADER) *header,
-hipc::Allocator *alloc,
-  Args&& ...args) {
-shm_make_header(header, alloc);
-shm_init(std::forward<Args>(args)...);
-}
-
-/** Constructor. Header is pre-allocated. */
-template<typename ...Args>
 explicit CLASS_NAME(hipc::ShmArchive<CLASS_NAME> &header,
 hipc::Allocator *alloc,
   Args&& ...args) {
@@ -139,17 +138,40 @@ void shm_make_header(TYPE_UNWRAP(TYPED_HEADER) *header,
  * Destructor
  * ===================================*/
 
+/** Destructor. */
+~CLASS_NAME() {
+  if (flags_.OrBits(SHM_PRIVATE_IS_DESTRUCTABLE)) {
+    shm_destroy();
+  }
+}
+
+/** Used by assignmnet operators */
+void shm_erase_or_init(hipc::Allocator *alloc) {
+  if (header_ != nullptr) {
+    shm_erase();
+  } else {
+    shm_make_header(nullptr, alloc);
+    SetNull();
+  }
+}
+
+/** Erase operation */
+void shm_erase() {
+  if (!IsNull()) {
+    shm_destroy_main();
+    SetNull();
+  }
+}
+
 /** Destruction operation */
 void shm_destroy() {
-  if (IsNull()) { return; }
-  if (flags_.OrBits(SHM_PRIVATE_IS_DESTRUCTABLE)) {
-    shm_destroy_main();
-    if (flags_.OrBits(SHM_PRIVATE_OWNS_HEADER)) {
-      alloc_->template FreePtr<TYPE_UNWRAP(TYPED_HEADER)>(header_);
-    }
+  shm_erase();
+  if (flags_.OrBits(SHM_PRIVATE_OWNS_HEADER) && header_) {
+    alloc_->template FreePtr<TYPE_UNWRAP(TYPED_HEADER)>(header_);
+    header_ = nullptr;
   }
-  SetNull();
 }
+
 /**====================================
  * Serialization
  * ===================================*/

@@ -80,8 +80,13 @@ class string : public ShmContainer {
     _create_str(text.data(), text.size());
   }
 
+  /** SHM Constructor. Just allocate space. */
+  void shm_init(size_t length) {
+    _create_str(length);
+  }
+
   /** Internal move operator. */
-  void shm_weak_move_main(string &&other) {
+  void shm_strong_move_main(string &&other) {
       memcpy((void*)header_, (void*)other.header_, sizeof(*header_));
       shm_deserialize_main();
       other.SetNull();

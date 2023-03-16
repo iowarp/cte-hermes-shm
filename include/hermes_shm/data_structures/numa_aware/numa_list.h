@@ -59,7 +59,7 @@ class numa_list : public ShmContainer {
   }
 
   /** Move constructor */
-  void shm_weak_move_main(TYPED_HEADER *header,
+  void shm_strong_move_main(TYPED_HEADER *header,
                           hipc::Allocator *alloc,
                           CLASS_NAME &other) {
     shm_init_main(header, alloc);

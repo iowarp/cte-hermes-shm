@@ -202,7 +202,7 @@ class iqueue : public ShmContainer {
   }
 
   /** Internal move operator */
-  void shm_weak_move_main(iqueue &&other) {}
+  void shm_strong_move_main(iqueue &&other) {}
 
   /** Internal copy operator */
   void shm_strong_copy_main(const iqueue &other) {}
