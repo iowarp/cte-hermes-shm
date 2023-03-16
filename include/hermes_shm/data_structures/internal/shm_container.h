@@ -19,7 +19,7 @@
 #include "shm_container_macro.h"
 #include "shm_macros.h"
 #include "shm_archive.h"
-#include "shm_ref.h"
+#include "hermes_shm/data_structures/smart_ptr/smart_ptr_base.h"
 #include "shm_deserialize.h"
 
 namespace hipc = hermes_shm::ipc;
@@ -27,14 +27,10 @@ namespace hipc = hermes_shm::ipc;
 namespace hermes_shm::ipc {
 
 /** Bits used for determining how to destroy an object */
-/// The container's header has been allocated
-#define SHM_PRIVATE_IS_VALID BIT_OPT(uint16_t, 0)
-/// The container header is initialized
-#define SHM_SHARED_IS_VALID BIT_OPT(uint16_t, 1)
-/// The header was allocated by this container
-#define SHM_SHARED_HEADER_DESTRUCTABLE BIT_OPT(uint16_t, 2)
 /// The container should free all data when destroyed
-#define SHM_PRIVATE_IS_DESTRUCTABLE BIT_OPT(uint16_t, 3)
+#define SHM_PRIVATE_IS_DESTRUCTABLE BIT_OPT(uint32_t, 0)
+/// The container owns the header
+#define SHM_PRIVATE_OWNS_HEADER BIT_OPT(uint32_t, 1)
 
 /** The shared-memory header used for data structures */
 template<typename T>

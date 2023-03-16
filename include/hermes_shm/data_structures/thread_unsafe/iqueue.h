@@ -34,7 +34,7 @@ template<typename T>
 struct iqueue_iterator_templ {
  public:
   /**< A shm reference to the containing iqueue object. */
-  hipc::ShmRef<iqueue<T>> iqueue_;
+  hipc::Ref<iqueue<T>> iqueue_;
   /**< A pointer to the entry in shared memory */
   iqueue_entry *entry_;
   /**< A pointer to the entry prior to this one */
@@ -223,23 +223,22 @@ class iqueue : public ShmContainer {
    * SHM Overrides
    * ===================================*/
 
-  /** Constructor. Empty. */
-  explicit iqueue(TYPED_HEADER *header,
-                  Allocator *alloc) {
-    shm_init_header(header, alloc);
+  /** SHM constructor. Default. */
+  void shm_init() {
     header_->length_ = 0;
     header_->head_ptr_.SetNull();
   }
 
-  /** Destroy all shared memory allocated by the iqueue */
-  void shm_destroy() {
-    if (!IsNull()) {
-      clear();
-    }
+  /** SHM destructor. */
+  void shm_destroy_main() {
+    clear();
   }
 
-  /** Store into shared memory */
-  void shm_serialize_main() const {}
+  /** Internal move operator */
+  void shm_weak_move_main(iqueue &&other) {}
+
+  /** Internal copy operator */
+  void shm_strong_copy_main(const iqueue &other) {}
 
   /** Load from shared memory */
   void shm_deserialize_main() {}

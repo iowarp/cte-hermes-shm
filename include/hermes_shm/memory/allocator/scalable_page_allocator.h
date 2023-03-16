@@ -106,7 +106,7 @@ struct ScalablePageAllocatorHeader : public AllocatorHeader {
 class ScalablePageAllocator : public Allocator {
  private:
   ScalablePageAllocatorHeader *header_;
-  hipc::ShmRef<vector<pair<FreeListStats, iqueue<MpPage>>>> free_lists_;
+  hipc::mptr<vector<pair<FreeListStats, iqueue<MpPage>>>> free_lists_;
   StackAllocator alloc_;
   /** The power-of-two exponent of the minimum size that can be cached */
   static const size_t min_cached_size_exp_ = 5;
@@ -168,14 +168,14 @@ class ScalablePageAllocator : public Allocator {
    * Find the first fit of an element in a free list
    * */
   MpPage* FindFirstFit(size_t size_mp,
-                       hipc::ShmRef<FreeListStats> &stats,
-                       hipc::ShmRef<iqueue<MpPage>> &free_list);
+                       hipc::Ref<FreeListStats> &stats,
+                       hipc::Ref<iqueue<MpPage>> &free_list);
 
   /**
    * Divide a page into smaller pages and cache them
    * */
-  void DividePage(hipc::ShmRef<FreeListStats> &stats,
-                  hipc::ShmRef<iqueue<MpPage>> &free_list,
+  void DividePage(hipc::Ref<FreeListStats> &stats,
+                  hipc::Ref<iqueue<MpPage>> &free_list,
                   MpPage *fit_page,
                   MpPage *&rem_page,
                   size_t size_mp,

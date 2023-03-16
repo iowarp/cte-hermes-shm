@@ -41,13 +41,13 @@ struct slist_entry {
   }
 
   /** Returns the element stored in the slist */
-  ShmRef<T> internal_ref(Allocator *alloc) {
-    return ShmRef<T>(data_.internal_ref(alloc));
+  Ref<T> internal_ref(Allocator *alloc) {
+    return Ref<T>(data_.internal_ref(alloc));
   }
 
   /** Returns the element stored in the slist */
-  ShmRef<T> internal_ref(Allocator *alloc) const {
-    return ShmRef<T>(data_.internal_ref(alloc));
+  Ref<T> internal_ref(Allocator *alloc) const {
+    return Ref<T>(data_.internal_ref(alloc));
   }
 };
 
@@ -58,7 +58,7 @@ template<typename T>
 struct slist_iterator_templ {
  public:
   /**< A shm reference to the containing slist object. */
-  hipc::ShmRef<slist<T>> slist_;
+  hipc::mptr<slist<T>> slist_;
   /**< A pointer to the entry in shared memory */
   slist_entry<T> *entry_;
   /**< The offset of the entry in the shared-memory allocator */
@@ -73,8 +73,8 @@ struct slist_iterator_templ {
 
   /** Construct an iterator */
   explicit slist_iterator_templ(ShmDeserialize<slist<T>> slist,
-                               slist_entry<T> *entry,
-                               OffsetPointer entry_ptr)
+                                slist_entry<T> *entry,
+                                OffsetPointer entry_ptr)
     : slist_(slist), entry_(entry), entry_ptr_(entry_ptr) {}
 
   /** Copy constructor */
@@ -95,12 +95,12 @@ struct slist_iterator_templ {
   }
 
   /** Get the object the iterator points to */
-  ShmRef<T> operator*() {
+  Ref<T> operator*() {
     return entry_->internal_ref(slist_->GetAllocator());
   }
 
   /** Get the object the iterator points to */
-  const ShmRef<T> operator*() const {
+  const Ref<T> operator*() const {
     return entry_->internal_ref();
   }
 
@@ -248,50 +248,15 @@ class slist : public ShmContainer {
    * SHM Overrides
    * ===================================*/
 
-  /** Initialize slist in shared memory */
-  explicit slist(TYPED_HEADER *header, Allocator *alloc) {
-    shm_init_header(header, alloc);
+  /** SHM constructor. Default. */
+  void shm_init() {
     SetNull();
   }
 
-  /** Move constructor */
-  explicit slist(slist &&other) {
-    shm_init_header(other.header_, other.alloc_);
-    if (!other.IsNull()) {
-      shm_deserialize_main();
-    }
-    other.RemoveHeader();
-  }
-
-  /** Move assignment operator */
-  slist& operator=(slist &&other) noexcept {
-    if (this == &other) {
-      return *this;
-    }
-    shm_destroy();
-    if (!other.IsNull()) {
-      if (alloc_ == other.alloc_) {
-        memcpy(header_, other.header_, sizeof(*header_));
-        shm_deserialize_main();
-        other.SetNull();
-      } else {
-        shm_strong_copy_main(other);
-        other.shm_destroy();
-      }
-    }
-    return *this;
-  }
-
-  /** Copy assignment operator */
-  CLASS_NAME& operator=(const slist &other) {
-    if (this == &other) {
-      return *this;
-    }
-    shm_destroy();
-    if (!other.IsNull()) {
-      shm_strong_copy_main(other);
-    }
-    return *this;
+  /** Internal move operation */
+  void shm_weak_move_main(slist &&other) {
+    memcpy(header_, other.header_, sizeof(*header_));
+    shm_deserialize_main();
   }
 
   /** Internal copy operation */
@@ -302,14 +267,9 @@ class slist : public ShmContainer {
   }
 
   /** Destroy all shared memory allocated by the slist */
-  void shm_destroy() {
-    if (IsNull()) { return; }
+  void shm_destroy_main() {
     clear();
-    SetNull();
   }
-
-  /** Store into shared memory */
-  void shm_serialize_main() const {}
 
   /** Load from shared memory */
   void shm_deserialize_main() {}
@@ -378,7 +338,7 @@ class slist : public ShmContainer {
     } else {
       slist_iterator<T> prior_iter = end();
       for (auto iter = begin(); !iter.is_end(); ++iter) {
-        hipc::ShmRef<T> data = *iter;
+        hipc::Ref<T> data = *iter;
         if (iter == pos) {
           return prior_iter;
         }
@@ -431,12 +391,12 @@ class slist : public ShmContainer {
   }
 
   /** Get the object at the front of the slist */
-  ShmRef<T> front() {
+  Ref<T> front() {
     return *begin();
   }
 
   /** Get the object at the back of the slist */
-  ShmRef<T> back() {
+  Ref<T> back() {
     return *last();
   }
 
@@ -451,7 +411,7 @@ class slist : public ShmContainer {
   /** Find an element in this slist */
   slist_iterator<T> find(const T &entry) {
     for (auto iter = begin(); iter != end(); ++iter) {
-      hipc::ShmRef<T> ref = *iter;
+      hipc::Ref<T> ref = *iter;
       if (*ref == entry) {
         return iter;
       }

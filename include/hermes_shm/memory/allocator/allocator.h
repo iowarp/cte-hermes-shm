@@ -293,9 +293,9 @@ class Allocator {
    *
    * @return A process-specific pointer
    * */
-  template<typename T, typename POINTER_T = Pointer>
+  template<typename T>
   inline T* AllocateObjs(size_t count) {
-    POINTER_T p;
+    OffsetPointer p;
     return AllocateObjs<T>(count, p);
   }
 

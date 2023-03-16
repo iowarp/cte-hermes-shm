@@ -59,74 +59,43 @@ class string : public ShmContainer {
    * Shm Overrides
    * ===================================*/
 
-  /** Constructor. Empty. */
-  explicit string(TYPED_HEADER *header, Allocator *alloc) {
-    shm_init_header(header, alloc);
+  /** SHM Constructor. Default. */
+  void shm_init() {
     SetNull();
   }
 
-  /** Constructor. From const char* */
-  explicit string(TYPED_HEADER *header, Allocator *alloc,
-                  const char *text) {
-    shm_init_header(header, alloc);
+  /** SHM Constructor. From const char* */
+  void shm_init(const char *text) {
     size_t length = strlen(text);
     _create_str(text, length);
   }
 
-  /** Constructor. From std::string */
-  explicit string(TYPED_HEADER *header,
-                  Allocator *alloc, const std::string &text) {
-    shm_init_header(header, alloc);
+  /** SHM Constructor. From const char* and size */
+  void shm_init(const char *text, size_t length) {
+    _create_str(text, length);
+  }
+
+  /** SHM Constructor. From std::string */
+  void shm_init(const std::string &text) {
     _create_str(text.data(), text.size());
   }
 
-  /** Move constructor */
-  string(string &&other) noexcept {
-    shm_init_header(other.header_, other.alloc_);
-    shm_deserialize_main();
-    other.RemoveHeader();
+  /** Internal move operator. */
+  void shm_weak_move_main(string &&other) {
+      memcpy((void*)header_, (void*)other.header_, sizeof(*header_));
+      shm_deserialize_main();
+      other.SetNull();
   }
 
-  /** Move assignment operator */
-  string& operator=(string &&other) noexcept {
-    if (this == &other) {
-      return *this;
-    }
-    shm_destroy();
-    if (!other.IsNull()) {
-      if (other.alloc_ == alloc_) {
-        memcpy((void*)header_, (void*)other.header_, sizeof(*header_));
-        shm_deserialize_main();
-        other.SetNull();
-      } else {
-        _create_str(other.data(), other.size());
-        other.shm_destroy();
-      }
-    }
-    return *this;
-  }
-
-  /** Copy assignment operator */
-  string& operator=(const string &other) {
-    if (this == &other) {
-      return *this;
-    }
-    shm_destroy();
-    if (!other.IsNull()) {
-      _create_str(other.data(), other.size());
-    }
-    return *this;
+  /** Internal copy operator */
+  void shm_strong_copy_main(const string &other) {
+    _create_str(other.data(), other.size());
   }
 
   /** Destroy the shared-memory data. */
-  void shm_destroy() {
-    if (IsNull()) { return; }
+  void shm_destroy_main() {
     alloc_->Free(header_->text_);
-    SetNull();
   }
-
-  /** Store into shared memory */
-  void shm_serialize_main() const {}
 
   /** Load from shared memory */
   void shm_deserialize_main() {

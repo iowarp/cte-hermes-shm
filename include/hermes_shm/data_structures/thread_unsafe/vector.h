@@ -30,7 +30,7 @@ class vector;
 template<typename T, bool FORWARD_ITER>
 struct vector_iterator_templ {
  public:
-  hipc::ShmRef<vector<T>> vec_;
+  hipc::Ref<vector<T>> vec_;
   off64_t i_;
 
   /** Default constructor */
@@ -41,7 +41,7 @@ struct vector_iterator_templ {
   : vec_(vec) {}
 
   /** Construct an iterator at \a i offset */
-  inline explicit vector_iterator_templ(const hipc::ShmRef<vector<T>> &vec,
+  inline explicit vector_iterator_templ(const hipc::Ref<vector<T>> &vec,
                                         size_t i)
   : vec_(vec), i_(static_cast<off64_t>(i)) {}
 
@@ -76,14 +76,14 @@ struct vector_iterator_templ {
   }
 
   /** Dereference the iterator */
-  inline ShmRef<T> operator*() {
-    return ShmRef<T>(vec_->data_ar()[i_].internal_ref(
+  inline Ref<T> operator*() {
+    return Ref<T>(vec_->data_ar()[i_].internal_ref(
       vec_->GetAllocator()));
   }
 
   /** Dereference the iterator */
-  inline const ShmRef<T> operator*() const {
-    return ShmRef<T>(vec_->data_ar_const()[i_].internal_ref(
+  inline const Ref<T> operator*() const {
+    return Ref<T>(vec_->data_ar_const()[i_].internal_ref(
       vec_->GetAllocator()));
   }
 
@@ -286,25 +286,20 @@ class vector : public ShmContainer {
     header_->vec_ptr_.SetNull();
   }
 
-  /** Construct the vector in shared memory */
-  explicit vector(TYPED_HEADER *header, Allocator *alloc) {
-    shm_init_header(header, alloc);
+  /** SHM constructor. Default. */
+  void shm_init() {
     init_header();
   }
 
   /** Construct the vector in shared memory */
   template<typename ...Args>
-  explicit vector(TYPED_HEADER *header, Allocator *alloc,
-                  size_t length, Args&& ...args) {
-    shm_init_header(header, alloc);
+  void shm_init(size_t length, Args&& ...args) {
     init_header();
     resize(length, std::forward<Args>(args)...);
   }
 
   /** Copy from std::vector */
-  explicit vector(TYPED_HEADER *header, Allocator *alloc,
-                  std::vector<T> &other) {
-    shm_init_header(header, alloc);
+  void shm_init(std::vector<T> &other) {
     init_header();
     reserve(other.size());
     for (auto &entry : other) {
@@ -312,42 +307,10 @@ class vector : public ShmContainer {
     }
   }
 
-  /** Move constructor */
-  explicit vector(vector &&other) {
-    shm_init_header(other.header_, other.alloc_);
-    shm_deserialize_main();
-    other.RemoveHeader();
-  }
-
   /** Move assignment operator */
-  vector& operator=(vector &&other) noexcept {
-    if (this == &other) {
-      return *this;
-    }
-    shm_destroy();
-    if (!other.IsNull()) {
-      if (other.alloc_ == alloc_) {
-        memcpy((void*)header_, (void*)other.header_, sizeof(*header_));
-        shm_deserialize_main();
-        other.SetNull();
-      } else {
-        shm_strong_copy_main(other);
-        other.shm_destroy();
-      }
-    }
-    return *this;
-  }
-
-  /** Copy assignment operator */
-  vector& operator=(const vector &other) {
-    if (this == &other) {
-      return *this;
-    }
-    shm_destroy();
-    if (!other.IsNull()) {
-      shm_strong_copy_main(other);
-    }
-    return *this;
+  void shm_weak_move_main(vector &&other) noexcept {
+    memcpy((void*)header_, (void*)other.header_, sizeof(*header_));
+    shm_deserialize_main();
   }
 
   /** Copy internal (no null check) */
@@ -365,15 +328,10 @@ class vector : public ShmContainer {
   }
 
   /** Destroy all shared memory allocated by the vector */
-  void shm_destroy() {
-    if (IsNull()) { return; }
+  void shm_destroy_main() {
     erase(begin(), end());
     alloc_->Free(header_->vec_ptr_);
-    SetNull();
   }
-
-  /** Store into shared memory */
-  void shm_serialize_main() const {}
 
   /** Load from shared memory */
   void shm_deserialize_main() {}
@@ -398,7 +356,7 @@ class vector : public ShmContainer {
   std::vector<T> vec() {
     std::vector<T> v;
     v.reserve(size());
-    for (hipc::ShmRef<T> entry : *this) {
+    for (hipc::Ref<T> entry : *this) {
       v.emplace_back(*entry);
     }
     return v;
@@ -432,25 +390,25 @@ class vector : public ShmContainer {
   }
 
   /** Index the vector at position i */
-  hipc::ShmRef<T> operator[](const size_t i) {
+  hipc::Ref<T> operator[](const size_t i) {
     ShmArchive<T> *vec = data_ar();
-    return hipc::ShmRef<T>(vec[i].internal_ref(alloc_));
+    return hipc::Ref<T>(vec[i].internal_ref(alloc_));
   }
 
   /** Get first element of vector */
-  hipc::ShmRef<T> front() {
+  hipc::Ref<T> front() {
     return (*this)[0];
   }
 
   /** Get last element of vector */
-  hipc::ShmRef<T> back() {
+  hipc::Ref<T> back() {
     return (*this)[size() - 1];
   }
 
   /** Index the vector at position i */
-  const hipc::ShmRef<T> operator[](const size_t i) const {
+  const hipc::Ref<T> operator[](const size_t i) const {
     ShmArchive<T> *vec = data_ar_const();
-    return hipc::ShmRef<T>(vec[i].internal_ref(alloc_));
+    return hipc::Ref<T>(vec[i].internal_ref(alloc_));
   }
 
   /** Construct an element at the back of the vector */
@@ -593,8 +551,10 @@ class vector : public ShmContainer {
       new_vec = alloc_->template
         AllocateObjs<ShmArchive<T>>(max_length, new_p);
       for (size_t i = 0; i < header_->length_; ++i) {
-        hipc::ShmRef<T> old = (*this)[i];
-        new_vec[i].shm_init(alloc_, std::move(*old));
+        hipc::Ref<T> old_entry = (*this)[i];
+        new_vec[i].shm_init(alloc_);
+        hipc::Ref<T> new_entry(new_vec[i].internal_ref(alloc_));
+        (*new_entry) = std::move(*old_entry);
       }
       if (!header_->vec_ptr_.IsNull()) {
         alloc_->Free(header_->vec_ptr_);

@@ -31,7 +31,7 @@ template<>
  class ShmHeader<ShmContainerExample> : public hipc::ShmBaseHeader {
 };
 
-class ShmContainerExample {
+class ShmContainerExample : public hipc::ShmContainer {
  public:
   /**====================================
    * Variables & Types
@@ -50,11 +50,13 @@ class ShmContainerExample {
   /** Constructor. Empty. */
   explicit CLASS_NAME(TYPED_HEADER *header,
                       hipc::Allocator *alloc) {
-    shm_init_header(header, alloc);
+    shm_make_header(header, alloc);
   }
 
-  /** Store into shared memory */
-  void shm_serialize_main() const {}
+  /** Default initialization */
+  void shm_init() {
+    SetNull();
+  }
 
   /** Load from shared memory */
   void shm_deserialize_main() {}
@@ -62,28 +64,140 @@ class ShmContainerExample {
   /** Destroy object */
   void shm_destroy_main() {}
 
-  /** Copy the object to an initialized object */
+  /** Internal copy operation */
   void shm_strong_copy_main(const CLASS_NAME &other) {
   }
+
+  /** Internal move operation */
+  void shm_weak_move_main(CLASS_NAME &&other) {
+    memcpy(header_, other.header_, sizeof(*header_));
+  }
+
+  /** Check if header is NULL */
+  bool IsNull() {
+    return header_ == nullptr;
+  }
+
+  /** Nullify object header */
+  void SetNull() {
+  }
+
+  /**====================================
+   * Move Operations
+   * ===================================*/
+
+  /** Move constructor */
+  explicit CLASS_NAME(CLASS_NAME &&other) {
+    shm_make_header(other.header_, other.alloc_);
+    shm_deserialize_main();
+    other.RemoveHeader();
+  }
+
+   /** SHM Constructor. Move operator. */
+   void shm_init(CLASS_NAME &&other) {
+     SetNull();
+     shm_weak_move_main(std::forward<CLASS_NAME>(other));
+   }
+
+  /** Move assignment operator */
+  CLASS_NAME& operator=(CLASS_NAME &&other) {
+    if (this == &other) {
+      return *this;
+    }
+    shm_destroy();
+    if (alloc_ == other.alloc_) {
+      shm_weak_move_main(std::forward<CLASS_NAME>(other));
+      other.SetNull();
+    } else {
+      shm_strong_copy_main(other);
+      other.shm_destroy();
+    }
+    return *this;
+  }
+
+  /**====================================
+   * Copy Operations
+   * ===================================*/
+
+   /** Copy constructor */
+   CLASS_NAME(const CLASS_NAME &other) {
+     shm_make_header(nullptr, other.alloc_);
+     SetNull();
+     shm_strong_copy_main(other);
+   }
+
+   /** Copy assignment operator */
+   CLASS_NAME& operator=(const CLASS_NAME &other) {
+     if (this == &other) {
+       return *this;
+     }
+     shm_destroy();
+     shm_strong_copy_main(other);
+     return *this;
+   }
+
+   /** SHM Constructor. Copy operator. */
+   void shm_init(const CLASS_NAME &other) {
+     SetNull();
+     shm_strong_copy_main(other);
+   }
 
   /**====================================
    * Constructors
    * ===================================*/
 
-  /** Disable default constructor */
-  CLASS_NAME() = delete;
+  /** Constructor. Default allocator. */
+  CLASS_NAME() {
+    shm_make_header(nullptr, nullptr);
+    shm_init();
+  }
 
-  /** Disable copy constructor */
-  CLASS_NAME(const CLASS_NAME &other) = delete;
+  /** Constructor. Default allocator with args. */
+  template<typename ...Args>
+  CLASS_NAME(Args&& ...args) {
+    shm_make_header(nullptr, nullptr);
+    shm_init(std::forward<Args>(args)...);
+  }
 
-  /** Default destructor */
-  ~CLASS_NAME() = default;
+  /** Constructor. Custom allocator. */
+  template<typename ...Args>
+  explicit CLASS_NAME(hipc::Allocator *alloc, Args&& ...args) {
+    shm_make_header(nullptr, alloc);
+    shm_init(std::forward<Args>(args)...);
+  }
 
-  /** Initialize header + allocator */
-  void shm_init_header(TYPE_UNWRAP(TYPED_HEADER) *header,
+  /** Constructor. Header is pre-allocated. */
+  template<typename ...Args>
+  explicit CLASS_NAME(hipc::ShmInit,
+                      hipc::ShmDeserialize<CLASS_NAME> ar,
+                      Args&& ...args) {
+    shm_make_header(ar.header_, ar.alloc_);
+    shm_init(std::forward<Args>(args)...);
+  }
+
+  /** Constructor. Header is pre-allocated. */
+  template<typename ...Args>
+  explicit CLASS_NAME(TYPE_UNWRAP(TYPED_HEADER) *header,
+                      hipc::Allocator *alloc,
+                      Args&& ...args) {
+    shm_make_header(header, alloc);
+    shm_init(std::forward<Args>(args)...);
+  }
+
+   /** Initialize header + allocator */
+  void shm_make_header(TYPE_UNWRAP(TYPED_HEADER) *header,
                        hipc::Allocator *alloc) {
-    header_ = header;
+    if (alloc == nullptr) {
+      alloc = HERMES_MEMORY_REGISTRY->GetDefaultAllocator();
+    }
     alloc_ = alloc;
+    if (header == nullptr) {
+      header_ = alloc_->template AllocateObjs<TYPE_UNWRAP(TYPED_HEADER)>(1);
+      flags_.SetBits(SHM_PRIVATE_IS_DESTRUCTABLE | SHM_PRIVATE_OWNS_HEADER);
+    } else {
+      header_ = header;
+      flags_.UnsetBits(SHM_PRIVATE_IS_DESTRUCTABLE | SHM_PRIVATE_OWNS_HEADER);
+    }
   }
 
   /**====================================
@@ -93,56 +207,14 @@ class ShmContainerExample {
   /** Destruction operation */
   void shm_destroy() {
     if (IsNull()) { return; }
-    shm_destroy_main();
-    SetNull();
-  }
-
-  /**====================================
-   * Move Operations
-   * ===================================*/
-
-  /** Move constructor */
-  explicit CLASS_NAME(CLASS_NAME &&other) {
-    shm_init_header(other.header_, other.alloc_);
-    shm_deserialize_main();
-    other.RemoveHeader();
-  }
-
-  /** Move assignment operator */
-  CLASS_NAME& operator=(CLASS_NAME &&other) {
-    if (this == &other) {
-      return *this;
-    }
-    shm_destroy();
-    if (!other.IsNull()) {
-      if (alloc_ == other.alloc_) {
-        memcpy(header_, other.header_, sizeof(*header_));
-        shm_deserialize_main();
-        other.SetNull();
-      } else {
-        shm_strong_copy_main(other);
-        other.shm_destroy();
+    if (flags_.OrBits(SHM_PRIVATE_IS_DESTRUCTABLE)) {
+      shm_destroy_main();
+      if (flags_.OrBits(SHM_PRIVATE_OWNS_HEADER)) {
+        alloc_->template FreePtr<TYPE_UNWRAP(TYPED_HEADER)>(header_);
       }
     }
-    return *this;
+    SetNull();
   }
-
-  /**====================================
-   * Copy Operations
-   * ===================================*/
-
-  /** Copy assignment operator */
-  CLASS_NAME& operator=(const CLASS_NAME &other) {
-    if (this == &other) {
-      return *this;
-    }
-    shm_destroy();
-    if (!other.IsNull()) {
-      shm_strong_copy_main(other);
-    }
-    return *this;
-  }
-
   /**====================================
    * Serialization
    * ===================================*/
@@ -151,23 +223,12 @@ class ShmContainerExample {
   void shm_serialize(hipc::TypedPointer<TYPED_CLASS> &ar) const {
     ar = alloc_->template
       Convert<TYPED_HEADER, hipc::Pointer>(header_);
-    shm_serialize_main();
   }
 
   /** Serialize into an AtomicPointer */
   void shm_serialize(hipc::TypedAtomicPointer<TYPED_CLASS> &ar) const {
     ar = alloc_->template
       Convert<TYPED_HEADER, hipc::AtomicPointer>(header_);
-    shm_serialize_main();
-  }
-
-  /** Override >> operators */
-  void operator>>(hipc::TypedPointer<TYPE_UNWRAP(TYPED_CLASS)> &ar) const {
-    shm_serialize(ar);
-  }
-  void operator>>(
-    hipc::TypedAtomicPointer<TYPE_UNWRAP(TYPED_CLASS)> &ar) const {
-    shm_serialize(ar);
   }
 
   /**====================================
@@ -199,13 +260,13 @@ class ShmContainerExample {
   /** Deserialize object from allocator + header */
   bool shm_deserialize(TYPED_HEADER *header,
                        hipc::Allocator *alloc) {
-    shm_init_header(header, alloc);
+    shm_make_header(header, alloc);
     shm_deserialize_main();
     return true;
   }
 
   /** Constructor. Deserialize the object from the reference. */
-  explicit CLASS_NAME(hipc::ShmRef<TYPED_CLASS> &obj) {
+  explicit CLASS_NAME(hipc::Ref<TYPED_CLASS> &obj) {
     shm_deserialize(obj->header_, obj->GetAllocator());
   }
 
@@ -214,17 +275,16 @@ class ShmContainerExample {
     shm_deserialize(other);
   }
 
-  /** Override << operators */
-  void operator<<(const hipc::TypedPointer<TYPE_UNWRAP(TYPED_CLASS)> &ar) {
-    shm_deserialize(ar);
+  /**====================================
+   * Flag Operations
+   * ===================================*/
+
+  void SetHeaderOwned() {
+    flags_.SetBits(SHM_PRIVATE_OWNS_HEADER);
   }
-  void operator<<(
-    const hipc::TypedAtomicPointer<TYPE_UNWRAP(TYPED_CLASS)> &ar) {
-    shm_deserialize(ar);
-  }
-  void operator<<(
-    const hipc::ShmDeserialize<TYPE_UNWRAP(TYPED_CLASS)> &ar) {
-    shm_deserialize(ar);
+
+  void UnsetHeaderOwned() {
+    flags_.UnsetBits(SHM_PRIVATE_OWNS_HEADER);
   }
 
   /**====================================

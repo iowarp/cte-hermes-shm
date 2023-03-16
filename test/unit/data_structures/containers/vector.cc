@@ -24,8 +24,8 @@ using hermes_shm::ipc::string;
 template<typename T>
 void VectorTest() {
   Allocator *alloc = alloc_g;
-  vector<T> vec(alloc);
-  VectorTestSuite<T, vector<T>> test(vec, alloc);
+  auto vec = hipc::make_uptr<vector<T>>(alloc);
+  VectorTestSuite<T, vector<T>> test(*vec, alloc);
 
   test.EmplaceTest(15);
   test.IndexTest();
@@ -43,7 +43,8 @@ void VectorTest() {
 
 void VectorOfListOfStringTest() {
   Allocator *alloc = alloc_g;
-  vector<list<string>> vec(alloc);
+  auto vec_p = hipc::make_uptr<vector<list<string>>>(alloc);
+  auto &vec = *vec_p;
 
   vec.resize(10);
   for (auto bkt : vec) {

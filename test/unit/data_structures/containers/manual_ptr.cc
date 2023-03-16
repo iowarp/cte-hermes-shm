@@ -11,7 +11,7 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 
-#include "hermes_shm/data_structures/smart_ptr/manual_ptr.h"
+#include "hermes_shm/data_structures/smart_ptr/smart_ptr_base.h"
 #include "basic_test.h"
 #include "test_init.h"
 #include "hermes_shm/data_structures/string.h"
@@ -29,7 +29,7 @@ void ManualPtrTest() {
   Allocator *alloc = alloc_g;
   hipc::SmartPtrTestSuite<T, mptr<T>> test;
   CREATE_SET_VAR_TO_INT_OR_STRING(T, num, 25);
-  test.ptr_ = make_mptr<T>(num);
+  *test.ptr_ = std::move(num);
   test.DereferenceTest(num);
   test.MoveConstructorTest(num);
   test.MoveAssignmentTest(num);

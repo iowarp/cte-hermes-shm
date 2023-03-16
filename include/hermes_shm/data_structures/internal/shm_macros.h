@@ -34,48 +34,33 @@
 #define SHM_X_OR_Y(T, X, Y) \
   typename std::conditional<         \
     IS_SHM_ARCHIVEABLE(T), \
-    X, Y>::type
+    TYPE_UNWRAP(X), TYPE_UNWRAP(Y)>::type
 
 /**
- * SHM_T_OR_PTR_T: Returns T if SHM_ARCHIVEABLE, and T* otherwise. Used
- * internally by hipc::ShmRef<T>.
- *
- * @param T: The type being stored in the shmem data structure
+ * SHM_ARCHIVE_OR_PTR_T: Returns ShmArchive if SHM_ARCHIVEABLE, and T*
+ * otherwise.
  * */
-#define SHM_T_OR_PTR_T(T) \
-  SHM_X_OR_Y(T, T, T*)
+#define SHM_ARCHIVE_OR_PTR_T(T) \
+  SHM_X_OR_Y(T, hipc::ShmArchive<T>, T*)
 
 /**
- * ShmArchive: Returns TypedPointer<T> if SHM_ARCHIVEABLE, and T
- * otherwise. Used to construct an hipc::ShmRef<T>.
- *
- * @param T The type being stored in the shmem data structure
+ * SHM_HEADER_OR_T: Returns header_t if SHM_ARCHIVEABLE, and T otherwise.
+ * Used by ShmDeserialize.
  * */
-#define SHM_ARCHIVE_OR_T(T) \
-  SHM_X_OR_Y(T, hipc::TypedPointer<T>, T)
+template<typename T, typename = void>
+struct HeaderOrT { using type = T; };
+template<typename T>
+struct HeaderOrT<T, std::void_t<typename T::NestedType>> {
+  using type = typename T::header_t;
+};
+
+#define SHM_HEADER_OR_T(T) \
+  typename HeaderOrT<T>::type
 
 /**
- * SHM_T_OR_SHM_STRUCT_T: Used by unique_ptr and manual_ptr to internally
- * store either a shm-compatible type or a POD (piece of data) type.
- *
- * @param T: The type being stored in the shmem data structure
+ * SHM_DESERIALIZE_OR_REF: Return value of shm_ar::internal_ref().
  * */
-#define SHM_T_OR_SHM_STRUCT_T(T) \
-  SHM_X_OR_Y(T, T, ShmStruct<T>)
-
-/**
- * SHM_T_OR_CONST_T: Determines whether or not an object should be
- * a constant or not.
- * */
-#define SHM_CONST_T_OR_T(T, IS_CONST) \
-  typename std::conditional<         \
-    IS_CONST, \
-    const T, T>::type
-
-/**
- * SHM_ARCHIVE_OR_REF: Return value of shm_ar::internal_ref().
- * */
-#define SHM_ARCHIVE_OR_REF(T)\
+#define SHM_DESERIALIZE_OR_REF(T)\
   SHM_X_OR_Y(T, ShmDeserialize<T>, T&)
 
 #endif  // HERMES_MEMORY_SHM_MACROS_H_

@@ -19,26 +19,34 @@ using hermes_shm::ipc::string;
 void TestString() {
   Allocator *alloc = alloc_g;
 
-  auto text1 = string("hello1");
-  REQUIRE(text1 == "hello1");
-  REQUIRE(text1 != "h");
-  REQUIRE(text1 != "asdfklaf");
+  PAGE_DIVIDE("Test basic construction from string") {
+    auto text = hipc::make_uptr<string>(alloc, "hello1");
+    REQUIRE(*text == "hello1");
+    REQUIRE(*text != "h");
+    REQUIRE(*text != "asdfklaf");
+  }
 
-  auto text2 = string("hello2");
-  REQUIRE(text2 == "hello2");
+  PAGE_DIVIDE("Test the mutability of the string") {
+    auto text = hipc::make_uptr<string>(alloc, 6);
+    memcpy(text->data_mutable(), "hello4", strlen("hello4"));
+    REQUIRE(*text == "hello4");
+  }
 
-  string text3 = text1 + text2;
-  REQUIRE(text3 == "hello1hello2");
+  PAGE_DIVIDE("Test copy assign") {
+    auto text1 = hipc::make_uptr<string>(alloc, "hello");
+    auto text2 = hipc::make_uptr<string>(alloc);
+    (*text2) = (*text1);
+    REQUIRE(*text1 == "hello4");
+    REQUIRE(text1->header_ != text2->header_);
+  }
 
-  string text4(6);
-  memcpy(text4.data_mutable(), "hello4", strlen("hello4"));
-
-  string text5 = text4;
-  REQUIRE(text5 == "hello4");
-  REQUIRE(text5.header_ != text4.header_);
-
-  string text6 = std::move(text5);
-  REQUIRE(text6 == "hello4");
+  PAGE_DIVIDE("Test move assign") {
+    auto text1 = hipc::make_uptr<string>(alloc, "hello");
+    auto text2 = hipc::make_uptr<string>(alloc);
+    (*text2) = std::move(*text1);
+    REQUIRE(*text1 == "hello4");
+    REQUIRE(text1->header_ != text2->header_);
+  }
 }
 
 TEST_CASE("String") {

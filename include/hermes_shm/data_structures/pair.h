@@ -14,6 +14,7 @@
 #define HERMES_INCLUDE_HERMES_DATA_STRUCTURES_PAIR_H_
 
 #include "internal/shm_internal.h"
+#include "hermes_shm/data_structures/smart_ptr/smart_ptr_base.h"
 
 namespace hermes_shm::ipc {
 
@@ -47,115 +48,75 @@ class pair : public ShmContainer {
   SHM_CONTAINER_TEMPLATE((CLASS_NAME), (TYPED_CLASS), (TYPED_HEADER))
 
  public:
-  hipc::ShmRef<FirstT> first_;
-  hipc::ShmRef<SecondT> second_;
+  hipc::Ref<FirstT> first_;
+  hipc::Ref<SecondT> second_;
 
  public:
   /**====================================
    * SHM Overrides
    * ===================================*/
 
-  /** Default shm constructor */
-  explicit pair(TYPED_HEADER *header, Allocator *alloc) {
-    shm_init_header(header, alloc);
-    header_->first_.shm_init();
-    header_->second_.shm_init();
+  /** SHM constructor. Default. */
+  void shm_init() {
+    first_ = make_ref<FirstT>(header_->first_, alloc_);
+    second_ = make_ref<SecondT>(header_->second_, alloc_);
   }
 
-  /** Construct pair by moving parameters */
-  explicit pair(TYPED_HEADER *header, Allocator *alloc,
-                FirstT &&first, SecondT &&second) {
-    shm_init_header(header, alloc);
-    header_->first_.shm_init(std::forward<FirstT>(first));
-    header_->second_.shm_init(std::forward<SecondT>(second));
-    shm_deserialize_main();
-
+  /** SHM constructor. Move parameters. */
+  void shm_init(FirstT &&first, SecondT &&second) {
+    first_ = make_ref<FirstT>(header_->first_,
+                              alloc_, std::forward<FirstT>(first));
+    second_ = make_ref<SecondT>(header_->second_,
+                                alloc_, std::forward<SecondT>(second));
   }
 
-  /** Construct pair by copying parameters */
-  explicit pair(TYPED_HEADER *header, Allocator *alloc,
-                const FirstT &first, const SecondT &second) {
-    shm_init_header(header, alloc);
-    header_->first_.shm_init(first);
-    header_->second_.shm_init(second);
-    shm_deserialize_main();
+  /** SHM constructor. Copy parameters. */
+  void shm_init(const FirstT &first, const SecondT &second) {
+    first_ = make_ref<FirstT>(alloc_, first);
+    second_ = make_ref<SecondT>(alloc_, second);
   }
 
-  /** Construct pair piecewise */
+  /** SHM constructor. Piecewise emplace. */
   template<typename FirstArgPackT, typename SecondArgPackT>
-  explicit pair(TYPED_HEADER *header, Allocator *alloc,
-                PiecewiseConstruct &&hint,
+  void shm_init(PiecewiseConstruct &&hint,
                 FirstArgPackT &&first,
                 SecondArgPackT &&second) {
-    shm_init_header(header, alloc);
-    header_->first_.shm_init_piecewise(std::forward<FirstArgPackT>(first));
-    header_->second_.shm_init_piecewise(std::forward<SecondArgPackT>(second));
+    first_ = make_ref_piecewise<FirstT>(make_argpack(alloc_), first);
+    second_ = make_ref_piecewise<SecondT>(make_argpack(alloc_), second);
+
+    header_->first_.shm_init_piecewise(alloc_,
+                                       std::forward<FirstArgPackT>(first));
+    header_->second_.shm_init_piecewise(alloc_,
+                                        std::forward<SecondArgPackT>(second));
     shm_deserialize_main();
   }
 
-  /** Move constructor */
-  explicit CLASS_NAME(CLASS_NAME &&other) {
-    shm_init_header(other.header_, other.alloc_);
-    shm_deserialize_main();
-    other.RemoveHeader();
+  /** Internal move operation */
+  void shm_weak_move_main(CLASS_NAME &&other) {
+    (*first_) = std::move(*other.first_);
+    (*second_) = std::move(*other.second_);
   }
 
-  /** Move assignment operator */
-  CLASS_NAME& operator=(CLASS_NAME &&other) {
-    if (this == &other) {
-      return *this;
-    }
-    shm_destroy();
-    if (!other.IsNull()) {
-      if (alloc_ == other.alloc_) {
-        (*first_) = std::move(*other.first_);
-        (*second_) = std::move(*other.second_);
-        other.SetNull();
-      } else {
-        shm_strong_copy_main(other);
-        other.shm_destroy();
-      }
-    }
-    return *this;
-  }
-
-  /** Copy assignment operator */
-  CLASS_NAME& operator=(const pair &&other) {
-    if (this == &other) {
-      return *this;
-    }
-    shm_destroy();
-    if (!other.IsNull()) {
-      shm_strong_copy_main(other);
-    }
-    return *this;
-  }
-
-  /** Copy constructor */
+  /** Internal copy operation */
   void shm_strong_copy_main(const pair &other) {
     (*first_) = (*other.first_);
     (*second_) = (*other.second_);
   }
 
   /** Destroy the shared-memory data */
-  void shm_destroy() {
-    if (IsNull()) { return; }
-    first_->shm_destroy();
-    second_->shm_destroy();
-    SetNull();
+  void shm_destroy_main() {
+    first_.shm_destroy();
+    second_.shm_destroy();
   }
-
-  /** Store into shared memory */
-  void shm_serialize_main() const {}
 
   /** Load from shared memory */
   void shm_deserialize_main() {
-    first_ = hipc::ShmRef<FirstT>(header_->first_.internal_ref(alloc_));
-    second_ = hipc::ShmRef<SecondT>(header_->second_.internal_ref(alloc_));
+    first_ = hipc::Ref<FirstT>(header_->first_.internal_ref(alloc_));
+    second_ = hipc::Ref<SecondT>(header_->second_.internal_ref(alloc_));
   }
 
   /** Check if the pair is empty */
-  bool IsNull() {
+  bool IsNull() const {
     return header_ == nullptr;
   }
 

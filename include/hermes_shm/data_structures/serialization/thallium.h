@@ -74,11 +74,12 @@ void load_vec(A &ar, ContainerT &obj) {
   ar >> alloc_id;
   ar >> size;
   auto alloc = HERMES_MEMORY_MANAGER->GetAllocator(alloc_id);
-  obj.shm_init(alloc);
-  obj.resize(size);
+  auto obj_tmp = hipc::make_mptr<ContainerT>(alloc);
+  obj_tmp->resize(size);
   for (int i = 0; i < size; ++i) {
     ar >> *(obj[i]);
   }
+  obj << obj_tmp->GetShmDeserialize();
 }
 
 /**
@@ -115,12 +116,13 @@ void load_list(A &ar, ContainerT &obj) {
   ar >> alloc_id;
   ar >> size;
   auto alloc = HERMES_MEMORY_MANAGER->GetAllocator(alloc_id);
-  obj.shm_init(alloc);
+  auto obj_tmp = hipc::make_mptr<ContainerT>(alloc);
   for (int i = 0; i < size; ++i) {
     T elmt;
     ar >> elmt;
-    obj.emplace_back(std::move(elmt));
+    obj_tmp->emplace_back(std::move(elmt));
   }
+  obj << obj_tmp->GetShmDeserialize();
 }
 
 /**
@@ -233,8 +235,8 @@ void load(A &ar, hipc::string &text) {
   if (!size) { return; }
   ar >> alloc_id;
   auto alloc = HERMES_MEMORY_MANAGER->GetAllocator(alloc_id);
-  text.shm_init(alloc, size);
-  ar.read(text.data_mutable(), size);
+  text = hipc::text();
+  ar.read(text_tmp->data_mutable(), size);
 }
 
 /**
@@ -303,10 +305,10 @@ void load(A &ar, hshm::bitfield32_t &field) {
 }
 
 /**
- * Lets Thallium know how to serialize a ShmRef object
+ * Lets Thallium know how to serialize a Ref object
  * */
 template<typename A, typename T>
-void serialize(A &ar, hipc::ShmRef<T> &ref) {
+void serialize(A &ar, hipc::Ref<T> &ref) {
   ar &(*ref);
 }
 

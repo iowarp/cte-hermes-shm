@@ -62,7 +62,7 @@ int main(int argc, char **argv) {
   }
 
   // Read vector on all ranks
-  for (hipc::ShmRef<int> x : obj) {
+  for (hipc::Ref<int> x : obj) {
     assert(*x == 10);
   }
   MPI_Barrier(MPI_COMM_WORLD);

@@ -43,13 +43,13 @@ struct list_entry {
   }
 
   /** Returns the element stored in the list */
-  ShmRef<T> internal_ref(Allocator *alloc) {
-    return ShmRef<T>(data_.internal_ref(alloc));
+  Ref<T> internal_ref(Allocator *alloc) {
+    return Ref<T>(data_.internal_ref(alloc));
   }
 
   /** Returns the element stored in the list */
-  ShmRef<T> internal_ref(Allocator *alloc) const {
-    return ShmRef<T>(data_.internal_ref(alloc));
+  Ref<T> internal_ref(Allocator *alloc) const {
+    return Ref<T>(data_.internal_ref(alloc));
   }
 };
 
@@ -60,7 +60,7 @@ template<typename T>
 struct list_iterator_templ {
  public:
   /**< A shm reference to the containing list object. */
-  hipc::ShmRef<list<T>> list_;
+  hipc::Ref<list<T>> list_;
   /**< A pointer to the entry in shared memory */
   list_entry<T> *entry_;
   /**< The offset of the entry in the shared-memory allocator */
@@ -97,12 +97,12 @@ struct list_iterator_templ {
   }
 
   /** Get the object the iterator points to */
-  ShmRef<T> operator*() {
+  Ref<T> operator*() {
     return entry_->internal_ref(list_->GetAllocator());
   }
 
   /** Get the object the iterator points to */
-  const ShmRef<T> operator*() const {
+  const Ref<T> operator*() const {
     return entry_->internal_ref();
   }
 
@@ -250,59 +250,23 @@ class list : public ShmContainer {
    * SHM Overrides
    * ===================================*/
 
-  /** Initialize list in shared memory */
-  explicit list(TYPED_HEADER *header, Allocator *alloc) {
-    shm_init_header(header, alloc);
+  /** SHM constructor. Default. */
+  void shm_init() {
     SetNull();
   }
 
-  /** Copy from std::list */
-  explicit list(TYPED_HEADER *header, Allocator *alloc, std::list<T> &other) {
-    shm_init_header(header, alloc);
+  /** SHM constructor. Copy from std::list */
+  void shm_init(std::list<T> &other) {
     SetNull();
     for (auto &entry : other) {
       emplace_back(entry);
     }
   }
 
-  /** Move constructor */
-  explicit list(list &&other) {
-    shm_init_header(other.header_, other.alloc_);
-    if (!other.IsNull()) {
-      shm_deserialize_main();
-    }
-    other.RemoveHeader();
-  }
-
-  /** Move assignment operator */
-  list& operator=(list &&other) noexcept {
-    if (this == &other) {
-      return *this;
-    }
-    shm_destroy();
-    if (!other.IsNull()) {
-      if (alloc_ == other.alloc_) {
-        memcpy(header_, other.header_, sizeof(*header_));
-        shm_deserialize_main();
-        other.SetNull();
-      } else {
-        shm_strong_copy_main(other);
-        other.shm_destroy();
-      }
-    }
-    return *this;
-  }
-
-  /** Copy assignment operator */
-  CLASS_NAME& operator=(const list &other) {
-    if (this == &other) {
-      return *this;
-    }
-    shm_destroy();
-    if (!other.IsNull()) {
-      shm_strong_copy_main(other);
-    }
-    return *this;
+  /** Internal move operation */
+  void shm_weak_move_main(list &&other) {
+    memcpy(header_, other.header_, sizeof(*header_));
+    shm_deserialize_main();
   }
 
   /** Internal copy operation */
@@ -312,21 +276,16 @@ class list : public ShmContainer {
     }
   }
 
-  /** Destroy all shared memory allocated by the list */
-  void shm_destroy() {
-    if (IsNull()) { return; }
+  /** SHM destructor.  */
+  void shm_destroy_main() {
     clear();
-    SetNull();
   }
-
-  /** Store into shared memory */
-  void shm_serialize_main() const {}
 
   /** Load from shared memory */
   void shm_deserialize_main() {}
 
   /** Check if the list is empty */
-  bool IsNull() {
+  bool IsNull() const {
     return header_ == nullptr || header_->length_ == 0;
   }
 
@@ -437,12 +396,12 @@ class list : public ShmContainer {
   }
 
   /** Get the object at the front of the list */
-  ShmRef<T> front() {
+  Ref<T> front() {
     return *begin();
   }
 
   /** Get the object at the back of the list */
-  ShmRef<T> back() {
+  Ref<T> back() {
     return *end();
   }
 
@@ -457,7 +416,7 @@ class list : public ShmContainer {
   /** Find an element in this list */
   list_iterator<T> find(const T &entry) {
     for (auto iter = begin(); iter != end(); ++iter) {
-      hipc::ShmRef<T> ref = *iter;
+      hipc::Ref<T> ref = *iter;
       if (*ref == entry) {
         return iter;
       }

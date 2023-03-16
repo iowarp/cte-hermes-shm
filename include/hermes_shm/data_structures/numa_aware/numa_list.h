@@ -55,7 +55,7 @@ class numa_list : public ShmContainer {
   void shm_init_main(TYPED_HEADER *header,
                      hipc::Allocator *alloc) {
     shm_init_allocator(alloc);
-    shm_init_header(header, alloc_);
+    shm_make_header(header, alloc_);
   }
 
   /** Move constructor */
@@ -118,11 +118,11 @@ class numa_list : public ShmContainer {
   }
 
   /** Get the object at the front of the numa_list */
-  ShmRef<T> front() {
+  Ref<T> front() {
   }
 
   /** Get the object at the back of the numa_list */
-  ShmRef<T> back() {
+  Ref<T> back() {
   }
 
   /** Get the number of elements in the numa_list */
@@ -136,7 +136,7 @@ class numa_list : public ShmContainer {
   /** Find an element in this numa_list */
   list_iterator<T> find(const T &entry) {
     for (auto iter = begin(); iter != end(); ++iter) {
-      hipc::ShmRef<T> ref = *iter;
+      hipc::Ref<T> ref = *iter;
       if (*ref == entry) {
         return iter;
       }

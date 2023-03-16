@@ -44,7 +44,7 @@ struct FixedPageAllocatorHeader : public AllocatorHeader {
 class FixedPageAllocator : public Allocator {
  private:
   FixedPageAllocatorHeader *header_;
-  hipc::ShmRef<vector<iqueue<MpPage>>> free_lists_;
+  hipc::Ref<vector<iqueue<MpPage>>> free_lists_;
   StackAllocator alloc_;
 
  public:

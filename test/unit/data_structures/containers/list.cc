@@ -21,8 +21,8 @@ using hermes_shm::ipc::list;
 template<typename T>
 void ListTest() {
   Allocator *alloc = alloc_g;
-  list<T> lp(alloc);
-  ListTestSuite<T, list<T>> test(lp, alloc);
+  auto lp = hipc::make_uptr<list<T>>(alloc);
+  ListTestSuite<T, list<T>> test(*lp, alloc);
 
   test.EmplaceTest(30);
   test.ForwardIteratorTest();

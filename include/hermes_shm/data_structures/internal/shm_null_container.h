@@ -89,7 +89,7 @@ class NullContainer : public ShmContainer {
   void shm_init_main(TYPED_HEADER *header,
                      Allocator *alloc) {
     shm_init_allocator(alloc);
-    shm_init_header(header);
+    shm_make_header(header);
   }
 
   /** Move constructor */

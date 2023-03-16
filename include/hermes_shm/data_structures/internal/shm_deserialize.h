@@ -14,8 +14,34 @@
 #define HERMES_INCLUDE_HERMES_DATA_STRUCTURES_INTERNAL_DESERIALIZE_H_
 
 #include "hermes_shm/memory/memory_registry.h"
+#include "shm_archive.h"
 
 namespace hermes_shm::ipc {
+
+/**
+ * Indicates that a data structure can be archived in shared memory
+ * and has a corresponding TypedPointer override.
+ * */
+class ShmArchiveable {};
+
+template<typename ContainerT>
+struct _ShmDeserializeShm {
+  typedef typename ContainerT::header_t header_t;
+};
+
+template<typename ContainerT>
+struct _ShmDeserializeNoShm {
+  typedef ContainerT header_t;
+};
+
+#define MAKE_SHM_DESERIALIZE(T) \
+   SHM_X_OR_Y(T,        \
+    _ShmDeserializeShm<T>, _ShmDeserializeNoShm<T>)::header_t
+
+/**
+ * Indicates that a Deserialize should also be initialized
+ * */
+struct ShmInit {};
 
 /**
  * The parameters used to deserialize an object.
@@ -23,7 +49,7 @@ namespace hermes_shm::ipc {
 template<typename ContainerT>
 struct ShmDeserialize {
  public:
-  typedef typename ContainerT::header_t header_t;
+  typedef MAKE_SHM_DESERIALIZE(ContainerT) header_t;
   Allocator *alloc_;
   header_t *header_;
 
@@ -35,8 +61,7 @@ struct ShmDeserialize {
   explicit ShmDeserialize(const TypedPointer<ContainerT> &ar) {
     alloc_ = HERMES_MEMORY_REGISTRY->GetAllocator(ar.allocator_id_);
     header_ = alloc_->Convert<
-      TypedPointer<ContainerT>,
-      OffsetPointer>(ar.ToOffsetPointer());
+      header_t, OffsetPointer>(ar.ToOffsetPointer());
   }
 
   /** Construct from allocator + offset pointer */
@@ -44,8 +69,7 @@ struct ShmDeserialize {
                           Allocator *alloc) {
     alloc_ = alloc;
     header_ = alloc_->Convert<
-      TypedPointer<ContainerT>,
-      OffsetPointer>(ar.ToOffsetPointer());
+      header_t, OffsetPointer>(ar.ToOffsetPointer());
   }
 
   /** Construct from header (ptr) + allocator */
@@ -67,30 +91,29 @@ struct ShmDeserialize {
 
   /** Copy assign operator */
   ShmDeserialize& operator=(const ShmDeserialize &other) {
-    shm_strong_copy(other);
+    if (this != &other) {
+      shm_strong_copy(other);
+    }
     return *this;
   }
 
-  /** Copy operation */
-  void shm_strong_copy(const ShmDeserialize &other) {
-    alloc_ = other.alloc_;
-    header_ = other.header_;
-  }
-
   /** Move constructor */
-  ShmDeserialize(ShmDeserialize &&other) {
-    shm_weak_move(other);
+  ShmDeserialize(ShmDeserialize &&other) noexcept {
+    shm_strong_copy(other);
   }
 
   /** Move assign operator */
   ShmDeserialize& operator=(ShmDeserialize &&other) {
-    shm_weak_move();
+    if (this != &other) {
+      shm_strong_copy();
+    }
     return *this;
   }
 
-  /** Move operation */
-  void shm_weak_move(ShmDeserialize &other) {
-    shm_strong_copy(other);
+  /** Internal copy operation */
+  void shm_strong_copy(const ShmDeserialize &other) {
+    alloc_ = other.alloc_;
+    header_ = other.header_;
   }
 };
 

@@ -27,21 +27,18 @@ class LockedVector {
   /**====================================
    * Variables
    * ===================================*/
-  hipc::ShmRef<hipc::vector<int>> vec_;
+  hipc::mptr<hipc::vector<int>> vec_;
 
  public:
   /**====================================
    * Shm Overrides
    * ===================================*/
 
-  /** Default constructor */
-  LockedVector() = default;
-
   /** Default shm constructor. Initializes the vector with 0 elements. */
   void shm_init_main(header_t *header,
                      hipc::Allocator *alloc) {
     shm_init_allocator(alloc);
-    shm_init_header(header, alloc_);
+    shm_make_header(header, alloc_);
     shm_deserialize_main();
     vec_->shm_init(alloc_);
   }
@@ -82,7 +79,7 @@ class LockedVector {
     vec_->emplace_back(num);
   }
 
-  hipc::ShmRef<int> operator[](size_t i) {
+  hipc::Ref<int> operator[](size_t i) {
     return (*vec_)[i];
   }
 };

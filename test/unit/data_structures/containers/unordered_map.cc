@@ -169,9 +169,10 @@ void UnorderedMapOpTest() {
     }
   }
 
-  // Copy the unordered_map
+  // Copy assignment operator
   PAGE_DIVIDE("Copy the map") {
-    unordered_map<Key, Val> cpy(map);
+    unordered_map<Key, Val> cpy;
+    (cpy) = map;
     for (int i = 0; i < 100; ++i) {
       CREATE_KV_PAIR(key, i, val, i);
       REQUIRE(map.find(key) != map.end());
@@ -179,7 +180,7 @@ void UnorderedMapOpTest() {
     }
   }
 
-  // Move the unordered_map
+  // Move assignment operator
   PAGE_DIVIDE("Move the map") {
     unordered_map<Key, Val> cpy = std::move(map);
     for (int i = 0; i < 100; ++i) {
