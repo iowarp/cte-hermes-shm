@@ -471,7 +471,7 @@ class Allocator {
    * @return a process-independent pointer
    * */
   template<typename T, typename POINTER_T = Pointer>
-  inline POINTER_T Convert(T *ptr) {
+  inline POINTER_T Convert(const T *ptr) {
     if (ptr == nullptr) { return POINTER_T::GetNull(); }
     return POINTER_T(GetId(),
                      reinterpret_cast<size_t>(ptr) -

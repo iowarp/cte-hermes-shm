@@ -24,7 +24,6 @@ void TestString() {
     REQUIRE(*text == "hello1");
     REQUIRE(*text != "h");
     REQUIRE(*text != "asdfklaf");
-    return;
   }
 
   PAGE_DIVIDE("Test construction from std::string") {
@@ -32,7 +31,6 @@ void TestString() {
     REQUIRE(*text == "hello1");
     REQUIRE(*text != "h");
     REQUIRE(*text != "asdfklaf");
-    return;
   }
 
   PAGE_DIVIDE("Test the mutability of the string") {
@@ -60,6 +58,16 @@ void TestString() {
     auto text2 = hipc::make_uptr<hipc::string>(alloc);
     (*text2) = std::move(*text1);
     REQUIRE(*text2 == "hello");
+    REQUIRE(text1->header_ != text2->header_);
+  }
+
+  PAGE_DIVIDE("Move from a string. Re-assign moved string.") {
+    auto text1 = hipc::make_uptr<hipc::string>(alloc, "hello");
+    auto text2 = hipc::make_uptr<hipc::string>(alloc);
+    (*text2) = std::move(*text1);
+    (*text1) = "hello2";
+    REQUIRE(*text2 == "hello");
+    REQUIRE(*text1 == "hello2");
     REQUIRE(text1->header_ != text2->header_);
   }
 }

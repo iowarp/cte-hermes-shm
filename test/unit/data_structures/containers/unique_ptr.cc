@@ -35,6 +35,13 @@ void UniquePtrTest() {
   test.SerializeationOperatorTest(num);
 }
 
+TEST_CASE("UniquePtrOfInt") {
+  Allocator *alloc = alloc_g;
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+  UniquePtrTest<int>();
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+}
+
 TEST_CASE("UniquePtrOfString") {
   Allocator *alloc = alloc_g;
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);

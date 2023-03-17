@@ -105,7 +105,7 @@ class _RefShm {
     if constexpr(destructable) {
       auto header = get()->header_;
       auto alloc = get()->alloc_;
-      Allocator::DestructObj<T>(*get());
+      get()->shm_destroy();
       alloc->template FreePtr<header_t>(header);
     }
   }
@@ -186,8 +186,7 @@ class _RefNoShm {
   /** Serialize into a pointer type */
   template<typename PointerT>
   void shm_serialize(PointerT &ar) const {
-    ar.allocator_id_ = alloc_->GetId();
-    ar.off_ = alloc_->template Convert<T, PointerT>(obj_);
+    ar = alloc_->template Convert<T, PointerT>(get());
   }
 
   /**====================================
