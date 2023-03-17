@@ -89,7 +89,7 @@ void UnorderedMapOpTest() {
   PAGE_DIVIDE("Modify the fourth map entry") {
     CREATE_KV_PAIR(key, 4, val, 25);
     auto iter = map.find(key);
-    (*iter)->GetVal() = std::move(val);
+    (*iter)->GetVal() = val;
     REQUIRE((*iter)->GetVal() == val);
   }
 
@@ -172,23 +172,24 @@ void UnorderedMapOpTest() {
 
   // Copy assignment operator
   PAGE_DIVIDE("Copy the map") {
-    unordered_map<Key, Val> cpy;
-    (cpy) = map;
+    auto cpy = hipc::make_uptr<unordered_map<Key, Val>>(alloc);
+    (*cpy) = map;
     for (int i = 0; i < 100; ++i) {
       CREATE_KV_PAIR(key, i, val, i);
-      REQUIRE(map.find(key) != map.end());
-      REQUIRE(cpy.find(key) != cpy.end());
+      REQUIRE(!map.find(key).is_end());
+      REQUIRE(!cpy->find(key).is_end());
     }
   }
 
   // Move assignment operator
   PAGE_DIVIDE("Move the map") {
-    unordered_map<Key, Val> cpy = std::move(map);
+    auto cpy = hipc::make_uptr<unordered_map<Key, Val>>(alloc);
+    (*cpy) = std::move(map);
     for (int i = 0; i < 100; ++i) {
       CREATE_KV_PAIR(key, i, val, i);
-      REQUIRE(cpy.find(key) != cpy.end());
+      REQUIRE(!cpy->find(key).is_end());
     }
-    map = std::move(cpy);
+    map = std::move(*cpy);
   }
 }
 

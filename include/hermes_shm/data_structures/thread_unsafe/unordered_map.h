@@ -217,6 +217,7 @@ class unordered_map : public ShmContainer {
                          int num_buckets = 20,
                          RealNumber max_capacity = RealNumber(4, 5),
                          RealNumber growth = RealNumber(5, 4)) {
+    shm_init_header(header, alloc);
     auto buckets =
       make_ref<vector<BUCKET_T>>(header_->buckets_, alloc_, num_buckets);
     header_->max_capacity_ = max_capacity;
@@ -334,7 +335,7 @@ class unordered_map : public ShmContainer {
   void shm_deserialize_main() {}
 
   /**====================================
-   * unordered_map Operations
+   * Emplace Methods
    * ===================================*/
 
   /**
@@ -362,6 +363,47 @@ class unordered_map : public ShmContainer {
   bool try_emplace(const Key &key, Args&&... args) {
     return emplace_templ<true, false>(key, std::forward<Args>(args)...);
   }
+
+ private:
+  /**
+   * Insert a serialized (key, value) pair in the map
+   *
+   * @param growth whether or not to grow the unordered map on collision
+   * @param modify_existing whether or not to override an existing entry
+   * @param entry the (key,value) pair shared-memory serialized
+   * @return None
+   * */
+  template<bool growth, bool modify_existing, typename ...Args>
+  bool emplace_templ(const Key &key, Args&& ...args) {
+    // Hash the key to a bucket
+    hipc::Ref<vector<BUCKET_T>> buckets = GetBuckets();
+    size_t bkt_id = Hash{}(key) % buckets->size();
+    hipc::Ref<BUCKET_T> bkt = (*buckets)[bkt_id];
+
+    // Insert into the map
+    list<COLLISION_T> &collisions = *bkt;
+    auto has_key_iter = find_collision(key, collisions);
+    if (!has_key_iter.is_end()) {
+      if constexpr(!modify_existing) {
+        return false;
+      } else {
+        collisions.erase(has_key_iter);
+        --header_->length_;
+      }
+    }
+    collisions.emplace_back(PiecewiseConstruct(),
+                            make_argpack(key),
+                            make_argpack(std::forward<Args>(args)...));
+
+    // Increment the size of the map
+    ++header_->length_;
+    return true;
+  }
+
+ public:
+  /**====================================
+   * Erase Methods
+   * ===================================*/
 
   /**
    * Erase an object indexable by \a key key
@@ -411,6 +453,10 @@ class unordered_map : public ShmContainer {
     header_->length_ = 0;
   }
 
+  /**====================================
+   * Index Methods
+   * ===================================*/
+
   /**
    * Locate an entry in the unordered_map
    *
@@ -425,9 +471,7 @@ class unordered_map : public ShmContainer {
     throw UNORDERED_MAP_CANT_FIND.format();
   }
 
-  /**
-   * Find an object in the unordered_map
-   * */
+  /** Find an object in the unordered_map */
   unordered_map_iterator<Key, T, Hash> find(const Key &key) {
     unordered_map_iterator<Key, T, Hash> iter(GetShmDeserialize());
 
@@ -446,25 +490,7 @@ class unordered_map : public ShmContainer {
     return iter;
   }
 
-  /** The number of entries in the map */
-  size_t size() const {
-    return header_->length_.load();
-  }
-
-  /** The number of buckets in the map */
-  size_t get_num_buckets() const {
-    hipc::Ref<vector<BUCKET_T>> buckets = GetBuckets();
-    return buckets->size();
-  }
-
- private:
-  /**====================================
-   * Private unordered_map Methods
-   * ===================================*/
-
-  /**
-   * Find a key in the collision list
-   * */
+  /** Find a key in the collision list */
   list_iterator<COLLISION_T>
   find_collision(const Key &key, list<COLLISION_T> &collisions) {
     auto iter = collisions.begin();
@@ -478,70 +504,20 @@ class unordered_map : public ShmContainer {
     return iter_end;
   }
 
-  /**
-   * Construct an object directly in the map
-   *
-   * @param key the key to future index the map
-   * @param args the arguments to construct the object
-   * @return None
-   * */
-  template<bool growth, bool modify_existing, typename ...Args>
-  bool emplace_templ(const Key &key, Args&&... args) {
-    COLLISION_T entry(alloc_,
-                      PiecewiseConstruct(),
-                      make_argpack(key),
-                      make_argpack(std::forward<Args>(args)...));
-    return insert_templ<growth, modify_existing>(
-      key, std::forward<Args>(args)...);
+  /**====================================
+   * Query Methods
+   * ===================================*/
+
+  /** The number of entries in the map */
+  size_t size() const {
+    return header_->length_.load();
   }
 
-  /**
-   * Insert a serialized (key, value) pair in the map
-   *
-   * @param growth whether or not to grow the unordered map on collision
-   * @param modify_existing whether or not to override an existing entry
-   * @param entry the (key,value) pair shared-memory serialized
-   * @return None
-   * */
-  template<bool growth, bool modify_existing, typename ...Args>
-  bool insert_templ(Key &key, Args&& ...args) {
-    // Hash the key to a bucket
+  /** The number of buckets in the map */
+  size_t get_num_buckets() const {
     hipc::Ref<vector<BUCKET_T>> buckets = GetBuckets();
-    size_t bkt_id = Hash{}(key) % buckets->size();
-    hipc::Ref<BUCKET_T> bkt = (*buckets)[bkt_id];
-
-    // Insert into the map
-    list<COLLISION_T> &collisions = *bkt;
-    auto has_key_iter = find_collision(key, collisions);
-    if (has_key_iter.is_end()) {
-      if constexpr(!modify_existing) {
-        return false;
-      } else {
-        collisions.erase(has_key_iter);
-        --header_->length;
-      }
-    }
-    collisions.emplace_back(alloc_,
-                            PiecewiseConstruct(),
-                            make_argpack(std::move(key)),
-                            make_argpack(std::forward<Args>(args)...));
-    auto back = collisions.back();
-
-    // Increment the size of the map
-    ++header_->length_;
-    return true;
+    return buckets->size();
   }
-
-  bool insert_simple(COLLISION_T &&entry,
-                     vector<BUCKET_T> &buckets) {
-    Key &key = entry.GetKey();
-    size_t bkt_id = Hash{}(key) % buckets.size();
-    hipc::Ref<BUCKET_T> bkt = buckets[bkt_id];
-    list<COLLISION_T>& collisions = bkt;
-    collisions.emplace_back(std::move(entry));
-    return true;
-  }
-
 
  public:
   /**====================================

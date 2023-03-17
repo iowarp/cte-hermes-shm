@@ -29,7 +29,7 @@ void ManualPtrTest() {
   Allocator *alloc = alloc_g;
   hipc::SmartPtrTestSuite<T, mptr<T>> test;
   CREATE_SET_VAR_TO_INT_OR_STRING(T, num, 25);
-  *test.ptr_ = std::move(num);
+  test.ptr_ = hipc::make_mptr<T>(num);
   test.DereferenceTest(num);
   test.MoveConstructorTest(num);
   test.MoveAssignmentTest(num);
@@ -38,6 +38,13 @@ void ManualPtrTest() {
   test.SerializeationConstructorTest(num);
   test.SerializeationOperatorTest(num);
   test.ptr_.shm_destroy();
+}
+
+TEST_CASE("ManualPtrOfInt") {
+  Allocator *alloc = alloc_g;
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+  ManualPtrTest<hipc::string>();
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
 }
 
 TEST_CASE("ManualPtrOfString") {
