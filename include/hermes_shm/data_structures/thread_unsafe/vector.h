@@ -82,7 +82,7 @@ struct vector_iterator_templ {
 
   /** Dereference the iterator */
   inline const Ref<T> operator*() const {
-    return Ref<T>(vec_->data_ar_const()[i_], vec_->GetAllocator());
+    return Ref<T>(vec_->data_ar()[i_], vec_->GetAllocator());
   }
 
   /** Increment iterator in-place */
@@ -274,48 +274,59 @@ class vector : public ShmContainer {
 
  public:
   /**====================================
-   * SHM Overrides
+   * Default Constructor
    * ===================================*/
 
-  /** Initialize the header state */
-  void init_header() {
-    header_->length_ = 0;
-    header_->max_length_ = 0;
-    header_->vec_ptr_.SetNull();
+  /** SHM constructor. Default. */
+  explicit vector(TYPED_HEADER *header, Allocator *alloc) {
+    shm_init_header(header, alloc);
+    SetNull();
   }
 
-  /** SHM constructor. Default. */
-  void shm_init() {
-    init_header();
-  }
+  /**====================================
+   * Copy Constructors
+   * ===================================*/
 
   /** Construct the vector in shared memory */
   template<typename ...Args>
-  void shm_init(size_t length, Args&& ...args) {
-    init_header();
+  explicit vector(TYPED_HEADER *header, Allocator *alloc,
+                  size_t length, Args&& ...args) {
+    shm_init_header(header, alloc);
+    SetNull();
     resize(length, std::forward<Args>(args)...);
   }
 
-  /** Copy from std::vector */
-  void shm_init(std::vector<T> &other) {
-    init_header();
-    reserve(other.size());
-    for (auto &entry : other) {
-      emplace_back(entry);
+  /** SHM copy constructor. From vector. */
+  explicit vector(TYPED_HEADER *header, Allocator *alloc,
+                  const vector &other) {
+    shm_init_header(header, alloc);
+    SetNull();
+    shm_strong_copy_main<vector<T>>(other);
+  }
+
+  /** SHM copy assignment operator. From vector. */
+  vector& operator=(const vector &other) {
+    if (this != &other) {
+      shm_destroy();
+      shm_strong_copy_main<vector>(other);
     }
+    return *this;
   }
 
-  /** Move assignment operator */
-  void shm_strong_move_main(vector &&other) noexcept {
-    memcpy((void*)header_, (void*)other.header_, sizeof(*header_));
-    shm_deserialize_main();
+  /** SHM copy constructor. From std::vector */
+  explicit vector(TYPED_HEADER *header, Allocator *alloc,
+                  const std::vector<T> &other) {
+    shm_init_header(header, alloc);
+    SetNull();
+    shm_strong_copy_main<std::vector<T>>(other);
   }
 
-  /** Copy internal (no null check) */
-  void shm_strong_copy_main(const vector &other) {
+  /** The main copy operation  */
+  template<typename VectorT>
+  void shm_strong_copy_main(const VectorT &other) {
     reserve(other.size());
     if constexpr(std::is_pod<T>() && !IS_SHM_ARCHIVEABLE(T)) {
-      memcpy(data_ar(), other.data_ar_const(),
+      memcpy(data_ar(), other.data(),
              other.size() * sizeof(T));
       header_->length_ = other.size();
     } else {
@@ -325,24 +336,65 @@ class vector : public ShmContainer {
     }
   }
 
+  /**====================================
+   * Move Constructors
+   * ===================================*/
+
+  /** SHM move constructor. */
+  vector(TYPED_HEADER *header, Allocator *alloc, vector &&other) {
+    shm_init_header(header, alloc);
+    if (alloc_ == other.alloc_) {
+      memcpy((void *) header_, (void *) other.header_, sizeof(*header_));
+      other.SetNull();
+    } else {
+      shm_strong_copy_main<vector>(other);
+      other.shm_destroy();
+    }
+  }
+
+  /** SHM move assignment operator. */
+  vector& operator=(vector &&other) noexcept {
+    if (this != &other) {
+      shm_destroy();
+      if (alloc_ == other.alloc_) {
+        memcpy((void *) header_, (void *) other.header_, sizeof(*header_));
+        other.SetNull();
+      } else {
+        shm_strong_copy_main<vector>(other);
+        other.shm_destroy();
+      }
+    }
+    return *this;
+  }
+
+  /**====================================
+   * Destructor
+   * ===================================*/
+
+  /** Check if null */
+  bool IsNull() {
+    return header_->vec_ptr_.IsNull();
+  }
+
+  /** Make null */
+  void SetNull() {
+    header_->length_ = 0;
+    header_->max_length_ = 0;
+    header_->vec_ptr_.SetNull();
+  }
+
   /** Destroy all shared memory allocated by the vector */
   void shm_destroy_main() {
     erase(begin(), end());
     alloc_->Free(header_->vec_ptr_);
   }
 
+  /**====================================
+   * SHM Deserialization
+   * ===================================*/
+
   /** Load from shared memory */
   void shm_deserialize_main() {}
-
-  /** Check if null */
-  bool IsNull() {
-    return header_ == nullptr || header_->vec_ptr_.IsNull();
-  }
-
-  /** Make null */
-  void SetNull() {
-    header_->vec_ptr_.SetNull();
-  }
 
   /**====================================
    * Vector Operations
@@ -405,7 +457,7 @@ class vector : public ShmContainer {
 
   /** Index the vector at position i */
   const hipc::Ref<T> operator[](const size_t i) const {
-    ShmArchive<T> *vec = data_ar_const();
+    ShmArchive<T> *vec = data_ar();
     return hipc::Ref<T>(vec[i], alloc_);
   }
 
@@ -487,7 +539,7 @@ class vector : public ShmContainer {
   }
 
   /** Get constant pointer to the data */
-  void* data_const() const {
+  void* data() const {
     if (header_ == nullptr) {
       return nullptr;
     }
@@ -506,7 +558,7 @@ class vector : public ShmContainer {
   /**
    * Retreives a pointer to the array from the process-independent pointer.
    * */
-  ShmArchive<T>* data_ar_const() const {
+  ShmArchive<T>* data_ar() const {
     return alloc_->template
       Convert<ShmArchive<T>>(header_->vec_ptr_);
   }

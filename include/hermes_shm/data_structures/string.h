@@ -56,45 +56,121 @@ class string : public ShmContainer {
 
  public:
   /**====================================
-   * Shm Overrides
+   * Default Constructor
    * ===================================*/
 
   /** SHM Constructor. Default. */
-  void shm_init() {
+  explicit string(TYPED_HEADER *header, Allocator *alloc) {
+    shm_init_header(header, alloc);
     SetNull();
   }
 
+  /**====================================
+   * Emplace Constructors
+   * ===================================*/
+
+  /** SHM Constructor. Just allocate space. */
+  explicit string(TYPED_HEADER *header, Allocator *alloc,
+                  size_t length) {
+    shm_init_header(header, alloc);
+    _create_str(length);
+  }
+
+  /**====================================
+   * Copy Constructors
+   * ===================================*/
+
   /** SHM Constructor. From const char* */
-  void shm_init(const char *text) {
+  explicit string(TYPED_HEADER *header, Allocator *alloc,
+                  const char *text) {
+    shm_init_header(header, alloc);
     size_t length = strlen(text);
     _create_str(text, length);
   }
 
   /** SHM Constructor. From const char* and size */
-  void shm_init(const char *text, size_t length) {
+  explicit string(TYPED_HEADER *header, Allocator *alloc,
+                  const char *text, size_t length) {
+    shm_init_header(header, alloc);
     _create_str(text, length);
   }
 
   /** SHM Constructor. From std::string */
-  void shm_init(const std::string &text) {
+  explicit string(TYPED_HEADER *header, Allocator *alloc,
+                  const std::string &text) {
+    shm_init_header(header, alloc);
     _create_str(text.data(), text.size());
   }
 
-  /** SHM Constructor. Just allocate space. */
-  void shm_init(size_t length) {
-    _create_str(length);
+  /** SHM copy assignment operator. From std::string. */
+  string& operator=(const std::string &other) {
+    shm_destroy();
+    _create_str(other.data(), other.size());
+    return *this;
   }
 
-  /** Internal move operator. */
-  void shm_strong_move_main(string &&other) {
-      memcpy((void*)header_, (void*)other.header_, sizeof(*header_));
+  /** SHM copy constructor. From string. */
+  explicit string(TYPED_HEADER *header, Allocator *alloc,
+                  const string &other) {
+    shm_init_header(header, alloc);
+    _create_str(other.data(), other.size());
+  }
+
+  /** SHM copy assignment operator. From string. */
+  string& operator=(const string &other) {
+    if (this != &other) {
+      shm_destroy();
+      _create_str(other.data(), other.size());
+    }
+    return *this;
+  }
+
+  /**====================================
+   * Move Constructors
+   * ===================================*/
+
+  /** SHM move constructor. */
+  string(TYPED_HEADER *header, Allocator *alloc, string &&other) {
+    shm_init_header(header, alloc);
+    if (alloc_ == other.alloc_) {
+      memcpy((void *) header_, (void *) other.header_, sizeof(*header_));
       shm_deserialize_main();
       other.SetNull();
+    } else {
+      _create_str(other.data(), other.size());
+      other.shm_destroy();
+    }
   }
 
-  /** Internal copy operator */
-  void shm_strong_copy_main(const string &other) {
-    _create_str(other.data(), other.size());
+  /** SHM move assignment operator. */
+  string& operator=(string &&other) noexcept {
+    if (this != &other) {
+      shm_destroy();
+      if (alloc_ == other.alloc_) {
+        memcpy((void *) header_, (void *) other.header_, sizeof(*header_));
+        shm_deserialize_main();
+        other.SetNull();
+      } else {
+        _create_str(other.data(), other.size());
+        other.shm_destroy();
+      }
+    }
+    return *this;
+  }
+
+  /**====================================
+   * Destructors
+   * ===================================*/
+
+  /** Check if this string is NULL */
+  bool IsNull() const {
+    return header_->text_.IsNull();
+  }
+
+  /** Set this string to NULL */
+  void SetNull() {
+    header_->text_.SetNull();
+    header_->length_ = 0;
   }
 
   /** Destroy the shared-memory data. */
@@ -102,25 +178,16 @@ class string : public ShmContainer {
     alloc_->Free(header_->text_);
   }
 
+  /**====================================
+   * SHM Deserialization
+   * ===================================*/
+
   /** Load from shared memory */
   void shm_deserialize_main() {
     if (!IsNull()) {
       text_ = alloc_->template
         Convert<char>(header_->text_);
-    } else {
-      text_ = nullptr;
     }
-  }
-
-  /** Check if this string is NULL */
-  bool IsNull() const {
-    return header_ == nullptr || header_->text_.IsNull();
-  }
-
-  /** Set this string to NULL */
-  void SetNull() {
-    header_->text_.SetNull();
-    header_->length_ = 0;
   }
 
   /**====================================

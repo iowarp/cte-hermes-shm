@@ -33,40 +33,31 @@ void ListTestRunner(ListTestSuite<T, list<T>> &test) {
   test.EraseTest();
 }
 
-template<typename T, bool ptr>
+template<typename T>
 void ListTest() {
   Allocator *alloc = alloc_g;
-  if constexpr(ptr) {
-    auto lp = hipc::make_uptr<list<T>>(alloc);
-    ListTestSuite<T, list<T>> test(*lp, alloc);
-    ListTestRunner(test);
-  } else {
-    list<T> lp(alloc);
-    ListTestSuite<T, list<T>> test(lp, alloc);
-    ListTestRunner(test);
-  }
+  auto lp = hipc::make_uptr<list<T>>(alloc);
+  ListTestSuite<T, list<T>> test(*lp, alloc);
+  ListTestRunner(test);
 }
 
 TEST_CASE("ListOfInt") {
   Allocator *alloc = alloc_g;
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
-  ListTest<int, false>();
-  ListTest<int, true>();
+  ListTest<int>();
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
 }
 
 TEST_CASE("ListOfString") {
   Allocator *alloc = alloc_g;
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
-  ListTest<hipc::string, false>();
-  ListTest<hipc::string, true>();
+  ListTest<hipc::string>();
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
 }
 
 TEST_CASE("ListOfStdString") {
   Allocator *alloc = alloc_g;
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
-  ListTest<std::string, false>();
-  ListTest<std::string, true>();
+  ListTest<std::string>();
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
 }

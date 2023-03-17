@@ -38,11 +38,19 @@ class _RefShm {
   * Initialization
   * ===================================*/
 
-  /** SHM Constructor. */
+  /** SHM Constructor. Header is NOT preallocated. */
   template<typename ...Args>
-  void shm_init(Args&& ...args) {
+  void shm_init(Allocator *alloc, Args&& ...args) {
+    auto header = alloc->template AllocateObjs<header_t>(1);
     Allocator::ConstructObj<T>(
-      *get(), std::forward<Args>(args)...);
+      *get(), header, alloc, std::forward<Args>(args)...);
+  }
+
+  /** SHM constructor. Header is preallocated. */
+  template<typename ...Args>
+  void shm_init(ShmArchive<T> &obj, Allocator *alloc, Args&& ...args) {
+    Allocator::ConstructObj<T>(
+      *get(), obj.get(), alloc, std::forward<Args>(args)...);
   }
 
   /**====================================
@@ -95,11 +103,11 @@ class _RefShm {
   /** Destroy the data allocated by this pointer */
   void shm_destroy() {
     if constexpr(destructable) {
-      get()->SetHeaderOwned();
-    } else {
-      get()->UnsetHeaderOwned();
+      auto header = get()->header_;
+      auto alloc = get()->alloc_;
+      Allocator::DestructObj<T>(*get());
+      alloc->template FreePtr<header_t>(header);
     }
-    get()->shm_destroy();
   }
 };
 
@@ -117,14 +125,7 @@ class _RefNoShm {
   * Initialization
   * ===================================*/
 
-  /** SHM constructor. Default allocator. */
-  template<typename ...Args>
-  void shm_init(Args&& ...args) {
-    auto alloc = HERMES_MEMORY_REGISTRY->GetDefaultAllocator();
-    shm_init(alloc, std::forward<Args>(args)...);
-  }
-
-  /** SHM constructor. Default non-default allocator */
+  /** SHM constructor. Header is NOT preallocated. */
   template<typename ...Args>
   void shm_init(Allocator *alloc, Args&& ...args) {
     alloc_ = alloc;
@@ -199,6 +200,7 @@ class _RefNoShm {
       if (obj_ != nullptr) {
         Allocator::DestructObj<T>(*obj_);
         alloc_->FreePtr<T>(obj_);
+        obj_ = nullptr;
       }
     }
   }
@@ -418,7 +420,7 @@ class smart_ptr_base {
   * Hash function
   * ===================================*/
   size_t hash() const {
-    return std::hash<T>{}(*this);
+    return std::hash<T>{}(*obj_.get());
   }
 };
 
@@ -476,13 +478,27 @@ Ref<T> make_ref_piecewise(ArgPackT_1 &&args1, ArgPackT_2 &&args2) {
 /** Create a manual pointer with default allocator */
 template<typename T, typename ...Args>
 mptr<T> make_mptr(Args&& ...args) {
-  return make_ptr_base<mptr<T>>(std::forward<Args>(args)...);
+  auto alloc = HERMES_MEMORY_REGISTRY->GetDefaultAllocator();
+  return make_ptr_base<mptr<T>>(alloc, std::forward<Args>(args)...);
+}
+
+/** Create a manual pointer with non-default allocator */
+template<typename T, typename ...Args>
+mptr<T> make_mptr(Allocator *alloc, Args&& ...args) {
+  return make_ptr_base<mptr<T>>(alloc, std::forward<Args>(args)...);
 }
 
 /** Create a unique pointer with default allocator */
 template<typename T, typename ...Args>
 uptr<T> make_uptr(Args&& ...args) {
-  return make_ptr_base<uptr<T>>(std::forward<Args>(args)...);
+  auto alloc = HERMES_MEMORY_REGISTRY->GetDefaultAllocator();
+  return make_ptr_base<uptr<T>>(alloc, std::forward<Args>(args)...);
+}
+
+/** Create a unique pointer with non-default allocator */
+template<typename T, typename ...Args>
+uptr<T> make_uptr(Allocator *alloc, Args&& ...args) {
+  return make_ptr_base<uptr<T>>(alloc, std::forward<Args>(args)...);
 }
 
 }  // namespace hermes_shm::ipc
@@ -511,6 +527,14 @@ struct hash<hermes_shm::ipc::uptr<T>> {
   }
 };
 
+
+/** Hash function for ref */
+template<typename T>
+struct hash<hermes_shm::ipc::Ref<T>> {
+  size_t operator()(const hermes_shm::ipc::Ref<T> &obj) const {
+    return obj.hash();
+  }
+};
 }  // namespace std
 
 #endif  // HERMES_DATA_STRUCTURES_PTR_H_

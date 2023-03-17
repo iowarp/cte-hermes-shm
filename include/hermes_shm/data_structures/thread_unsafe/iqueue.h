@@ -187,28 +187,75 @@ class iqueue : public ShmContainer {
 
  public:
   /**====================================
-   * SHM Overrides
+   * Default Constructor
    * ===================================*/
 
   /** SHM constructor. Default. */
-  void shm_init() {
+  explicit iqueue(TYPED_HEADER *header, Allocator *alloc) {
+    shm_init_header(header, alloc);
     header_->length_ = 0;
     header_->head_ptr_.SetNull();
   }
 
-  /** SHM destructor. */
-  void shm_destroy_main() {
-    clear();
+  /**====================================
+   * Copy Constructors
+   * ===================================*/
+
+  /** SHM copy constructor */
+  explicit iqueue(TYPED_HEADER *header, Allocator *alloc,
+                  const iqueue &other) {
+    shm_init_header(header, alloc);
+    shm_strong_copy_construct_and_op(other);
   }
 
-  /** Internal move operator */
-  void shm_strong_move_main(iqueue &&other) {}
+  /** SHM copy assignment operator */
+  iqueue& operator=(const iqueue &other) {
+    if (this != &other) {
+      shm_destroy();
+      shm_strong_copy_construct_and_op(other);
+    }
+    return *this;
+  }
 
-  /** Internal copy operator */
-  void shm_strong_copy_main(const iqueue &other) {}
+  /** SHM copy constructor + operator */
+  void shm_strong_copy_construct_and_op(const iqueue &other) {
+    memcpy((void*)header_, (void*)other.header_, sizeof(*header_));
+  }
 
-  /** Load from shared memory */
-  void shm_deserialize_main() {}
+  /**====================================
+   * Move Constructors
+   * ===================================*/
+
+  /** SHM move constructor. */
+  iqueue(TYPED_HEADER *header, Allocator *alloc, iqueue &&other) noexcept {
+    shm_init_header(header, alloc);
+    if (alloc_ == other.alloc_) {
+      memcpy((void*)header_, (void*)other.header_, sizeof(*header_));
+      other.SetNull();
+    } else {
+      shm_strong_copy_construct_and_op(other);
+      other.shm_destroy();
+    }
+  }
+
+  /** SHM move assignment operator. */
+  iqueue& operator=(iqueue &&other) noexcept {
+    if (this != &other) {
+      shm_destroy();
+      if (this != &other) {
+        memcpy((void *) header_, (void *) other.header_, sizeof(*header_));
+        other.SetNull();
+      } else {
+        shm_strong_copy_construct_and_op(other);
+        other.shm_destroy();
+      }
+    }
+    return *this;
+  }
+
+  /**====================================
+   * Destructor
+   * ===================================*/
 
   /** Check if the iqueue is null */
   bool IsNull() {
@@ -219,6 +266,18 @@ class iqueue : public ShmContainer {
   void SetNull() {
     header_->length_ = 0;
   }
+
+  /** SHM destructor. */
+  void shm_destroy_main() {
+    clear();
+  }
+
+  /**====================================
+   * SHM Deserialization
+   * ===================================*/
+
+  /** Load from shared memory */
+  void shm_deserialize_main() {}
 
   /**====================================
    * iqueue Methods

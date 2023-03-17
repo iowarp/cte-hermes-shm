@@ -236,45 +236,104 @@ class list : public ShmContainer {
 
  public:
   /**====================================
-   * SHM Overrides
+   * Default Constructor
    * ===================================*/
 
   /** SHM constructor. Default. */
-  void shm_init() {
+  explicit list(TYPED_HEADER *header, Allocator *alloc) {
+    shm_init_header(header, alloc);
     SetNull();
   }
 
-  /** SHM constructor. Copy from std::list */
-  void shm_init(std::list<T> &other) {
+  /**====================================
+   * Copy Constructors
+   * ===================================*/
+
+  /** SHM copy constructor */
+  explicit list(TYPED_HEADER *header, Allocator *alloc,
+                const list &other) {
+    shm_init_header(header, alloc);
     SetNull();
-    for (auto &entry : other) {
-      emplace_back(entry);
+    shm_strong_copy_construct_and_op<list>(other);
+  }
+
+  /** SHM copy assignment operator */
+  list& operator=(const list &other) {
+    if (this != &other) {
+      shm_destroy();
+      shm_strong_copy_construct_and_op<list>(other);
     }
+    return *this;
   }
 
-  /** Internal move operation */
-  void shm_strong_move_main(list &&other) {
-    memcpy(header_, other.header_, sizeof(*header_));
+  /** SHM copy constructor. From std::list */
+  explicit list(TYPED_HEADER *header, Allocator *alloc,
+                std::list<T> &other) {
+    shm_init_header(header, alloc);
+    SetNull();
+    shm_strong_copy_construct_and_op<std::list<T>>(other);
   }
 
-  /** Internal copy operation */
-  void shm_strong_copy_main(const list &other) {
+  /** SHM copy assignment operator. From std::list. */
+  list& operator=(const std::list<T> &other) {
+    if (this != &other) {
+      shm_destroy();
+      shm_strong_copy_construct_and_op<std::list<T>>(other);
+    }
+    return *this;
+  }
+
+  /** SHM copy constructor + operator main */
+  template<typename ListT>
+  void shm_strong_copy_construct_and_op(const ListT &other) {
     for (auto iter = other.cbegin(); iter != other.cend(); ++iter) {
       emplace_back(**iter);
     }
   }
+
+  /**====================================
+   * Move Constructors
+   * ===================================*/
+
+  /** SHM move constructor. */
+  list(TYPED_HEADER *header, Allocator *alloc, list &&other) noexcept {
+    shm_init_header(header, alloc);
+    if (alloc_ == other.alloc_) {
+      memcpy(header_, other.header_, sizeof(*header_));
+      other.SetNull();
+    } else {
+      shm_strong_copy_construct_and_op<list>(other);
+      other.shm_destroy();
+    }
+  }
+
+  /** SHM move assignment operator. */
+  list& operator=(list &&other) noexcept {
+    if (this != &other) {
+      shm_destroy();
+      if (alloc_ == other.alloc_) {
+        memcpy((void *) header_, (void *) other.header_, sizeof(*header_));
+        other.SetNull();
+      } else {
+        shm_strong_copy_construct_and_op<list>(other);
+        other.shm_destroy();
+      }
+    }
+    return *this;
+  }
+
+  /**====================================
+   * Destructor
+   * ===================================*/
 
   /** SHM destructor.  */
   void shm_destroy_main() {
     clear();
   }
 
-  /** Load from shared memory */
-  void shm_deserialize_main() {}
-
   /** Check if the list is empty */
   bool IsNull() const {
-    return header_ == nullptr || header_->length_ == 0;
+    return header_->length_ == 0;
   }
 
   /** Sets this list as empty */
@@ -283,6 +342,13 @@ class list : public ShmContainer {
     header_->head_ptr_.SetNull();
     header_->tail_ptr_.SetNull();
   }
+
+  /**====================================
+   * SHM Deserialization
+   * ===================================*/
+
+  /** Load from shared memory */
+  void shm_deserialize_main() {}
 
   /**====================================
    * list Methods
@@ -389,7 +455,7 @@ class list : public ShmContainer {
 
   /** Get the object at the back of the list */
   Ref<T> back() {
-    return *end();
+    return *last();
   }
 
   /** Get the number of elements in the list */
@@ -419,6 +485,15 @@ class list : public ShmContainer {
       Convert<list_entry<T>>(header_->head_ptr_);
     return list_iterator<T>(GetShmDeserialize(),
       head, header_->head_ptr_);
+  }
+
+  /** Last iterator begin */
+  list_iterator<T> last() {
+    if (size() == 0) { return end(); }
+    auto head = alloc_->template
+      Convert<list_entry<T>>(header_->tail_ptr_);
+    return list_iterator<T>(GetShmDeserialize(),
+                            head, header_->tail_ptr_);
   }
 
   /** Forward iterator end */

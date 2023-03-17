@@ -240,34 +240,95 @@ class slist : public ShmContainer {
 
  public:
   /**====================================
-   * SHM Overrides
+   * Default Constructor
    * ===================================*/
 
   /** SHM constructor. Default. */
-  void shm_init() {
+  explicit slist(TYPED_HEADER *header, Allocator *alloc) {
+    shm_init_header(header, alloc);
     SetNull();
   }
 
-  /** Internal move operation */
-  void shm_strong_move_main(slist &&other) {
-    memcpy(header_, other.header_, sizeof(*header_));
-    shm_deserialize_main();
+  /**====================================
+   * Copy Constructors
+   * ===================================*/
+
+  /** SHM copy constructor. From slist. */
+  explicit slist(TYPED_HEADER *header, Allocator *alloc,
+                 const slist &other) {
+    shm_init_header(header, alloc);
+    SetNull();
+    shm_strong_copy_construct_and_op<slist>(other);
   }
 
-  /** Internal copy operation */
-  void shm_strong_copy_main(const slist &other) {
+  /** SHM copy assignment operator. From slist. */
+  slist& operator=(const slist &other) {
+    if (this != &other) {
+      shm_destroy();
+      shm_strong_copy_construct_and_op<slist>(other);
+    }
+    return *this;
+  }
+
+  /** SHM copy constructor. From std::list */
+  explicit slist(TYPED_HEADER *header, Allocator *alloc,
+                 std::list<T> &other) {
+    shm_init_header(header, alloc);
+    SetNull();
+    shm_strong_copy_construct_and_op<std::list<T>>(other);
+  }
+
+  /** SHM copy assignment operator. From std::list. */
+  slist& operator=(const std::list<T> &other) {
+    if (this != &other) {
+      shm_destroy();
+      shm_strong_copy_construct_and_op<std::list<T>>(other);
+    }
+    return *this;
+  }
+
+  /** SHM copy constructor + operator main */
+  template<typename ListT>
+  void shm_strong_copy_construct_and_op(const ListT &other) {
     for (auto iter = other.cbegin(); iter != other.cend(); ++iter) {
       emplace_back(**iter);
     }
   }
 
-  /** Destroy all shared memory allocated by the slist */
-  void shm_destroy_main() {
-    clear();
+  /**====================================
+   * Move Constructors
+   * ===================================*/
+
+  /** SHM move constructor. From slist. */
+  slist(TYPED_HEADER *header, Allocator *alloc, slist &&other) noexcept {
+    shm_init_header(header, alloc);
+    if (alloc_ == other.alloc_) {
+      memcpy(header_, other.header_, sizeof(*header_));
+      other.SetNull();
+    } else {
+      shm_strong_copy_construct_and_op<slist>(other);
+      other.shm_destroy();
+    }
   }
 
-  /** Load from shared memory */
-  void shm_deserialize_main() {}
+  /** SHM move assignment operator. From slist. */
+  slist& operator=(slist &&other) noexcept {
+    if (this != &other) {
+      shm_destroy();
+      if (alloc_ == other.alloc_) {
+        memcpy((void *) header_, (void *) other.header_, sizeof(*header_));
+        other.SetNull();
+      } else {
+        shm_strong_copy_construct_and_op<slist>(other);
+        other.shm_destroy();
+      }
+    }
+    return *this;
+  }
+
+  /**====================================
+  * Destructor
+  * ===================================*/
 
   /** Check if the list is empty */
   bool IsNull() const {
@@ -280,6 +341,18 @@ class slist : public ShmContainer {
     header_->head_ptr_.SetNull();
     header_->tail_ptr_.SetNull();
   }
+
+  /** Destroy all shared memory allocated by the slist */
+  void shm_destroy_main() {
+    clear();
+  }
+
+  /**====================================
+   * SHM Deserialization
+   * ===================================*/
+
+  /** Load from shared memory */
+  void shm_deserialize_main() {}
 
   /**====================================
    * slist Methods

@@ -6,132 +6,25 @@ public:
 typedef TYPED_HEADER header_t; /** Header type query */
 header_t *header_; /**< Header of the shared-memory data structure */
 hipc::Allocator *alloc_; /**< hipc::Allocator used for this data structure */
-hermes_shm::bitfield32_t flags_; /**< Flags used data structure status */
-
-/**====================================
- * Move Operations
- * ===================================*/
-
-/** Move constructor */
-explicit CLASS_NAME(CLASS_NAME &&other) {
-shm_weak_move_main(std::forward<CLASS_NAME>(other));
-}
-
-/** SHM Constructor. Move operator. */
-void shm_init(CLASS_NAME &&other) {
-  SetNull();
-  shm_strong_move_main(std::forward<CLASS_NAME>(other));
-}
-
-/** Weak move of simply pointers */
-void shm_weak_move_main(CLASS_NAME &&other) {
-  shm_make_header(other.header_, other.alloc_);
-  flags_ = other.flags_;
-  shm_deserialize_main();
-  other.RemoveHeader();
-}
-
-/** Move assignment operator */
-CLASS_NAME& operator=(CLASS_NAME &&other) {
-  if (this == &other) {
-    return *this;
-  }
-  shm_destroy();
-  if (header_ == nullptr) {
-    shm_weak_move_main(std::forward<CLASS_NAME>(other));
-  } else if (alloc_ == other.alloc_) {
-    shm_strong_move_main(std::forward<CLASS_NAME>(other));
-    other.SetNull();
-  } else {
-    shm_strong_copy_main(other);
-    other.shm_destroy();
-  }
-  return *this;
-}
-
-/**====================================
- * Copy Operations
- * ===================================*/
-
-/** Copy constructor */
-CLASS_NAME(const CLASS_NAME &other) {
-  shm_make_header(nullptr, other.alloc_);
-  SetNull();
-  shm_strong_copy_main(other);
-}
-
-/** Copy assignment operator */
-CLASS_NAME& operator=(const CLASS_NAME &other) {
-  if (this == &other) {
-    return *this;
-  }
-  shm_erase_or_init(alloc_);
-  shm_strong_copy_main(other);
-  return *this;
-}
-
-/** SHM Constructor. Copy operator. */
-void shm_init(const CLASS_NAME &other) {
-  SetNull();
-  shm_strong_copy_main(other);
-}
 
 /**====================================
  * Constructors
  * ===================================*/
 
-/** Constructor. Default allocator. */
-CLASS_NAME() {
-  shm_make_header(nullptr, nullptr);
-  shm_init();
-}
+/** Default constructor. Deleted. */
+CLASS_NAME() = delete;
 
-/** Constructor. Default allocator with args. */
-template<typename ...Args>
-CLASS_NAME(Args&& ...args) {
-shm_make_header(nullptr, nullptr);
-shm_init(std::forward<Args>(args)...);
-}
+/** Move constructor. Deleted. */
+CLASS_NAME(CLASS_NAME &&other) = delete;
 
-/** Constructor. Custom allocator. */
-template<typename ...Args>
-explicit CLASS_NAME(hipc::Allocator *alloc, Args&& ...args) {
-shm_make_header(nullptr, alloc);
-shm_init(std::forward<Args>(args)...);
-}
-
-/** Constructor. Header is pre-allocated. */
-template<typename ...Args>
-explicit CLASS_NAME(hipc::ShmInit,
-  hipc::ShmDeserialize<CLASS_NAME> ar,
-Args&& ...args) {
-shm_make_header(ar.header_, ar.alloc_);
-shm_init(std::forward<Args>(args)...);
-}
-
-/** Constructor. Header is pre-allocated. */
-template<typename ...Args>
-explicit CLASS_NAME(hipc::ShmArchive<CLASS_NAME> &header,
-hipc::Allocator *alloc,
-  Args&& ...args) {
-shm_make_header(header.get(), alloc);
-shm_init(std::forward<Args>(args)...);
-}
+/** Copy constructor. Deleted. */
+CLASS_NAME(const CLASS_NAME &other) = delete;
 
 /** Initialize header + allocator */
-void shm_make_header(TYPE_UNWRAP(TYPED_HEADER) *header,
+void shm_init_header(TYPE_UNWRAP(TYPED_HEADER) *header,
                      hipc::Allocator *alloc) {
-  if (alloc == nullptr) {
-    alloc = HERMES_MEMORY_REGISTRY->GetDefaultAllocator();
-  }
+  header_ = header;
   alloc_ = alloc;
-  if (header == nullptr) {
-    header_ = alloc_->template AllocateObjs<TYPE_UNWRAP(TYPED_HEADER)>(1);
-    flags_.SetBits(SHM_PRIVATE_IS_DESTRUCTABLE | SHM_PRIVATE_OWNS_HEADER);
-  } else {
-    header_ = header;
-    flags_.UnsetBits(SHM_PRIVATE_IS_DESTRUCTABLE | SHM_PRIVATE_OWNS_HEADER);
-  }
 }
 
 /**====================================
@@ -139,37 +32,13 @@ void shm_make_header(TYPE_UNWRAP(TYPED_HEADER) *header,
  * ===================================*/
 
 /** Destructor. */
-~CLASS_NAME() {
-  if (flags_.OrBits(SHM_PRIVATE_IS_DESTRUCTABLE)) {
-    shm_destroy();
-  }
-}
-
-/** Used by assignmnet operators */
-void shm_erase_or_init(hipc::Allocator *alloc) {
-  if (header_ != nullptr) {
-    shm_erase();
-  } else {
-    shm_make_header(nullptr, alloc);
-    SetNull();
-  }
-}
-
-/** Erase operation */
-void shm_erase() {
-  if (!IsNull()) {
-    shm_destroy_main();
-    SetNull();
-  }
-}
+~CLASS_NAME() = default;
 
 /** Destruction operation */
 void shm_destroy() {
-  shm_erase();
-  if (flags_.OrBits(SHM_PRIVATE_OWNS_HEADER) && header_) {
-    alloc_->template FreePtr<TYPE_UNWRAP(TYPED_HEADER)>(header_);
-    header_ = nullptr;
-  }
+  if (IsNull()) { return; }
+  shm_destroy_main();
+  SetNull();
 }
 
 /**====================================
@@ -219,7 +88,6 @@ bool shm_deserialize(TYPED_HEADER *header,
                      hipc::Allocator *alloc) {
   header_ = header;
   alloc_ = alloc;
-  flags_.UnsetBits(SHM_PRIVATE_IS_DESTRUCTABLE | SHM_PRIVATE_OWNS_HEADER);
   shm_deserialize_main();
   return true;
 }
@@ -235,25 +103,8 @@ shm_deserialize(other);
 }
 
 /**====================================
- * Flag Operations
- * ===================================*/
-
-void SetHeaderOwned() {
-  flags_.SetBits(SHM_PRIVATE_OWNS_HEADER);
-}
-
-void UnsetHeaderOwned() {
-  flags_.UnsetBits(SHM_PRIVATE_OWNS_HEADER);
-}
-
-/**====================================
  * Header Operations
  * ===================================*/
-
-/** Set the header to null */
-void RemoveHeader() {
-  header_ = nullptr;
-}
 
 /** Get a typed pointer to the object */
 template<typename POINTER_T>

@@ -40,37 +40,31 @@ void VectorTestRunner(VectorTestSuite<T, vector<T>> &test) {
 template<typename T, bool ptr>
 void VectorTest() {
   Allocator *alloc = alloc_g;
-  if constexpr(ptr) {
-    auto vec = hipc::make_uptr<vector<T>>(alloc);
-    VectorTestSuite<T, vector<T>> test(*vec, alloc);
-    VectorTestRunner<T>(test);
-  } else {
-    vector<T> vec(alloc);
-    VectorTestSuite<T, vector<T>> test(vec, alloc);
-    VectorTestRunner<T>(test);
-  }
+  auto vec = hipc::make_uptr<vector<T>>(alloc);
+  VectorTestSuite<T, vector<T>> test(*vec, alloc);
+  VectorTestRunner<T>(test);
 }
 
 void VectorOfVectorOfStringTest() {
   Allocator *alloc = alloc_g;
-  vector<vector<string>> vec(alloc);
+  auto vec = hipc::make_uptr<vector<vector<string>>>(alloc);
 
-  vec.resize(10);
-  for (hipc::Ref<vector<string>> bkt : vec) {
+  vec->resize(10);
+  for (hipc::Ref<vector<string>> bkt : *vec) {
     bkt->emplace_back("hello");
   }
-  vec.clear();/**/
+  vec->clear();
 }
 
 void VectorOfListOfStringTest() {
   Allocator *alloc = alloc_g;
-  vector<list<string>> vec(alloc);
+  auto vec = hipc::make_uptr<vector<list<string>>>(alloc);
 
-  vec.resize(10);
-  for (hipc::Ref<list<string>> bkt : vec) {
+  vec->resize(10);
+  for (hipc::Ref<list<string>> bkt : *vec) {
     bkt->emplace_back("hello");
   }
-  vec.clear();
+  vec->clear();
 }
 
 TEST_CASE("VectorOfInt") {

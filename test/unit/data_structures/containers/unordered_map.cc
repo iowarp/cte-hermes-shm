@@ -35,7 +35,8 @@ using hermes_shm::ipc::string;
 template<typename Key, typename Val>
 void UnorderedMapOpTest() {
   Allocator *alloc = alloc_g;
-  unordered_map<Key, Val> map(alloc);
+  auto map_p = hipc::make_uptr<unordered_map<Key, Val>>(alloc);
+  auto &map = *map_p;
 
   // Insert 20 entries into the map (no growth trigger)
   PAGE_DIVIDE("Insert entries") {
