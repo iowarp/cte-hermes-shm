@@ -102,10 +102,10 @@ class _RefShm {
 
   /** Destroy the data allocated by this pointer */
   void shm_destroy() {
+    auto header = get()->header_;
+    auto alloc = get()->alloc_;
+    get()->shm_destroy();
     if constexpr(destructable) {
-      auto header = get()->header_;
-      auto alloc = get()->alloc_;
-      get()->shm_destroy();
       alloc->template FreePtr<header_t>(header);
     }
   }
@@ -195,9 +195,9 @@ class _RefNoShm {
 
   /** Destroy the data pointed by this ref */
   void shm_destroy() {
+    Allocator::DestructObj<T>(*obj_);
     if constexpr(destructable) {
       if (obj_ != nullptr) {
-        Allocator::DestructObj<T>(*obj_);
         alloc_->FreePtr<T>(obj_);
         obj_ = nullptr;
       }

@@ -40,7 +40,7 @@ struct ShmHeader<TYPED_CLASS> {
 };
 
 /**
-* A string of characters.
+* A pair of two objects.
 * */
 template<typename FirstT, typename SecondT>
 class pair : public ShmContainer {
