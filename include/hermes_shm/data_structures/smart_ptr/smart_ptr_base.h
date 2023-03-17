@@ -301,7 +301,7 @@ class smart_ptr_base {
   smart_ptr_base(const smart_ptr_base &other) {
     static_assert(!unique, "Cannot use unique_ptr with copy operator");
     obj_.shm_strong_copy(other.obj_);
-  };
+  }
 
   /** Copy assignment operator (equivalent to move) */
   smart_ptr_base& operator=(const smart_ptr_base &other) {
@@ -470,8 +470,7 @@ template<typename T, typename ArgPackT_1, typename ArgPackT_2>
 Ref<T> make_ref_piecewise(ArgPackT_1 &&args1, ArgPackT_2 &&args2) {
   return make_piecewise<Ref<T>, ArgPackT_1, ArgPackT_2>(
     std::forward<ArgPackT_1>(args1),
-    std::forward<ArgPackT_2>(args2)
-  );
+    std::forward<ArgPackT_2>(args2));
 }
 
 /** Create a manual pointer with default allocator */

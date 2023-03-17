@@ -92,10 +92,12 @@ class pair : public ShmContainer {
                 FirstArgPackT &&first,
                 SecondArgPackT &&second) {
     shm_init_header(header, alloc);
-    first_ = make_ref_piecewise<FirstT>(make_argpack(header_->first_, alloc_),
-                                        std::forward<FirstArgPackT>(first));
-    second_ = make_ref_piecewise<SecondT>(make_argpack(header_->second_, alloc_),
-                                          std::forward<SecondArgPackT>(second));
+    first_ = make_ref_piecewise<FirstT>(
+      make_argpack(header_->first_, alloc_),
+      std::forward<FirstArgPackT>(first));
+    second_ = make_ref_piecewise<SecondT>(
+      make_argpack(header_->second_, alloc_),
+      std::forward<SecondArgPackT>(second));
   }
 
   /**====================================

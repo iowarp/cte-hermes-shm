@@ -35,8 +35,7 @@ struct _ShmDeserializeNoShm {
 };
 
 #define MAKE_SHM_DESERIALIZE(T) \
-   SHM_X_OR_Y(T,        \
-    _ShmDeserializeShm<T>, _ShmDeserializeNoShm<T>)::header_t
+  SHM_X_OR_Y(T, _ShmDeserializeShm<T>, _ShmDeserializeNoShm<T>)::header_t
 
 /**
  * Indicates that a Deserialize should also be initialized
