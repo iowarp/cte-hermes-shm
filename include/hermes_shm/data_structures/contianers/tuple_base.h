@@ -14,8 +14,8 @@
 #define HERMES_INCLUDE_HERMES_DATA_STRUCTURES_TupleBase_H_
 
 #include <utility>
-#include "basic.h"
-#include "argpack.h"
+#include "hermes_shm/types/basic.h"
+#include "hermes_shm/types/argpack.h"
 
 namespace hermes_shm {
 

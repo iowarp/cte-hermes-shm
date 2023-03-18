@@ -18,9 +18,9 @@
 #include "hermes_shm/memory/memory.h"
 #include "hermes_shm/memory/allocator/allocator.h"
 #include "hermes_shm/memory/memory_registry.h"
-#include "hermes_shm/data_structures/internal/shm_macros.h"
-#include "hermes_shm/data_structures/internal/shm_archive.h"
-#include "hermes_shm/data_structures/internal/shm_smart_ptr.h"
+#include "hermes_shm/data_structures/ipc/internal/shm_macros.h"
+#include "hermes_shm/data_structures/ipc/internal/shm_archive.h"
+#include "hermes_shm/data_structures/ipc/internal/shm_smart_ptr.h"
 
 namespace hermes_shm::ipc {
 

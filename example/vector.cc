@@ -4,7 +4,7 @@
 
 #include <mpi.h>
 #include <cassert>
-#include "hermes_shm/data_structures/thread_unsafe/vector.h"
+#include "hermes_shm/data_structures/ipc/vector.h"
 #include "hermes_shm/data_structures/data_structure.h"
 
 struct CustomHeader {

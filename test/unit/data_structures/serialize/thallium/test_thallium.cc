@@ -12,7 +12,7 @@
 
 #include "basic_test.h"
 #include "test_init.h"
-#include "hermes_shm/data_structures/string.h"
+#include "hermes_shm/data_structures/ipc/string.h"
 
 TEST_CASE("SerializeString") {
   tl::endpoint server = client_->lookup(kServerName);

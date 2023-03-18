@@ -13,7 +13,7 @@
 #ifndef HERMES_INCLUDE_HERMES_TYPES_CHARBUF_H_
 #define HERMES_INCLUDE_HERMES_TYPES_CHARBUF_H_
 
-#include "basic.h"
+#include "hermes_shm/types/basic.h"
 #include "hermes_shm/memory/memory_registry.h"
 #include <string>
 
@@ -31,14 +31,22 @@ struct charbuf {
   bool destructable_;  /**< Whether or not this container owns data */
 
   /**====================================
-   * Constructors & Assignment
+   * Default Constructor
    * ===================================*/
 
   /** Default constructor */
   charbuf() : alloc_(nullptr), data_(nullptr), size_(0), destructable_(false) {}
 
+  /**====================================
+   * Destructor
+   * ===================================*/
+
   /** Destructor */
   ~charbuf() { Free(); }
+
+  /**====================================
+   * Emplace Constructors
+   * ===================================*/
 
   /** Size-based constructor */
   explicit charbuf(size_t size) {
@@ -50,26 +58,34 @@ struct charbuf {
     Allocate(alloc, size);
   }
 
-  /** String-based constructor */
+  /**====================================
+  * Reference Constructors
+  * ===================================*/
+
+  /** Reference constructor. From char* + size */
+  explicit charbuf(char *data, size_t size)
+    : alloc_(nullptr), data_(data), size_(size), destructable_(false) {}
+
+  /**
+   * Reference constructor. From const char*
+   * We assume that the data will not be modified by the user, but
+   * we must cast away the const anyway.
+   * */
+  explicit charbuf(const char *data, size_t size)
+    : alloc_(nullptr), data_(const_cast<char*>(data)),
+      size_(size), destructable_(false) {}
+
+  /**====================================
+   * Copy Constructors
+   * ===================================*/
+
+  /** Copy constructor. From std::string. */
   explicit charbuf(const std::string &data) {
     Allocate(HERMES_MEMORY_REGISTRY->GetDefaultAllocator(), data.size());
     memcpy(data_, data.data(), data.size());
   }
 
-  /** Pointer-based constructor */
-  explicit charbuf(char *data, size_t size)
-  : alloc_(nullptr), data_(data), size_(size), destructable_(false) {}
-
-  /**
-   * Pointer-based constructor
-   * This should only be used when Blob itself is const.
-   * */
-  explicit charbuf(const char *data, size_t size)
-  : alloc_(nullptr), data_(const_cast<char*>(data)),
-    size_(size), destructable_(false) {}
-
-
-  /** Copy constructor */
+  /** Copy constructor. From charbuf. */
   charbuf(const charbuf &other) {
     if (!Allocate(HERMES_MEMORY_REGISTRY->GetDefaultAllocator(),
                   other.size())) {
@@ -90,6 +106,10 @@ struct charbuf {
     }
     return *this;
   }
+
+  /**====================================
+   * Move Constructors
+   * ===================================*/
 
   /** Move constructor */
   charbuf(charbuf &&other) {

@@ -16,9 +16,9 @@
 
 #include "allocator.h"
 #include "hermes_shm/thread/lock.h"
-#include "hermes_shm/data_structures/pair.h"
-#include "hermes_shm/data_structures/thread_unsafe/vector.h"
-#include "hermes_shm/data_structures/thread_unsafe/list.h"
+#include "hermes_shm/data_structures/ipc/pair.h"
+#include "hermes_shm/data_structures/ipc/vector.h"
+#include "hermes_shm/data_structures/ipc/list.h"
 #include <hermes_shm/memory/allocator/stack_allocator.h>
 #include "mp_page.h"
 

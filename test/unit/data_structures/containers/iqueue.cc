@@ -13,7 +13,7 @@
 #include "basic_test.h"
 #include "test_init.h"
 #include "iqueue.h"
-#include "hermes_shm/data_structures/thread_unsafe/iqueue.h"
+#include "hermes_shm/data_structures/ipc/iqueue.h"
 #include "hermes_shm/data_structures/smart_ptr/smart_ptr_base.h"
 
 using hermes_shm::ipc::mptr;

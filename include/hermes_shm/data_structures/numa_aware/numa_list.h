@@ -13,9 +13,9 @@
 #ifndef HERMES_SHM_INCLUDE_HERMES_SHM_DATA_STRUCTURES_NUMA_AWARE_LIST_H_
 #define HERMES_SHM_INCLUDE_HERMES_SHM_DATA_STRUCTURES_NUMA_AWARE_LIST_H_
 
-#include "hermes_shm/data_structures/internal/shm_internal.h"
-#include "hermes_shm/data_structures/thread_unsafe/list.h"
-#include "hermes_shm/data_structures/thread_unsafe/vector.h"
+#include "hermes_shm/data_structures/ipc/internal/shm_internal.h"
+#include "hermes_shm/data_structures/ipc/list.h"
+#include "hermes_shm/data_structures/ipc/vector.h"
 
 namespace hermes_shm::ipc {
 

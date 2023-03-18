@@ -14,7 +14,7 @@
 #include "hermes_shm/data_structures/smart_ptr/smart_ptr_base.h"
 #include "basic_test.h"
 #include "test_init.h"
-#include "hermes_shm/data_structures/string.h"
+#include "hermes_shm/data_structures/ipc/string.h"
 #include "smart_ptr.h"
 
 using hermes_shm::ipc::string;

@@ -2,10 +2,10 @@
 // Created by lukemartinlogan on 2/22/23.
 //
 
-#include <hermes_shm/data_structures/internal/shm_container.h>
-#include <hermes_shm/data_structures/internal/shm_archive.h>
+#include <hermes_shm/data_structures/ipc/internal/shm_container.h>
+#include <hermes_shm/data_structures/ipc/internal/shm_archive.h>
 #include <hermes_shm/thread/lock.h>
-#include <hermes_shm/data_structures/thread_unsafe/vector.h>
+#include <hermes_shm/data_structures/ipc/vector.h>
 
 template<typename T>
 class ShmHeader;

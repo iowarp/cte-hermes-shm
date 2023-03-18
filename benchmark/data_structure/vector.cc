@@ -27,8 +27,8 @@
 #include <vector>
 
 // hermes
-#include <hermes_shm/data_structures/string.h>
-#include <hermes_shm/data_structures/thread_unsafe/vector.h>
+#include "hermes_shm/data_structures/ipc/string.h"
+#include <hermes_shm/data_structures/ipc/vector.h>
 
 #include "basic_test.h"
 #include "test_init.h"

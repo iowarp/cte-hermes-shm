@@ -13,8 +13,8 @@
 #ifndef HERMES_INCLUDE_HERMES_DATA_STRUCTURES_INTERNAL_SHM_CONTAINER_EXAMPLE_H_
 #define HERMES_INCLUDE_HERMES_DATA_STRUCTURES_INTERNAL_SHM_CONTAINER_EXAMPLE_H_
 
-#include "hermes_shm/data_structures/internal/shm_container.h"
-#include "hermes_shm/data_structures/internal/shm_deserialize.h"
+#include "hermes_shm/data_structures/ipc/internal/shm_container.h"
+#include "hermes_shm/data_structures/ipc/internal/shm_deserialize.h"
 
 namespace honey {
 

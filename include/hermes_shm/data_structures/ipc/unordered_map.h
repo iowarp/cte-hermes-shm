@@ -15,11 +15,11 @@
 #define HERMES_DATA_STRUCTURES_UNORDERED_MAP_H_
 
 #include "hermes_shm/thread/thread_manager.h"
-#include "hermes_shm/data_structures/thread_unsafe/vector.h"
-#include "hermes_shm/data_structures/thread_unsafe/list.h"
-#include "hermes_shm/data_structures/pair.h"
+#include "hermes_shm/data_structures/ipc/vector.h"
+#include "hermes_shm/data_structures/ipc/list.h"
+#include "pair.h"
 #include "hermes_shm/types/atomic.h"
-#include "hermes_shm/data_structures/internal/shm_internal.h"
+#include "hermes_shm/data_structures/ipc/internal/shm_internal.h"
 
 namespace hermes_shm::ipc {
 

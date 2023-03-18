@@ -15,7 +15,7 @@
 
 #include "basic_test.h"
 #include "test_init.h"
-#include <hermes_shm/data_structures/string.h>
+#include "hermes_shm/data_structures/ipc/string.h"
 
 template<typename T, typename Container>
 class ListTestSuite {

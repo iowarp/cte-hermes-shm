@@ -12,9 +12,9 @@
 
 #include "basic_test.h"
 #include "test_init.h"
-#include "hermes_shm/data_structures/string.h"
-#include "hermes_shm/data_structures/thread_unsafe/list.h"
-#include "hermes_shm/data_structures/thread_unsafe/vector.h"
+#include "hermes_shm/data_structures/ipc/string.h"
+#include "hermes_shm/data_structures/ipc/list.h"
+#include "hermes_shm/data_structures/ipc/vector.h"
 #include "hermes_shm/util/error.h"
 
 template<typename T, typename ContainerT>

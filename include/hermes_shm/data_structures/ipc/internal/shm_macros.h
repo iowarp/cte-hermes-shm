@@ -14,7 +14,7 @@
 #ifndef HERMES_MEMORY_SHM_MACROS_H_
 #define HERMES_MEMORY_SHM_MACROS_H_
 
-#include <hermes_shm/constants/macros.h>
+#include "hermes_shm/constants/macros.h"
 
 /**
  * Determine whether or not \a T type is designed for shared memory

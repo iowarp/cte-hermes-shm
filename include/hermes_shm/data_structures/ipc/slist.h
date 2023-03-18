@@ -14,7 +14,7 @@
 #ifndef HERMES_DATA_STRUCTURES_THREAD_UNSAFE_Sslist_H
 #define HERMES_DATA_STRUCTURES_THREAD_UNSAFE_Sslist_H
 
-#include "hermes_shm/data_structures/internal/shm_internal.h"
+#include "hermes_shm/data_structures/ipc/internal/shm_internal.h"
 
 namespace hermes_shm::ipc {
 

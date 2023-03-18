@@ -13,8 +13,8 @@
 #include "basic_test.h"
 #include "test_init.h"
 #include "list.h"
-#include "hermes_shm/data_structures/thread_unsafe/list.h"
-#include "hermes_shm/data_structures/string.h"
+#include "hermes_shm/data_structures/ipc/list.h"
+#include "hermes_shm/data_structures/ipc/string.h"
 
 using hermes_shm::ipc::list;
 

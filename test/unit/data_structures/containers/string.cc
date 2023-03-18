@@ -12,7 +12,7 @@
 
 #include "basic_test.h"
 #include "test_init.h"
-#include "hermes_shm/data_structures/string.h"
+#include "hermes_shm/data_structures/ipc/string.h"
 
 using hermes_shm::ipc::string;
 
@@ -35,7 +35,7 @@ void TestString() {
 
   PAGE_DIVIDE("Test the mutability of the string") {
     auto text = hipc::make_uptr<hipc::string>(alloc, 6);
-    memcpy(text->data_mutable(), "hello4", strlen("hello4"));
+    memcpy(text->data(), "hello4", strlen("hello4"));
     REQUIRE(*text == "hello4");
   }
 

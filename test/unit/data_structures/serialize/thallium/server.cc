@@ -11,9 +11,9 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include "test_init.h"
-#include "hermes_shm/data_structures/string.h"
+#include "hermes_shm/data_structures/ipc/string.h"
 #include "hermes_shm/data_structures/serialization/thallium.h"
-#include "hermes_shm/types/charbuf.h"
+#include "hermes_shm/data_structures/contianers/charbuf.h"
 #include <memory>
 
 std::unique_ptr<tl::engine> client_;

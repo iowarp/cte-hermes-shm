@@ -15,12 +15,12 @@
 #define HERMES_DATA_STRUCTURES_SERIALIZATION_THALLIUM_H_
 
 #include <thallium.hpp>
-#include <hermes_shm/data_structures/string.h>
+#include "hermes_shm/data_structures/ipc/string.h"
 #include <hermes_shm/data_structures/data_structure.h>
-#include <hermes_shm/data_structures/thread_unsafe/vector.h>
-#include <hermes_shm/data_structures/thread_unsafe/list.h>
-#include <hermes_shm/types/charbuf.h>
-#include "hermes_shm/data_structures/thread_unsafe/slist.h"
+#include <hermes_shm/data_structures/ipc/vector.h>
+#include <hermes_shm/data_structures/ipc/list.h>
+#include "hermes_shm/data_structures/contianers/charbuf.h"
+#include "hermes_shm/data_structures/ipc/slist.h"
 
 namespace thallium {
 
@@ -216,7 +216,7 @@ void save(A &ar, hipc::string &text) {
   ar << text.size();
   if (!text.size()) { return; }
   ar << text.GetAllocator()->GetId();
-  ar.write(text.data_mutable(), text.size());
+  ar.write(text.data(), text.size());
 }
 
 /**
@@ -236,7 +236,7 @@ void load(A &ar, hipc::string &text) {
   ar >> alloc_id;
   auto alloc = HERMES_MEMORY_MANAGER->GetAllocator(alloc_id);
   text = hipc::text();
-  ar.read(text_tmp->data_mutable(), size);
+  ar.read(text_tmp->data(), size);
 }
 
 /**

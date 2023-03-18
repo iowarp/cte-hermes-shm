@@ -13,6 +13,6 @@
 #ifndef HERMES_SHM_INCLUDE_HERMES_SHM_DATA_STRUCTURES_NUMA_AWARE_VECTOR_H_
 #define HERMES_SHM_INCLUDE_HERMES_SHM_DATA_STRUCTURES_NUMA_AWARE_VECTOR_H_
 
-#include "hermes_shm/data_structures/internal/shm_internal.h"
+#include "hermes_shm/data_structures/ipc/internal/shm_internal.h"
 
 #endif  // HERMES_SHM_INCLUDE_HERMES_SHM_DATA_STRUCTURES_NUMA_AWARE_VECTOR_H_

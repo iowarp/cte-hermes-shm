@@ -14,7 +14,7 @@
 #ifndef HERMES_DATA_STRUCTURES_LOCKLESS_STRING_H_
 #define HERMES_DATA_STRUCTURES_LOCKLESS_STRING_H_
 
-#include "internal/shm_internal.h"
+#include "hermes_shm/data_structures/ipc/internal/shm_internal.h"
 #include <string>
 
 namespace hermes_shm::ipc {
@@ -220,7 +220,7 @@ class string : public ShmContainer {
   }
 
   /** Get a mutable reference to the C-style string */
-  char* data_mutable() {
+  char* data() {
     return text_;
   }
 
