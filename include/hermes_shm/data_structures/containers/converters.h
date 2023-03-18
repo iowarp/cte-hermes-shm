@@ -16,7 +16,9 @@ template<typename T, typename SharedT>
 std::vector<T> to_stl_vector(const SharedT &other) {
   std::vector<T> vec;
   vec.reserve(other.size());
-  for (hipc::Ref<T> obj : other) {
+  auto end = other.cend();
+  for (auto iter = other.cbegin(); iter != end; ++iter) {
+    hipc::Ref<T> obj = (*iter);
     vec.emplace_back(*obj);
   }
   return vec;
@@ -26,7 +28,9 @@ std::vector<T> to_stl_vector(const SharedT &other) {
 template<typename T, typename SharedT>
 std::list<T> to_stl_list(const SharedT &other) {
   std::list<T> vec;
-  for (hipc::Ref<T> obj : other) {
+  auto end = other.cend();
+  for (auto iter = other.cbegin(); iter != end; ++iter) {
+    hipc::Ref<T> obj = (*iter);
     vec.emplace_back(*obj);
   }
   return vec;

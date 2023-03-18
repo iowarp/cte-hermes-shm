@@ -321,6 +321,15 @@ class vector : public ShmContainer {
     shm_strong_copy_main<std::vector<T>>(other);
   }
 
+  /** SHM copy assignment operator. From std::vector */
+  vector& operator=(const std::vector<T> &other) {
+    if (this != &other) {
+      shm_destroy();
+      shm_strong_copy_main<std::vector>(other);
+    }
+    return *this;
+  }
+
   /** The main copy operation  */
   template<typename VectorT>
   void shm_strong_copy_main(const VectorT &other) {
