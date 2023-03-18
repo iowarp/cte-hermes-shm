@@ -15,6 +15,7 @@
 #define HERMES_DATA_STRUCTURES_LOCKLESS_STRING_H_
 
 #include "hermes_shm/data_structures/ipc/internal/shm_internal.h"
+#include "hermes_shm/data_structures/containers/charbuf.h"
 #include <string>
 
 namespace hermes_shm::ipc {
@@ -104,6 +105,20 @@ class string : public ShmContainer {
 
   /** SHM copy assignment operator. From std::string. */
   string& operator=(const std::string &other) {
+    shm_destroy();
+    _create_str(other.data(), other.size());
+    return *this;
+  }
+
+  /** SHM Constructor. From std::string */
+  explicit string(TYPED_HEADER *header, Allocator *alloc,
+                  const hshm::charbuf &text) {
+    shm_init_header(header, alloc);
+    _create_str(text.data(), text.size());
+  }
+
+  /** SHM copy assignment operator. From std::string. */
+  string& operator=(const hshm::charbuf &other) {
     shm_destroy();
     _create_str(other.data(), other.size());
     return *this;

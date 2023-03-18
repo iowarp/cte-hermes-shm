@@ -323,10 +323,8 @@ class vector : public ShmContainer {
 
   /** SHM copy assignment operator. From std::vector */
   vector& operator=(const std::vector<T> &other) {
-    if (this != &other) {
-      shm_destroy();
-      shm_strong_copy_main<std::vector>(other);
-    }
+    shm_destroy();
+    shm_strong_copy_main<std::vector<T>>(other);
     return *this;
   }
 
@@ -335,12 +333,16 @@ class vector : public ShmContainer {
   void shm_strong_copy_main(const VectorT &other) {
     reserve(other.size());
     if constexpr(std::is_pod<T>() && !IS_SHM_ARCHIVEABLE(T)) {
-      memcpy(data_ar(), other.data(),
+      memcpy(data(), other.data(),
              other.size() * sizeof(T));
       header_->length_ = other.size();
     } else {
       for (auto iter = other.cbegin(); iter != other.cend(); ++iter) {
-        emplace_back((**iter));
+        if constexpr(IS_SHM_ARCHIVEABLE(VectorT)) {
+          emplace_back((**iter));
+        } else {
+          emplace_back((*iter));
+        }
       }
     }
   }
