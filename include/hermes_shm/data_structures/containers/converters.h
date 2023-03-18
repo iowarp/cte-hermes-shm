@@ -36,6 +36,14 @@ std::list<T> to_stl_list(const SharedT &other) {
   return vec;
 }
 
+/** Convert a string to an hshm::charbuf */
+template<typename StringT>
+hshm::charbuf to_charbuf(StringT &other) {
+  hshm::charbuf text(other.size());
+  memcpy(text.data(), other.data(), other.size());
+  return text;
+}
+
 }  // namespace hermes_shm
 
 #endif //HERMES_SHM_INCLUDE_HERMES_SHM_DATA_STRUCTURES_IPC_CONVERTERS_H_
