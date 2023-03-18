@@ -19,7 +19,7 @@
 #include <hermes_shm/data_structures/data_structure.h>
 #include <hermes_shm/data_structures/ipc/vector.h>
 #include <hermes_shm/data_structures/ipc/list.h>
-#include "hermes_shm/data_structures/contianers/charbuf.h"
+#include "hermes_shm/data_structures/containers/charbuf.h"
 #include "hermes_shm/data_structures/ipc/slist.h"
 
 namespace thallium {

@@ -218,6 +218,11 @@ class _RefNoShm {
 #define TYPED_CLASS smart_ptr_base<T>
 
 /**
+ * Flags used for the smart pointer
+ * */
+#define POINTER_IS_OWNED BIT_OPT(uint32_t, 0)
+
+/**
  * Creates a unique instance of a shared-memory data structure
  * and deletes eventually.
  * */
@@ -226,14 +231,14 @@ class smart_ptr_base {
  public:
   typedef MAKE_REF_SHM_OR_NO_SHM(T, destructable) T_Ref;
   T_Ref obj_;   /**< The stored shared-memory object */
-  bool owner_;  /**< Whether the shared-memory object is owned */
+  bitfield32_t flags_;  /**< Whether the shared-memory object is owned */
 
  public:
   /**====================================
   * Initialization + Destruction
   * ===================================*/
 
-  /** Default constructor does nothing */
+  /** Default constructor. */
   smart_ptr_base() = default;
 
   /** Create the mptr contents */
@@ -241,14 +246,14 @@ class smart_ptr_base {
   void shm_init(Args&& ...args) {
     obj_.shm_init(std::forward<Args>(args)...);
     if constexpr(unique) {
-      owner_ = true;
+      flags_.SetBits(POINTER_IS_OWNED);
     }
   }
 
   /** Destructor. Does not free data. */
   ~smart_ptr_base() {
     if constexpr(unique) {
-      if (owner_) {
+      if (flags_.OrBits(POINTER_IS_OWNED)) {
         shm_destroy();
       }
     }
