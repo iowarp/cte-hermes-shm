@@ -339,8 +339,8 @@ class smart_ptr_base {
   void shm_strong_move(smart_ptr_base &&other) {
     obj_.shm_strong_copy(other.obj_);
     if constexpr(unique) {
-      owner_ = other.owner_;
-      other.owner_ = false;
+      flags_ = other.flags_;
+      other.flags_.UnsetBits(POINTER_IS_OWNED);
     }
   }
 
@@ -389,7 +389,7 @@ class smart_ptr_base {
   void shm_deserialize(const ShmDeserialize<T> &ar) {
     obj_.shm_deserialize(ar);
     if constexpr(unique) {
-      owner_ = false;
+      flags_.UnsetBits(POINTER_IS_OWNED);
     }
   }
 
@@ -397,7 +397,7 @@ class smart_ptr_base {
   void shm_deserialize(T &ar) {
     obj_.shm_deserialize(ar);
     if constexpr(unique) {
-      owner_ = false;
+      flags_.UnsetBits(POINTER_IS_OWNED);
     }
   }
 
