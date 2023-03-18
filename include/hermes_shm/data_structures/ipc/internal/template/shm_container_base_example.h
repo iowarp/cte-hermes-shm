@@ -98,6 +98,7 @@ class ShmContainerExample : public hipc::ShmContainer {
   void shm_init_header(TYPE_UNWRAP(TYPED_HEADER) *header,
                        hipc::Allocator *alloc) {
     header_ = header;
+    hipc::Allocator::ConstructObj<TYPE_UNWRAP(TYPED_HEADER)>(*header_);
     alloc_ = alloc;
   }
 

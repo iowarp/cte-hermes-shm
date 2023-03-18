@@ -27,6 +27,7 @@ TYPE_UNWRAP(CLASS_NAME)(const TYPE_UNWRAP(CLASS_NAME) &other) = delete;\
 void shm_init_header(TYPE_UNWRAP(TYPE_UNWRAP(TYPED_HEADER)) *header,\
                      hipc::Allocator *alloc) {\
   header_ = header;\
+  hipc::Allocator::ConstructObj<TYPE_UNWRAP(TYPE_UNWRAP(TYPED_HEADER))>(*header_);\
   alloc_ = alloc;\
 }\
 \
