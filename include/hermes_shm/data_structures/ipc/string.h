@@ -224,6 +224,18 @@ class string : public ShmContainer {
     return text_;
   }
 
+  /** Resize this string */
+  void resize(size_t new_size) {
+    if (IsNull()) {
+      _create_str(new_size);
+    } else if (new_size > size()) {
+      text_ = alloc_->ReallocatePtr<char, Pointer>(header_->text_, new_size);
+      header_->length_ = new_size;
+    } else {
+      header_->length_ = new_size;
+    }
+  }
+
   /**====================================
    * Comparison Operations
    * ===================================*/

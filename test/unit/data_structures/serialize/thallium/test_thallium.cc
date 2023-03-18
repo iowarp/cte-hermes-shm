@@ -22,8 +22,8 @@ TEST_CASE("SerializeString") {
   auto empty_str = hipc::make_uptr<hipc::string>("");
   auto large_str = hipc::make_uptr<hipc::string>(kTestString);
 
-  REQUIRE(string0_proc.on(server)(*empty_str));
-  REQUIRE(string_large_proc.on(server)(*large_str));
+  REQUIRE(string0_proc.on(server)(empty_str));
+  REQUIRE(string_large_proc.on(server)(large_str));
 }
 
 TEST_CASE("SerializeCharBuf") {
@@ -45,13 +45,13 @@ TEST_CASE("SerializeVectorOfInt") {
 
   // Send empty vector
   auto vec_int = hipc::make_uptr<hipc::vector<int>>();
-  REQUIRE(vec_int0_proc.on(server)(*vec_int));
+  REQUIRE(vec_int0_proc.on(server)(vec_int));
 
   // Send initialized vector
   for (int i = 0; i < 20; ++i) {
     vec_int->emplace_back(i);
   }
-  REQUIRE(vec_int_proc.on(server)(*vec_int));
+  REQUIRE(vec_int_proc.on(server)(vec_int));
 }
 
 TEST_CASE("SerializeVectorOfString") {
@@ -61,13 +61,13 @@ TEST_CASE("SerializeVectorOfString") {
 
   // Send empty vector
   auto vec_string = hipc::make_uptr<hipc::vector<hipc::string>>();
-  REQUIRE(vec_string0_proc.on(server)(*vec_string));
+  REQUIRE(vec_string0_proc.on(server)(vec_string));
 
   // Send initialized vector
   for (int i = 0; i < 20; ++i) {
     vec_string->emplace_back(std::to_string(i));
   }
-  REQUIRE(vec_string_proc.on(server)(*vec_string));
+  REQUIRE(vec_string_proc.on(server)(vec_string));
 }
 
 TEST_CASE("SerializeBitfield") {
@@ -80,17 +80,3 @@ TEST_CASE("SerializeBitfield") {
   REQUIRE(bitfield_proc.on(server)(field));
 }
 
-TEST_CASE("SerializeVectorOfIntRef") {
-  tl::endpoint server = client_->lookup(kServerName);
-  tl::remote_procedure vec_int_proc = client_->define(kVecOfIntRefTest);
-
-  // Send empty vector
-  auto vec_int =
-    hipc::make_uptr<hipc::vector<int>>(0);
-  for (int i = 0; i < 20; ++i) {
-    vec_int->emplace_back(i);
-  }
-
-  hipc::Ref<hipc::vector<int>> vec_ref(vec_int->GetShmDeserialize());
-  REQUIRE(vec_int_proc.on(server)(vec_ref));
-}

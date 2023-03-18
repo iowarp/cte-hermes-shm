@@ -304,15 +304,19 @@ class smart_ptr_base {
 
   /** Copy constructor (equivalent to move) */
   smart_ptr_base(const smart_ptr_base &other) {
-    static_assert(!unique, "Cannot use unique_ptr with copy operator");
     obj_.shm_strong_copy(other.obj_);
+    if constexpr(unique) {
+      flags_.UnsetBits(POINTER_IS_OWNED);
+    }
   }
 
   /** Copy assignment operator (equivalent to move) */
   smart_ptr_base& operator=(const smart_ptr_base &other) {
     if (this != &other) {
-      static_assert(!unique, "Cannot use unique_ptr with copy operator");
       obj_.shm_strong_copy(other.obj_);
+      if constexpr(unique) {
+        flags_.UnsetBits(POINTER_IS_OWNED);
+      }
     }
     return *this;
   }
