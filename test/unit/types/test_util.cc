@@ -12,6 +12,7 @@
 
 #include <hermes_shm/util/formatter.h>
 #include <hermes_shm/util/path_parser.h>
+#include <hermes_shm/util/auto_trace.h>
 #include "basic_test.h"
 
 namespace hshm = hermes_shm;
@@ -23,6 +24,10 @@ TEST_CASE("TestPathParser") {
   auto y = hshm::path_parser("${PATH_PARSER_TEST}/hello");
   REQUIRE(x == "HOME/hello");
   REQUIRE(y == "${PATH_PARSER_TEST}/hello");
+}
+
+TEST_CASE("TestAutoTrace") {
+  AUTO_TRACE(0)
 }
 
 TEST_CASE("TestFormatter") {
