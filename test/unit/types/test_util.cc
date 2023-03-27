@@ -10,6 +10,8 @@
 * have access to the file, you may request a copy from help@hdfgroup.org.   *
 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+
+#define HERMES_ENABLE_PROFILING 1
 #include <hermes_shm/util/formatter.h>
 #include <hermes_shm/util/path_parser.h>
 #include <hermes_shm/util/auto_trace.h>
@@ -28,6 +30,9 @@ TEST_CASE("TestPathParser") {
 
 TEST_CASE("TestAutoTrace") {
   AUTO_TRACE(0)
+
+  TIMER_START()
+  TIMER_END()
 }
 
 TEST_CASE("TestFormatter") {
