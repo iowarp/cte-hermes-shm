@@ -22,8 +22,8 @@ namespace hermes_shm {
 #define AUTO_TRACE(LOG_LEVEL) \
   hermes_shm::AutoTrace<LOG_LEVEL> hshm_tracer_(__PRETTY_FUNCTION__);
 
-#define TIMER_START() \
-  hshm_tracer_.StartTimer(__PRETTY_FUNCTION__);
+#define TIMER_START(NAME) \
+  hshm_tracer_.StartTimer(NAME);
 
 #define TIMER_END()  \
   hshm_tracer_.EndTimer();
@@ -35,19 +35,21 @@ class AutoTrace {
   HighResMonotonicTimer timer_;
   HighResMonotonicTimer timer2_;
   std::string fname_;
+  std::string internal_name_;
 
  public:
   template<typename ...Args>
   explicit AutoTrace(const char *fname) : fname_(fname) {
-    _StartTimer(timer_, fname);
+    _StartTimer(timer_);
   }
 
   ~AutoTrace() {
     _EndTimer(timer_);
   }
 
-  void StartTimer(const char *fname) {
-    _StartTimer(timer2_, fname);
+  void StartTimer(const char *internal_name) {
+    internal_name_ = "/" + std::string(internal_name);
+    _StartTimer(timer2_);
   }
 
   void EndTimer() {
@@ -55,7 +57,8 @@ class AutoTrace {
   }
 
  private:
-  void _StartTimer(HighResMonotonicTimer &timer, const char *fname) {
+  template<typename ...Args>
+  void _StartTimer(HighResMonotonicTimer &timer) {
 #ifdef HERMES_ENABLE_PROFILING
     if constexpr(LOG_LEVEL <= HERMES_ENABLE_PROFILING) {
       timer.Resume();
@@ -67,10 +70,12 @@ class AutoTrace {
 #ifdef HERMES_ENABLE_PROFILING
     if constexpr(LOG_LEVEL <= HERMES_ENABLE_PROFILING) {
       timer.Pause();
-      std::cout << hermes_shm::Formatter::format("{};{}ns\n",
+      std::cout << hermes_shm::Formatter::format("{}{};{}ns\n",
                                                  fname_,
+                                                 internal_name_,
                                                  timer_.GetNsec());
       timer.Reset();
+      internal_name_.clear();
     }
 #endif
   }

@@ -31,7 +31,7 @@ TEST_CASE("TestPathParser") {
 TEST_CASE("TestAutoTrace") {
   AUTO_TRACE(0)
 
-  TIMER_START()
+  TIMER_START("Example")
   TIMER_END()
 }
 
@@ -61,5 +61,11 @@ TEST_CASE("TestFormatter") {
     std::string name = hshm::Formatter::format("bucket{}_{}",
                                                rank);
     REQUIRE(name == "bucket{}_{}");
+  }
+
+  PAGE_DIVIDE("Test with parameters next to each other") {
+    std::string name = hshm::Formatter::format("bucket{}{}",
+                                               rank, i);
+    REQUIRE(name == "bucket00");
   }
 }
