@@ -16,6 +16,7 @@
 #include <hermes_shm/util/path_parser.h>
 #include <hermes_shm/util/auto_trace.h>
 #include "basic_test.h"
+#include <unistd.h>
 
 namespace hshm = hermes_shm;
 
@@ -32,6 +33,7 @@ TEST_CASE("TestAutoTrace") {
   AUTO_TRACE(0)
 
   TIMER_START("Example")
+  sleep(1);
   TIMER_END()
 }
 

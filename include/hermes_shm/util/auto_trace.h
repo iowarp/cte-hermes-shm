@@ -73,7 +73,7 @@ class AutoTrace {
       std::cout << hermes_shm::Formatter::format("{}{};{}ns\n",
                                                  fname_,
                                                  internal_name_,
-                                                 timer_.GetNsec());
+                                                 timer.GetNsec());
       timer.Reset();
       internal_name_.clear();
     }
