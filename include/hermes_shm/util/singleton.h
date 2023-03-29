@@ -45,6 +45,8 @@ class Singleton {
 };
 template <typename T>
 std::unique_ptr<T> Singleton<T>::obj_;
+template <typename T>
+hshm::Mutex Singleton<T>::lock_;
 #define DEFINE_SINGLETON_CC(T)\
   template<> std::unique_ptr<T>\
     hshm::Singleton<T>::obj_ = nullptr;\
