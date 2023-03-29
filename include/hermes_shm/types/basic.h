@@ -18,7 +18,7 @@
 
 #ifdef __cplusplus
 
-namespace hermes_shm {
+namespace hshm {
 
 /**
  * decimal + (numerator/65536)
@@ -89,7 +89,7 @@ struct RealNumber {
   }
 };
 
-}  // namespace hermes_shm
+}  // namespace hshm
 
 #endif
 

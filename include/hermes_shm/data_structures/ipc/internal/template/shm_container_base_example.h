@@ -212,7 +212,7 @@ class ShmContainerExample : public hipc::ShmContainer {
   }
 };
 
-}  // namespace hermes_shm::ipc
+}  // namespace hshm::ipc
 
 #undef CLASS_NAME
 #undef TYPED_CLASS

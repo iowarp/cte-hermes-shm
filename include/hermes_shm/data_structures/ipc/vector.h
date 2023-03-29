@@ -18,7 +18,7 @@
 
 #include <vector>
 
-namespace hermes_shm::ipc {
+namespace hshm::ipc {
 
 /** forward pointer for vector */
 template<typename T>
@@ -31,7 +31,7 @@ template<typename T, bool FORWARD_ITER>
 struct vector_iterator_templ {
  public:
   hipc::Ref<vector<T>> vec_;
-  off64_t i_;
+  int64_t i_;
 
   /** Default constructor */
   vector_iterator_templ() = default;
@@ -42,8 +42,8 @@ struct vector_iterator_templ {
 
   /** Construct an iterator at \a i offset */
   inline explicit vector_iterator_templ(const hipc::Ref<vector<T>> &vec,
-                                        size_t i)
-  : vec_(vec), i_(static_cast<off64_t>(i)) {}
+                                        int64_t i)
+  : vec_(vec), i_(i) {}
 
   /** Copy constructor */
   inline vector_iterator_templ(const vector_iterator_templ &other)
@@ -668,7 +668,7 @@ class vector : public ShmContainer {
   void shift_right(const vector_iterator<T> pos, int count = 1) {
     auto src = data_ar() + size() - 1;
     auto dst = src + count;
-    auto sz = static_cast<off64_t>(size());
+    auto sz = static_cast<int64_t>(size());
     for (auto i = sz - 1; i >= pos.i_; --i) {
       memcpy(dst, src, sizeof(ShmArchive<T>));
       dst -= 1; src -= 1;
@@ -736,7 +736,7 @@ class vector : public ShmContainer {
   }
 };
 
-}  // namespace hermes_shm::ipc
+}  // namespace hshm::ipc
 
 #undef CLASS_NAME
 #undef TYPED_CLASS

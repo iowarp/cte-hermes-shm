@@ -18,8 +18,6 @@
 #include "basic_test.h"
 #include <unistd.h>
 
-namespace hshm = hermes_shm;
-
 TEST_CASE("TestPathParser") {
   setenv("PATH_PARSER_TEST", "HOME", true);
   auto x = hshm::path_parser("${PATH_PARSER_TEST}/hello");
