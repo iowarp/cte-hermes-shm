@@ -60,7 +60,8 @@ class ShmContainerExample : public hipc::ShmContainer {
 
   /** Internal move operation */
   void shm_strong_move_main(CLASS_NAME &&other) {
-    memcpy(header_, other.header_, sizeof(*header_));
+    // memcpy((void*)header_, (void*)other.header_, sizeof(*header_));
+    (*header_) = (*other.header_);
   }
 
   /** Check if header is NULL */

@@ -189,7 +189,7 @@ struct vector_iterator_templ {
   /** Set this iterator to end */
   inline void set_end() {
     if constexpr(FORWARD_ITER) {
-      i_ = vec_->size();
+      i_ = (int64_t)vec_->size();
     } else {
       i_ = -1;
     }
@@ -200,7 +200,7 @@ struct vector_iterator_templ {
     if constexpr(FORWARD_ITER) {
       i_ = 0;
     } else {
-      i_ = vec_->size() - 1;
+      i_ = (size_t)(vec_->size() - 1);
     }
   }
 
@@ -209,14 +209,14 @@ struct vector_iterator_templ {
     if constexpr(FORWARD_ITER) {
       return (i_ == 0);
     } else {
-      return (i_ == vec_->size() - 1);
+      return ((size_t)i_ == vec_->size() - 1);
     }
   }
 
   /** Determine whether this iterator is the end iterator */
   inline bool is_end() const {
     if constexpr(FORWARD_ITER) {
-      return i_ == vec_->size();
+      return (size_t)i_ == vec_->size();
     } else {
       return i_ == -1;
     }
@@ -355,7 +355,8 @@ class vector : public ShmContainer {
   vector(TYPED_HEADER *header, Allocator *alloc, vector &&other) {
     shm_init_header(header, alloc);
     if (alloc_ == other.alloc_) {
-      memcpy((void *) header_, (void *) other.header_, sizeof(*header_));
+      // memcpy((void*)header_, (void*)other.header_, sizeof(*header_));
+      (*header_) = (*other.header_);
       other.SetNull();
     } else {
       shm_strong_copy_main<vector>(other);
@@ -368,7 +369,7 @@ class vector : public ShmContainer {
     if (this != &other) {
       shm_destroy();
       if (alloc_ == other.alloc_) {
-        memcpy((void *) header_, (void *) other.header_, sizeof(*header_));
+        (*header_) = (*other.header_);
         other.SetNull();
       } else {
         shm_strong_copy_main<vector>(other);
@@ -651,8 +652,8 @@ class vector : public ShmContainer {
     }
     auto dst = vec + pos.i_;
     auto src = dst + count;
-    for (auto i = pos.i_ + count; i < size(); ++i) {
-      memcpy(dst, src, sizeof(ShmArchive<T>));
+    for (auto i = pos.i_ + count; i < (int64_t)size(); ++i) {
+      memcpy((void*)dst, (void*)src, sizeof(ShmArchive<T>));
       dst += 1; src += 1;
     }
   }
@@ -670,7 +671,7 @@ class vector : public ShmContainer {
     auto dst = src + count;
     auto sz = static_cast<int64_t>(size());
     for (auto i = sz - 1; i >= pos.i_; --i) {
-      memcpy(dst, src, sizeof(ShmArchive<T>));
+      memcpy((void*)dst, (void*)src, sizeof(ShmArchive<T>));
       dst -= 1; src -= 1;
     }
   }
