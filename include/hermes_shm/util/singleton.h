@@ -43,6 +43,8 @@ class Singleton {
     return obj_.get();
   }
 };
+template <typename T>
+std::unique_ptr<T> Singleton<T>::obj_;
 #define DEFINE_SINGLETON_CC(T)\
   template<> std::unique_ptr<T>\
     hshm::Singleton<T>::obj_ = nullptr;\
@@ -64,6 +66,8 @@ class GlobalSingleton {
     return &obj_;
   }
 };
+template <typename T>
+T GlobalSingleton<T>::obj_;
 #define DEFINE_GLOBAL_SINGLETON_CC(T)\
   template<> T\
     hshm::GlobalSingleton<T>::obj_ = T();
