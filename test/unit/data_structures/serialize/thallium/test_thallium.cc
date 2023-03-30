@@ -12,6 +12,7 @@
 
 #include "basic_test.h"
 #include "test_init.h"
+#include "constants.h"
 #include "hermes_shm/data_structures/ipc/string.h"
 
 TEST_CASE("SerializeString") {
