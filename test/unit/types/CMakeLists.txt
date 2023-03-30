@@ -8,8 +8,9 @@ add_executable(test_types
         test_init.cc
         test_argpack.cc
         test_util.cc)
+add_dependencies(test_types hermes_shm_data_structures)
 target_link_libraries(test_types
-        Catch2::Catch2 MPI::MPI_CXX OpenMP::OpenMP_CXX)
+        hermes_shm_data_structures Catch2::Catch2 MPI::MPI_CXX OpenMP::OpenMP_CXX)
 
 #------------------------------------------------------------------------------
 # Code Coverage
