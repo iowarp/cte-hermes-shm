@@ -21,7 +21,9 @@ namespace hshm::ipc {
 template<typename T, typename PointerT>
 class SmartPtrTestSuite {
  public:
-  PointerT ptr_;
+  PointerT &ptr_;
+
+  SmartPtrTestSuite(PointerT &ptr) : ptr_(ptr) {}
 
  public:
   // Test dereference

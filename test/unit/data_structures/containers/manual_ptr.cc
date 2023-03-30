@@ -26,9 +26,9 @@ using hshm::ipc::TypedPointer;
 
 template<typename T>
 void ManualPtrTest() {
-  hipc::SmartPtrTestSuite<T, mptr<T>> test;
   CREATE_SET_VAR_TO_INT_OR_STRING(T, num, 25);
-  test.ptr_ = hipc::make_mptr<T>(num);
+  auto ptr = hipc::make_mptr<T>(num);
+  hipc::SmartPtrTestSuite<T, mptr<T>> test(ptr);
   test.DereferenceTest(num);
   test.MoveConstructorTest(num);
   test.MoveAssignmentTest(num);
