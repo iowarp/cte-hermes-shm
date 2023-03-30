@@ -66,17 +66,24 @@ void UnorderedMapOpTest() {
   // Iterate over the map
   PAGE_DIVIDE("Forward iterate") {
     int i = 0;
+    std::vector<int> keys, vals;
     for (auto entry : map) {
       GET_INT_FROM_KEY(entry->GetKey());
       GET_INT_FROM_VAL(entry->GetVal());
-      REQUIRE((0 <= key_ret && key_ret < 20));
-      REQUIRE((0 <= val_ret && val_ret < 20));
+      keys.emplace_back(key_ret);
+      vals.emplace_back(val_ret);
       ++i;
     }
     REQUIRE(i == 20);
+    std::sort(keys.begin(), keys.end());
+    std::sort(vals.begin(), vals.end());
+    for (int i = 0; i < 20; ++i) {
+      REQUIRE(keys[i] == i);
+      REQUIRE(vals[i] == i);
+    }
   }
 
-  // Re-emplace elements
+  // Re-emplace elements (adding 100 to i)
   PAGE_DIVIDE("Re-emplace elements") {
     for (int i = 0; i < 20; ++i) {
       CREATE_KV_PAIR(key, i, val, i + 100);
@@ -140,14 +147,15 @@ void UnorderedMapOpTest() {
   }
 
   // Attempt to replace an existing key
-  PAGE_DIVIDE("Attempt to replace an existing key") {
+  PAGE_DIVIDE("Try emplace on an existing key") {
     for (int i = 15; i < 20; ++i) {
       CREATE_KV_PAIR(key, i, val, 100);
       REQUIRE(map.try_emplace(key, val) == false);
     }
     for (int i = 15; i < 20; ++i) {
       CREATE_KV_PAIR(key, i, val, 100);
-      REQUIRE(*map[key] != val);
+      GET_INT_FROM_VAL(*map[key])
+      REQUIRE(val_ret == i + 100);
     }
   }
 
@@ -162,11 +170,13 @@ void UnorderedMapOpTest() {
     for (int i = 0; i < 100; ++i) {
       CREATE_KV_PAIR(key, i, val, i);
       map.emplace(key, val);
-      REQUIRE(map.find(key) != map.end());
     }
     for (int i = 0; i < 100; ++i) {
       CREATE_KV_PAIR(key, i, val, i);
-      REQUIRE(map.find(key) != map.end());
+      auto iter = map.find(key);
+      REQUIRE(iter != map.end());
+      REQUIRE((*iter)->GetKey() == key);
+      REQUIRE((*iter)->GetVal() == val);
     }
   }
 
@@ -176,8 +186,15 @@ void UnorderedMapOpTest() {
     (*cpy) = map;
     for (int i = 0; i < 100; ++i) {
       CREATE_KV_PAIR(key, i, val, i);
-      REQUIRE(!map.find(key).is_end());
-      REQUIRE(!cpy->find(key).is_end());
+      auto iter1 = map.find(key);
+      auto iter2 = cpy->find(key);
+      REQUIRE(!iter1.is_end());
+      REQUIRE((*iter1)->GetKey() == key);
+      REQUIRE((*iter1)->GetVal() == val);
+
+      REQUIRE(!iter2.is_end());
+      REQUIRE((*iter2)->GetKey() == key);
+      REQUIRE((*iter2)->GetVal() == val);
     }
   }
 
@@ -187,7 +204,10 @@ void UnorderedMapOpTest() {
     (*cpy) = std::move(map);
     for (int i = 0; i < 100; ++i) {
       CREATE_KV_PAIR(key, i, val, i);
-      REQUIRE(!cpy->find(key).is_end());
+      auto iter = cpy->find(key);
+      REQUIRE(!iter.is_end());
+      REQUIRE((*iter)->GetKey() == key);
+      REQUIRE((*iter)->GetVal() == val);
     }
     map = std::move(*cpy);
   }
