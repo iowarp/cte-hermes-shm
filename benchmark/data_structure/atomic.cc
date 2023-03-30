@@ -167,7 +167,7 @@ class AtomicInstructionTestSuite {
     if (test_count == 0) {
       TestOutputHeader();
     }
-    int nthreads = omp_get_num_threads();
+    size_t nthreads = omp_get_num_threads();
     ss << test_name << ","
        << atomic_type_ << ","
        << sizeof(T) << ","
