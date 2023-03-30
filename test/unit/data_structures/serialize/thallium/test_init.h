@@ -36,6 +36,19 @@ using hshm::ipc::MemoryManager;
 using hshm::ipc::Pointer;
 
 static const char* kServerName = "ofi+sockets://127.0.0.1:8080";
+static const char* kTestString = "012344823723642364723874623";
+
+/** Test cases */
+static const char* kStringTest0 = "kStringTest0";
+static const char* kStringTestLarge = "kStringTestLarge";
+static const char* kCharbufTest0 = "kCharbufTest0";
+static const char* kCharbufTestLarge = "kCharbufTestLarge";
+static const char* kVecOfInt0Test = "kVecOfInt0Test";
+static const char* kVecOfIntLargeTest = "kVecOfIntLargeTest";
+static const char* kVecOfString0Test = "kVecOfString0Test";
+static const char* kVecOfStringLargeTest = "kVecOfStringLargeTest";
+static const char* kBitfieldTest = "kBitfieldTest";
+static const char* kVecOfIntRefTest = "kVecOfIntRefTest";
 
 namespace tl = thallium;
 using thallium::request;

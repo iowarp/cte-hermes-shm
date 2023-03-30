@@ -11,7 +11,6 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include "test_init.h"
-#include "constants.h"
 #include "hermes_shm/data_structures/ipc/string.h"
 #include "hermes_shm/data_structures/serialization/thallium.h"
 #include "hermes_shm/data_structures/containers/charbuf.h"
