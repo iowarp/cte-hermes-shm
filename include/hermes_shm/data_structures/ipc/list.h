@@ -299,7 +299,7 @@ class list : public ShmContainer {
   list(TYPED_HEADER *header, Allocator *alloc, list &&other) noexcept {
     shm_init_header(header, alloc);
     if (alloc_ == other.alloc_) {
-      memcpy(header_, other.header_, sizeof(*header_));
+      memcpy((void*)header_, (void*)other.header_, sizeof(*header_));
       other.SetNull();
     } else {
       shm_strong_copy_construct_and_op<list>(other);

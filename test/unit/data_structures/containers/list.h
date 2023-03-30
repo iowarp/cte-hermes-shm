@@ -29,7 +29,7 @@ class ListTestSuite {
 
   /// Emplace elements
   void EmplaceTest(size_t count = 30) {
-    for (int i = 0; i < count; ++i) {
+    for (size_t i = 0; i < count; ++i) {
       CREATE_SET_VAR_TO_INT_OR_STRING(T, var, i);
       obj_.emplace_back(var);
     }
@@ -38,7 +38,7 @@ class ListTestSuite {
 
   /// Forward iterator
   void ForwardIteratorTest(size_t count = 30) {
-    int fcur = 0;
+    size_t fcur = 0;
     for (auto num : obj_) {
       CREATE_SET_VAR_TO_INT_OR_STRING(T, fcur_conv, fcur);
       REQUIRE(*num == fcur_conv);
@@ -49,7 +49,7 @@ class ListTestSuite {
   /// Constant Forward iterator
   void ConstForwardIteratorTest(size_t count = 30) {
     const Container &obj = obj_;
-    int fcur = 0;
+    size_t fcur = 0;
     for (auto iter = obj.cbegin(); iter != obj.cend(); ++iter) {
       hipc::Ref<T> num = *iter;
       CREATE_SET_VAR_TO_INT_OR_STRING(T, fcur_conv, fcur);
@@ -95,7 +95,7 @@ class ListTestSuite {
   /// Emplace and erase front
   void EmplaceFrontTest() {
     CREATE_SET_VAR_TO_INT_OR_STRING(T, i0, 100);
-    int old_size = obj_.size();
+    size_t old_size = obj_.size();
     obj_.emplace_front(i0);
     REQUIRE(*obj_.front() == i0);
     REQUIRE(obj_.size() == old_size + 1);
@@ -152,7 +152,7 @@ class ListTestSuite {
 
     // Verify obj
     {
-      int fcur = 0;
+      size_t fcur = 0;
       for (auto num : obj_) {
         CREATE_SET_VAR_TO_INT_OR_STRING(T, fcur_conv, fcur);
         REQUIRE(*num == fcur_conv);
@@ -162,7 +162,7 @@ class ListTestSuite {
 
     // Verify copy
     {
-      int fcur = 0;
+      size_t fcur = 0;
       for (auto num : cpy) {
         CREATE_SET_VAR_TO_INT_OR_STRING(T, fcur_conv, fcur);
         REQUIRE(*num == fcur_conv);
@@ -177,7 +177,7 @@ class ListTestSuite {
                   size_t count) {
     // Verify move into cpy worked
     {
-      int fcur = 0;
+      size_t fcur = 0;
       REQUIRE(orig_obj.IsNull());
       REQUIRE(new_obj.size() == count);
       for (auto num : new_obj) {

@@ -42,7 +42,7 @@ class StringTestSuite {
 
     Timer t;
     t.Resume();
-    for (int i = 0; i < count; ++i) {
+    for (size_t i = 0; i < count; ++i) {
       T hello(data);
     }
     t.Pause();
@@ -60,7 +60,7 @@ class StringTestSuite {
 
     Timer t;
     t.Resume();
-    for (int i = 0; i < count; ++i) {
+    for (size_t i = 0; i < count; ++i) {
       vec[i] = T(data);
     }
     vec.clear();

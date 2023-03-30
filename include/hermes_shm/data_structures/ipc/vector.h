@@ -209,14 +209,14 @@ struct vector_iterator_templ {
     if constexpr(FORWARD_ITER) {
       return (i_ == 0);
     } else {
-      return (i_ == vec_->size() - 1);
+      return (i_ == (int64_t)vec_->size() - 1);
     }
   }
 
   /** Determine whether this iterator is the end iterator */
   inline bool is_end() const {
     if constexpr(FORWARD_ITER) {
-      return i_ == vec_->size();
+      return i_ == (int64_t)vec_->size();
     } else {
       return i_ == -1;
     }
@@ -644,15 +644,15 @@ class vector : public ShmContainer {
    * @param pos the starting position
    * @param count the amount to shift left by
    * */
-  void shift_left(const vector_iterator<T> pos, int count = 1) {
+  void shift_left(const vector_iterator<T> pos, size_t count = 1) {
     ShmArchive<T> *vec = data_ar();
-    for (int i = 0; i < count; ++i) {
+    for (size_t i = 0; i < count; ++i) {
       hipc::Ref<T>(vec[pos.i_ + i], alloc_).shm_destroy();
     }
     auto dst = vec + pos.i_;
     auto src = dst + count;
     for (auto i = pos.i_ + count; i < size(); ++i) {
-      memcpy(dst, src, sizeof(ShmArchive<T>));
+      memcpy((void*)dst, (void*)src, sizeof(ShmArchive<T>));
       dst += 1; src += 1;
     }
   }
@@ -665,12 +665,12 @@ class vector : public ShmContainer {
    * @param pos the starting position
    * @param count the amount to shift right by
    * */
-  void shift_right(const vector_iterator<T> pos, int count = 1) {
+  void shift_right(const vector_iterator<T> pos, size_t count = 1) {
     auto src = data_ar() + size() - 1;
     auto dst = src + count;
     auto sz = static_cast<off64_t>(size());
     for (auto i = sz - 1; i >= pos.i_; --i) {
-      memcpy(dst, src, sizeof(ShmArchive<T>));
+      memcpy((void*)dst, (void*)src, sizeof(ShmArchive<T>));
       dst -= 1; src -= 1;
     }
   }
