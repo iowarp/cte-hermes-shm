@@ -14,7 +14,7 @@
 #include "test_init.h"
 
 void PageAllocationTest(Allocator *alloc) {
-  int count = 1024;
+  size_t count = 1024;
   size_t page_size = KILOBYTES(4);
   auto mem_mngr = HERMES_MEMORY_MANAGER;
 

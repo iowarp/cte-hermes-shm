@@ -30,7 +30,7 @@ class IqueueTestSuite {
   : obj_(obj), alloc_(alloc) {}
 
   /// Enqueue elements
-  void EnqueueTest(int count = 30) {
+  void EnqueueTest(size_t count = 30) {
     for (int i = 0; i < count; ++i) {
       hipc::OffsetPointer p;
       auto page = alloc_->template
@@ -42,7 +42,7 @@ class IqueueTestSuite {
   }
 
   /// Dequeue and then re-enqueue
-  void DequeueTest(int count = 30) {
+  void DequeueTest(size_t count = 30) {
     std::vector<T*> tmp(count);
     for (int i = 0; i < count; ++i) {
       tmp[i] = obj_.dequeue();
@@ -55,7 +55,7 @@ class IqueueTestSuite {
   }
 
   /// Forward iterator
-  void ForwardIteratorTest(int count = 30) {
+  void ForwardIteratorTest(size_t count = 30) {
     int fcur = 0;
     for (T *page : obj_) {
       REQUIRE(page->page_size_ == fcur);
@@ -64,7 +64,7 @@ class IqueueTestSuite {
   }
 
   /// Constant Forward iterator
-  void ConstForwardIteratorTest(int count = 30) {
+  void ConstForwardIteratorTest(size_t count = 30) {
     const Container &obj = obj_;
     int fcur = 0;
     for (auto iter = obj.cbegin(); iter != obj.cend(); ++iter) {
@@ -76,7 +76,7 @@ class IqueueTestSuite {
 
   /// Dequeue an element in the middle of the queue
   void DequeueMiddleTest() {
-    int count = obj_.size();
+    size_t count = obj_.size();
     int mid = obj_.size() / 2;
     auto iter = obj_.begin();
     for (int i = 0; i < mid; ++i) {
@@ -93,7 +93,6 @@ class IqueueTestSuite {
 
   /// Verify erase
   void EraseTest() {
-    int count = obj_.size();
     std::vector<T*> tmp;
     for (T *page : obj_) {
       tmp.emplace_back(page);

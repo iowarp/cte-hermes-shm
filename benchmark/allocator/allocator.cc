@@ -49,7 +49,7 @@ class AllocatorTestSuite {
   }
 
   /** Allocate and Free a single size in a single loop */
-  void AllocateAndFreeFixedSize(int count, size_t size) {
+  void AllocateAndFreeFixedSize(size_t count, size_t size) {
     Timer t;
     t.Resume();
     for (int i = 0; i < count; ++i) {
@@ -63,7 +63,7 @@ class AllocatorTestSuite {
   }
 
   /** Allocate a fixed size in a loop, and then free in another loop */
-  void AllocateThenFreeFixedSize(int count, size_t size) {
+  void AllocateThenFreeFixedSize(size_t count, size_t size) {
     Timer t;
     std::vector<Pointer> cache(count);
     t.Resume();

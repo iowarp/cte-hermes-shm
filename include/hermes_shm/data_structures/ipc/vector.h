@@ -645,7 +645,7 @@ class vector : public ShmContainer {
    * @param pos the starting position
    * @param count the amount to shift left by
    * */
-  void shift_left(const vector_iterator<T> pos, int count = 1) {
+  void shift_left(const vector_iterator<T> pos, size_t count = 1) {
     ShmArchive<T> *vec = data_ar();
     for (int i = 0; i < count; ++i) {
       hipc::Ref<T>(vec[pos.i_ + i], alloc_).shm_destroy();
@@ -666,7 +666,7 @@ class vector : public ShmContainer {
    * @param pos the starting position
    * @param count the amount to shift right by
    * */
-  void shift_right(const vector_iterator<T> pos, int count = 1) {
+  void shift_right(const vector_iterator<T> pos, size_t count = 1) {
     auto src = data_ar() + size() - 1;
     auto dst = src + count;
     auto sz = static_cast<int64_t>(size());

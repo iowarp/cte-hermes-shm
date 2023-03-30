@@ -112,8 +112,6 @@ struct unordered_map_iterator {
         if (bucket_.is_end()) {
           return false;
         }
-        BUCKET_T& new_bkt = (**bucket_);
-        slist<COLLISION_T> &new_collisions = new_bkt;
         collision_ = collisions.begin();
       }
     } while (true);

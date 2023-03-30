@@ -21,7 +21,7 @@ using hshm::RwLock;
 void MutexTest() {
   int nthreads = 8;
   int loop_count = 10000;
-  int count = 0;
+  size_t count = 0;
   Mutex lock;
 
   HERMES_THREAD_MANAGER->GetThreadStatic();
@@ -43,7 +43,7 @@ void MutexTest() {
 }
 
 void barrier_for_reads(std::vector<int> &tid_start, int left) {
-  int count;
+  size_t count;
   do {
     count = 0;
     for (int i = 0; i < left; ++i) {
@@ -57,7 +57,7 @@ void RwLockTest() {
   int left = nthreads / 2;
   std::vector<int> tid_start(left, 0);
   int loop_count = 100000;
-  int count = 0;
+  size_t count = 0;
   RwLock lock;
 
   HERMES_THREAD_MANAGER->GetThreadStatic();

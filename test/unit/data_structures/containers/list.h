@@ -28,7 +28,7 @@ class ListTestSuite {
   : obj_(obj), alloc_(alloc) {}
 
   /// Emplace elements
-  void EmplaceTest(int count = 30) {
+  void EmplaceTest(size_t count = 30) {
     for (int i = 0; i < count; ++i) {
       CREATE_SET_VAR_TO_INT_OR_STRING(T, var, i);
       obj_.emplace_back(var);
@@ -37,7 +37,7 @@ class ListTestSuite {
   }
 
   /// Forward iterator
-  void ForwardIteratorTest(int count = 30) {
+  void ForwardIteratorTest(size_t count = 30) {
     int fcur = 0;
     for (auto num : obj_) {
       CREATE_SET_VAR_TO_INT_OR_STRING(T, fcur_conv, fcur);
@@ -47,7 +47,7 @@ class ListTestSuite {
   }
 
   /// Constant Forward iterator
-  void ConstForwardIteratorTest(int count = 30) {
+  void ConstForwardIteratorTest(size_t count = 30) {
     const Container &obj = obj_;
     int fcur = 0;
     for (auto iter = obj.cbegin(); iter != obj.cend(); ++iter) {
@@ -60,14 +60,14 @@ class ListTestSuite {
 
   /// Copy constructor
   void CopyConstructorTest() {
-    int count = obj_.size();
+    size_t count = obj_.size();
     auto cpy = hipc::make_uptr<Container>(obj_);
     VerifyCopy(obj_, *cpy, count);
   }
 
   /// Copy assignment
   void CopyAssignmentTest() {
-    int count = obj_.size();
+    size_t count = obj_.size();
     auto cpy = hipc::make_uptr<Container>();
     *cpy = obj_;
     VerifyCopy(obj_, *cpy, count);
@@ -75,7 +75,7 @@ class ListTestSuite {
 
   /// Move constructor
   void MoveConstructorTest() {
-    int count = obj_.size();
+    size_t count = obj_.size();
     auto cpy = hipc::make_uptr<Container>(std::move(obj_));
     VerifyMove(obj_, *cpy, count);
     obj_ = std::move(*cpy);
@@ -84,7 +84,7 @@ class ListTestSuite {
 
   /// Move assignment
   void MoveAssignmentTest() {
-    int count = obj_.size();
+    size_t count = obj_.size();
     auto cpy = hipc::make_uptr<Container>();
     (*cpy) = std::move(obj_);
     VerifyMove(obj_, *cpy, count);
@@ -146,7 +146,7 @@ class ListTestSuite {
   /// Verify copy construct/assign worked
   void VerifyCopy(Container &obj,
                   Container &cpy,
-                  int count) {
+                  size_t count) {
     REQUIRE(obj_.size() == count);
     REQUIRE(cpy.size() == count);
 
@@ -174,7 +174,7 @@ class ListTestSuite {
   /// Verify move worked
   void VerifyMove(Container &orig_obj,
                   Container &new_obj,
-                  int count) {
+                  size_t count) {
     // Verify move into cpy worked
     {
       int fcur = 0;
