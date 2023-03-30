@@ -148,8 +148,7 @@ class string : public ShmContainer {
   string(TYPED_HEADER *header, Allocator *alloc, string &&other) {
     shm_init_header(header, alloc);
     if (alloc_ == other.alloc_) {
-      // memcpy((void*)header_, (void*)other.header_, sizeof(*header_));
-      (*header_) = (*other.header_);
+      memcpy((void *) header_, (void *) other.header_, sizeof(*header_));
       shm_deserialize_main();
       other.SetNull();
     } else {
@@ -163,8 +162,7 @@ class string : public ShmContainer {
     if (this != &other) {
       shm_destroy();
       if (alloc_ == other.alloc_) {
-        // memcpy((void*)header_, (void*)other.header_, sizeof(*header_));
-        (*header_) = (*other.header_);
+        memcpy((void *) header_, (void *) other.header_, sizeof(*header_));
         shm_deserialize_main();
         other.SetNull();
       } else {
