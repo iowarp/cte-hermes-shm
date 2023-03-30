@@ -35,7 +35,7 @@ using hshm::ipc::string;
 template<typename Key, typename Val>
 void UnorderedMapOpTest() {
   Allocator *alloc = alloc_g;
-  auto map_p = hipc::make_uptr<unordered_map<Key, Val>>(alloc);
+  auto map_p = hipc::make_uptr<unordered_map<Key, Val>>(alloc, 5);
   auto &map = *map_p;
 
   // Insert 20 entries into the map (no growth trigger)
@@ -43,6 +43,25 @@ void UnorderedMapOpTest() {
     for (int i = 0; i < 20; ++i) {
       CREATE_KV_PAIR(key, i, val, i);
       map.emplace(key, val);
+    }
+  }
+
+  // Iterate over the map
+  PAGE_DIVIDE("Forward iterate") {
+    std::vector<int> keys, vals;
+    for (auto entry : map) {
+      GET_INT_FROM_KEY(entry->GetKey());
+      GET_INT_FROM_VAL(entry->GetVal());
+      keys.emplace_back(key_ret);
+      vals.emplace_back(val_ret);
+    }
+    REQUIRE(keys.size() == 20);
+    REQUIRE(vals.size() == 20);
+    std::sort(keys.begin(), keys.end());
+    std::sort(vals.begin(), vals.end());
+    for (int i = 0; i < 20; ++i) {
+      REQUIRE(keys[i] == i);
+      REQUIRE(vals[i] == i);
     }
   }
 
@@ -60,26 +79,6 @@ void UnorderedMapOpTest() {
       CREATE_KV_PAIR(key, i, val, i);
       auto iter = map.find(key);
       REQUIRE((*iter)->GetVal() == val);
-    }
-  }
-
-  // Iterate over the map
-  PAGE_DIVIDE("Forward iterate") {
-    int i = 0;
-    std::vector<int> keys, vals;
-    for (auto entry : map) {
-      GET_INT_FROM_KEY(entry->GetKey());
-      GET_INT_FROM_VAL(entry->GetVal());
-      keys.emplace_back(key_ret);
-      vals.emplace_back(val_ret);
-      ++i;
-    }
-    REQUIRE(i == 20);
-    std::sort(keys.begin(), keys.end());
-    std::sort(vals.begin(), vals.end());
-    for (int i = 0; i < 20; ++i) {
-      REQUIRE(keys[i] == i);
-      REQUIRE(vals[i] == i);
     }
   }
 
