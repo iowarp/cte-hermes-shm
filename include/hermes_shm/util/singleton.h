@@ -43,10 +43,6 @@ class Singleton {
     return obj_;
   }
 };
-template <typename T>
-T* Singleton<T>::obj_;
-template <typename T>
-hshm::Mutex Singleton<T>::lock_;
 #define DEFINE_SINGLETON_CC(T)\
   template<> T*\
     hshm::Singleton<T>::obj_ = nullptr;\
@@ -68,8 +64,6 @@ class GlobalSingleton {
     return &obj_;
   }
 };
-template <typename T>
-T GlobalSingleton<T>::obj_;
 #define DEFINE_GLOBAL_SINGLETON_CC(T)\
   template<> T\
     hshm::GlobalSingleton<T>::obj_ = T();
