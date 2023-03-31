@@ -18,59 +18,83 @@
 namespace hshm {
 
 /**
- * The verbosity of the logger indicates how much data will be printed.
- * The higher the verbosity, the more data will be printed and the lower
- * performance will be.
+ * A macro to indicate the verbosity of the logger.
+ * Verbosity indicates how much data will be printed.
+ * The higher the verbosity, the more data will be printed.
  * */
 #ifndef HERMES_LOG_VERBOSITY
 #define HERMES_LOG_VERBOSITY 10
 #endif
-
-/** Logging levels */
-#define kDebug 10  /**< Low-priority debugging information*/
-// ... may want to add more levels here
-#define kInfo 1    /**< Useful information the user should know */
+#if HERMES_LOG_VERBOSITY < 0
+#error "HERMES_LOG_VERBOSITY cannot be less than 0"
+#endif
 
 /** Simplify access to Logger singleton */
 #define HERMES_LOG hshm::EasySingleton<hshm::Logger>::GetInstance()
 
+/** Information Logging levels */
+#define kDebug 10  /**< Low-priority debugging information*/
+// ... may want to add more levels here
+#define kInfo 1    /**< Useful information the user should know */
+
+/** Error Logging Levels */
+#define kFatal 0   /**< A fatal error has occurred */
+#define kError 1   /**< A non-fatal error has occurred */
+#define kWarning 2   /**< Something might be wrong */
+
 /**
+ * Hermes Info (HI) Log
  * LOG_LEVEL indicates the priority of the log.
- * LOG_LEVEL 1 is maximum priority
+ * LOG_LEVEL 0 is considered required
  * LOG_LEVEL 10 is considered debugging priority.
  * */
-#define HLOG(LOG_LEVEL, ...) \
+#define HILOG(LOG_LEVEL, ...) \
   if constexpr(LOG_LEVEL <= HERMES_LOG_VERBOSITY) { \
-    HERMES_LOG->Log(LOG_LEVEL, __func__, __LINE__, __VA_ARGS__); \
+    HERMES_LOG->InfoLog(LOG_LEVEL, __func__, __LINE__, __VA_ARGS__); \
+  }
+
+/**
+ * Hermes Error (HE) Log
+ * LOG_LEVEL indicates the priority of the log.
+ * LOG_LEVEL 0 is considered required
+ * LOG_LEVEL 10 is considered debugging priority.
+ * */
+#define HELOG(LOG_LEVEL, ...) \
+  if constexpr(LOG_LEVEL <= HERMES_LOG_VERBOSITY) { \
+    HERMES_LOG->ErrorLog(LOG_LEVEL, __func__, __LINE__, __VA_ARGS__); \
   }
 
 class Logger {
  public:
   std::string exe_path_;
-  std::string exe_name_;
+  // std::string exe_name_;
   int verbosity_;
 
  public:
   Logger() {
     GetExePath();
-    exe_name_ = std::filesystem::path(exe_path_).filename().string();
-    verbosity_ = kDebug;
+    // exe_name_ = std::filesystem::path(exe_path_).filename().string();
+    int verbosity = kDebug;
     auto verbosity_env = getenv("HERMES_LOG_VERBOSITY");
     if (verbosity_env && strlen(verbosity_env)) {
       try {
-        std::stringstream(verbosity_env) >> verbosity_;
+        verbosity = std::stoi(verbosity_env);
       } catch (...) {
-        verbosity_ = kDebug;
+        verbosity = kDebug;
       }
     }
+    SetVerbosity(verbosity);
   }
 
   void SetVerbosity(int LOG_LEVEL) {
     verbosity_ = LOG_LEVEL;
+    if (verbosity_ < 0) {
+      verbosity_ = 0;
+    }
   }
 
   template<typename ...Args>
-  void Log(int LOG_LEVEL,
+  void InfoLog(int LOG_LEVEL,
            const char *func,
            int line,
            const char *fmt,
@@ -82,6 +106,18 @@ class Logger {
     std::cerr << hshm::Formatter::format(
       "{}:{} {} {} {}\n",
       exe_path_, line, tid, func, msg);
+  }
+
+  template<typename ...Args>
+  void ErrorLog(int LOG_LEVEL,
+               const char *func,
+               int line,
+               const char *fmt,
+               Args&& ...args) {
+    InfoLog(LOG_LEVEL, func, line, fmt, std::forward<Args>(args)...);
+    if (LOG_LEVEL == kFatal) {
+      exit(1);
+    }
   }
 
  private:

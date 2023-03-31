@@ -62,7 +62,7 @@ class AutoTrace {
   void _StartTimer(HighResMonotonicTimer &timer) {
     if constexpr(LOG_LEVEL <= HERMES_LOG_VERBOSITY) {
       timer.Resume();
-      HLOG(LOG_LEVEL, "{}{}",
+      HILOG(LOG_LEVEL, "{}{}",
            fname_,
            internal_name_)
     }
@@ -71,7 +71,7 @@ class AutoTrace {
   void _EndTimer(HighResMonotonicTimer &timer) {
     if constexpr(LOG_LEVEL <= HERMES_LOG_VERBOSITY) {
       timer.Pause();
-      HLOG(LOG_LEVEL, "{}{} {}ns",
+      HILOG(LOG_LEVEL, "{}{} {}ns",
            fname_,
            internal_name_,
            timer.GetNsec())

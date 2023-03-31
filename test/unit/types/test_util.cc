@@ -50,12 +50,17 @@ TEST_CASE("TestAutoTrace") {
 }
 
 TEST_CASE("TestLogger") {
-  HLOG(kInfo, "I'm more likely to be printed: {}", 0)
-  HLOG(kDebug, "I'm not likely to be printed: {}", 10)
+  HILOG(kInfo, "I'm more likely to be printed: {}", 0)
+  HILOG(kDebug, "I'm not likely to be printed: {}", 10)
 
   HERMES_LOG->SetVerbosity(kInfo);
-  HLOG(kInfo, "I'm more likely to be printed (2): {}", 0)
-  HLOG(kDebug, "I won't be printed: {}", 10)
+  HILOG(kInfo, "I'm more likely to be printed (2): {}", 0)
+  HILOG(kDebug, "I won't be printed: {}", 10)
+
+#ifdef TEST_ERRORS
+  HELOG(kError, "I will NOT cause an EXIT!")
+  HELOG(kFatal, "I will cause an EXIT!")
+#endif
 }
 
 TEST_CASE("TestFormatter") {
