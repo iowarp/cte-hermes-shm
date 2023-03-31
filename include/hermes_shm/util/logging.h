@@ -29,6 +29,11 @@ namespace hshm {
 #error "HERMES_LOG_VERBOSITY cannot be less than 0"
 #endif
 
+/** Prints log verbosity at compile time */
+#define XSTR(s) STR(s)
+#define STR(s) #s
+// #pragma message XSTR(HERMES_LOG_VERBOSITY)
+
 /** Simplify access to Logger singleton */
 #define HERMES_LOG hshm::EasySingleton<hshm::Logger>::GetInstance()
 
