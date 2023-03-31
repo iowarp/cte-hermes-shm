@@ -62,16 +62,19 @@ class AutoTrace {
   void _StartTimer(HighResMonotonicTimer &timer) {
     if constexpr(LOG_LEVEL <= HERMES_LOG_VERBOSITY) {
       timer.Resume();
+      HLOG(LOG_LEVEL, "{}{}",
+           fname_,
+           internal_name_)
     }
   }
 
   void _EndTimer(HighResMonotonicTimer &timer) {
     if constexpr(LOG_LEVEL <= HERMES_LOG_VERBOSITY) {
       timer.Pause();
-      std::cout << hshm::Formatter::format("{}{};{}ns\n",
-                                                 fname_,
-                                                 internal_name_,
-                                                 timer.GetNsec());
+      HLOG(LOG_LEVEL, "{}{} {}ns",
+           fname_,
+           internal_name_,
+           timer.GetNsec())
       timer.Reset();
       internal_name_.clear();
     }

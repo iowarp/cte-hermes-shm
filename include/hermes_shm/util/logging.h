@@ -10,6 +10,7 @@
 
 #include <vector>
 #include <iostream>
+#include <iomanip>
 #include <filesystem>
 #include "formatter.h"
 #include "singleton.h"
@@ -28,14 +29,14 @@ namespace hshm {
 /** Logging levels */
 #define kDebug 10  /**< Low-priority debugging information*/
 // ... may want to add more levels here
-#define kInfo 0    /**< Useful information the user should know */
+#define kInfo 1    /**< Useful information the user should know */
 
 /** Simplify access to Logger singleton */
 #define HERMES_LOG hshm::EasySingleton<hshm::Logger>::GetInstance()
 
 /**
  * LOG_LEVEL indicates the priority of the log.
- * LOG_LEVEL 0 is maximum priority
+ * LOG_LEVEL 1 is maximum priority
  * LOG_LEVEL 10 is considered debugging priority.
  * */
 #define HLOG(LOG_LEVEL, ...) \
@@ -52,7 +53,7 @@ class Logger {
  public:
   Logger() {
     GetExePath();
-    exe_name_ = std::filesystem::path(exe_path_).lexically_normal();
+    exe_name_ = std::filesystem::path(exe_path_).filename().string();
     verbosity_ = kDebug;
     auto verbosity_env = getenv("HERMES_LOG_VERBOSITY");
     if (verbosity_env && strlen(verbosity_env)) {
@@ -75,13 +76,12 @@ class Logger {
            const char *fmt,
            Args&& ...args) {
     if (LOG_LEVEL > verbosity_) { return; }
-    std::string text =
+    std::string msg =
       hshm::Formatter::format(fmt, std::forward<Args>(args)...);
     int tid = gettid();
     std::cerr << hshm::Formatter::format(
-      "{} \\033]8;url=file://{}&line={}\\a{}:{} {}\\033]8;;\\a {}",
-      tid, exe_path_, line,
-      exe_name_, line, func, text);
+      "{}:{} {} {} {}\n",
+      exe_path_, line, tid, func, msg);
   }
 
  private:

@@ -27,6 +27,20 @@ TEST_CASE("TestPathParser") {
   REQUIRE(y == "${PATH_PARSER_TEST}/hello");
 }
 
+TEST_CASE("TestTerminal") {
+  std::cout << "\033[1m" << "Bold text" << "\033[0m" << std::endl;
+  std::cout << "\033[4m" << "Underlined text" << "\033[0m" << std::endl;
+  std::cout << "\033[31m" << "Red text" << "\033[0m" << std::endl;
+  std::cout << "\033[32m" << "Green text" << "\033[0m" << std::endl;
+  std::cout << "\033[33m" << "Yellow text" << "\033[0m" << std::endl;
+  std::cout << "\033[34m" << "Blue text" << "\033[0m" << std::endl;
+  std::cout << "\033[35m" << "Magenta text" << "\033[0m" << std::endl;
+  std::cout << "\033[36m" << "Cyan text" << "\033[0m" << std::endl;
+
+  std::cout << "\033]8;;https://www.example.com\a" << "Click here to visit example.com" << "\033]8;;\a" << std::endl;
+
+}
+
 TEST_CASE("TestAutoTrace") {
   AUTO_TRACE(0)
 
