@@ -10,11 +10,10 @@
 * have access to the file, you may request a copy from help@hdfgroup.org.   *
 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-
-#define HERMES_ENABLE_PROFILING 1
 #include <hermes_shm/util/formatter.h>
 #include <hermes_shm/util/path_parser.h>
 #include <hermes_shm/util/auto_trace.h>
+#include <hermes_shm/util/logging.h>
 #include "basic_test.h"
 #include "hermes_shm/util/singleton.h"
 #include <unistd.h>
@@ -34,6 +33,15 @@ TEST_CASE("TestAutoTrace") {
   TIMER_START("Example")
   sleep(1);
   TIMER_END()
+}
+
+TEST_CASE("TestLogger") {
+  HLOG(kInfo, "I'm more likely to be printed: {}", 0)
+  HLOG(kDebug, "I'm not likely to be printed: {}", 10)
+
+  HERMES_LOG->SetVerbosity(kInfo);
+  HLOG(kInfo, "I'm more likely to be printed (2): {}", 0)
+  HLOG(kDebug, "I won't be printed: {}", 10)
 }
 
 TEST_CASE("TestFormatter") {
