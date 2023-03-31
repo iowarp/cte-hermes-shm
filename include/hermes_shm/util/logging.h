@@ -55,7 +55,8 @@ namespace hshm {
  * */
 #define HILOG(LOG_LEVEL, ...) \
   if constexpr(LOG_LEVEL <= HERMES_LOG_VERBOSITY) { \
-    HERMES_LOG->InfoLog(LOG_LEVEL, __func__, __LINE__, __VA_ARGS__); \
+    HERMES_LOG->InfoLog(LOG_LEVEL, __FILE__,        \
+    __func__, __LINE__, __VA_ARGS__); \
   }
 
 /**
@@ -66,18 +67,16 @@ namespace hshm {
  * */
 #define HELOG(LOG_LEVEL, ...) \
   if constexpr(LOG_LEVEL <= HERMES_LOG_VERBOSITY) { \
-    HERMES_LOG->ErrorLog(LOG_LEVEL, __func__, __LINE__, __VA_ARGS__); \
+    HERMES_LOG->ErrorLog(LOG_LEVEL, __FILE__,       \
+    __func__, __LINE__, __VA_ARGS__); \
   }
 
 class Logger {
  public:
-  std::string exe_path_;
-  // std::string exe_name_;
   int verbosity_;
 
  public:
   Logger() {
-    GetExePath();
     // exe_name_ = std::filesystem::path(exe_path_).filename().string();
     int verbosity = kDebug;
     auto verbosity_env = getenv("HERMES_LOG_VERBOSITY");
@@ -100,40 +99,31 @@ class Logger {
 
   template<typename ...Args>
   void InfoLog(int LOG_LEVEL,
-           const char *func,
-           int line,
-           const char *fmt,
-           Args&& ...args) {
+               const char *path,
+               const char *func,
+               int line,
+               const char *fmt,
+               Args&& ...args) {
     if (LOG_LEVEL > verbosity_) { return; }
     std::string msg =
       hshm::Formatter::format(fmt, std::forward<Args>(args)...);
     int tid = gettid();
     std::cerr << hshm::Formatter::format(
       "{}:{} {} {} {}\n",
-      exe_path_, line, tid, func, msg);
+      path, line, tid, func, msg);
   }
 
   template<typename ...Args>
   void ErrorLog(int LOG_LEVEL,
-               const char *func,
-               int line,
-               const char *fmt,
-               Args&& ...args) {
-    InfoLog(LOG_LEVEL, func, line, fmt, std::forward<Args>(args)...);
+                const char *path,
+                const char *func,
+                int line,
+                const char *fmt,
+                Args&& ...args) {
+    InfoLog(LOG_LEVEL, path, func, line, fmt, std::forward<Args>(args)...);
     if (LOG_LEVEL == kFatal) {
       exit(1);
     }
-  }
-
- private:
-  void GetExePath() {
-    std::vector<char> exe_path(PATH_MAX, 0);
-    if (readlink("/proc/self/exe", exe_path.data(), PATH_MAX - 1) == -1) {
-      std::cerr
-        << "Could not introspect the name of this program for logging"
-        << std::endl;
-    }
-    exe_path_ = std::string(exe_path.data());
   }
 };
 
