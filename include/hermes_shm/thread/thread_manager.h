@@ -52,7 +52,7 @@ union NodeThreadId {
   uint64_t as_int_;
 
   NodeThreadId() {
-    bits_.tid_ = HERMES_THREAD_MANAGER->GetThreadStatic()->GetTid();
+    bits_.tid_ = HSHM_THREAD_MANAGER->GetThreadStatic()->GetTid();
     bits_.pid_ = HERMES_SYSTEM_INFO->pid_;
   }
 
