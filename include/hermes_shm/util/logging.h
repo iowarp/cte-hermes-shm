@@ -128,7 +128,33 @@ class Logger {
                 int line,
                 const char *fmt,
                 Args&& ...args) {
-    InfoLog(LOG_LEVEL, path, func, line, fmt, std::forward<Args>(args)...);
+    if (LOG_LEVEL > verbosity_) { return; }
+    std::string level;
+    switch (LOG_LEVEL) {
+      case kWarning: {
+        level = "Warning";
+        break;
+      }
+      case kError: {
+        level = "ERROR";
+        break;
+      }
+      case kFatal: {
+        level = "FATAL";
+        break;
+      }
+      default: {
+        level = "WARNING";
+        break;
+      }
+    }
+
+    std::string msg =
+        hshm::Formatter::format(fmt, std::forward<Args>(args)...);
+    int tid = gettid();
+    std::cerr << hshm::Formatter::format(
+        "{}:{} {} {} {} {} {}\n",
+        path, line, level, tid, func, msg);
     if (LOG_LEVEL == kFatal) {
       exit(1);
     }

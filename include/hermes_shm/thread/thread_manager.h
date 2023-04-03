@@ -18,6 +18,7 @@
 #include "thread_factory.h"
 #include <hermes_shm/constants/data_structure_singleton_macros.h>
 #include <hermes_shm/introspect/system_info.h>
+#include <mutex>
 
 #define US_TO_CLOCKS(x) (x * 56)
 
@@ -29,6 +30,7 @@ class ThreadManager {
  public:
   ThreadType type_;
   std::unique_ptr<ThreadStatic> thread_static_;
+  std::mutex lock_;
 
   ThreadManager() : type_(ThreadType::kPthread) {}
 
@@ -38,7 +40,11 @@ class ThreadManager {
 
   ThreadStatic* GetThreadStatic() {
     if (!thread_static_) {
-      thread_static_ = ThreadStaticFactory::Get(type_);
+      lock_.lock();
+      if (!thread_static_) {
+        thread_static_ = ThreadStaticFactory::Get(type_);
+      }
+      lock_.unlock();
     }
     return thread_static_.get();
   }
