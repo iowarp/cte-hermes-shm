@@ -153,7 +153,7 @@ class Logger {
         hshm::Formatter::format(fmt, std::forward<Args>(args)...);
     int tid = gettid();
     std::cerr << hshm::Formatter::format(
-        "{}:{} {} {} {} {} {}\n",
+        "{}:{} {} {} {} {}\n",
         path, line, level, tid, func, msg);
     if (LOG_LEVEL == kFatal) {
       exit(1);
