@@ -20,12 +20,15 @@
 #include <omp.h>
 #include "hermes_shm/introspect/system_info.h"
 
-namespace hshm {
+namespace hshm::thread_model {
 
 class Argobots : public ThreadModel {
  public:
   /** Default constructor */
-  Argobots() {}
+  Argobots() = default;
+
+  /** Virtual destructor */
+  virtual ~Argobots() = default;
 
   /** Yield the current thread for a period of time */
   void SleepForUs(size_t us) override {
@@ -47,6 +50,6 @@ class Argobots : public ThreadModel {
   }
 };
 
-}  // namespace hshm
+}  // namespace hshm::thread_model
 
 #endif //HERMES_SHM_INCLUDE_HERMES_SHM_THREAD_THALLIUM_H_

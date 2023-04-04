@@ -19,11 +19,17 @@
 #include <omp.h>
 #include "hermes_shm/introspect/system_info.h"
 
-namespace hshm {
+namespace hshm::thread_model {
 
 template<typename FUNC>
 class Pthread : public ThreadModel {
  public:
+  /** Default constructor */
+  Pthread() = default;
+
+  /** Virtual destructor */
+  virtual ~Pthread() = default;
+
   /** Yield the thread for a period of time */
   void SleepForUs(size_t us) override {
     usleep(us);
@@ -41,6 +47,6 @@ class Pthread : public ThreadModel {
   }
 };
 
-}  // namespace hshm
+}  // namespace hshm::thread_model
 
 #endif  // HERMES_THREAD_PTHREAD_H_

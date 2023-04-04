@@ -18,7 +18,7 @@
 #include "argobots.h"
 #include "hermes_shm/util/logging.h"
 
-namespace hshm {
+namespace hshm::thread_model {
 
 class ThreadFactory {
  public:
@@ -47,6 +47,6 @@ class ThreadFactory {
   }
 };
 
-}  // namespace hshm
+}  // namespace hshm::thread_model
 
 #endif  // HERMES_THREAD_THREAD_FACTORY_H_

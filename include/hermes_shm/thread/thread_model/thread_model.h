@@ -30,6 +30,9 @@ enum class ThreadType {
 /** Used to represent tid */
 typedef uint64_t tid_t;
 
+}  // namespace hshm
+
+namespace hshm::thread_model {
 /** Represents the generic operations of a thread */
 class ThreadModel {
  public:
@@ -43,6 +46,6 @@ class ThreadModel {
   virtual tid_t GetTid() = 0;
 };
 
-}  // namespace hshm
+}  // namespace hshm::thread_model
 
 #endif  // HERMES_THREAD_THREAD_H_
