@@ -22,12 +22,16 @@ option(HERMES_ENABLE_COVERAGE "Check how well tests cover code" OFF)
 option(HERMES_ENABLE_DOXYGEN "Check how well the code is documented" ON)
 option(HERMES_CXX_PROFILE "Generate profiling data from benchmarks" OFF)
 option(HERMES_PTHREADS_ENABLED "Support spawning pthreads" ON)
+option(HERMES_DEBUG_LOCK "Used for debugging locks" OFF)
 
 if (HERMES_PTHREADS_ENABLED)
     add_compile_definitions(HERMES_PTHREADS_ENABLED)
 endif()
 if (HERMES_RPC_THALLIUM)
     add_compile_definitions(HERMES_RPC_THALLIUM)
+endif()
+if (HERMES_DEBUG_LOCK)
+    add_compile_definitions(HERMES_DEBUG_LOCK)
 endif()
 
 #------------------------------------------------------------------------------
