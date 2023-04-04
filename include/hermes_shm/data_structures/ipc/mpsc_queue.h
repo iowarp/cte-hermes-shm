@@ -152,7 +152,8 @@ class mpsc_queue : public ShmContainer {
 
   /** Sets this list as empty */
   void SetNull() {
-    queue_->SetNull();
+    header_->head_ = 0;
+    header_->tail_ = 0;
   }
 
   /**====================================
@@ -176,32 +177,42 @@ class mpsc_queue : public ShmContainer {
     // The slot is marked NULL, so pop won't do anything if context switch
     uint64_t head = header_->head_.load();
     uint64_t tail = header_->tail_.fetch_add(1);
-    uint64_t size = tail - head;
+    uint64_t size = tail - head + 1;
 
     // Check if there's space in the queue. Resize if necessary.
     if (size > queue_->size()) {
-      ScopedRwWriteLock resize_lock(header_->lock_);
+      ScopedRwWriteLock resize_lock(header_->lock_, 0);
       if (size > queue_->size()) {
-        queue_->resize(size + 64);
+        uint64_t old_size = queue_->size();
+        uint64_t new_size = (RealNumber(5, 4) * (size + 64)).as_int();
+        auto new_queue =
+          hipc::make_uptr<vector<pair<bitfield32_t, T>>>(new_size);
+        for (uint64_t i = 0; i < old_size; ++i) {
+          uint64_t i_old = (head + i) % old_size;
+          uint64_t i_new = (head + i) % new_size;
+          (*(*new_queue)[i_new]) = std::move(*(*queue_)[i_old]);
+        }
+        (*queue_) = std::move(*new_queue);
       }
     }
 
     // Emplace into queue at our slot
-    ScopedRwReadLock resize_lock(header_->lock_);
+    ScopedRwReadLock resize_lock(header_->lock_, 0);
     uint32_t idx = tail % queue_->size();
     auto iter = queue_->begin() + idx;
-    queue_->emplace(iter,
+    queue_->replace(iter,
                     hshm::PiecewiseConstruct(),
                     make_argpack(),
                     make_argpack(std::forward<Args>(args)...));
 
     // Let pop know that the data is fully prepared
-    (*queue_)[idx]->first_->SetBits(1);
+    Ref<pair<bitfield32_t, T>> entry = (*iter);
+    entry->first_->SetBits(1);
   }
 
   /** Consumer pops the head object */
   bool pop(Ref<T> &val) {
-    ScopedRwReadLock resize_lock(header_->lock_);
+    ScopedRwReadLock resize_lock(header_->lock_, 0);
 
     // Don't pop if there's no entries
     uint64_t head = header_->head_.load();
@@ -213,7 +224,7 @@ class mpsc_queue : public ShmContainer {
 
     // Pop the element, but only if it's marked valid
     uint64_t idx = head % queue_->size();
-    hipc::Ref<std::pair<bitfield32_t, T>> entry = queue_[idx];
+    hipc::Ref<hipc::pair<bitfield32_t, T>> entry = (*queue_)[idx];
     if (entry->first_->Any(1)) {
       (*val) = std::move(*entry->second_);
       entry->first_->Clear();

@@ -497,7 +497,7 @@ mptr<T> make_mptr(Allocator *alloc, Args&& ...args) {
 
 /** Convert a manual pointer to a ref */
 template<typename T>
-Ref<T> to_ref(const mptr<T> &obj) {
+Ref<T> to_ref(mptr<T> &obj) {
   Ref<T> obj_ref;
   obj_ref.shm_deserialize(*obj);
   return obj_ref;
@@ -518,7 +518,7 @@ uptr<T> make_uptr(Allocator *alloc, Args&& ...args) {
 
 /** Convert a manual pointer to a ref */
 template<typename T>
-Ref<T> to_ref(const uptr<T> &obj) {
+Ref<T> to_ref(uptr<T> &obj) {
   Ref<T> obj_ref;
   obj_ref.shm_deserialize(*obj);
   return obj_ref;
