@@ -53,7 +53,7 @@ union RwLockPayload {
 /** A reader-writer lock implementation */
 struct RwLock {
   std::atomic<uint64_t> payload_;
-#ifdef HERMES_LOCK_DEBUG
+#ifdef HERMES_DEBUG_LOCK
   uint32_t owner_;
 #endif
 

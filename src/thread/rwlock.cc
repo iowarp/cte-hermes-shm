@@ -44,7 +44,7 @@ void RwLock::ReadLock(uint32_t owner) {
         expected.as_int_,
         desired.as_int_);
       if (ret) {
-#ifdef HERMES_LOCK_DEBUG
+#ifdef HERMES_DEBUG_LOCK
         owner_ = owner;
 #endif
         return;
@@ -61,7 +61,7 @@ void RwLock::ReadLock(uint32_t owner) {
 void RwLock::ReadUnlock() {
   bool ret;
   RwLockPayload expected, desired;
-#ifdef HERMES_LOCK_DEBUG
+#ifdef HERMES_DEBUG_LOCK
   owner_ = 0;
 #endif
   do {
@@ -97,7 +97,7 @@ void RwLock::WriteLock(uint32_t owner) {
         expected.as_int_,
         desired.as_int_);
       if (ret) {
-#ifdef HERMES_LOCK_DEBUG
+#ifdef HERMES_DEBUG_LOCK
         owner_ = owner;
 #endif
         return;
@@ -119,7 +119,7 @@ void RwLock::WriteLock(uint32_t owner) {
 void RwLock::WriteUnlock() {
   bool ret;
   RwLockPayload expected, desired;
-#ifdef HERMES_LOCK_DEBUG
+#ifdef HERMES_DEBUG_LOCK
   owner_ = 0;
 #endif
   do {

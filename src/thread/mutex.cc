@@ -51,7 +51,7 @@ bool Mutex::TryLock(uint32_t owner) {
     lock_.fetch_sub(1);
     return false;
   }
-#ifdef HERMES_LOCK_DEBUG
+#ifdef HERMES_DEBUG_LOCK
   owner_ = owner;
 #endif
   return true;
@@ -61,7 +61,7 @@ bool Mutex::TryLock(uint32_t owner) {
  * Release the mutex
  * */
 void Mutex::Unlock() {
-#ifdef HERMES_LOCK_DEBUG
+#ifdef HERMES_DEBUG_LOCK
   owner_ = 0;
 #endif
   lock_.fetch_sub(1);

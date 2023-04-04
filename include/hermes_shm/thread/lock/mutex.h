@@ -20,7 +20,7 @@ namespace hshm {
 
 struct Mutex {
   std::atomic<uint32_t> lock_;
-#ifdef HERMES_LOCK_DEBUG
+#ifdef HERMES_DEBUG_LOCK
   uint32_t owner_;
 #endif
 
