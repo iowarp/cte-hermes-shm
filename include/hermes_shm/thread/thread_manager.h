@@ -35,11 +35,11 @@ class ThreadManager {
 
   /** Default constructor */
   ThreadManager() {
-    SetThreadType(ThreadType::kPthread);
+    SetThreadModel(ThreadType::kPthread);
   }
 
   /** Set the threading model of this application */
-  void SetThreadType(ThreadType type) {
+  void SetThreadModel(ThreadType type) {
     lock_.lock();
     if (type_ == type) {
       return;

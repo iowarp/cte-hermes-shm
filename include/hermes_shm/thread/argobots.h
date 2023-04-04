@@ -10,10 +10,11 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_THREAD_PTHREAD_H_
-#define HERMES_THREAD_PTHREAD_H_
+#ifndef HERMES_SHM_INCLUDE_HERMES_SHM_THREAD_THALLIUM_H_
+#define HERMES_SHM_INCLUDE_HERMES_SHM_THREAD_THALLIUM_H_
 
 #include "thread.h"
+#include <thallium.hpp>
 #include <errno.h>
 #include <hermes_shm/util/errors.h>
 #include <omp.h>
@@ -21,43 +22,41 @@
 
 namespace hshm {
 
-template<typename FUNC> class Pthread;
+template<typename FUNC> class Argobots;
 
 /** Parameters passed to the pthread */
 template<typename FUNC>
-struct PthreadParams {
+struct ArgobotsParams {
   FUNC func_;
-  Pthread<FUNC> *obj_;
+  Argobots<FUNC> *obj_;
 
   /** Default constructor */
-  PthreadParams(Pthread<FUNC> *obj, FUNC bind) :
+  ArgobotsParams(Argobots<FUNC> *obj, FUNC bind) :
     func_(bind),
     obj_(obj) {}
 };
 
 template<typename FUNC>
-class Pthread : public Thread {
+class Argobots : public Thread {
  private:
-  pthread_t thread_;
-  PthreadParams<FUNC> params_;
+  ABT_thread thread_;
+  ABT_key key_;
+  ArgobotsParams<FUNC> params_;
 
  public:
   bool started_;
 
  public:
   /** Default constructor */
-  Pthread() = default;
+  Argobots() = default;
 
   /** Spawn constructor */
-  explicit Pthread(FUNC func) : thread_(-1),
-                                params_(this, func),
-                                started_(false) {
-    int ret = pthread_create(&thread_, nullptr,
-                             DoWork, &params_);
-    if (ret != 0) {
-      throw PTHREAD_CREATE_FAILED.format();
-    }
-    while (!started_) {}
+  explicit Argobots(ABT_xstream &xstream, FUNC func)
+  : params_(this, func), started_(false) {
+    ABT_thread_create_on_xstream(xstream,
+                                 DoWork, (void*)&params_,
+                                 ABT_THREAD_ATTR_NULL, &thread_);
+    while(!started_);
   }
 
   /** Pause a thread */
@@ -68,27 +67,17 @@ class Pthread : public Thread {
 
   /** Join the thread */
   void Join() override {
-    void *ret;
-    pthread_join(thread_, &ret);
+    ABT_thread_join(thread_);
   }
 
   /** Set thread affinity to the mask */
   void SetAffinity(const cpu_bitfield &mask) override {
-    int ncpu = HERMES_SYSTEM_INFO->ncpu_;
-    cpu_set_t cpus[ncpu];
-    for (size_t i = 0; i < mask.size(); ++i) {
-      memcpy((void*)&cpus[i],
-             (void*)&mask.bits_[i],
-             sizeof(bitfield32_t));
-    }
-    pthread_setaffinity_np_safe(ncpu, cpus);
+    // TODO(llogan)
   }
 
   /** Get thread affinity according to the mask */
   void GetAffinity(cpu_bitfield &mask) override {
-    pthread_getaffinity_np(thread_,
-                           CPU_SETSIZE,
-                           (cpu_set_t*)mask.bits_);
+    // TODO(llogan)
   }
 
   /** Yield the thread for a period of time */
@@ -98,35 +87,26 @@ class Pthread : public Thread {
 
   /** Yield thread time slice */
   void Yield() override {
-    sched_yield();
+    ABT_thread_yield();
   }
 
   /** Get the TID of the current thread */
   tid_t GetTid() override {
-    return omp_get_thread_num();
-    // return static_cast<tid_t>(pthread_self());
+    return ABT_thread_self(&thread_);
   }
 
  private:
   /** Execute the function */
-  static void* DoWork(void *void_params) {
-    auto params = (*reinterpret_cast<PthreadParams<FUNC>*>(void_params));
+  static void DoWork(void *void_params) {
+    auto params = (*reinterpret_cast<ArgobotsParams<FUNC>*>(void_params));
+    // Start working
     params.obj_->started_ = true;
     if constexpr(!std::is_same_v<FUNC, int>) {
       params.func_();
-    }
-    return nullptr;
-  }
-
-  /** Get the CPU affinity of this thread */
-  inline void pthread_setaffinity_np_safe(int n_cpu, cpu_set_t *cpus) {
-    int ret = pthread_setaffinity_np(thread_, n_cpu, cpus);
-    if (ret != 0) {
-      throw INVALID_AFFINITY.format(strerror(ret));
     }
   }
 };
 
 }  // namespace hshm
 
-#endif  // HERMES_THREAD_PTHREAD_H_
+#endif //HERMES_SHM_INCLUDE_HERMES_SHM_THREAD_THALLIUM_H_

@@ -15,28 +15,50 @@
 
 #include "thread.h"
 #include "pthread.h"
+#include "argobots.h"
 
 namespace hshm {
 
-template<typename BIND=int>
+template<typename FUNC=int>
 class ThreadFactory {
  private:
   ThreadType type_;
-  BIND bind_;
+  FUNC func_;
+#ifdef HERMES_RPC_THALLIUM
+  ABT_xstream *xstream_;
+#endif
+
 
  public:
   /** Create a thread without spawning */
   explicit ThreadFactory(ThreadType type) : type_(type) {}
 
   /** Create and spawn a thread */
-  explicit ThreadFactory(ThreadType type, BIND bind)
-  : type_(type), bind_(bind) {}
+  explicit ThreadFactory(ThreadType type, FUNC func)
+  : type_(type), func_(func) {}
+
+#ifdef HERMES_RPC_THALLIUM
+  /** Create and spawn a thread (argobots) */
+  explicit ThreadFactory(ThreadType type, ABT_xstream &xstream, FUNC func)
+    : xstream_(&xstream), type_(type), func_(func) {}
+#endif
 
   /**  */
   std::unique_ptr<Thread> Get() {
     switch (type_) {
       case ThreadType::kPthread: {
-        return std::make_unique<Pthread<BIND>>(bind_);
+#ifdef HERMES_PTHREADS_ENABLED
+        return std::make_unique<Pthread<FUNC>>(func_);
+#else
+        return nullptr;
+#endif
+      }
+      case ThreadType::kArgobots: {
+#ifdef HERMES_RPC_THALLIUM
+        return std::make_unique<Argobots<FUNC>>(*xstream_, func_);
+#else
+        return nullptr;
+#endif
       }
       default: return nullptr;
     }

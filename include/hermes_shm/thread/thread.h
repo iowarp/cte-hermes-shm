@@ -25,7 +25,8 @@ typedef uint32_t tid_t;
 
 /** Available threads that are mapped */
 enum class ThreadType {
-  kPthread
+  kPthread,
+  kArgobots
 };
 
 /** A bitfield representing CPU affinity */
