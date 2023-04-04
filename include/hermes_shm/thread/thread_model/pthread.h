@@ -10,14 +10,37 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include "basic_test.h"
-#include "omp.h"
-#include "hermes_shm/thread/thread_manager.h"
+#ifndef HERMES_THREAD_PTHREAD_H_
+#define HERMES_THREAD_PTHREAD_H_
 
-TEST_CASE("TestPthread") {
-  HSHM_THREAD_MANAGER->SetThreadModel(hshm::ThreadType::kPthread);
-}
+#include "thread_model.h"
+#include <errno.h>
+#include "hermes_shm/util/errors.h"
+#include <omp.h>
+#include "hermes_shm/introspect/system_info.h"
 
-TEST_CASE("TestArgobots") {
-  HSHM_THREAD_MANAGER->SetThreadModel(hshm::ThreadType::kArgobots);
-}
+namespace hshm {
+
+template<typename FUNC>
+class Pthread : public ThreadModel {
+ public:
+  /** Yield the thread for a period of time */
+  void SleepForUs(size_t us) override {
+    usleep(us);
+  }
+
+  /** Yield thread time slice */
+  void Yield() override {
+    sched_yield();
+  }
+
+  /** Get the TID of the current thread */
+  tid_t GetTid() override {
+    return (tid_t)omp_get_thread_num();
+    // return static_cast<tid_t>(pthread_self());
+  }
+};
+
+}  // namespace hshm
+
+#endif  // HERMES_THREAD_PTHREAD_H_

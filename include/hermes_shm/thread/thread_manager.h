@@ -14,8 +14,8 @@
 #ifndef HERMES_THREAD_THREAD_MANAGER_H_
 #define HERMES_THREAD_THREAD_MANAGER_H_
 
-#include "thread.h"
-#include "thread_factory.h"
+#include "hermes_shm/thread/thread_model/thread_model.h"
+#include "hermes_shm/thread/thread_model/thread_factory.h"
 #include <hermes_shm/constants/data_structure_singleton_macros.h>
 #include <hermes_shm/introspect/system_info.h>
 #include <mutex>
@@ -29,7 +29,7 @@ union NodeThreadId;
 class ThreadManager {
  public:
   ThreadType type_; /**< The type of threads used in this program */
-  std::unique_ptr<Thread>
+  std::unique_ptr<ThreadModel>
     thread_static_; /**< Functions static to all threads */
   std::mutex lock_; /**< Synchronize */
 
@@ -42,10 +42,11 @@ class ThreadManager {
   void SetThreadModel(ThreadType type) {
     lock_.lock();
     if (type_ == type) {
+      lock_.unlock();
       return;
     }
     type_ = type;
-    thread_static_ = ThreadFactory<int>(type).Get();
+    thread_static_ = ThreadFactory::Get(type);
     lock_.unlock();
   }
 

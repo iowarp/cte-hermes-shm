@@ -15,7 +15,7 @@
 
 #include <thallium.hpp>
 #include "hermes_shm/thread/thread_manager.h"
-#include "hermes_shm/thread/thread_factory.h"
+#include "hermes_shm/thread/thread_model/thread_factory.h"
 #include "hermes_shm/data_structures/data_structure.h"
 #include "hermes_shm/data_structures/serialization/thallium.h"
 

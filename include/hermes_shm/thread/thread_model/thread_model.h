@@ -21,45 +21,18 @@
 
 namespace hshm {
 
-typedef uint32_t tid_t;
-
 /** Available threads that are mapped */
 enum class ThreadType {
   kPthread,
   kArgobots
 };
 
-/** A bitfield representing CPU affinity */
-typedef big_bitfield<CPU_SETSIZE> cpu_bitfield;
+/** Used to represent tid */
+typedef uint64_t tid_t;
 
 /** Represents the generic operations of a thread */
-class Thread {
+class ThreadModel {
  public:
-  /** Virtual destructor */
-  virtual ~Thread() = default;
-
-  /** Pause a thread */
-  virtual void Pause() = 0;
-
-  /** Resume a thread */
-  virtual void Resume() = 0;
-
-  /** Join the thread */
-  virtual void Join() = 0;
-
-  /** Set thread affinity to a single CPU */
-  void SetAffinity(int cpu_id) {
-    cpu_bitfield mask;
-    mask.SetBits(cpu_id, 1);
-    SetAffinity(mask);
-  }
-
-  /** Set thread affinity to the mask */
-  virtual void SetAffinity(const cpu_bitfield &mask) = 0;
-
-  /** Get thread affinity according to the mask */
-  virtual void GetAffinity(cpu_bitfield &mask) = 0;
-
   /** Sleep thread for a period of time */
   virtual void SleepForUs(size_t us) = 0;
 

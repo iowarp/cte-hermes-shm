@@ -13,54 +13,36 @@
 #ifndef HERMES_THREAD_THREAD_FACTORY_H_
 #define HERMES_THREAD_THREAD_FACTORY_H_
 
-#include "thread.h"
+#include "thread_model.h"
 #include "pthread.h"
 #include "argobots.h"
+#include "hermes_shm/util/logging.h"
 
 namespace hshm {
 
-template<typename FUNC=int>
 class ThreadFactory {
- private:
-  ThreadType type_;
-  FUNC func_;
-#ifdef HERMES_RPC_THALLIUM
-  ABT_xstream *xstream_;
-#endif
-
-
  public:
-  /** Create a thread without spawning */
-  explicit ThreadFactory(ThreadType type) : type_(type) {}
-
-  /** Create and spawn a thread */
-  explicit ThreadFactory(ThreadType type, FUNC func)
-  : type_(type), func_(func) {}
-
-#ifdef HERMES_RPC_THALLIUM
-  /** Create and spawn a thread (argobots) */
-  explicit ThreadFactory(ThreadType type, ABT_xstream &xstream, FUNC func)
-    : xstream_(&xstream), type_(type), func_(func) {}
-#endif
-
-  /**  */
-  std::unique_ptr<Thread> Get() {
-    switch (type_) {
+  /** Get a thread instance */
+  static std::unique_ptr<ThreadModel> Get(ThreadType type) {
+    switch (type) {
       case ThreadType::kPthread: {
 #ifdef HERMES_PTHREADS_ENABLED
-        return std::make_unique<Pthread<FUNC>>(func_);
+        return std::make_unique<int>();
 #else
         return nullptr;
 #endif
       }
       case ThreadType::kArgobots: {
 #ifdef HERMES_RPC_THALLIUM
-        return std::make_unique<Argobots<FUNC>>(*xstream_, func_);
+        return std::make_unique<Argobots>();
 #else
         return nullptr;
 #endif
       }
-      default: return nullptr;
+      default: {
+        HELOG(kWarning, "No such thread type");
+        return nullptr;
+      }
     }
   }
 };
