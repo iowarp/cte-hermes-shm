@@ -383,7 +383,7 @@ class vector : public ShmContainer {
    * ===================================*/
 
   /** Check if null */
-  bool IsNull() {
+  bool IsNull() const {
     return header_->vec_ptr_.IsNull();
   }
 
