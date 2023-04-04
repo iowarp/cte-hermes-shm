@@ -13,6 +13,7 @@
 
 #include "hermes_shm/thread/lock/rwlock.h"
 #include "hermes_shm/thread/thread_manager.h"
+#include "hermes_shm/util/logging.h"
 
 namespace hshm {
 
@@ -22,9 +23,13 @@ namespace hshm {
 void RwLock::ReadLock() {
   bool ret = false;
   RwLockPayload expected, desired;
-  auto thread_info = HSHM_THREAD_MANAGER->GetThreadStatic();
+  size_t count = 0;
   do {
-    for (int i = 0; i < US_TO_CLOCKS(8); ++i) {
+    if (count > 500) {
+      HILOG(kDebug, "Taking a while");
+      count = 5;
+    }
+    for (int i = 0; i < US_TO_CLOCKS(1); ++i) {
       expected.as_int_ = payload_.load();
       if (expected.IsWriteLocked()) {
         continue;
@@ -36,7 +41,8 @@ void RwLock::ReadLock() {
         desired.as_int_);
       if (ret) { return; }
     }
-    thread_info->Yield();
+    HSHM_THREAD_MANAGER->Yield();
+    ++count;
   } while (true);
 }
 
@@ -62,8 +68,12 @@ void RwLock::ReadUnlock() {
 void RwLock::WriteLock() {
   bool ret = false;
   RwLockPayload expected, desired;
-  auto thread_info = HSHM_THREAD_MANAGER->GetThreadStatic();
+  size_t count = 0;
   do {
+    if (count > 500) {
+      HILOG(kDebug, "Taking a while");
+      count = 5;
+    }
     for (int i = 0; i < US_TO_CLOCKS(8); ++i) {
       expected.as_int_ = payload_.load();
       if (expected.IsReadLocked() || expected.IsWriteLocked()) {
@@ -76,7 +86,13 @@ void RwLock::WriteLock() {
         desired.as_int_);
       if (ret) { return; }
     }
-    thread_info->Yield();
+
+    if (count < 5) {
+      HSHM_THREAD_MANAGER->Yield();
+    } else {
+      usleep(100);
+    }
+    ++count;
   } while (true);
 }
 

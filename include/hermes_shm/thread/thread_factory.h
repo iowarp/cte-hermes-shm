@@ -18,29 +18,26 @@
 
 namespace hshm {
 
-template<typename BIND>
+template<typename BIND=int>
 class ThreadFactory {
  private:
   ThreadType type_;
   BIND bind_;
 
  public:
+  /** Create a thread without spawning */
+  explicit ThreadFactory(ThreadType type) : type_(type) {}
+
+  /** Create and spawn a thread */
   explicit ThreadFactory(ThreadType type, BIND bind)
   : type_(type), bind_(bind) {}
 
+  /**  */
   std::unique_ptr<Thread> Get() {
     switch (type_) {
-      case ThreadType::kPthread: return std::make_unique<Pthread<BIND>>(bind_);
-      default: return nullptr;
-    }
-  }
-};
-
-class ThreadStaticFactory {
- public:
-  static std::unique_ptr<ThreadStatic> Get(ThreadType type) {
-    switch (type) {
-      case ThreadType::kPthread: return std::make_unique<PthreadStatic>();
+      case ThreadType::kPthread: {
+        return std::make_unique<Pthread<BIND>>(bind_);
+      }
       default: return nullptr;
     }
   }

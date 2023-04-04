@@ -28,28 +28,44 @@ union NodeThreadId;
 
 class ThreadManager {
  public:
-  ThreadType type_;
-  std::unique_ptr<ThreadStatic> thread_static_;
-  std::mutex lock_;
+  ThreadType type_; /**< The type of threads used in this program */
+  std::unique_ptr<Thread>
+    thread_static_; /**< Functions static to all threads */
+  std::mutex lock_; /**< Synchronize */
 
-  ThreadManager() : type_(ThreadType::kPthread) {}
-
-  void SetThreadType(ThreadType type) {
-    type_ = type;
+  /** Default constructor */
+  ThreadManager() {
+    SetThreadType(ThreadType::kPthread);
   }
 
-  ThreadStatic* GetThreadStatic() {
-    if (!thread_static_) {
-      lock_.lock();
-      if (!thread_static_) {
-        thread_static_ = ThreadStaticFactory::Get(type_);
-      }
-      lock_.unlock();
+  /** Set the threading model of this application */
+  void SetThreadType(ThreadType type) {
+    lock_.lock();
+    if (type_ == type) {
+      return;
     }
-    return thread_static_.get();
+    type_ = type;
+    thread_static_ = ThreadFactory<int>(type).Get();
+    lock_.unlock();
+  }
+
+  /** Sleep for a period of time (microseconds) */
+  void SleepForUs(size_t us) {
+    thread_static_->SleepForUs(us);
+  }
+
+  /** Call Yield */
+  void Yield() {
+    thread_static_->Yield();
+  }
+
+  /** Call GetTid */
+  tid_t GetTid() {
+    return thread_static_->GetTid();
   }
 };
 
+/** A unique identifier of this thread across processes */
 union NodeThreadId {
   struct {
     uint32_t tid_;
@@ -57,11 +73,13 @@ union NodeThreadId {
   } bits_;
   uint64_t as_int_;
 
+  /** Default constructor */
   NodeThreadId() {
-    bits_.tid_ = HSHM_THREAD_MANAGER->GetThreadStatic()->GetTid();
+    bits_.tid_ = HSHM_THREAD_MANAGER->GetTid();
     bits_.pid_ = HERMES_SYSTEM_INFO->pid_;
   }
 
+  /** Hash function */
   uint32_t hash() {
     return as_int_;
   }

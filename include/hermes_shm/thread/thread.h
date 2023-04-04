@@ -17,28 +17,55 @@
 #include <cstdint>
 #include <memory>
 #include <atomic>
+#include "hermes_shm/types/bitfield.h"
 
 namespace hshm {
 
 typedef uint32_t tid_t;
 
+/** Available threads that are mapped */
 enum class ThreadType {
   kPthread
 };
 
+/** A bitfield representing CPU affinity */
+typedef big_bitfield<CPU_SETSIZE> cpu_bitfield;
+
+/** Represents the generic operations of a thread */
 class Thread {
  public:
-  virtual void Pause() = 0;
-  virtual void Resume() = 0;
-  virtual void Join() = 0;
-  void SetAffinity(int cpu_id) { SetAffinity(cpu_id, 1); }
-  virtual void SetAffinity(int cpu_start, size_t count) = 0;
-};
+  /** Virtual destructor */
+  virtual ~Thread() = default;
 
-class ThreadStatic {
- public:
-  virtual ~ThreadStatic() = default;
+  /** Pause a thread */
+  virtual void Pause() = 0;
+
+  /** Resume a thread */
+  virtual void Resume() = 0;
+
+  /** Join the thread */
+  virtual void Join() = 0;
+
+  /** Set thread affinity to a single CPU */
+  void SetAffinity(int cpu_id) {
+    cpu_bitfield mask;
+    mask.SetBits(cpu_id, 1);
+    SetAffinity(mask);
+  }
+
+  /** Set thread affinity to the mask */
+  virtual void SetAffinity(const cpu_bitfield &mask) = 0;
+
+  /** Get thread affinity according to the mask */
+  virtual void GetAffinity(cpu_bitfield &mask) = 0;
+
+  /** Sleep thread for a period of time */
+  virtual void SleepForUs(size_t us) = 0;
+
+  /** Yield thread time slice */
   virtual void Yield() = 0;
+
+  /** Get the TID of the current thread */
   virtual tid_t GetTid() = 0;
 };
 
