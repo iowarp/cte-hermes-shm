@@ -23,6 +23,8 @@ struct SystemInfo {
   int pid_;
   int ncpu_;
   int page_size_;
+  int uid_;
+  int gid_;
   size_t ram_size_;
 
   SystemInfo() {
@@ -31,6 +33,8 @@ struct SystemInfo {
     page_size_ = getpagesize();
     struct sysinfo info;
     sysinfo(&info);
+    uid_ = getuid();
+    gid_ = getgid();
     ram_size_ = info.totalram;
   }
 };
