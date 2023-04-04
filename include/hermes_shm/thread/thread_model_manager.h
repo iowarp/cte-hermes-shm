@@ -26,7 +26,7 @@ namespace hshm {
 
 union NodeThreadId;
 
-class ThreadManager {
+class ThreadModelManager {
  public:
   ThreadType type_; /**< The type of threads used in this program */
   std::unique_ptr<thread_model::ThreadModel>
@@ -34,7 +34,7 @@ class ThreadManager {
   std::mutex lock_; /**< Synchronize */
 
   /** Default constructor */
-  ThreadManager() {
+  ThreadModelManager() {
     SetThreadModel(ThreadType::kPthread);
   }
 
@@ -47,6 +47,9 @@ class ThreadManager {
     }
     type_ = type;
     thread_static_ = thread_model::ThreadFactory::Get(type);
+    if (thread_static_ == nullptr) {
+      HELOG(kFatal, "Could not load the threading model");
+    }
     lock_.unlock();
   }
 
@@ -76,7 +79,7 @@ union NodeThreadId {
 
   /** Default constructor */
   NodeThreadId() {
-    bits_.tid_ = HSHM_THREAD_MANAGER->GetTid();
+    bits_.tid_ = HERMES_THREAD_MODEL->GetTid();
     bits_.pid_ = HERMES_SYSTEM_INFO->pid_;
   }
 

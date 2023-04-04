@@ -27,7 +27,7 @@ class ThreadFactory {
     switch (type) {
       case ThreadType::kPthread: {
 #ifdef HERMES_PTHREADS_ENABLED
-        return std::make_unique<int>();
+        return std::make_unique<Pthread>();
 #else
         return nullptr;
 #endif

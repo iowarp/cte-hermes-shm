@@ -23,6 +23,7 @@ namespace hshm {
 
 /** Available threads that are mapped */
 enum class ThreadType {
+  kNone,
   kPthread,
   kArgobots
 };

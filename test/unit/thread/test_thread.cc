@@ -12,12 +12,12 @@
 
 #include "basic_test.h"
 #include "omp.h"
-#include "hermes_shm/thread/thread_manager.h"
+#include "hermes_shm/thread/thread_model_manager.h"
 
 TEST_CASE("TestPthread") {
-  HSHM_THREAD_MANAGER->SetThreadModel(hshm::ThreadType::kPthread);
+  HERMES_THREAD_MODEL->SetThreadModel(hshm::ThreadType::kPthread);
 }
 
 TEST_CASE("TestArgobots") {
-  HSHM_THREAD_MANAGER->SetThreadModel(hshm::ThreadType::kArgobots);
+  HERMES_THREAD_MODEL->SetThreadModel(hshm::ThreadType::kArgobots);
 }

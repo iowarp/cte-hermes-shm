@@ -12,25 +12,29 @@
 
 
 #include "hermes_shm/thread/lock.h"
-#include "hermes_shm/thread/thread_manager.h"
+#include "hermes_shm/thread/thread_model_manager.h"
 #include "hermes_shm/util/logging.h"
 
 namespace hshm {
 
+/**====================================
+ * Mutex
+ * ===================================*/
+
 /**
  * Acquire the mutex
  * */
-void Mutex::Lock() {
+void Mutex::Lock(uint32_t owner) {
   size_t count = 0;
   do {
-    if (count > 500) {
+    if (count > US_TO_CLOCKS(1000000)) {
       HILOG(kDebug, "Taking a while");
       count = 5;
     }
-    for (int i = 0; i < US_TO_CLOCKS(1); ++i) {
-      if (TryLock()) { return; }
+    for (int i = 0; i < 1; ++i) {
+      if (TryLock(owner)) { return; }
     }
-    HSHM_THREAD_MANAGER->Yield();
+    HERMES_THREAD_MODEL->Yield();
     ++count;
   } while (true);
 }
@@ -38,13 +42,18 @@ void Mutex::Lock() {
 /**
  * Attempt to acquire the mutex
  * */
-bool Mutex::TryLock() {
-  if (lock_.load() != 0) return false;
+bool Mutex::TryLock(uint32_t owner) {
+  if (lock_.load() != 0) {
+    return false;
+  }
   uint32_t tkt = lock_.fetch_add(1);
   if (tkt != 0) {
     lock_.fetch_sub(1);
     return false;
   }
+#ifdef HERMES_LOCK_DEBUG
+  owner_ = owner;
+#endif
   return true;
 }
 
@@ -55,16 +64,16 @@ void Mutex::Unlock() {
   lock_.fetch_sub(1);
 }
 
-/**
- * SCOPED MUTEX
- * */
+/**====================================
+ * Scoped Mutex
+ * ===================================*/
 
 /**
  * Constructor
  * */
-ScopedMutex::ScopedMutex(Mutex &lock)
+ScopedMutex::ScopedMutex(Mutex &lock, uint32_t owner)
 : lock_(lock), is_locked_(false) {
-  Lock();
+  Lock(owner);
 }
 
 /**
@@ -77,9 +86,9 @@ ScopedMutex::~ScopedMutex() {
 /**
  * Acquire the mutex
  * */
-void ScopedMutex::Lock() {
+void ScopedMutex::Lock(uint32_t owner) {
   if (!is_locked_) {
-    lock_.Lock();
+    lock_.Lock(owner);
     is_locked_ = true;
   }
 }
@@ -87,9 +96,9 @@ void ScopedMutex::Lock() {
 /**
  * Attempt to acquire the mutex
  * */
-bool ScopedMutex::TryLock() {
+bool ScopedMutex::TryLock(uint32_t owner) {
   if (!is_locked_) {
-    is_locked_ = lock_.TryLock();
+    is_locked_ = lock_.TryLock(owner);
   }
   return is_locked_;
 }

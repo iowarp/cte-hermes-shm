@@ -55,7 +55,6 @@ namespace hshm {
   const Error DOUBLE_FREE("Freeing the same memory twice!");
 
   const Error UNORDERED_MAP_CANT_FIND("Could not find key in unordered_map");
-  const Error CANNOT_SPAWN_THREAD("Cannot spawn the thread");
 }  // namespace hshm
 
 #endif

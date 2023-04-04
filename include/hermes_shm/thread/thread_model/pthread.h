@@ -21,7 +21,6 @@
 
 namespace hshm::thread_model {
 
-template<typename FUNC>
 class Pthread : public ThreadModel {
  public:
   /** Default constructor */
