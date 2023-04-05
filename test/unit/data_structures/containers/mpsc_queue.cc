@@ -49,8 +49,8 @@ class QueueTestSuite {
 
     // Consume everything
     while(entries.size() < total_size) {
-      bool success = queue_->pop(entry_ref);
-      if (!success) {
+      auto qtok = queue_->pop(entry_ref);
+      if (qtok.IsNull()) {
         HERMES_THREAD_MODEL->Yield();
         continue;
       }
@@ -59,7 +59,7 @@ class QueueTestSuite {
     }
 
     // Ensure there's no data left in the queue
-    REQUIRE(!queue_->pop(entry_ref));
+    REQUIRE(queue_->pop(entry_ref).IsNull());
 
     // Ensure that all elements are here
     if (!inorder) {
