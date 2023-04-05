@@ -29,10 +29,12 @@ void RwLock::ReadLock(uint32_t owner) {
   RwLockPayload expected, desired;
   size_t count = 0;
   do {
+#ifdef HERMES_DEBUG_LOCK
     if (count > US_TO_CLOCKS(1000000)) {
       HILOG(kDebug, "Taking a while");
       count = 5;
     }
+#endif
     for (int i = 0; i < 1; ++i) {
       expected.as_int_ = payload_.load();
       if (expected.IsWriteLocked()) {
@@ -82,10 +84,12 @@ void RwLock::WriteLock(uint32_t owner) {
   RwLockPayload expected, desired;
   size_t count = 0;
   do {
+#ifdef HERMES_DEBUG_LOCK
     if (count > US_TO_CLOCKS(1000000)) {
       HILOG(kDebug, "Taking a while");
       count = 5;
     }
+#endif
     for (int i = 0; i < 1; ++i) {
       expected.as_int_ = payload_.load();
       if (expected.IsReadLocked() || expected.IsWriteLocked()) {
