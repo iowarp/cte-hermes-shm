@@ -23,17 +23,17 @@ target_link_libraries(test_data_structure_mpi_exec
 
 # VECTOR TESTS
 add_test(NAME test_vector_of_int_mpi COMMAND
-        mpirun -n 4 ${CMAKE_CURRENT_BINARY_DIR}/test_data_structure_mpi_exec "VectorOfIntMpi")
+        mpirun -n 4 ${CMAKE_BINARY_DIR}/bin/test_data_structure_mpi_exec "VectorOfIntMpi")
 add_test(NAME test_vector_of_string_mpi COMMAND
-        mpirun -n 1  ${CMAKE_CURRENT_BINARY_DIR}/test_data_structure_mpi_exec "VectorOfStringMpi")
+        mpirun -n 1  ${CMAKE_BINARY_DIR}/bin/test_data_structure_mpi_exec "VectorOfStringMpi")
 
 # LIST TESTS
 add_test(NAME test_list_of_int_mpi COMMAND
-        mpirun -n 4 ${CMAKE_CURRENT_BINARY_DIR}/test_data_structure_mpi_exec "ListOfIntMpi")
+        mpirun -n 4 ${CMAKE_BINARY_DIR}/bin/test_data_structure_mpi_exec "ListOfIntMpi")
 add_test(NAME test_list_of_string_mpi COMMAND
-        mpirun -n 2 ${CMAKE_CURRENT_BINARY_DIR}/test_data_structure_mpi_exec "ListOfStringMpi")
+        mpirun -n 2 ${CMAKE_BINARY_DIR}/bin/test_data_structure_mpi_exec "ListOfStringMpi")
 
-message("mpirun -n 1 ${CMAKE_CURRENT_BINARY_DIR}/test_data_structure_mpi_exec ListOfStringMpi")
+message("mpirun -n 1 ${CMAKE_BINARY_DIR}/bin/test_data_structure_mpi_exec ListOfStringMpi")
 
 #------------------------------------------------------------------------------
 # Install Targets

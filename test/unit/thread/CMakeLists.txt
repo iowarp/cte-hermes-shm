@@ -23,7 +23,7 @@ target_link_libraries(test_thread_exec
 # Test Cases
 #------------------------------------------------------------------------------
 add_test(NAME test_thread COMMAND
-        ${CMAKE_CURRENT_BINARY_DIR}/test_thread_exec)
+        ${CMAKE_BINARY_DIR}/bin/test_thread_exec)
 
 #------------------------------------------------------------------------------
 # Install Targets

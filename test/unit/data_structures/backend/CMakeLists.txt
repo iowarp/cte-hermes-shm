@@ -21,11 +21,11 @@ target_link_libraries(test_memory_exec
 #------------------------------------------------------------------------------
 
 add_test(NAME test_memory_slots COMMAND
-        mpirun -n 2 ${CMAKE_CURRENT_BINARY_DIR}/test_memory_exec "MemorySlot")
+        mpirun -n 2 ${CMAKE_BINARY_DIR}/bin/test_memory_exec "MemorySlot")
 add_test(NAME test_reserve COMMAND
-        ${CMAKE_CURRENT_BINARY_DIR}/test_memory_exec "BackendReserve")
+        ${CMAKE_BINARY_DIR}/bin/test_memory_exec "BackendReserve")
 add_test(NAME test_memory_manager COMMAND
-        mpirun -n 2 ${CMAKE_CURRENT_BINARY_DIR}/test_memory_exec "MemoryManager")
+        mpirun -n 2 ${CMAKE_BINARY_DIR}/bin/test_memory_exec "MemoryManager")
 
 #------------------------------------------------------------------------------
 # Install Targets

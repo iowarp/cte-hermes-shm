@@ -6,7 +6,6 @@ set(CMAKE_CXX_STANDARD 17)
 #------------------------------------------------------------------------------
 # Build Tests
 #------------------------------------------------------------------------------
-
 set (LIBS
         hermes_shm_data_structures
         Catch2::Catch2
@@ -22,7 +21,6 @@ target_link_libraries(test_thallium_server ${LIBS})
 #------------------------------------------------------------------------------
 # Test Cases
 #------------------------------------------------------------------------------
-
 add_executable(test_thallium_exec
         ${TEST_MAIN}/main.cc
         test_init.cc
@@ -33,7 +31,7 @@ target_link_libraries(test_thallium_exec ${LIBS})
 
 add_test(NAME test_thallium COMMAND
         bash ${CMAKE_CURRENT_SOURCE_DIR}/test_thallium.sh
-        "${CMAKE_CURRENT_BINARY_DIR}")
+        "${CMAKE_BINARY_DIR}")
 
 #------------------------------------------------------------------------------
 # Install Targets

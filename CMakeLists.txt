@@ -35,6 +35,19 @@ if (HERMES_DEBUG_LOCK)
 endif()
 
 #------------------------------------------------------------------------------
+# Setup CMake Environment
+#------------------------------------------------------------------------------
+if(NOT HERMES_EXTERNALLY_CONFIGURED)
+    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY
+            ${PROJECT_BINARY_DIR}/bin CACHE PATH "Single Directory for all Executables.")
+    set(EXECUTABLE_OUTPUT_PATH ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY
+            ${PROJECT_BINARY_DIR}/bin CACHE PATH "Single Directory for all Libraries")
+    set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY
+            ${PROJECT_BINARY_DIR}/bin CACHE PATH "Single Directory for all static libraries.")
+endif()
+
+#------------------------------------------------------------------------------
 # Setup install and output Directories
 #------------------------------------------------------------------------------
 if(NOT HERMES_INSTALL_BIN_DIR)
@@ -144,7 +157,7 @@ if (NOT IS_HERMES_MAIN)
         include(UseDoxygenDoc)
         add_doxygen_doc(
                 BUILD_DIR
-                ${CMAKE_CURRENT_BINARY_DIR}/_build
+                ${CMAKE_BINARY_DIR}/bin/_build
                 DOXY_FILE
                 ${CMAKE_CURRENT_SOURCE_DIR}/doc/Doxyfile.in
                 TARGET_NAME

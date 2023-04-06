@@ -27,7 +27,7 @@ set(ALLOCATORS
         ScalablePageAllocator)
 foreach(ALLOCATOR ${ALLOCATORS})
     add_test(NAME test_${ALLOCATOR} COMMAND
-            ${CMAKE_CURRENT_BINARY_DIR}/test_allocator_exec "${ALLOCATOR}")
+            ${CMAKE_BINARY_DIR}/bin/test_allocator_exec "${ALLOCATOR}")
 endforeach()
 
 # Multi-Thread ALLOCATOR tests
@@ -36,7 +36,7 @@ set(MT_ALLOCATORS
         ScalablePageAllocator)
 foreach(ALLOCATOR ${MT_ALLOCATORS})
     add_test(NAME test_${ALLOCATOR}_4t COMMAND
-            ${CMAKE_CURRENT_BINARY_DIR}/test_allocator_exec "${ALLOCATOR}Multithreaded")
+            ${CMAKE_BINARY_DIR}/bin/test_allocator_exec "${ALLOCATOR}Multithreaded")
 endforeach()
 
 #------------------------------------------------------------------------------
