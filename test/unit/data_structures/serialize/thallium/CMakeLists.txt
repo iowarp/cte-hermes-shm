@@ -3,6 +3,10 @@ project(hermes_shm)
 
 set(CMAKE_CXX_STANDARD 17)
 
+#------------------------------------------------------------------------------
+# Build Tests
+#------------------------------------------------------------------------------
+
 set (LIBS
         hermes_shm_data_structures
         Catch2::Catch2
@@ -14,6 +18,10 @@ add_executable(test_thallium_server server.cc)
 add_dependencies(test_thallium_server
         hermes_shm_data_structures)
 target_link_libraries(test_thallium_server ${LIBS})
+
+#------------------------------------------------------------------------------
+# Test Cases
+#------------------------------------------------------------------------------
 
 add_executable(test_thallium_exec
         ${TEST_MAIN}/main.cc

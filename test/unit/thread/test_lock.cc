@@ -52,7 +52,7 @@ void barrier_for_reads(std::vector<int> &tid_start, size_t left) {
 
 void RwLockTest(int producers, int consumers) {
   size_t nthreads = producers + consumers;
-  size_t loop_count = US_TO_CLOCKS(1000000);
+  size_t loop_count = 100000;
   size_t count = 0;
   RwLock lock;
 

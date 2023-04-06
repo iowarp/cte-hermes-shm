@@ -3,6 +3,10 @@ project(hermes_shm)
 
 set(CMAKE_CXX_STANDARD 17)
 
+#------------------------------------------------------------------------------
+# Test Cases
+#------------------------------------------------------------------------------
+
 add_executable(test_data_structure_mpi_exec
         ${TEST_MAIN}/main_mpi.cc
         test_init.cc
@@ -12,6 +16,10 @@ add_executable(test_data_structure_mpi_exec
 add_dependencies(test_data_structure_mpi_exec hermes_shm_data_structures)
 target_link_libraries(test_data_structure_mpi_exec
         hermes_shm_data_structures Catch2::Catch2 MPI::MPI_CXX OpenMP::OpenMP_CXX)
+
+#------------------------------------------------------------------------------
+# Build Tests
+#------------------------------------------------------------------------------
 
 # VECTOR TESTS
 add_test(NAME test_vector_of_int_mpi COMMAND

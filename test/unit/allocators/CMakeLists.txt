@@ -3,6 +3,10 @@ project(hermes_shm)
 
 set(CMAKE_CXX_STANDARD 17)
 
+#------------------------------------------------------------------------------
+# Build Tests
+#------------------------------------------------------------------------------
+
 add_executable(test_allocator_exec
         ${TEST_MAIN}/main.cc
         test_init.cc
@@ -11,6 +15,10 @@ add_executable(test_allocator_exec
 add_dependencies(test_allocator_exec hermes_shm_data_structures)
 target_link_libraries(test_allocator_exec
         hermes_shm_data_structures Catch2::Catch2 MPI::MPI_CXX OpenMP::OpenMP_CXX)
+
+#------------------------------------------------------------------------------
+# Test Cases
+#------------------------------------------------------------------------------
 
 # ALLOCATOR tests
 set(ALLOCATORS
