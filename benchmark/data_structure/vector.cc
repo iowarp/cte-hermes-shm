@@ -178,8 +178,10 @@ class VectorTest {
     t.Resume();
     if constexpr(IS_SHM_ARCHIVEABLE(VecT)) {
       auto vec2 = hipc::make_uptr<VecT>(*vec_);
+      USE(vec2);
     } else {
       VecT vec2(*vec_);
+      USE(vec2);
     }
     t.Pause();
 
@@ -216,7 +218,7 @@ class VectorTest {
 
   /** Output as CSV */
   void TestOutput(const std::string &test_name, Timer &t) {
-    HIPRINT("{}, {}, {}, {}\n",
+    HIPRINT("{},{},{},{}\n",
             test_name, vec_type_, internal_type_, t.GetMsec())
   }
 

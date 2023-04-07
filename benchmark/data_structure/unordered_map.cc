@@ -67,12 +67,13 @@ class UnorderedMapTest {
 
   /** Run the tests */
   void Test() {
-    AllocateTest(1000000);
-    EmplaceTest(1000000);
-    GetTest(1000000);
-    ForwardIteratorTest(1000000);
-    CopyTest(1000000);
-    MoveTest(1000000);
+    size_t count = 100000;
+    AllocateTest(count);
+    EmplaceTest(count);
+    GetTest(count);
+    ForwardIteratorTest(count);
+    CopyTest(count);
+    MoveTest(count);
   }
 
   /**====================================
@@ -95,6 +96,8 @@ class UnorderedMapTest {
   /** Emplace performance */
   void EmplaceTest(size_t count) {
     Timer t;
+    Allocate();
+
     t.Resume();
     Emplace(count);
     t.Pause();
@@ -196,8 +199,7 @@ class UnorderedMapTest {
 
   /** Output as CSV */
   void TestOutput(const std::string &test_name, Timer &t) {
-    map_->clear();
-    HIPRINT("{}, {}, {}, {}",
+    HIPRINT("{},{},{},{}\n",
             test_name, map_type_, internal_type_, t.GetMsec())
   }
 

@@ -12,10 +12,7 @@ add_executable(benchmark_data_structures
         string.cc
         list.cc
         vector.cc
-        # manual_ptr.cc
-        # unique_ptr.cc
         unordered_map.cc
-        # unordered_map_thread.cc
 )
 add_dependencies(benchmark_data_structures hermes_shm_data_structures)
 target_link_libraries(benchmark_data_structures
