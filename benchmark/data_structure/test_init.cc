@@ -14,16 +14,17 @@
 #include "hermes_shm/data_structures/ipc/vector.h"
 #include "hermes_shm/memory/allocator/stack_allocator.h"
 
-std::unique_ptr<bipc::void_allocator> alloc_inst_g;
-std::unique_ptr<bipc::managed_shared_memory> segment_g;
-
 void MainPretest() {
   // Boost shared memory
-  bipc::shared_memory_object::remove("HermesBoostBench");
-  segment_g = std::make_unique<bipc::managed_shared_memory>(
-    bipc::create_only, "HermesBoostBench", GIGABYTES(4));
-  alloc_inst_g = std::make_unique<bipc::void_allocator>(
-    segment_g->get_segment_manager());
+  BOOST_SEGMENT;
+  BOOST_ALLOCATOR(char);
+  BOOST_ALLOCATOR(size_t);
+  BOOST_ALLOCATOR(std::string);
+  BOOST_ALLOCATOR(bipc_string);
+  BOOST_ALLOCATOR((std::pair<size_t, char>));
+  BOOST_ALLOCATOR((std::pair<size_t, size_t>));
+  BOOST_ALLOCATOR((std::pair<size_t, std::string>));
+  BOOST_ALLOCATOR((std::pair<size_t, bipc_string>));
 
   // hermes shared memory
   std::string shm_url = "HermesBench";
