@@ -85,6 +85,7 @@ class UnorderedMapTest {
     t.Resume();
     for (size_t i = 0; i < count; ++i) {
       Allocate();
+      Destroy();
     }
     t.Pause();
 
@@ -99,6 +100,7 @@ class UnorderedMapTest {
     t.Pause();
 
     TestOutput("Emplace", t);
+    Destroy();
   }
 
   /** Get performance */
@@ -116,6 +118,7 @@ class UnorderedMapTest {
     t.Pause();
 
     TestOutput("FixedGet", t);
+    Destroy();
   }
 
   /** Iterator performance */
@@ -142,6 +145,7 @@ class UnorderedMapTest {
     t.Pause();
 
     TestOutput("ForwardIterator", t);
+    Destroy();
   }
 
   /** Copy performance */
@@ -163,6 +167,7 @@ class UnorderedMapTest {
     t.Pause();
 
     TestOutput("Copy", t);
+    Destroy();
   }
 
   /** Move performance */
@@ -181,6 +186,7 @@ class UnorderedMapTest {
     t.Pause();
 
     TestOutput("Move", t);
+    Destroy();
   }
 
  private:
@@ -227,11 +233,14 @@ class UnorderedMapTest {
   void Allocate() {
     if constexpr(std::is_same_v<MapT, hipc::unordered_map<size_t, T>>) {
       map_ptr_ = hipc::make_mptr<MapT>();
+      map_ = map_ptr_.get();
     } else if constexpr(std::is_same_v<MapT, std::unordered_map<size_t, T>>) {
       map_ptr_ = new std::unordered_map<size_t, T>();
+      map_ = map_ptr_;
     } else if constexpr (std::is_same_v<MapT, bipc_unordered_map<size_t, T>>) {
       map_ptr_ = BOOST_SEGMENT->construct<MapT>("BoostMap")(
         BOOST_ALLOCATOR((std::pair<size_t, T>)));
+      map_ = map_ptr_;
     }
   }
 
@@ -263,6 +272,6 @@ void FullUnorderedMapTest() {
   UnorderedMapTest<hipc::string, hipc::unordered_map<size_t, hipc::string>>().Test();
 }
 
-TEST_CASE("VectorBenchmark") {
+TEST_CASE("UnorderedMapBenchmark") {
   FullUnorderedMapTest();
 }

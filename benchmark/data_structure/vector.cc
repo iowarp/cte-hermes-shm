@@ -52,33 +52,25 @@ class VectorTest {
       vec_type_ = "std::vector";
     } else if constexpr(std::is_same_v<hipc::vector<T>, VecT>) {
       vec_type_ = "hipc::vector";
-    } else if constexpr(std::is_same_v<bipc::vector<T>, VecT>) {
-      vec_type_ = "bipc::vector";
+    } else if constexpr(std::is_same_v<bipc_vector<T>, VecT>) {
+      vec_type_ = "bipc_vector";
     } else {
       std::cout << "INVALID: none of the vector tests matched" << std::endl;
       return;
     }
-
-    if constexpr(std::is_same_v<T, hipc::string>) {
-      internal_type_ = "hipc::string";
-    } else if constexpr(std::is_same_v<T, std::string>) {
-      internal_type_ = "std::string";
-    } else if constexpr(std::is_same_v<T, bipc_string>) {
-      internal_type_ = "bipc::string";
-    } else if constexpr(std::is_same_v<T, int>) {
-      internal_type_ = "int";
-    }
+    internal_type_ = InternalTypeName<T>::Get();
   }
 
   /** Run the tests */
   void Test() {
-    AllocateTest(1000000);
-    ResizeTest(1000000);
-    ReserveEmplaceTest(1000000);
-    GetTest(1000000);
-    ForwardIteratorTest(1000000);
-    CopyTest(1000000);
-    MoveTest(1000000);
+    size_t count = 100000;
+    AllocateTest(count);
+    // ResizeTest(count);
+    ReserveEmplaceTest(count);
+    GetTest(count);
+    ForwardIteratorTest(count);
+    CopyTest(count);
+    MoveTest(count);
   }
 
   /**====================================
@@ -91,11 +83,11 @@ class VectorTest {
     t.Resume();
     for (size_t i = 0; i < count; ++i) {
       Allocate();
+      Destroy();
     }
     t.Pause();
 
     TestOutput("Allocate", t);
-    Destroy();
   }
 
   /** Test the performance of a resize */
@@ -105,7 +97,7 @@ class VectorTest {
 
     Allocate();
     t.Resume();
-    // vec_->resize(count);
+    vec_->resize(count);
     t.Pause();
 
     TestOutput("FixedResize", t);
@@ -224,7 +216,7 @@ class VectorTest {
 
   /** Output as CSV */
   void TestOutput(const std::string &test_name, Timer &t) {
-    HIPRINT("{}, {}, {}, {}",
+    HIPRINT("{}, {}, {}, {}\n",
             test_name, vec_type_, internal_type_, t.GetMsec())
   }
 
@@ -249,7 +241,7 @@ class VectorTest {
       if constexpr(std::is_same_v<VecT, std::vector<T>>) {
         vec_->emplace_back(var.Get());
       } else if constexpr(std::is_same_v<VecT, bipc_vector<T>>) {
-        // vec_->emplace_back(var.Get());
+        vec_->emplace_back(var.Get());
       } else if constexpr(std::is_same_v<VecT, hipc::vector<T>>) {
         vec_->emplace_back(var.Get());
       }
@@ -260,11 +252,14 @@ class VectorTest {
   void Allocate() {
     if constexpr(std::is_same_v<VecT, hipc::vector<T>>) {
       vec_ptr_ = hipc::make_mptr<VecT>();
+      vec_ = vec_ptr_.get();
     } else if constexpr(std::is_same_v<VecT, std::vector<T>>) {
       vec_ptr_ = new std::vector<T>();
-    } else if constexpr (std::is_same_v<VecT, bipc::vector<T>>) {
+      vec_ = vec_ptr_;
+    } else if constexpr (std::is_same_v<VecT, bipc_vector<T>>) {
       vec_ptr_ = BOOST_SEGMENT->construct<VecT>("BoostVector")(
         BOOST_ALLOCATOR((std::pair<int, T>)));
+      vec_ = vec_ptr_;
     }
   }
 
@@ -274,9 +269,7 @@ class VectorTest {
       vec_ptr_.shm_destroy();
     } else if constexpr(std::is_same_v<VecT, std::vector<T>>) {
       delete vec_ptr_;
-    } else if constexpr (std::is_same_v<VecT, boost::container::vector<T>>) {
-      delete vec_ptr_;
-    } else if constexpr (std::is_same_v<VecT, bipc::vector<T>>) {
+    } else if constexpr (std::is_same_v<VecT, bipc_vector<T>>) {
       BOOST_SEGMENT->destroy<VecT>("BoostVector");
     }
   }
@@ -284,16 +277,16 @@ class VectorTest {
 
 void FullVectorTest() {
   // std::vector tests
-  VectorTest<int, std::vector<size_t>>().Test();
+  VectorTest<size_t, std::vector<size_t>>().Test();
   VectorTest<std::string, std::vector<std::string>>().Test();
 
   // boost::ipc::vector tests
-  VectorTest<int, bipc_vector<size_t>>().Test();
+  VectorTest<size_t, bipc_vector<size_t>>().Test();
   VectorTest<std::string, bipc_vector<std::string>>().Test();
   VectorTest<bipc_string, bipc_vector<bipc_string>>().Test();
 
   // hipc::vector tests
-  VectorTest<int, hipc::vector<size_t>>().Test();
+  VectorTest<size_t, hipc::vector<size_t>>().Test();
   VectorTest<std::string, hipc::vector<std::string>>().Test();
   VectorTest<hipc::string, hipc::vector<hipc::string>>().Test();
 }

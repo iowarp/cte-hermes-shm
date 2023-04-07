@@ -19,7 +19,6 @@
 TEST_CASE("TestMutexTryLock") {
   Timer t;
   t.Resume();
-  size_t j = 0;
   size_t ops = (1ull << 26);
   hshm::Mutex lock;
   for (size_t i = 0; i < ops; ++i) {
@@ -33,7 +32,6 @@ TEST_CASE("TestMutexTryLock") {
 TEST_CASE("TestMutex") {
   Timer t;
   t.Resume();
-  size_t j = 0;
   size_t ops = (1ull << 26);
   hshm::Mutex lock;
   for (size_t i = 0; i < ops; ++i) {
@@ -46,7 +44,6 @@ TEST_CASE("TestMutex") {
 TEST_CASE("TestRwReadLock") {
   Timer t;
   t.Resume();
-  size_t j = 0;
   size_t ops = (1ull << 26);
   hshm::RwLock lock_;
   for (size_t i = 0; i < ops; ++i) {
@@ -59,7 +56,6 @@ TEST_CASE("TestRwReadLock") {
 TEST_CASE("TestRwWriteLock") {
   Timer t;
   t.Resume();
-  size_t j = 0;
   size_t ops = (1ull << 26);
   hshm::RwLock lock_;
   for (size_t i = 0; i < ops; ++i) {

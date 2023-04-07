@@ -32,6 +32,8 @@ void MainPretest() {
   auto mem_mngr = HERMES_MEMORY_MANAGER;
   mem_mngr->CreateBackend<hipc::PosixShmMmap>(
     MemoryManager::kDefaultBackendSize, shm_url);
+  mem_mngr->CreateAllocator<hipc::ScalablePageAllocator>(
+    shm_url, alloc_id, 0);
 }
 
 void MainPosttest() {
