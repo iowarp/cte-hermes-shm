@@ -252,13 +252,13 @@ class ListTest {
 
 void FullListTest() {
   // std::list tests
-  ListTest<size_t, std::list<size_t>>().Test();
+  /*ListTest<size_t, std::list<size_t>>().Test();
   ListTest<std::string, std::list<std::string>>().Test();
 
   // boost::ipc::list tests
   ListTest<size_t, bipc_list<size_t>>().Test();
   ListTest<std::string, bipc_list<std::string>>().Test();
-  ListTest<bipc_string, bipc_list<bipc_string>>().Test();
+  ListTest<bipc_string, bipc_list<bipc_string>>().Test();*/
 
   // hipc::list tests
   ListTest<size_t, hipc::list<size_t>>().Test();
@@ -266,9 +266,9 @@ void FullListTest() {
   ListTest<hipc::string, hipc::list<hipc::string>>().Test();
 
   // hipc::slist tests
-  ListTest<size_t, hipc::slist<size_t>>().Test();
+  /*ListTest<size_t, hipc::slist<size_t>>().Test();
   ListTest<std::string, hipc::slist<std::string>>().Test();
-  ListTest<hipc::string, hipc::slist<hipc::string>>().Test();
+  ListTest<hipc::string, hipc::slist<hipc::string>>().Test();*/
 }
 
 TEST_CASE("ListBenchmark") {

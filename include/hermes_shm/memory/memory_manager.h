@@ -25,11 +25,13 @@ namespace hshm::ipc {
 
 class MemoryManager {
  public:
-  /** The default amount of memory a single allocator manages */
-  static const size_t kDefaultBackendSize = GIGABYTES(64);
-
   /** Default constructor. */
   MemoryManager() = default;
+
+  /** Default backend size */
+  static size_t GetDefaultBackendSize() {
+    return HERMES_SYSTEM_INFO->ram_size_;
+  }
 
   /**
    * Create a memory backend. Memory backends are divided into slots.
@@ -94,6 +96,13 @@ class MemoryManager {
    * */
   void RegisterAllocator(std::unique_ptr<Allocator> &alloc) {
     HERMES_MEMORY_REGISTRY->RegisterAllocator(alloc);
+  }
+
+  /**
+   * Destroys an allocator
+   * */
+  void UnregisterAllocator(allocator_id_t alloc_id) {
+    HERMES_MEMORY_REGISTRY->UnregisterAllocator(alloc_id);
   }
 
   /**

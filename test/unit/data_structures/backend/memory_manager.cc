@@ -40,7 +40,7 @@ TEST_CASE("MemoryManager") {
   if (rank == 0) {
     std::cout << "Creating SHMEM (rank 0): " << shm_url << std::endl;
     mem_mngr->CreateBackend<hipc::PosixShmMmap>(
-      MemoryManager::kDefaultBackendSize, shm_url);
+      MemoryManager::GetDefaultBackendSize(), shm_url);
     mem_mngr->CreateAllocator<hipc::StackAllocator>(
       shm_url, alloc_id, 0);
   }
