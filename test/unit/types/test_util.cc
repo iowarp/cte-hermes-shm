@@ -16,7 +16,16 @@
 #include <hermes_shm/util/logging.h>
 #include "basic_test.h"
 #include "hermes_shm/util/singleton.h"
+#include "hermes_shm/util/type_switch.h"
 #include <unistd.h>
+
+TEST_CASE("TypeSwitch") {
+  typedef hshm::type_switch<int, int,
+    std::string, std::string,
+    size_t, size_t>::type internal_t;
+
+  internal_t x = 24;
+}
 
 TEST_CASE("TestPathParser") {
   setenv("PATH_PARSER_TEST", "HOME", true);

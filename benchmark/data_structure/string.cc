@@ -21,9 +21,9 @@ class StringTestSuite {
  public:
   std::string str_type_;
 
-  /////////////////
-  /// Test Cases
-  /////////////////
+  /**====================================
+   * Test Cases
+   * ===================================*/
 
   /** Constructor */
   StringTestSuite() {
@@ -36,56 +36,37 @@ class StringTestSuite {
 
   /** Construct + destruct in a loop */
   void ConstructDestructTest(size_t count, int length) {
-    char *data = (char *) malloc(length + 1);
-    data[length] = 0;
-    memset(data, 1, length);
+    std::string data(length, 1);
 
     Timer t;
     t.Resume();
     for (size_t i = 0; i < count; ++i) {
-      T hello(data);
+      if constexpr(std::is_same_v<std::string, T>) {
+        volatile T hello(data);
+      } else if constexpr(std::is_same_v<hipc::string, T>) {
+        volatile auto hello = hipc::make_uptr<hipc::string>(data);
+      }
     }
     t.Pause();
 
     TestOutput("ConstructDestructTest", t);
   }
 
-  /** Construct in a loop, and then destruct in a loop */
-  void ConstructThenDestructTest(size_t count, int length) {
-    char *data = (char *) malloc(length + 1);
-    data[length] = 0;
-    memset(data, 1, length);
-
-    std::vector<T> vec(count);
-
-    Timer t;
-    t.Resume();
-    for (size_t i = 0; i < count; ++i) {
-      vec[i] = T(data);
-    }
-    vec.clear();
-    t.Pause();
-
-    TestOutput("ConstructThenDestructTest", t);
-  }
-
-  /////////////////
-  /// Test Output
-  /////////////////
+  /**====================================
+   * Test Output
+   * ===================================*/
 
   /** Output test results */
   void TestOutput(const std::string &test_name, Timer &t) {
-    printf("%s, %s, %lf\n",
-           test_name.c_str(),
-           str_type_.c_str(),
-           t.GetMsec());
+    HIPRINT("{}, {}, {}, {}",
+            test_name, str_type_, t.GetMsec())
   }
 };
 
 template<typename T>
 void StringTest() {
-  StringTestSuite<T>().ConstructDestructTest(1000000, 10);
-  // StringTestSuite<T>().ConstructThenDestructTest(1000000, MEGABYTES(1));
+  StringTestSuite<T>().ConstructDestructTest(1000000, 16);
+  StringTestSuite<T>().ConstructDestructTest(1000000, 256);
 }
 
 void FullStringTest() {
