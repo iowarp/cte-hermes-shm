@@ -49,7 +49,7 @@ class StringTestSuite {
     }
     t.Pause();
 
-    TestOutput("ConstructDestructTest", t);
+    TestOutput("ConstructDestructTest", t, length);
   }
 
   /**====================================
@@ -57,16 +57,17 @@ class StringTestSuite {
    * ===================================*/
 
   /** Output test results */
-  void TestOutput(const std::string &test_name, Timer &t) {
-    HIPRINT("{}, {}, {}, {}",
-            test_name, str_type_, t.GetMsec())
+  void TestOutput(const std::string &test_name, Timer &t, size_t length) {
+    HIPRINT("{},{},{},{}\n",
+            test_name, str_type_, length, t.GetMsec())
   }
 };
 
 template<typename T>
 void StringTest() {
-  StringTestSuite<T>().ConstructDestructTest(1000000, 16);
-  StringTestSuite<T>().ConstructDestructTest(1000000, 256);
+  size_t count = 1000;
+  StringTestSuite<T>().ConstructDestructTest(count, 16);
+  StringTestSuite<T>().ConstructDestructTest(count, 256);
 }
 
 void FullStringTest() {
