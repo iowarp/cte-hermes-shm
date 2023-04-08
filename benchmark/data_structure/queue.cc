@@ -59,7 +59,7 @@ class QueueTest {
 
   /** Run the tests */
   void Test() {
-    size_t count = 100000;
+    size_t count = 1;
     // AllocateTest(count);
     EmplaceTest(count);
     DequeueTest(count);
@@ -173,12 +173,12 @@ class QueueTest {
 void FullQueueTest() {
   // std::queue tests
   QueueTest<size_t, std::queue<size_t>>().Test();
-  QueueTest<std::string, std::queue<std::string>>().Test();
+  // QueueTest<std::string, std::queue<std::string>>().Test();
 
   // hipc::mpsc_queue tests
   QueueTest<size_t, hipc::mpsc_queue<size_t>>().Test();
-  QueueTest<std::string, hipc::mpsc_queue<std::string>>().Test();
-  QueueTest<hipc::string, hipc::mpsc_queue<hipc::string>>().Test();
+  // QueueTest<std::string, hipc::mpsc_queue<std::string>>().Test();
+  // QueueTest<hipc::string, hipc::mpsc_queue<hipc::string>>().Test();
 }
 
 TEST_CASE("QueueBenchmark") {

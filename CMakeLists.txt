@@ -24,6 +24,7 @@ option(HERMES_ENABLE_DOXYGEN "Check how well the code is documented" ON)
 option(HERMES_CXX_PROFILE "Generate profiling data from benchmarks" OFF)
 option(HERMES_PTHREADS_ENABLED "Support spawning pthreads" ON)
 option(HERMES_DEBUG_LOCK "Used for debugging locks" OFF)
+option(HERMES_ENABLE_PROFILING "View profiling logs" OFF)
 
 if (HERMES_PTHREADS_ENABLED)
     add_compile_definitions(HERMES_PTHREADS_ENABLED)
