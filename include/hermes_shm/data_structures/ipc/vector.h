@@ -37,12 +37,13 @@ struct vector_iterator_templ {
   vector_iterator_templ() = default;
 
   /** Construct an iterator */
-  inline explicit vector_iterator_templ(ShmDeserialize<vector_templ<T, FIXED>> &&vec)
+  inline explicit vector_iterator_templ(
+    ShmDeserialize<vector_templ<T, FIXED>> &&vec)
   : vec_(vec) {}
 
   /** Construct an iterator at \a i offset */
-  inline explicit vector_iterator_templ(const hipc::Ref<vector_templ<T, FIXED>> &vec,
-                                        size_t i)
+  inline explicit vector_iterator_templ(
+    const hipc::Ref<vector_templ<T, FIXED>> &vec, size_t i)
   : vec_(vec), i_(static_cast<off64_t>(i)) {}
 
   /** Copy constructor */
