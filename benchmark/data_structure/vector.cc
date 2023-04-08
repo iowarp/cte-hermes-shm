@@ -52,6 +52,8 @@ class VectorTest {
       vec_type_ = "std::vector";
     } else if constexpr(std::is_same_v<hipc::vector<T>, VecT>) {
       vec_type_ = "hipc::vector";
+    } else if constexpr(std::is_same_v<hipc::array<T>, VecT>) {
+      vec_type_ = "hipc::array";
     } else if constexpr(std::is_same_v<bipc_vector<T>, VecT>) {
       vec_type_ = "bipc_vector";
     } else {
@@ -224,15 +226,18 @@ class VectorTest {
 
   /** Get element at position i */
   void Get(size_t i) {
-    if constexpr(std::is_same_v<VecT, std::vector<T>>) {
+    if constexpr(std::is_same_v<std::vector<T>, VecT>) {
       T &x = (*vec_)[i];
       USE(x);
-    } else if constexpr(std::is_same_v<VecT, bipc_vector<T>>) {
-      T &x = (*vec_)[i];
-      USE(x);
-    } else if constexpr(std::is_same_v<VecT, hipc::vector<T>>) {
+    } else if constexpr(std::is_same_v<hipc::vector<T>, VecT>) {
       hipc::Ref<T> x = (*vec_)[i];
       USE(*x);
+    } else if constexpr(std::is_same_v<hipc::array<T>, VecT>) {
+      hipc::Ref<T> x = (*vec_)[i];
+      USE(*x);
+    } else if constexpr(std::is_same_v<bipc_vector<T>, VecT>) {
+      T &x = (*vec_)[i];
+      USE(x);
     }
   }
 
@@ -240,11 +245,13 @@ class VectorTest {
   void Emplace(size_t count) {
     StringOrInt<T> var(124);
     for (size_t i = 0; i < count; ++i) {
-      if constexpr(std::is_same_v<VecT, std::vector<T>>) {
+      if constexpr(std::is_same_v<std::vector<T>, VecT>) {
         vec_->emplace_back(var.Get());
-      } else if constexpr(std::is_same_v<VecT, bipc_vector<T>>) {
+      } else if constexpr(std::is_same_v<hipc::vector<T>, VecT>) {
         vec_->emplace_back(var.Get());
-      } else if constexpr(std::is_same_v<VecT, hipc::vector<T>>) {
+      } else if constexpr(std::is_same_v<hipc::array<T>, VecT>) {
+        vec_->emplace_back(var.Get());
+      } else if constexpr(std::is_same_v<bipc_vector<T>, VecT>) {
         vec_->emplace_back(var.Get());
       }
     }
@@ -252,13 +259,16 @@ class VectorTest {
 
   /** Allocate an arbitrary vector for the test cases */
   void Allocate() {
-    if constexpr(std::is_same_v<VecT, hipc::vector<T>>) {
-      vec_ptr_ = hipc::make_mptr<VecT>();
-      vec_ = vec_ptr_.get();
-    } else if constexpr(std::is_same_v<VecT, std::vector<T>>) {
+    if constexpr(std::is_same_v<std::vector<T>, VecT>) {
       vec_ptr_ = new std::vector<T>();
       vec_ = vec_ptr_;
-    } else if constexpr (std::is_same_v<VecT, bipc_vector<T>>) {
+    } else if constexpr(std::is_same_v<hipc::vector<T>, VecT>) {
+      vec_ptr_ = hipc::make_mptr<VecT>();
+      vec_ = vec_ptr_.get();
+    } else if constexpr(std::is_same_v<hipc::array<T>, VecT>) {
+      vec_ptr_ = hipc::make_mptr<VecT>();
+      vec_ = vec_ptr_.get();
+    } else if constexpr(std::is_same_v<bipc_vector<T>, VecT>) {
       vec_ptr_ = BOOST_SEGMENT->construct<VecT>("BoostVector")(
         BOOST_ALLOCATOR((std::pair<int, T>)));
       vec_ = vec_ptr_;
@@ -267,11 +277,13 @@ class VectorTest {
 
   /** Destroy the vector */
   void Destroy() {
-    if constexpr(std::is_same_v<VecT, hipc::vector<T>>) {
-      vec_ptr_.shm_destroy();
-    } else if constexpr(std::is_same_v<VecT, std::vector<T>>) {
+    if constexpr(std::is_same_v<std::vector<T>, VecT>) {
       delete vec_ptr_;
-    } else if constexpr (std::is_same_v<VecT, bipc_vector<T>>) {
+    } else if constexpr(std::is_same_v<hipc::vector<T>, VecT>) {
+      vec_ptr_.shm_destroy();
+    } else if constexpr(std::is_same_v<hipc::array<T>, VecT>) {
+      vec_ptr_.shm_destroy();
+    } else if constexpr(std::is_same_v<bipc_vector<T>, VecT>) {
       BOOST_SEGMENT->destroy<VecT>("BoostVector");
     }
   }
@@ -291,6 +303,11 @@ void FullVectorTest() {
   VectorTest<size_t, hipc::vector<size_t>>().Test();
   VectorTest<std::string, hipc::vector<std::string>>().Test();
   VectorTest<hipc::string, hipc::vector<hipc::string>>().Test();
+
+  // hipc::array tests
+  VectorTest<size_t, hipc::array<size_t>>().Test();
+  VectorTest<std::string, hipc::array<std::string>>().Test();
+  VectorTest<hipc::string, hipc::array<hipc::string>>().Test();
 }
 
 TEST_CASE("VectorBenchmark") {

@@ -77,7 +77,7 @@ class mpsc_queue_templ;
 template<typename T, bool EXTENSIBLE>
 struct ShmHeader<mpsc_queue_templ<T, EXTENSIBLE>> {
   SHM_CONTAINER_HEADER_TEMPLATE(ShmHeader)
-  ShmArchive<vector<pair<bitfield32_t, T>>> queue_;
+  ShmArchive<vector_templ<pair<bitfield32_t, T>, !EXTENSIBLE>> queue_;
   std::atomic<_qtok_t> tail_;
   std::atomic<_qtok_t> head_;
   RwLock lock_;
@@ -97,7 +97,7 @@ template<typename T, bool EXTENSIBLE>
 class mpsc_queue_templ : public ShmContainer {
  public:
   SHM_CONTAINER_TEMPLATE((CLASS_NAME), (TYPED_CLASS), (TYPED_HEADER))
-  Ref<vector<pair<bitfield32_t, T>>> queue_;
+  Ref<vector_templ<pair<bitfield32_t, T>, !EXTENSIBLE>> queue_;
 
  public:
   /**====================================
@@ -108,9 +108,8 @@ class mpsc_queue_templ : public ShmContainer {
   explicit mpsc_queue_templ(TYPED_HEADER *header, Allocator *alloc,
                       size_t depth = 1024) {
     shm_init_header(header, alloc);
-    queue_ = make_ref<vector<pair<bitfield32_t, T>>>(header_->queue_,
-                                                     alloc_,
-                                                     depth);
+    queue_ = make_ref<vector_templ<pair<bitfield32_t, T>, !EXTENSIBLE>>(
+      header_->queue_, alloc_, depth);
     SetNull();
   }
 
@@ -120,7 +119,7 @@ class mpsc_queue_templ : public ShmContainer {
 
   /** SHM copy constructor */
   explicit mpsc_queue_templ(TYPED_HEADER *header, Allocator *alloc,
-                     const mpsc_queue_templ &other) {
+                            const mpsc_queue_templ &other) {
     shm_init_header(header, alloc);
     SetNull();
     shm_strong_copy_construct_and_op(other);
@@ -147,7 +146,7 @@ class mpsc_queue_templ : public ShmContainer {
 
   /** SHM move constructor. */
   mpsc_queue_templ(TYPED_HEADER *header, Allocator *alloc,
-            mpsc_queue_templ &&other) noexcept {
+                   mpsc_queue_templ &&other) noexcept {
     shm_init_header(header, alloc);
     if (alloc_ == other.alloc_) {
       (*header_) = std::move(*other.header_);
@@ -201,8 +200,8 @@ class mpsc_queue_templ : public ShmContainer {
 
   /** Load from shared memory */
   void shm_deserialize_main() {
-    queue_ = Ref<vector<pair<bitfield32_t, T>>>(header_->queue_,
-                                                alloc_);
+    queue_ = Ref<vector_templ<pair<bitfield32_t, T>, !EXTENSIBLE>>(
+      header_->queue_, alloc_);
   }
 
   /**====================================
