@@ -67,7 +67,7 @@ class UnorderedMapTest {
 
   /** Run the tests */
   void Test() {
-    size_t count = 100000;
+    size_t count = 10000;
     AllocateTest(count);
     EmplaceTest(count);
     GetTest(count);

@@ -192,15 +192,6 @@ struct list_iterator_templ {
   }
 };
 
-/** forward iterator typedef */
-template<typename T>
-using list_iterator = list_iterator_templ<T>;
-
-/** const forward iterator typedef */
-template<typename T>
-using list_citerator = list_iterator_templ<T>;
-
-
 /**
  * MACROS used to simplify the list namespace
  * Used as inputs to the SHM_CONTAINER_TEMPLATE
@@ -233,6 +224,16 @@ template<typename T>
 class list : public ShmContainer {
  public:
   SHM_CONTAINER_TEMPLATE((CLASS_NAME), (TYPED_CLASS), (TYPED_HEADER))
+
+ public:
+  /**====================================
+   * Typedefs
+   * ===================================*/
+
+  /** forward iterator typedef */
+  typedef list_iterator_templ<T> iterator_t;
+  /** const forward iterator typedef */
+  typedef list_iterator_templ<T> citerator_t;
 
  public:
   /**====================================
@@ -368,7 +369,7 @@ class list : public ShmContainer {
 
   /** Construct an element at \a pos position in the list */
   template<typename ...Args>
-  void emplace(list_iterator<T> pos, Args&&... args) {
+  void emplace(iterator_t pos, Args&&... args) {
     OffsetPointer entry_ptr;
     auto entry = _create_entry(entry_ptr, std::forward<Args>(args)...);
     if (size() == 0) {
@@ -410,13 +411,13 @@ class list : public ShmContainer {
   }
 
   /** Erase the element at pos */
-  void erase(list_iterator<T> pos) {
+  void erase(iterator_t pos) {
     erase(pos, pos+1);
   }
 
   /** Erase all elements between first and last */
-  void erase(list_iterator<T> first,
-             list_iterator<T> last) {
+  void erase(iterator_t first,
+             iterator_t last) {
     if (first.is_end()) { return; }
     auto first_prior_ptr = first.entry_->prior_ptr_;
     auto pos = first;
@@ -464,7 +465,7 @@ class list : public ShmContainer {
   }
 
   /** Find an element in this list */
-  list_iterator<T> find(const T &entry) {
+  iterator_t find(const T &entry) {
     for (auto iter = begin(); iter != end(); ++iter) {
       hipc::Ref<T> ref = *iter;
       if (*ref == entry) {
@@ -479,40 +480,40 @@ class list : public ShmContainer {
    * ===================================*/
 
   /** Forward iterator begin */
-  list_iterator<T> begin() {
+  iterator_t begin() {
     if (size() == 0) { return end(); }
     auto head = alloc_->template
       Convert<list_entry<T>>(header_->head_ptr_);
-    return list_iterator<T>(GetShmDeserialize(),
+    return iterator_t(GetShmDeserialize(),
       head, header_->head_ptr_);
   }
 
   /** Last iterator begin */
-  list_iterator<T> last() {
+  iterator_t last() {
     if (size() == 0) { return end(); }
     auto head = alloc_->template
       Convert<list_entry<T>>(header_->tail_ptr_);
-    return list_iterator<T>(GetShmDeserialize(),
+    return iterator_t(GetShmDeserialize(),
                             head, header_->tail_ptr_);
   }
 
   /** Forward iterator end */
-  static list_iterator<T> const end() {
-    return list_iterator<T>::end();
+  static iterator_t const end() {
+    return iterator_t::end();
   }
 
   /** Constant forward iterator begin */
-  list_citerator<T> cbegin() const {
+  citerator_t cbegin() const {
     if (size() == 0) { return cend(); }
     auto head = alloc_->template
       Convert<list_entry<T>>(header_->head_ptr_);
-    return list_citerator<T>(GetShmDeserialize(),
+    return citerator_t(GetShmDeserialize(),
       head, header_->head_ptr_);
   }
 
   /** Constant forward iterator end */
-  static list_citerator<T> const cend() {
-    return list_citerator<T>::end();
+  static citerator_t const cend() {
+    return citerator_t::end();
   }
 
  private:

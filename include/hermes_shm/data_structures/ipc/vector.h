@@ -20,28 +20,28 @@
 
 namespace hshm::ipc {
 
-/** forward pointer for vector */
-template<typename T>
-class vector;
+/** forward pointer for vector_templ */
+template<typename T, bool FIXED>
+class vector_templ;
 
 /**
- * The vector iterator implementation
+ * The vector_templ iterator implementation
  * */
-template<typename T, bool FORWARD_ITER>
+template<typename T, bool FIXED, bool FORWARD_ITER>
 struct vector_iterator_templ {
  public:
-  hipc::Ref<vector<T>> vec_;
+  hipc::Ref<vector_templ<T, FIXED>> vec_;
   off64_t i_;
 
   /** Default constructor */
   vector_iterator_templ() = default;
 
   /** Construct an iterator */
-  inline explicit vector_iterator_templ(ShmDeserialize<vector<T>> &&vec)
+  inline explicit vector_iterator_templ(ShmDeserialize<vector_templ<T, FIXED>> &&vec)
   : vec_(vec) {}
 
   /** Construct an iterator at \a i offset */
-  inline explicit vector_iterator_templ(const hipc::Ref<vector<T>> &vec,
+  inline explicit vector_iterator_templ(const hipc::Ref<vector_templ<T, FIXED>> &vec,
                                         size_t i)
   : vec_(vec), i_(static_cast<off64_t>(i)) {}
 
@@ -223,34 +223,18 @@ struct vector_iterator_templ {
   }
 };
 
-/** Forward iterator typedef */
-template<typename T>
-using vector_iterator = vector_iterator_templ<T, true>;
-
-/** Backward iterator typedef */
-template<typename T>
-using vector_riterator = vector_iterator_templ<T, false>;
-
-/** Constant forward iterator typedef */
-template<typename T>
-using vector_citerator = vector_iterator_templ<T, true>;
-
-/** Backward iterator typedef */
-template<typename T>
-using vector_criterator = vector_iterator_templ<T, false>;
-
 /**
- * MACROS used to simplify the vector namespace
+ * MACROS used to simplify the vector_templ namespace
  * Used as inputs to the SHM_CONTAINER_TEMPLATE
  * */
-#define CLASS_NAME vector
-#define TYPED_CLASS vector<T>
-#define TYPED_HEADER ShmHeader<vector<T>>
+#define CLASS_NAME vector_templ
+#define TYPED_CLASS vector_templ<T, FIXED>
+#define TYPED_HEADER ShmHeader<vector_templ<T, FIXED>>
 
 /**
- * The vector shared-memory header
+ * The vector_templ shared-memory header
  * */
-template<typename T>
+template<typename T, bool FIXED>
 struct ShmHeader<TYPED_CLASS> {
   SHM_CONTAINER_HEADER_TEMPLATE(ShmHeader)
   AtomicPointer vec_ptr_;
@@ -265,12 +249,32 @@ struct ShmHeader<TYPED_CLASS> {
 };
 
 /**
- * The vector class
+ * The vector_templ class
  * */
-template<typename T>
-class vector : public ShmContainer {
+template<typename T, bool FIXED>
+class vector_templ : public ShmContainer {
  public:
   SHM_CONTAINER_TEMPLATE((CLASS_NAME), (TYPED_CLASS), (TYPED_HEADER))
+
+ public:
+  /**====================================
+   * Typedefs
+   * ===================================*/
+
+  /** forwrard iterator */
+  typedef vector_iterator_templ<T, FIXED, true>  iterator_t;
+  /** reverse iterator */
+  typedef vector_iterator_templ<T, FIXED, false> riterator_t;
+  /** const iterator */
+  typedef vector_iterator_templ<T, FIXED, true>  citerator_t;
+  /** const reverse iterator */
+  typedef vector_iterator_templ<T, FIXED, false> criterator_t;
+
+ public:
+  /**====================================
+   * Variables
+   * ===================================*/
+  ShmArchive<T> *cache_;
 
  public:
   /**====================================
@@ -278,51 +282,51 @@ class vector : public ShmContainer {
    * ===================================*/
 
   /** SHM constructor. Default. */
-  explicit vector(TYPED_HEADER *header, Allocator *alloc) {
+  explicit vector_templ(TYPED_HEADER *header, Allocator *alloc) {
     shm_init_header(header, alloc);
     SetNull();
+  }
+
+  /** SHM constructor. Resize + construct. */
+  template<typename ...Args>
+  explicit vector_templ(TYPED_HEADER *header, Allocator *alloc,
+                        size_t length, Args&& ...args) {
+    shm_init_header(header, alloc);
+    SetNull();
+    resize(length, std::forward<Args>(args)...);
   }
 
   /**====================================
    * Copy Constructors
    * ===================================*/
 
-  /** Construct the vector in shared memory */
-  template<typename ...Args>
-  explicit vector(TYPED_HEADER *header, Allocator *alloc,
-                  size_t length, Args&& ...args) {
+  /** SHM copy constructor. From vector_templ. */
+  explicit vector_templ(TYPED_HEADER *header, Allocator *alloc,
+                        const vector_templ &other) {
     shm_init_header(header, alloc);
     SetNull();
-    resize(length, std::forward<Args>(args)...);
+    shm_strong_copy_main<vector_templ<T, FIXED>>(other);
   }
 
-  /** SHM copy constructor. From vector. */
-  explicit vector(TYPED_HEADER *header, Allocator *alloc,
-                  const vector &other) {
-    shm_init_header(header, alloc);
-    SetNull();
-    shm_strong_copy_main<vector<T>>(other);
-  }
-
-  /** SHM copy assignment operator. From vector. */
-  vector& operator=(const vector &other) {
+  /** SHM copy assignment operator. From vector_templ. */
+  vector_templ& operator=(const vector_templ &other) {
     if (this != &other) {
       shm_destroy();
-      shm_strong_copy_main<vector>(other);
+      shm_strong_copy_main<vector_templ>(other);
     }
     return *this;
   }
 
   /** SHM copy constructor. From std::vector */
-  explicit vector(TYPED_HEADER *header, Allocator *alloc,
-                  const std::vector<T> &other) {
+  explicit vector_templ(TYPED_HEADER *header, Allocator *alloc,
+                        const std::vector<T> &other) {
     shm_init_header(header, alloc);
     SetNull();
     shm_strong_copy_main<std::vector<T>>(other);
   }
 
   /** SHM copy assignment operator. From std::vector */
-  vector& operator=(const std::vector<T> &other) {
+  vector_templ& operator=(const std::vector<T> &other) {
     shm_destroy();
     shm_strong_copy_main<std::vector<T>>(other);
     return *this;
@@ -336,6 +340,7 @@ class vector : public ShmContainer {
       memcpy(data(), other.data(),
              other.size() * sizeof(T));
       header_->length_ = other.size();
+      shm_deserialize_main();
     } else {
       for (auto iter = other.cbegin(); iter != other.cend(); ++iter) {
         if constexpr(IS_SHM_ARCHIVEABLE(VectorT)) {
@@ -352,26 +357,28 @@ class vector : public ShmContainer {
    * ===================================*/
 
   /** SHM move constructor. */
-  vector(TYPED_HEADER *header, Allocator *alloc, vector &&other) {
+  vector_templ(TYPED_HEADER *header, Allocator *alloc, vector_templ &&other) {
     shm_init_header(header, alloc);
     if (alloc_ == other.alloc_) {
       memcpy((void *) header_, (void *) other.header_, sizeof(*header_));
+      shm_deserialize_main();
       other.SetNull();
     } else {
-      shm_strong_copy_main<vector>(other);
+      shm_strong_copy_main<vector_templ>(other);
       other.shm_destroy();
     }
   }
 
   /** SHM move assignment operator. */
-  vector& operator=(vector &&other) noexcept {
+  vector_templ& operator=(vector_templ &&other) noexcept {
     if (this != &other) {
       shm_destroy();
       if (alloc_ == other.alloc_) {
         memcpy((void *) header_, (void *) other.header_, sizeof(*header_));
+        shm_deserialize_main();
         other.SetNull();
       } else {
-        shm_strong_copy_main<vector>(other);
+        shm_strong_copy_main<vector_templ>(other);
         other.shm_destroy();
       }
     }
@@ -394,7 +401,7 @@ class vector : public ShmContainer {
     header_->vec_ptr_.SetNull();
   }
 
-  /** Destroy all shared memory allocated by the vector */
+  /** Destroy all shared memory allocated by the vector_templ */
   void shm_destroy_main() {
     erase(begin(), end());
     alloc_->Free(header_->vec_ptr_);
@@ -405,7 +412,12 @@ class vector : public ShmContainer {
    * ===================================*/
 
   /** Load from shared memory */
-  void shm_deserialize_main() {}
+  void shm_deserialize_main() {
+    if constexpr(FIXED) {
+      cache_ = alloc_->template
+        Convert<ShmArchive<T>>(header_->vec_ptr_);
+    }
+  }
 
   /**====================================
    * Vector Operations
@@ -424,10 +436,10 @@ class vector : public ShmContainer {
   }
 
   /**
-   * Reserve space in the vector to emplace elements. Does not
+   * Reserve space in the vector_templ to emplace elements. Does not
    * change the size of the list.
    *
-   * @param length the maximum size the vector can get before a growth occurs
+   * @param length the maximum size the vector_templ can get before a growth occurs
    * @param args the arguments to construct
    * */
   template<typename ...Args>
@@ -437,11 +449,11 @@ class vector : public ShmContainer {
   }
 
   /**
-   * Reserve space in the vector to emplace elements. Changes the
+   * Reserve space in the vector_templ to emplace elements. Changes the
    * size of the list.
    *
-   * @param length the maximum size the vector can get before a growth occurs
-   * @param args the arguments used to construct the vector elements
+   * @param length the maximum size the vector_templ can get before a growth occurs
+   * @param args the arguments used to construct the vector_templ elements
    * */
   template<typename ...Args>
   void resize(size_t length, Args&& ...args) {
@@ -453,29 +465,29 @@ class vector : public ShmContainer {
     header_->length_ = length;
   }
 
-  /** Index the vector at position i */
+  /** Index the vector_templ at position i */
   hipc::Ref<T> operator[](const size_t i) {
     ShmArchive<T> *vec = data_ar();
     return hipc::Ref<T>(vec[i], alloc_);
   }
 
-  /** Get first element of vector */
+  /** Get first element of vector_templ */
   hipc::Ref<T> front() {
     return (*this)[0];
   }
 
-  /** Get last element of vector */
+  /** Get last element of vector_templ */
   hipc::Ref<T> back() {
     return (*this)[size() - 1];
   }
 
-  /** Index the vector at position i */
+  /** Index the vector_templ at position i */
   const hipc::Ref<T> operator[](const size_t i) const {
     ShmArchive<T> *vec = data_ar();
     return hipc::Ref<T>(vec[i], alloc_);
   }
 
-  /** Construct an element at the back of the vector */
+  /** Construct an element at the back of the vector_templ */
   template<typename... Args>
   void emplace_back(Args&& ...args) {
     ShmArchive<T> *vec = data_ar();
@@ -486,15 +498,15 @@ class vector : public ShmContainer {
     ++header_->length_;
   }
 
-  /** Construct an element in the front of the vector */
+  /** Construct an element in the front of the vector_templ */
   template<typename ...Args>
   void emplace_front(Args&& ...args) {
     emplace(begin(), std::forward<Args>(args)...);
   }
 
-  /** Construct an element at an arbitrary position in the vector */
+  /** Construct an element at an arbitrary position in the vector_templ */
   template<typename ...Args>
-  void emplace(vector_iterator<T> pos, Args&&... args) {
+  void emplace(iterator_t pos, Args&&... args) {
     if (pos.is_end()) {
       emplace_back(std::forward<Args>(args)...);
       return;
@@ -510,7 +522,7 @@ class vector : public ShmContainer {
 
   /** Replace an element at a position */
   template<typename ...Args>
-  void replace(vector_iterator<T> pos, Args&&... args) {
+  void replace(iterator_t pos, Args&&... args) {
     if (pos.is_end()) {
       return;
     }
@@ -520,14 +532,14 @@ class vector : public ShmContainer {
   }
 
   /** Delete the element at \a pos position */
-  void erase(vector_iterator<T> pos) {
+  void erase(iterator_t pos) {
     if (pos.is_end()) return;
     shift_left(pos, 1);
     header_->length_ -= 1;
   }
 
   /** Delete elements between first and last  */
-  void erase(vector_iterator<T> first, vector_iterator<T> last) {
+  void erase(iterator_t first, iterator_t last) {
     size_t last_i;
     if (first.is_end()) return;
     if (last.is_end()) {
@@ -541,51 +553,44 @@ class vector : public ShmContainer {
     header_->length_ -= count;
   }
 
-  /** Delete all elements from the vector */
+  /** Delete all elements from the vector_templ */
   void clear() {
     erase(begin(), end());
   }
 
-  /** Get the size of the vector */
+  /** Get the size of the vector_templ */
   size_t size() const {
-    if (header_ == nullptr) {
-      return 0;
-    }
     return header_->length_;
   }
 
-  /** Get the data in the vector */
+  /** Get the data in the vector_templ */
   void* data() {
-    if (header_ == nullptr) {
-      return nullptr;
-    }
-    return alloc_->template
-      Convert<void>(header_->vec_ptr_);
+    return reinterpret_cast<void*>(data_ar());
   }
 
   /** Get constant pointer to the data */
   void* data() const {
-    if (header_ == nullptr) {
-      return nullptr;
-    }
-    return alloc_->template
-      Convert<void>(header_->vec_ptr_);
+    return reinterpret_cast<void*>(data_ar());
   }
 
-  /**
-   * Retreives a pointer to the array from the process-independent pointer.
-   * */
+  /** Retreives a pointer to the internal array */
   ShmArchive<T>* data_ar() {
-    return alloc_->template
-      Convert<ShmArchive<T>>(header_->vec_ptr_);
+    if constexpr(FIXED) {
+      return cache_;
+    } else {
+      return alloc_->template
+        Convert<ShmArchive<T>>(header_->vec_ptr_);
+    }
   }
 
-  /**
-   * Retreives a pointer to the array from the process-independent pointer.
-   * */
+  /** Retreives a pointer to the array */
   ShmArchive<T>* data_ar() const {
-    return alloc_->template
-      Convert<ShmArchive<T>>(header_->vec_ptr_);
+    if constexpr(FIXED) {
+      return cache_;
+    } else {
+      return alloc_->template
+        Convert<ShmArchive<T>>(header_->vec_ptr_);
+    }
   }
 
   /**====================================
@@ -593,17 +598,17 @@ class vector : public ShmContainer {
    * ===================================*/
  private:
   /**
-   * Grow a vector to a new size.
+   * Grow a vector_templ to a new size.
    *
    * @param vec the C-style array of elements to grow
-   * @param max_length the new length of the vector. If 0, the current size
-   * of the vector will be multiplied by a constant.
-   * @param args the arguments used to construct the elements of the vector
+   * @param max_length the new length of the vector_templ. If 0, the current size
+   * of the vector_templ will be multiplied by a constant.
+   * @param args the arguments used to construct the elements of the vector_templ
    * */
   template<typename ...Args>
   ShmArchive<T>* grow_vector(ShmArchive<T> *vec, size_t max_length,
                              bool resize, Args&& ...args) {
-    // Grow vector by 25%
+    // Grow vector_templ by 25%
     if (max_length == 0) {
       max_length = 5 * header_->max_length_ / 4;
       if (max_length <= header_->max_length_ + 10) {
@@ -636,7 +641,7 @@ class vector : public ShmContainer {
       header_->vec_ptr_ = new_p;
     }
     if (new_vec == nullptr) {
-      throw OUT_OF_MEMORY.format("vector::emplace_back",
+      throw OUT_OF_MEMORY.format("vector_templ::emplace_back",
                                  max_length*sizeof(ShmArchive<T>));
     }
     if (resize) {
@@ -645,8 +650,11 @@ class vector : public ShmContainer {
       }
     }
 
-    // Update vector header
+    // Update vector_templ header
     header_->max_length_ = max_length;
+    if constexpr(FIXED) {
+      shm_deserialize_main();
+    }
 
     return new_vec;
   }
@@ -658,7 +666,7 @@ class vector : public ShmContainer {
    * @param pos the starting position
    * @param count the amount to shift left by
    * */
-  void shift_left(const vector_iterator<T> pos, size_t count = 1) {
+  void shift_left(const iterator_t pos, size_t count = 1) {
     ShmArchive<T> *vec = data_ar();
     for (size_t i = 0; i < count; ++i) {
       hipc::Ref<T>(vec[pos.i_ + i], alloc_).shm_destroy();
@@ -673,13 +681,13 @@ class vector : public ShmContainer {
 
   /**
    * Shift every element starting at "pos" to the right by count. Increases
-   * the total number of elements of the vector by "count". Does not modify
-   * the size parameter of the vector, this is done elsewhere.
+   * the total number of elements of the vector_templ by "count". Does not modify
+   * the size parameter of the vector_templ, this is done elsewhere.
    *
    * @param pos the starting position
    * @param count the amount to shift right by
    * */
-  void shift_right(const vector_iterator<T> pos, size_t count = 1) {
+  void shift_right(const iterator_t pos, size_t count = 1) {
     auto src = data_ar() + size() - 1;
     auto dst = src + count;
     auto sz = static_cast<off64_t>(size());
@@ -694,61 +702,69 @@ class vector : public ShmContainer {
    * ===================================*/
  public:
   /** Beginning of the forward iterator */
-  vector_iterator<T> begin() {
-    vector_iterator<T> iter(ShmDeserialize<vector<T>>(header_, alloc_));
+  iterator_t begin() {
+    iterator_t iter(ShmDeserialize<vector_templ<T, FIXED>>(header_, alloc_));
     iter.set_begin();
     return iter;
   }
 
   /** End of the forward iterator */
-  vector_iterator<T> const end() {
-    vector_iterator<T> iter(ShmDeserialize<vector<T>>(header_, alloc_));
+  iterator_t const end() {
+    iterator_t iter(ShmDeserialize<vector_templ<T, FIXED>>(header_, alloc_));
     iter.set_end();
     return iter;
   }
 
   /** Beginning of the constant forward iterator */
-  vector_citerator<T> cbegin() const {
-    vector_citerator<T> iter(ShmDeserialize<vector<T>>(header_, alloc_));
+  citerator_t cbegin() const {
+    citerator_t iter(ShmDeserialize<vector_templ<T, FIXED>>(header_, alloc_));
     iter.set_begin();
     return iter;
   }
 
   /** End of the forward iterator */
-  vector_citerator<T> cend() const {
-    vector_citerator<T> iter(ShmDeserialize<vector<T>>(header_, alloc_));
+  citerator_t cend() const {
+    citerator_t iter(ShmDeserialize<vector_templ<T, FIXED>>(header_, alloc_));
     iter.set_end();
     return iter;
   }
 
   /** Beginning of the reverse iterator */
-  vector_riterator<T> rbegin() {
-    vector_riterator<T> iter(ShmDeserialize<vector<T>>(header_, alloc_));
+  riterator_t rbegin() {
+    riterator_t iter(ShmDeserialize<vector_templ<T, FIXED>>(header_, alloc_));
     iter.set_begin();
     return iter;
   }
 
   /** End of the reverse iterator */
-  vector_riterator<T> rend() {
-    vector_citerator<T> iter(ShmDeserialize<vector<T>>(header_, alloc_));
+  riterator_t rend() {
+    citerator_t iter(ShmDeserialize<vector_templ<T, FIXED>>(header_, alloc_));
     iter.set_end();
     return iter;
   }
 
   /** Beginning of the constant reverse iterator */
-  vector_criterator<T> crbegin() const {
-    vector_criterator<T> iter(ShmDeserialize(header_, alloc_));
+  criterator_t crbegin() const {
+    criterator_t iter(ShmDeserialize(header_, alloc_));
     iter.set_begin();
     return iter;
   }
 
   /** End of the constant reverse iterator */
-  vector_criterator<T> crend() const {
-    vector_criterator<T> iter(ShmDeserialize(header_, alloc_));
+  criterator_t crend() const {
+    criterator_t iter(ShmDeserialize(header_, alloc_));
     iter.set_end();
     return iter;
   }
 };
+
+/** Global definition of variable-sized vector */
+template<typename T>
+using vector = vector_templ<T, false>;
+
+/** Global definition of a fixed-size array */
+template<typename T>
+using array = vector_templ<T, true>;
 
 }  // namespace hshm::ipc
 

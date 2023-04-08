@@ -14,6 +14,7 @@
 #define HERMES_SHM_INCLUDE_HERMES_SHM_DATA_STRUCTURES_IPC_mpsc_queue_templ_H_
 
 #include "hermes_shm/data_structures/ipc/internal/shm_internal.h"
+#include "hermes_shm/util/auto_trace.h"
 #include "hermes_shm/thread/lock.h"
 #include "vector.h"
 #include "pair.h"
@@ -211,6 +212,7 @@ class mpsc_queue_templ : public ShmContainer {
   /** Construct an element at \a pos position in the list */
   template<typename ...Args>
   qtok_t emplace(Args&&... args) {
+    AUTO_TRACE(1)
     // Allocate a slot in the queue
     // The slot is marked NULL, so pop won't do anything if context switch
     _qtok_t head = header_->head_.load();
@@ -259,6 +261,7 @@ class mpsc_queue_templ : public ShmContainer {
   /** Emplace operation */
   template<typename ...Args>
   void _emplace(_qtok_t tail, Args&& ...args) {
+    AUTO_TRACE(2)
     uint32_t idx = tail % queue_->size();
     auto iter = queue_->begin() + idx;
     queue_->replace(iter,

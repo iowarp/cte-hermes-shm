@@ -15,6 +15,16 @@
 #include "hermes_shm/memory/allocator/stack_allocator.h"
 
 void MainPretest() {
+  // hermes shared memory
+  std::string shm_url = "HermesBench";
+  allocator_id_t alloc_id(0, 1);
+  auto mem_mngr = HERMES_MEMORY_MANAGER;
+  auto backend = mem_mngr->CreateBackend<hipc::PosixShmMmap>(
+    MemoryManager::GetDefaultBackendSize(), shm_url);
+  memset(backend->data_, 0, MEGABYTES(128));
+  mem_mngr->CreateAllocator<hipc::FixedPageAllocator>(
+    shm_url, alloc_id, 0);
+
   // Boost shared memory
   BOOST_SEGMENT;
   BOOST_ALLOCATOR(char);
@@ -25,15 +35,6 @@ void MainPretest() {
   BOOST_ALLOCATOR((std::pair<size_t, size_t>));
   BOOST_ALLOCATOR((std::pair<size_t, std::string>));
   BOOST_ALLOCATOR((std::pair<size_t, bipc_string>));
-
-  // hermes shared memory
-  std::string shm_url = "HermesBench";
-  allocator_id_t alloc_id(0, 1);
-  auto mem_mngr = HERMES_MEMORY_MANAGER;
-  mem_mngr->CreateBackend<hipc::PosixShmMmap>(
-    MemoryManager::GetDefaultBackendSize(), shm_url);
-  mem_mngr->CreateAllocator<hipc::FixedPageAllocator>(
-    shm_url, alloc_id, 0);
 }
 
 void MainPosttest() {

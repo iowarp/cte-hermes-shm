@@ -144,15 +144,6 @@ struct iqueue_iterator_templ {
   }
 };
 
-/** forward iterator typedef */
-template<typename T>
-using iqueue_iterator = iqueue_iterator_templ<T>;
-
-/** const forward iterator typedef */
-template<typename T>
-using iqueue_citerator = iqueue_iterator_templ<T>;
-
-
 /**
  * MACROS used to simplify the iqueue namespace
  * Used as inputs to the SHM_CONTAINER_TEMPLATE
@@ -184,6 +175,15 @@ template<typename T>
 class iqueue : public ShmContainer {
  public:
   SHM_CONTAINER_TEMPLATE((CLASS_NAME), (TYPED_CLASS), (TYPED_HEADER))
+
+  /**====================================
+   * Typedefs
+   * ===================================*/
+
+  /** forward iterator typedef */
+  typedef iqueue_iterator_templ<T> iterator_t;
+  /** const forward iterator typedef */
+  typedef iqueue_iterator_templ<T> citerator_t;
 
  public:
   /**====================================
@@ -340,29 +340,29 @@ class iqueue : public ShmContainer {
   * ===================================*/
 
   /** Forward iterator begin */
-  iqueue_iterator<T> begin() {
+  iterator_t begin() {
     if (size() == 0) { return end(); }
     auto head = alloc_->template
       Convert<iqueue_entry>(header_->head_ptr_);
-    return iqueue_iterator<T>(GetShmDeserialize(), head);
+    return iterator_t(GetShmDeserialize(), head);
   }
 
   /** Forward iterator end */
-  static iqueue_iterator<T> const end() {
-    return iqueue_iterator<T>::end();
+  static iterator_t const end() {
+    return iterator_t::end();
   }
 
   /** Constant forward iterator begin */
-  iqueue_citerator<T> cbegin() const {
+  citerator_t cbegin() const {
     if (size() == 0) { return cend(); }
     auto head = alloc_->template
       Convert<iqueue_entry>(header_->head_ptr_);
-    return iqueue_citerator<T>(GetShmDeserialize(), head);
+    return citerator_t(GetShmDeserialize(), head);
   }
 
   /** Constant forward iterator end */
-  static iqueue_citerator<T> const cend() {
-    return iqueue_citerator<T>::end();
+  static citerator_t const cend() {
+    return citerator_t::end();
   }
 };
 

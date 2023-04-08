@@ -196,15 +196,6 @@ struct slist_iterator_templ {
   }
 };
 
-/** forward iterator typedef */
-template<typename T>
-using slist_iterator = slist_iterator_templ<T>;
-
-/** const forward iterator typedef */
-template<typename T>
-using slist_citerator = slist_iterator_templ<T>;
-
-
 /**
  * MACROS used to simplify the slist namespace
  * Used as inputs to the SHM_CONTAINER_TEMPLATE
@@ -236,7 +227,18 @@ struct ShmHeader<slist<T>> {
 template<typename T>
 class slist : public ShmContainer {
  public:
+  /**====================================
+   * Variables
+   * ===================================*/
   SHM_CONTAINER_TEMPLATE((CLASS_NAME), (TYPED_CLASS), (TYPED_HEADER))
+
+  /**====================================
+   * Iterator Typedefs
+   * ===================================*/
+  /** forward iterator typedef */
+  typedef slist_iterator_templ<T> iterator_t;
+  /** const forward iterator typedef */
+  typedef slist_iterator_templ<T> citerator_t;
 
  public:
   /**====================================
@@ -372,7 +374,7 @@ class slist : public ShmContainer {
 
   /** Construct an element at \a pos position in the slist */
   template<typename ...Args>
-  void emplace(slist_iterator<T> pos, Args&&... args) {
+  void emplace(iterator_t pos, Args&&... args) {
     OffsetPointer entry_ptr;
     auto entry = _create_entry(entry_ptr, std::forward<Args>(args)...);
     if (size() == 0) {
@@ -398,13 +400,13 @@ class slist : public ShmContainer {
   }
 
   /** Find the element prior to an slist_entry */
-  slist_iterator<T> find_prior(slist_iterator<T> pos) {
+  iterator_t find_prior(iterator_t pos) {
     if (pos.is_end()) {
       return last();
     } else if (pos.is_begin()) {
       return end();
     } else {
-      slist_iterator<T> prior_iter = end();
+      iterator_t prior_iter = end();
       for (auto iter = begin(); !iter.is_end(); ++iter) {
         hipc::Ref<T> data = *iter;
         if (iter == pos) {
@@ -423,13 +425,13 @@ class slist : public ShmContainer {
   }
 
   /** Erase the element at pos */
-  void erase(slist_iterator<T> pos) {
+  void erase(iterator_t pos) {
     erase(pos, pos+1);
   }
 
   /** Erase all elements between first and last */
-  void erase(slist_iterator<T> first,
-             slist_iterator<T> last) {
+  void erase(iterator_t first,
+             iterator_t last) {
     if (first.is_end()) { return; }
     auto first_prior = find_prior(first);
     auto pos = first;
@@ -477,7 +479,7 @@ class slist : public ShmContainer {
   }
 
   /** Find an element in this slist */
-  slist_iterator<T> find(const T &entry) {
+  iterator_t find(const T &entry) {
     for (auto iter = begin(); iter != end(); ++iter) {
       hipc::Ref<T> ref = *iter;
       if (*ref == entry) {
@@ -492,40 +494,40 @@ class slist : public ShmContainer {
   * ===================================*/
 
   /** Forward iterator begin */
-  slist_iterator<T> begin() {
+  iterator_t begin() {
     if (size() == 0) { return end(); }
     auto head = alloc_->template
       Convert<slist_entry<T>>(header_->head_ptr_);
-    return slist_iterator<T>(GetShmDeserialize(),
+    return iterator_t(GetShmDeserialize(),
       head, header_->head_ptr_);
   }
 
   /** Forward iterator end */
-  static slist_iterator<T> const end() {
-    return slist_iterator<T>::end();
+  static iterator_t const end() {
+    return iterator_t::end();
   }
 
   /** Forward iterator to last entry of list */
-  slist_iterator<T> last() {
+  iterator_t last() {
     if (size() == 0) { return end(); }
     auto tail = alloc_->template
       Convert<slist_entry<T>>(header_->tail_ptr_);
-    return slist_iterator<T>(GetShmDeserialize(),
+    return iterator_t(GetShmDeserialize(),
                              tail, header_->tail_ptr_);
   }
 
   /** Constant forward iterator begin */
-  slist_citerator<T> cbegin() const {
+  citerator_t cbegin() const {
     if (size() == 0) { return cend(); }
     auto head = alloc_->template
       Convert<slist_entry<T>>(header_->head_ptr_);
-    return slist_citerator<T>(GetShmDeserialize(),
+    return citerator_t(GetShmDeserialize(),
       head, header_->head_ptr_);
   }
 
   /** Constant forward iterator end */
-  static slist_citerator<T> const cend() {
-    return slist_citerator<T>::end();
+  static citerator_t const cend() {
+    return citerator_t::end();
   }
 
  private:

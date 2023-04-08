@@ -38,8 +38,8 @@ struct unordered_map_iterator {
 
  public:
   hipc::Ref<unordered_map<Key, T, Hash>> map_;
-  vector_iterator<BUCKET_T> bucket_;
-  slist_iterator<COLLISION_T> collision_;
+  typename vector<BUCKET_T>::iterator_t bucket_;
+  typename slist<COLLISION_T>::iterator_t collision_;
 
   /** Default constructor */
   unordered_map_iterator() = default;
@@ -55,8 +55,8 @@ struct unordered_map_iterator {
   }
 
   /** Assign one iterator into another */
-  unordered_map_iterator<Key, T, Hash>&
-  operator=(const unordered_map_iterator<Key, T, Hash> &other) {
+  unordered_map_iterator&
+  operator=(const unordered_map_iterator &other) {
     if (this != &other) {
       shm_strong_copy(other);
     }
@@ -64,7 +64,7 @@ struct unordered_map_iterator {
   }
 
   /** Copy an iterator */
-  void shm_strong_copy(const unordered_map_iterator<Key, T, Hash> &other) {
+  void shm_strong_copy(const unordered_map_iterator &other) {
     map_ = other.map_;
     bucket_ = other.bucket_;
     collision_ = other.collision_;
@@ -191,9 +191,12 @@ template<typename Key, typename T, class Hash>
 class unordered_map : public ShmContainer {
  public:
   SHM_CONTAINER_TEMPLATE((CLASS_NAME), (TYPED_CLASS), (TYPED_HEADER))
-  friend unordered_map_iterator<Key, T, Hash>;
 
- public:
+  /**====================================
+   * Typedefs
+   * ===================================*/
+  typedef unordered_map_iterator<Key, T, Hash> iterator_t;
+  friend iterator_t;
   using COLLISION_T = hipc::pair<Key, T>;
   using BUCKET_T = hipc::slist<COLLISION_T>;
 
@@ -427,7 +430,7 @@ class unordered_map : public ShmContainer {
   /**
    * Erase an object at the iterator
    * */
-  void erase(unordered_map_iterator<Key, T, Hash> &iter) {
+  void erase(iterator_t &iter) {
     if (iter == end()) return;
     // Acquire the bucket lock for a write (modifying collisions)
     hipc::Ref<BUCKET_T> bkt = *iter.bucket_;
@@ -470,8 +473,8 @@ class unordered_map : public ShmContainer {
   }
 
   /** Find an object in the unordered_map */
-  unordered_map_iterator<Key, T, Hash> find(const Key &key) {
-    unordered_map_iterator<Key, T, Hash> iter(GetShmDeserialize());
+  iterator_t find(const Key &key) {
+    iterator_t iter(GetShmDeserialize());
 
     // Determine the bucket corresponding to the key
     hipc::Ref<vector<BUCKET_T>> buckets = GetBuckets();
@@ -489,7 +492,7 @@ class unordered_map : public ShmContainer {
   }
 
   /** Find a key in the collision slist */
-  slist_iterator<COLLISION_T>
+  typename slist<COLLISION_T>::iterator_t
   find_collision(const Key &key, slist<COLLISION_T> &collisions) {
     auto iter = collisions.begin();
     auto iter_end = collisions.end();
@@ -523,8 +526,8 @@ class unordered_map : public ShmContainer {
    * ===================================*/
 
   /** Forward iterator begin */
-  inline unordered_map_iterator<Key, T, Hash> begin() const {
-    unordered_map_iterator<Key, T, Hash> iter(GetShmDeserialize());
+  inline iterator_t begin() const {
+    iterator_t iter(GetShmDeserialize());
     hipc::Ref<vector<BUCKET_T>> buckets(GetBuckets());
     if (buckets->size() == 0) {
       return iter;
@@ -538,8 +541,8 @@ class unordered_map : public ShmContainer {
   }
 
   /** Forward iterator end */
-  inline unordered_map_iterator<Key, T, Hash> end() const {
-    unordered_map_iterator<Key, T, Hash> iter(GetShmDeserialize());
+  inline iterator_t end() const {
+    iterator_t iter(GetShmDeserialize());
     hipc::Ref<vector<BUCKET_T>> buckets(GetBuckets());
     iter.bucket_ = buckets->cend();
     return iter;
