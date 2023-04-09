@@ -19,6 +19,7 @@
 #include <hermes_shm/introspect/system_info.h>
 #include <hermes_shm/types/bitfield.h>
 #include <hermes_shm/types/atomic.h>
+#include <hermes_shm/constants/macros.h>
 
 namespace hshm::ipc {
 

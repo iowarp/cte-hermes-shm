@@ -16,9 +16,6 @@
 
 #include "hermes_shm/constants/macros.h"
 
-#define HSHM_ALWAYS_INLINE \
-  __attribute__((always_inline))
-
 /**
  * Determine whether or not \a T type is designed for shared memory
  * */

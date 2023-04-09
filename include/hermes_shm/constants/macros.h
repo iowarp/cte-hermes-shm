@@ -58,4 +58,10 @@
 #define ESC_(...) VAN ## __VA_ARGS__
 #define VANISH
 
+/**
+ * Ensure that the compiler ALWAYS inlines a particular function.
+ * */
+#define HSHM_ALWAYS_INLINE \
+  __attribute__((always_inline))
+
 #endif  // HERMES_MACROS_H
