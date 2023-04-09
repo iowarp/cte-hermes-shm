@@ -207,13 +207,11 @@ class string_templ : public ShmContainer {
 
   /** Load from shared memory */
   void shm_deserialize_main() {
-    if (!IsNull()) {
-      if (size() < SSO) {
-        text_ = header_->sso_;
-      } else {
-        text_ = alloc_->template
-          Convert<char>(header_->text_);
-      }
+    if (size() < SSO) {
+      text_ = header_->sso_;
+    } else {
+      text_ = alloc_->template
+        Convert<char>(header_->text_);
     }
   }
 

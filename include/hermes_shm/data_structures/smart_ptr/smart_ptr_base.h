@@ -40,7 +40,7 @@ class _RefShm {
 
   /** SHM Constructor. Header is NOT preallocated. */
   template<typename ...Args>
-  void shm_init(Allocator *alloc, Args&& ...args) {
+  HSHM_ALWAYS_INLINE void shm_init(Allocator *alloc, Args&& ...args) {
     auto header = alloc->template AllocateObjs<header_t>(1);
     Allocator::ConstructObj<T>(
       *get(), header, alloc, std::forward<Args>(args)...);
@@ -48,7 +48,8 @@ class _RefShm {
 
   /** SHM constructor. Header is preallocated. */
   template<typename ...Args>
-  void shm_init(ShmArchive<T> &obj, Allocator *alloc, Args&& ...args) {
+  HSHM_ALWAYS_INLINE void shm_init(
+    ShmArchive<T> &obj, Allocator *alloc, Args&& ...args) {
     Allocator::ConstructObj<T>(
       *get(), obj.get(), alloc, std::forward<Args>(args)...);
   }
@@ -58,12 +59,12 @@ class _RefShm {
   * ===================================*/
 
   /** Gets a pointer to the internal object */
-  T* get() {
+  HSHM_ALWAYS_INLINE T* get() {
     return reinterpret_cast<T*>(obj_);
   }
 
   /** Gets a pointer to the internal object */
-  const T* get() const {
+  HSHM_ALWAYS_INLINE const T* get() const {
     return reinterpret_cast<const T*>(obj_);
   }
 
@@ -72,7 +73,7 @@ class _RefShm {
   * ===================================*/
 
   /** Internal copy operation */
-  void shm_strong_copy(const _RefShm &other) {
+  HSHM_ALWAYS_INLINE void shm_strong_copy(const _RefShm &other) {
     get()->shm_deserialize(other.get()->GetShmDeserialize());
   }
 
@@ -81,18 +82,18 @@ class _RefShm {
   * ===================================*/
 
   /** Deserialize from a ShmDeserialize. */
-  void shm_deserialize(const ShmDeserialize<T> &ar) {
+  HSHM_ALWAYS_INLINE void shm_deserialize(const ShmDeserialize<T> &ar) {
     get()->shm_deserialize(ar);
   }
 
   /** Deserialize from an object. */
-  void shm_deserialize(T &ar) {
+  HSHM_ALWAYS_INLINE void shm_deserialize(T &ar) {
     get()->shm_deserialize(ar.GetShmDeserialize());
   }
 
   /** Serialize into a pointer type */
   template<typename PointerT>
-  void shm_serialize(PointerT &ar) const {
+  HSHM_ALWAYS_INLINE void shm_serialize(PointerT &ar) const {
     get()->shm_serialize(ar);
   }
 
@@ -101,7 +102,7 @@ class _RefShm {
   * ===================================*/
 
   /** Destroy the data allocated by this pointer */
-  void shm_destroy() {
+  HSHM_ALWAYS_INLINE void shm_destroy() {
     get()->shm_destroy();
     if constexpr(destructable) {
       auto header = get()->header_;
@@ -115,7 +116,13 @@ class _RefShm {
  * When T is not a SHM object
  * */
 template<typename T, bool destructable>
-class _RefNoShm {
+class _RefNoShm;
+
+/**
+ * When T is not a SHM object & is destructable
+ * */
+template<typename T>
+class _RefNoShm<T, true> {
  public:
   T *obj_;
   Allocator *alloc_;
@@ -127,20 +134,21 @@ class _RefNoShm {
 
   /** SHM constructor. Header is NOT preallocated. */
   template<typename ...Args>
-  void shm_init(Allocator *alloc, Args&& ...args) {
-    alloc_ = alloc;
+  HSHM_ALWAYS_INLINE void shm_init(Allocator *alloc, Args&& ...args) {
     OffsetPointer p;
-    obj_ = alloc_->template AllocateConstructObjs<T, OffsetPointer>(
+    obj_ = alloc->template AllocateConstructObjs<T, OffsetPointer>(
       1, p, std::forward<Args>(args)...);
+    alloc_ = alloc;
   }
 
   /** SHM constructor. Header is preallocated. */
   template<typename ...Args>
-  void shm_init(ShmArchive<T> &obj, Allocator *alloc, Args&& ...args) {
-    alloc_ = alloc;
+  HSHM_ALWAYS_INLINE void shm_init(
+    ShmArchive<T> &obj, Allocator *alloc, Args&& ...args) {
     obj_ = obj.get();
-    alloc_->template ConstructObj<T>(
+    Allocator::ConstructObj<T>(
       *obj_, std::forward<Args>(args)...);
+    alloc_ = alloc;
   }
 
   /**====================================
@@ -148,12 +156,12 @@ class _RefNoShm {
   * ===================================*/
 
   /** Gets a pointer to the internal object */
-  T* get() {
+  HSHM_ALWAYS_INLINE T* get() {
     return obj_;
   }
 
   /** Gets a pointer to the internal object */
-  const T* get() const {
+  HSHM_ALWAYS_INLINE const T* get() const {
     return obj_;
   }
 
@@ -162,7 +170,7 @@ class _RefNoShm {
   * ===================================*/
 
   /** Internal copy operation */
-  void shm_strong_copy(const _RefNoShm &other) {
+  HSHM_ALWAYS_INLINE void shm_strong_copy(const _RefNoShm &other) {
     obj_ = other.obj_;
     alloc_ = other.alloc_;
   }
@@ -172,20 +180,19 @@ class _RefNoShm {
   * ===================================*/
 
   /** Deserialize from a ShmDeserialize. */
-  void shm_deserialize(const ShmDeserialize<T> &ar) {
+  HSHM_ALWAYS_INLINE void shm_deserialize(const ShmDeserialize<T> &ar) {
     obj_ = ar.header_;
     alloc_ = ar.alloc_;
   }
 
   /** Deserialize from an object. */
-  void shm_deserialize(T &ar) {
+  HSHM_ALWAYS_INLINE void shm_deserialize(T &ar) {
     obj_ = &ar;
-    // NOTE(llogan): alloc is not valid in this mode
   }
 
   /** Serialize into a pointer type */
   template<typename PointerT>
-  void shm_serialize(PointerT &ar) const {
+  HSHM_ALWAYS_INLINE void shm_serialize(PointerT &ar) const {
     ar = alloc_->template Convert<T, PointerT>(get());
   }
 
@@ -194,14 +201,98 @@ class _RefNoShm {
   * ===================================*/
 
   /** Destroy the data pointed by this ref */
-  void shm_destroy() {
+  HSHM_ALWAYS_INLINE void shm_destroy() {
     Allocator::DestructObj<T>(*obj_);
-    if constexpr(destructable) {
-      if (obj_ != nullptr) {
-        alloc_->FreePtr<T>(obj_);
-        obj_ = nullptr;
-      }
+    if (obj_ != nullptr) {
+      alloc_->FreePtr<T>(obj_);
+      obj_ = nullptr;
     }
+  }
+};
+
+/**
+ * When T is not a SHM object & is not destructable
+ * */
+template<typename T>
+class _RefNoShm<T, false> {
+ public:
+  T *obj_;
+
+ public:
+  /**====================================
+  * Initialization
+  * ===================================*/
+
+  /** SHM constructor. Header is NOT preallocated. */
+  template<typename ...Args>
+  HSHM_ALWAYS_INLINE void shm_init(Allocator *alloc, Args&& ...args) {}
+
+  /** SHM constructor. Header is preallocated. */
+  template<typename ...Args>
+  HSHM_ALWAYS_INLINE void shm_init(
+    ShmArchive<T> &obj, Args&& ...args) {
+    obj_ = obj.get();
+    Allocator::ConstructObj<T>(
+      *obj_, std::forward<Args>(args)...);
+  }
+
+  /** SHM constructor. Header is preallocated. */
+  template<typename ...Args>
+  HSHM_ALWAYS_INLINE void shm_init(
+    ShmArchive<T> &obj, Allocator *alloc, Args&& ...args) {
+    obj_ = obj.get();
+    Allocator::ConstructObj<T>(
+      *obj_, std::forward<Args>(args)...);
+  }
+
+  /**====================================
+  * Dereference Operations
+  * ===================================*/
+
+  /** Gets a pointer to the internal object */
+  HSHM_ALWAYS_INLINE T* get() {
+    return obj_;
+  }
+
+  /** Gets a pointer to the internal object */
+  HSHM_ALWAYS_INLINE const T* get() const {
+    return obj_;
+  }
+
+  /**====================================
+  * Move + Copy Operations
+  * ===================================*/
+
+  /** Internal copy operation */
+  HSHM_ALWAYS_INLINE void shm_strong_copy(const _RefNoShm &other) {
+    obj_ = other.obj_;
+  }
+
+  /**====================================
+  * Deserialization + Serialization
+  * ===================================*/
+
+  /** Deserialize from a ShmDeserialize. */
+  HSHM_ALWAYS_INLINE void shm_deserialize(const ShmDeserialize<T> &ar) {
+    obj_ = ar.header_;
+  }
+
+  /** Deserialize from an object. */
+  HSHM_ALWAYS_INLINE void shm_deserialize(T &ar) {
+    obj_ = &ar;
+  }
+
+  /** Serialize into a pointer type */
+  template<typename PointerT>
+  HSHM_ALWAYS_INLINE void shm_serialize(PointerT &ar) const {}
+
+  /**====================================
+  * Destructor
+  * ===================================*/
+
+  /** Destroy the data pointed by this ref */
+  HSHM_ALWAYS_INLINE void shm_destroy() {
+    Allocator::DestructObj<T>(*obj_);
   }
 };
 
@@ -223,6 +314,18 @@ class _RefNoShm {
 #define POINTER_IS_OWNED BIT_OPT(uint32_t, 0)
 
 /**
+ * Info needed by smart_ptr_Base
+ * */
+template<bool unique>
+struct smart_ptr_flags;
+template<>
+struct smart_ptr_flags<false> {};
+template<>
+struct smart_ptr_flags<true> {
+  bitfield32_t flags_;
+};
+
+/**
  * Creates a unique instance of a shared-memory data structure
  * and deletes eventually.
  * */
@@ -231,7 +334,7 @@ class smart_ptr_base {
  public:
   typedef MAKE_REF_SHM_OR_NO_SHM(T, destructable) T_Ref;
   T_Ref obj_;   /**< The stored shared-memory object */
-  bitfield32_t flags_;  /**< Whether the shared-memory object is owned */
+  smart_ptr_flags<unique> info_;  /**< Whether the shared-memory object is owned */
 
  public:
   /**====================================
@@ -239,28 +342,28 @@ class smart_ptr_base {
   * ===================================*/
 
   /** Default constructor. */
-  smart_ptr_base() = default;
+  HSHM_ALWAYS_INLINE smart_ptr_base() = default;
 
   /** Create the mptr contents */
   template<typename ...Args>
-  void shm_init(Args&& ...args) {
+  HSHM_ALWAYS_INLINE void shm_init(Args&& ...args) {
     obj_.shm_init(std::forward<Args>(args)...);
     if constexpr(unique) {
-      flags_.SetBits(POINTER_IS_OWNED);
+      info_.flags_.SetBits(POINTER_IS_OWNED);
     }
   }
 
   /** Destructor. Does not free data. */
-  ~smart_ptr_base() {
+  HSHM_ALWAYS_INLINE ~smart_ptr_base() {
     if constexpr(unique) {
-      if (flags_.Any(POINTER_IS_OWNED)) {
+      if (info_.flags_.Any(POINTER_IS_OWNED)) {
         shm_destroy();
       }
     }
   }
 
   /** Explicit destructor */
-  void shm_destroy() {
+  HSHM_ALWAYS_INLINE void shm_destroy() {
     obj_.shm_destroy();
   }
 
@@ -269,32 +372,32 @@ class smart_ptr_base {
   * ===================================*/
 
   /** Gets a pointer to the internal object */
-  T* get() {
+  HSHM_ALWAYS_INLINE T* get() {
     return obj_.get();
   }
 
   /** Gets a pointer to the internal object */
-  const T* get() const {
+  HSHM_ALWAYS_INLINE const T* get() const {
     return obj_.get();
   }
 
   /** Dereference operator */
-  T& operator*() {
+  HSHM_ALWAYS_INLINE T& operator*() {
     return *obj_.get();
   }
 
   /** Constant Dereference operator */
-  const T& operator*() const {
+  HSHM_ALWAYS_INLINE const T& operator*() const {
     return *obj_.get();
   }
 
   /** Pointer operator */
-  T* operator->() {
+  HSHM_ALWAYS_INLINE T* operator->() {
     return obj_.get();
   }
 
   /** Constant pointer operator */
-  const T* operator->() const {
+  HSHM_ALWAYS_INLINE const T* operator->() const {
     return obj_.get();
   }
 
@@ -303,31 +406,31 @@ class smart_ptr_base {
   * ===================================*/
 
   /** Copy constructor (equivalent to move) */
-  smart_ptr_base(const smart_ptr_base &other) {
+  HSHM_ALWAYS_INLINE smart_ptr_base(const smart_ptr_base &other) {
     obj_.shm_strong_copy(other.obj_);
     if constexpr(unique) {
-      flags_.UnsetBits(POINTER_IS_OWNED);
+      info_.flags_.UnsetBits(POINTER_IS_OWNED);
     }
   }
 
   /** Copy assignment operator (equivalent to move) */
-  smart_ptr_base& operator=(const smart_ptr_base &other) {
+  HSHM_ALWAYS_INLINE smart_ptr_base& operator=(const smart_ptr_base &other) {
     if (this != &other) {
       obj_.shm_strong_copy(other.obj_);
       if constexpr(unique) {
-        flags_.UnsetBits(POINTER_IS_OWNED);
+        info_.flags_.UnsetBits(POINTER_IS_OWNED);
       }
     }
     return *this;
   }
 
   /** Move constructor */
-  smart_ptr_base(smart_ptr_base&& other) noexcept {
+  HSHM_ALWAYS_INLINE smart_ptr_base(smart_ptr_base&& other) noexcept {
     shm_strong_move(std::forward<smart_ptr_base>(other));
   }
 
   /** Move assignment operator */
-  smart_ptr_base& operator=(smart_ptr_base&& other) noexcept {
+  HSHM_ALWAYS_INLINE smart_ptr_base& operator=(smart_ptr_base&& other) noexcept {
     if (this != &other) {
       shm_strong_move(std::forward<smart_ptr_base>(other));
     }
@@ -335,16 +438,16 @@ class smart_ptr_base {
   }
 
   /** Internal copy operation */
-  void shm_strong_copy(const smart_ptr_base &other) {
+  HSHM_ALWAYS_INLINE void shm_strong_copy(const smart_ptr_base &other) {
     obj_.shm_strong_copy(other.obj_);
   }
 
   /** Internal move operation */
-  void shm_strong_move(smart_ptr_base &&other) {
+  HSHM_ALWAYS_INLINE void shm_strong_move(smart_ptr_base &&other) {
     obj_.shm_strong_copy(other.obj_);
     if constexpr(unique) {
-      flags_ = other.flags_;
-      other.flags_.UnsetBits(POINTER_IS_OWNED);
+      info_.flags_ = other.info_.flags_;
+      other.info_.flags_.UnsetBits(POINTER_IS_OWNED);
     }
   }
 
@@ -353,55 +456,55 @@ class smart_ptr_base {
   * ===================================*/
 
   /** Constructor. Deserialize from a TypedPointer<T> */
-  explicit smart_ptr_base(const TypedPointer<T> &ar) {
+  HSHM_ALWAYS_INLINE explicit smart_ptr_base(const TypedPointer<T> &ar) {
     shm_deserialize(ar);
   }
 
   /** Constructor. Deserialize from a TypedAtomicPointer<T> */
-  explicit smart_ptr_base(const TypedAtomicPointer<T> &ar) {
+  HSHM_ALWAYS_INLINE explicit smart_ptr_base(const TypedAtomicPointer<T> &ar) {
     shm_deserialize(ar);
   }
 
   /** Constructor. Deserialize from an Archive. */
-  explicit smart_ptr_base(ShmArchive<T> &ar, Allocator *alloc) {
+  HSHM_ALWAYS_INLINE explicit smart_ptr_base(ShmArchive<T> &ar, Allocator *alloc) {
     shm_deserialize(ShmDeserialize<T>(ar.get(), alloc));
   }
 
   /** Constructor. Deserialize from a ShmDeserialize. */
-  explicit smart_ptr_base(const ShmDeserialize<T> &ar) {
+  HSHM_ALWAYS_INLINE explicit smart_ptr_base(const ShmDeserialize<T> &ar) {
     shm_deserialize(ar);
   }
 
   /** Constructor. Deserialize from an object. */
-  explicit smart_ptr_base(T &ar) {
+  HSHM_ALWAYS_INLINE explicit smart_ptr_base(T &ar) {
     shm_deserialize(ar);
   }
 
   /** Deserialize from a TypedPointer<T> */
-  void shm_deserialize(const TypedPointer<T> &ar) {
+  HSHM_ALWAYS_INLINE void shm_deserialize(const TypedPointer<T> &ar) {
     auto deserial = ShmDeserialize<T>(ar);
     shm_deserialize(deserial);
   }
 
   /** Deserialize from a TypedAtomicPointer<T> */
-  void shm_deserialize(const TypedAtomicPointer<T> &ar) {
+  HSHM_ALWAYS_INLINE void shm_deserialize(const TypedAtomicPointer<T> &ar) {
     auto deserial = ShmDeserialize<T>(ar);
     shm_deserialize(deserial);
   }
 
   /** Deserialize from a ShmDeserialize. */
-  void shm_deserialize(const ShmDeserialize<T> &ar) {
+  HSHM_ALWAYS_INLINE void shm_deserialize(const ShmDeserialize<T> &ar) {
     obj_.shm_deserialize(ar);
     if constexpr(unique) {
-      flags_.UnsetBits(POINTER_IS_OWNED);
+      info_.flags_.UnsetBits(POINTER_IS_OWNED);
     }
   }
 
   /** Deserialize from a reference to the object */
-  void shm_deserialize(T &ar) {
+  HSHM_ALWAYS_INLINE void shm_deserialize(T &ar) {
     obj_.shm_deserialize(ar);
     if constexpr(unique) {
-      flags_.UnsetBits(POINTER_IS_OWNED);
+      info_.flags_.UnsetBits(POINTER_IS_OWNED);
     }
   }
 
@@ -410,12 +513,12 @@ class smart_ptr_base {
   * ===================================*/
 
   /** Serialize to a TypedPointer<T> */
-  void shm_serialize(TypedPointer<T> &ar) const {
+  HSHM_ALWAYS_INLINE void shm_serialize(TypedPointer<T> &ar) const {
     obj_.template shm_serialize<TypedPointer<T>>(ar);
   }
 
   /** Serialize to a TypedAtomicPointer<T> */
-  void shm_serialize(TypedAtomicPointer<T> &ar) const {
+  HSHM_ALWAYS_INLINE void shm_serialize(TypedAtomicPointer<T> &ar) const {
     obj_.template shm_serialize<TypedAtomicPointer<T>>(ar);
   }
 
@@ -427,7 +530,7 @@ class smart_ptr_base {
   /**====================================
   * Hash function
   * ===================================*/
-  size_t hash() const {
+  HSHM_ALWAYS_INLINE size_t hash() const {
     return std::hash<T>{}(*obj_.get());
   }
 };

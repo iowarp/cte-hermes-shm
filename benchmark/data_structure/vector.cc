@@ -68,11 +68,13 @@ class VectorTest {
     size_t count = 100000;
     AllocateTest(count);
     // ResizeTest(count);
-    ReserveEmplaceTest(count);
+    // ReserveEmplaceTest(count);
     GetTest(count);
-    ForwardIteratorTest(count);
-    CopyTest(count);
-    MoveTest(count);
+    // BeginIteratorTest(count);
+    // EndIteratorTest(count);
+    // ForwardIteratorTest(count);
+    // CopyTest(count);
+    // MoveTest(count);
   }
 
   /**====================================
@@ -137,6 +139,52 @@ class VectorTest {
     t.Pause();
 
     TestOutput("FixedGet", t);
+    Destroy();
+  }
+
+  /** Begin iterator performance */
+  void BeginIteratorTest(size_t count) {
+    Timer t;
+    StringOrInt<T> var(124);
+
+    Allocate();
+    vec_->reserve(count);
+    Emplace(count);
+
+    t.Resume();
+    if constexpr(IS_SHM_ARCHIVEABLE(VecT)) {
+      auto iter = vec_->begin();
+      USE(iter);
+    } else {
+      auto iter = vec_->begin();
+      USE(iter);
+    }
+    t.Pause();
+
+    TestOutput("BeginIterator", t);
+    Destroy();
+  }
+
+  /** End iterator performance */
+  void EndIteratorTest(size_t count) {
+    Timer t;
+    StringOrInt<T> var(124);
+
+    Allocate();
+    vec_->reserve(count);
+    Emplace(count);
+
+    t.Resume();
+    if constexpr(IS_SHM_ARCHIVEABLE(VecT)) {
+      auto iter = vec_->end();
+      USE(iter);
+    } else {
+      auto iter = vec_->end();
+      USE(iter);
+    }
+    t.Pause();
+
+    TestOutput("EndIterator", t);
     Destroy();
   }
 

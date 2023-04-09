@@ -20,6 +20,7 @@ template<typename T>
 class StringTestSuite {
  public:
   std::string str_type_;
+  void *ptr_;
 
   /**====================================
    * Test Cases
@@ -31,10 +32,12 @@ class StringTestSuite {
       str_type_ = "std::string";
     } else if constexpr(std::is_same_v<hipc::string, T>) {
       str_type_ = "hipc::string";
+    } else if constexpr(std::is_same_v<bipc_string, T>) {
+      str_type_ = "bipc::string";
     }
   }
 
-  /** Construct + destruct in a loop */
+  /** Dereference performance */
   void ConstructDestructTest(size_t count, int length) {
     std::string data(length, 1);
 
@@ -42,14 +45,50 @@ class StringTestSuite {
     t.Resume();
     for (size_t i = 0; i < count; ++i) {
       if constexpr(std::is_same_v<std::string, T>) {
-        volatile T hello(data);
+        T hello(data);
+        USE(hello);
       } else if constexpr(std::is_same_v<hipc::string, T>) {
-        volatile auto hello = hipc::make_uptr<hipc::string>(data);
+        auto hello = hipc::make_uptr<hipc::string>(data);
+        USE(hello);
+      } else if constexpr(std::is_same_v<bipc_string, T>) {
+        auto hello = BOOST_SEGMENT->find_or_construct<bipc_string>("MyString")(
+          BOOST_ALLOCATOR(bipc_string));
+        BOOST_SEGMENT->destroy<bipc_string>("MyString");
+        USE(hello);
       }
     }
     t.Pause();
 
     TestOutput("ConstructDestructTest", t, length);
+  }
+
+  /** Deserialize a string in a loop */
+  void DeserializeTest(size_t count, int length) {
+    std::string data(length, 1);
+    std::string *test1 = &data;
+    auto test2 = hipc::make_uptr<hipc::string>(data);
+    auto test2_s = test2->GetShmDeserialize();
+    bipc_string *test3 = BOOST_SEGMENT->find_or_construct<bipc_string>("MyString")(
+      BOOST_ALLOCATOR(bipc_string));
+    test3->assign(data);
+
+    Timer t;
+    t.Resume();
+    for (size_t i = 0; i < count; ++i) {
+      if constexpr(std::is_same_v<std::string, T>) {
+        auto info = test1->data();
+        USE(info);
+      } else if constexpr(std::is_same_v<hipc::string, T>) {
+        auto info = hipc::Ref<hipc::string>(test2_s);
+        USE(info);
+      } else if constexpr(std::is_same_v<bipc_string, T>) {
+        auto info = test3->c_str();
+        USE(info);
+      }
+    }
+    t.Pause();
+
+    TestOutput("DeserializeTest", t, length);
   }
 
   /**====================================
@@ -65,14 +104,16 @@ class StringTestSuite {
 
 template<typename T>
 void StringTest() {
-  size_t count = 1000;
-  StringTestSuite<T>().ConstructDestructTest(count, 16);
-  StringTestSuite<T>().ConstructDestructTest(count, 256);
+  size_t count = 100000;
+  // StringTestSuite<T>().ConstructDestructTest(count, 16);
+  // StringTestSuite<T>().ConstructDestructTest(count, 256);
+  StringTestSuite<T>().DeserializeTest(count, 16);
 }
 
 void FullStringTest() {
   StringTest<std::string>();
   StringTest<hipc::string>();
+  StringTest<bipc_string>();
 }
 
 TEST_CASE("StringBenchmark") {

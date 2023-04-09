@@ -154,7 +154,7 @@ class ShmContainerExample : public hipc::ShmContainer {
   }
 
   /** Deserialize object from "Deserialize" object */
-  bool shm_deserialize(hipc::ShmDeserialize<TYPED_CLASS> other) {
+  bool shm_deserialize(const hipc::ShmDeserialize<TYPED_CLASS> &other) {
     return shm_deserialize(other.header_, other.alloc_);
   }
 
@@ -173,7 +173,12 @@ class ShmContainerExample : public hipc::ShmContainer {
   }
 
   /** Constructor. Deserialize the object deserialize reference. */
-  explicit CLASS_NAME(hipc::ShmDeserialize<TYPED_CLASS> other) {
+  explicit CLASS_NAME(const hipc::ShmDeserialize<TYPED_CLASS> &other) {
+    shm_deserialize(other);
+  }
+
+  /** Constructor. Deserialize the object deserialize reference. */
+  explicit CLASS_NAME(const hipc::ShmDeserialize<TYPED_CLASS> &&other) {
     shm_deserialize(other);
   }
 

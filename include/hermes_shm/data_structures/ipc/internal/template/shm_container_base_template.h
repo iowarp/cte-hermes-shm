@@ -80,7 +80,7 @@ bool shm_deserialize(hipc::Allocator *alloc, hipc::OffsetPointer header_ptr) {
 }
 
 /** Deserialize object from "Deserialize" object */
-bool shm_deserialize(hipc::ShmDeserialize<TYPED_CLASS> other) {
+bool shm_deserialize(const hipc::ShmDeserialize<TYPED_CLASS> &other) {
   return shm_deserialize(other.header_, other.alloc_);
 }
 
@@ -99,8 +99,13 @@ shm_deserialize(obj->header_, obj->GetAllocator());
 }
 
 /** Constructor. Deserialize the object deserialize reference. */
-explicit CLASS_NAME(hipc::ShmDeserialize<TYPED_CLASS> other) {
-shm_deserialize(other);
+explicit CLASS_NAME(const hipc::ShmDeserialize<TYPED_CLASS> &other) {
+  shm_deserialize(other);
+}
+
+/** Constructor. Deserialize the object deserialize reference. */
+explicit CLASS_NAME(const hipc::ShmDeserialize<TYPED_CLASS> &&other) {
+  shm_deserialize(other);
 }
 
 /**====================================

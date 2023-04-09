@@ -24,7 +24,7 @@ TYPE_UNWRAP(CLASS_NAME)(TYPE_UNWRAP(CLASS_NAME) &&other) = delete;\
 TYPE_UNWRAP(CLASS_NAME)(const TYPE_UNWRAP(CLASS_NAME) &other) = delete;\
 \
 /** Initialize header + allocator */\
-void shm_init_header(TYPE_UNWRAP(TYPE_UNWRAP(TYPED_HEADER)) *header,\
+HSHM_ALWAYS_INLINE void shm_init_header(TYPE_UNWRAP(TYPE_UNWRAP(TYPED_HEADER)) *header,\
                      hipc::Allocator *alloc) {\
   header_ = header;\
   hipc::Allocator::ConstructObj<TYPE_UNWRAP(TYPE_UNWRAP(TYPED_HEADER))>(*header_);\
@@ -39,7 +39,7 @@ void shm_init_header(TYPE_UNWRAP(TYPE_UNWRAP(TYPED_HEADER)) *header,\
 ~TYPE_UNWRAP(CLASS_NAME)() = default;\
 \
 /** Destruction operation */\
-void shm_destroy() {\
+HSHM_ALWAYS_INLINE void shm_destroy() {\
   if (IsNull()) { return; }\
   shm_destroy_main();\
   SetNull();\
@@ -50,13 +50,13 @@ void shm_destroy() {\
  * ===================================*/\
 \
 /** Serialize into a Pointer */\
-void shm_serialize(hipc::TypedPointer<TYPE_UNWRAP(TYPED_CLASS)> &ar) const {\
+HSHM_ALWAYS_INLINE void shm_serialize(hipc::TypedPointer<TYPE_UNWRAP(TYPED_CLASS)> &ar) const {\
   ar = alloc_->template\
     Convert<TYPE_UNWRAP(TYPED_HEADER), hipc::Pointer>(header_);\
 }\
 \
 /** Serialize into an AtomicPointer */\
-void shm_serialize(hipc::TypedAtomicPointer<TYPE_UNWRAP(TYPED_CLASS)> &ar) const {\
+HSHM_ALWAYS_INLINE void shm_serialize(hipc::TypedAtomicPointer<TYPE_UNWRAP(TYPED_CLASS)> &ar) const {\
   ar = alloc_->template\
     Convert<TYPE_UNWRAP(TYPED_HEADER), hipc::AtomicPointer>(header_);\
 }\
@@ -66,7 +66,7 @@ void shm_serialize(hipc::TypedAtomicPointer<TYPE_UNWRAP(TYPED_CLASS)> &ar) const
  * ===================================*/\
 \
 /** Deserialize object from a raw pointer */\
-bool shm_deserialize(const hipc::TypedPointer<TYPE_UNWRAP(TYPED_CLASS)> &ar) {\
+HSHM_ALWAYS_INLINE bool shm_deserialize(const hipc::TypedPointer<TYPE_UNWRAP(TYPED_CLASS)> &ar) {\
   return shm_deserialize(\
     HERMES_MEMORY_REGISTRY->GetAllocator(ar.allocator_id_),\
     ar.ToOffsetPointer()\
@@ -74,7 +74,7 @@ bool shm_deserialize(const hipc::TypedPointer<TYPE_UNWRAP(TYPED_CLASS)> &ar) {\
 }\
 \
 /** Deserialize object from allocator + offset */\
-bool shm_deserialize(hipc::Allocator *alloc, hipc::OffsetPointer header_ptr) {\
+HSHM_ALWAYS_INLINE bool shm_deserialize(hipc::Allocator *alloc, hipc::OffsetPointer header_ptr) {\
   if (header_ptr.IsNull()) { return false; }\
   return shm_deserialize(alloc->Convert<\
                            TYPE_UNWRAP(TYPED_HEADER),\
@@ -83,12 +83,12 @@ bool shm_deserialize(hipc::Allocator *alloc, hipc::OffsetPointer header_ptr) {\
 }\
 \
 /** Deserialize object from "Deserialize" object */\
-bool shm_deserialize(hipc::ShmDeserialize<TYPE_UNWRAP(TYPED_CLASS)> other) {\
+HSHM_ALWAYS_INLINE bool shm_deserialize(const hipc::ShmDeserialize<TYPE_UNWRAP(TYPED_CLASS)> &other) {\
   return shm_deserialize(other.header_, other.alloc_);\
 }\
 \
 /** Deserialize object from allocator + header */\
-bool shm_deserialize(TYPE_UNWRAP(TYPED_HEADER) *header,\
+HSHM_ALWAYS_INLINE bool shm_deserialize(TYPE_UNWRAP(TYPED_HEADER) *header,\
                      hipc::Allocator *alloc) {\
   header_ = header;\
   alloc_ = alloc;\
@@ -97,13 +97,18 @@ bool shm_deserialize(TYPE_UNWRAP(TYPED_HEADER) *header,\
 }\
 \
 /** Constructor. Deserialize the object from the reference. */\
-explicit TYPE_UNWRAP(CLASS_NAME)(hipc::Ref<TYPE_UNWRAP(TYPED_CLASS)> &obj) {\
+HSHM_ALWAYS_INLINE explicit TYPE_UNWRAP(CLASS_NAME)(hipc::Ref<TYPE_UNWRAP(TYPED_CLASS)> &obj) {\
 shm_deserialize(obj->header_, obj->GetAllocator());\
 }\
 \
 /** Constructor. Deserialize the object deserialize reference. */\
-explicit TYPE_UNWRAP(CLASS_NAME)(hipc::ShmDeserialize<TYPE_UNWRAP(TYPED_CLASS)> other) {\
-shm_deserialize(other);\
+HSHM_ALWAYS_INLINE explicit TYPE_UNWRAP(CLASS_NAME)(const hipc::ShmDeserialize<TYPE_UNWRAP(TYPED_CLASS)> &other) {\
+  shm_deserialize(other);\
+}\
+\
+/** Constructor. Deserialize the object deserialize reference. */\
+HSHM_ALWAYS_INLINE explicit TYPE_UNWRAP(CLASS_NAME)(const hipc::ShmDeserialize<TYPE_UNWRAP(TYPED_CLASS)> &&other) {\
+  shm_deserialize(other);\
 }\
 \
 /**====================================\
@@ -112,12 +117,12 @@ shm_deserialize(other);\
 \
 /** Get a typed pointer to the object */\
 template<typename POINTER_T>\
-POINTER_T GetShmPointer() const {\
+HSHM_ALWAYS_INLINE POINTER_T GetShmPointer() const {\
   return alloc_->Convert<TYPE_UNWRAP(TYPED_HEADER), POINTER_T>(header_);\
 }\
 \
 /** Get a ShmDeserialize object */\
-hipc::ShmDeserialize<TYPE_UNWRAP(CLASS_NAME)> GetShmDeserialize() const {\
+HSHM_ALWAYS_INLINE hipc::ShmDeserialize<TYPE_UNWRAP(CLASS_NAME)> GetShmDeserialize() const {\
   return hipc::ShmDeserialize<TYPE_UNWRAP(CLASS_NAME)>(header_, alloc_);\
 }\
 \
@@ -126,17 +131,17 @@ hipc::ShmDeserialize<TYPE_UNWRAP(CLASS_NAME)> GetShmDeserialize() const {\
  * ===================================*/\
 \
 /** Get the allocator for this container */\
-hipc::Allocator* GetAllocator() {\
+HSHM_ALWAYS_INLINE hipc::Allocator* GetAllocator() {\
   return alloc_;\
 }\
 \
 /** Get the allocator for this container */\
-hipc::Allocator* GetAllocator() const {\
+HSHM_ALWAYS_INLINE hipc::Allocator* GetAllocator() const {\
   return alloc_;\
 }\
 \
 /** Get the shared-memory allocator id */\
-hipc::allocator_id_t GetAllocatorId() const {\
+HSHM_ALWAYS_INLINE hipc::allocator_id_t GetAllocatorId() const {\
   return alloc_->GetId();\
 }\
 

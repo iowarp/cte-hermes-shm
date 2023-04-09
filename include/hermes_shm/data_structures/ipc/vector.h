@@ -34,24 +34,25 @@ struct vector_iterator_templ {
   off64_t i_;
 
   /** Default constructor */
-  vector_iterator_templ() = default;
+  HSHM_ALWAYS_INLINE vector_iterator_templ() = default;
 
-  /** Construct an iterator */
-  inline explicit vector_iterator_templ(
-    ShmDeserialize<vector_templ<T, FIXED>> &&vec)
-  : vec_(vec) {}
-
-  /** Construct an iterator at \a i offset */
-  inline explicit vector_iterator_templ(
-    const hipc::Ref<vector_templ<T, FIXED>> &vec, size_t i)
+  /** Construct an iterator (called from vector class) */
+  template<typename SizeT>
+  HSHM_ALWAYS_INLINE explicit vector_iterator_templ(
+    const ShmDeserialize<vector_templ<T, FIXED>> &vec, SizeT i)
   : vec_(vec), i_(static_cast<off64_t>(i)) {}
 
+  /** Construct an iterator (called from iterator) */
+  HSHM_ALWAYS_INLINE explicit vector_iterator_templ(
+    const hipc::Ref<vector_templ<T, FIXED>> &vec, off64_t i)
+  : vec_(vec), i_(i) {}
+
   /** Copy constructor */
-  inline vector_iterator_templ(const vector_iterator_templ &other)
+  HSHM_ALWAYS_INLINE vector_iterator_templ(const vector_iterator_templ &other)
   : vec_(other.vec_), i_(other.i_) {}
 
   /** Copy assignment operator  */
-  inline vector_iterator_templ&
+  HSHM_ALWAYS_INLINE vector_iterator_templ&
   operator=(const vector_iterator_templ &other) {
     if (this != &other) {
       vec_ = other.vec_;
@@ -61,13 +62,13 @@ struct vector_iterator_templ {
   }
 
   /** Move constructor */
-  inline vector_iterator_templ(vector_iterator_templ &&other) {
+  HSHM_ALWAYS_INLINE vector_iterator_templ(vector_iterator_templ &&other) {
     vec_ = other.vec_;
     i_ = other.i_;
   }
 
   /** Move assignment operator  */
-  inline vector_iterator_templ&
+  HSHM_ALWAYS_INLINE vector_iterator_templ&
   operator=(vector_iterator_templ &&other) {
     if (this != &other) {
       vec_ = other.vec_;
@@ -77,17 +78,17 @@ struct vector_iterator_templ {
   }
 
   /** Dereference the iterator */
-  inline Ref<T> operator*() {
+  HSHM_ALWAYS_INLINE Ref<T> operator*() {
     return Ref<T>(vec_->data_ar()[i_], vec_->GetAllocator());
   }
 
   /** Dereference the iterator */
-  inline const Ref<T> operator*() const {
+  HSHM_ALWAYS_INLINE const Ref<T> operator*() const {
     return Ref<T>(vec_->data_ar()[i_], vec_->GetAllocator());
   }
 
   /** Increment iterator in-place */
-  inline vector_iterator_templ& operator++() {
+  HSHM_ALWAYS_INLINE vector_iterator_templ& operator++() {
     if constexpr(FORWARD_ITER) {
       ++i_;
     } else {
@@ -97,7 +98,7 @@ struct vector_iterator_templ {
   }
 
   /** Decrement iterator in-place */
-  inline vector_iterator_templ& operator--() {
+  HSHM_ALWAYS_INLINE vector_iterator_templ& operator--() {
     if (is_begin() || is_end()) { return *this; }
     if constexpr(FORWARD_ITER) {
       --i_;
@@ -108,21 +109,21 @@ struct vector_iterator_templ {
   }
 
   /** Create the next iterator */
-  inline vector_iterator_templ operator++(int) const {
+  HSHM_ALWAYS_INLINE vector_iterator_templ operator++(int) const {
     vector_iterator_templ next_iter(*this);
     ++next_iter;
     return next_iter;
   }
 
   /** Create the prior iterator */
-  inline vector_iterator_templ operator--(int) const {
+  HSHM_ALWAYS_INLINE vector_iterator_templ operator--(int) const {
     vector_iterator_templ prior_iter(*this);
     --prior_iter;
     return prior_iter;
   }
 
   /** Increment iterator by \a count and return */
-  inline vector_iterator_templ operator+(size_t count) const {
+  HSHM_ALWAYS_INLINE vector_iterator_templ operator+(size_t count) const {
     if constexpr(FORWARD_ITER) {
       return vector_iterator_templ(vec_, i_ + count);
     } else {
@@ -131,7 +132,7 @@ struct vector_iterator_templ {
   }
 
   /** Decrement iterator by \a count and return */
-  inline vector_iterator_templ operator-(size_t count) const {
+  HSHM_ALWAYS_INLINE vector_iterator_templ operator-(size_t count) const {
     if constexpr(FORWARD_ITER) {
       return vector_iterator_templ(vec_, i_ - count);
     } else {
@@ -140,7 +141,7 @@ struct vector_iterator_templ {
   }
 
   /** Increment iterator by \a count in-place */
-  inline void operator+=(size_t count) {
+  HSHM_ALWAYS_INLINE void operator+=(size_t count) {
     if constexpr(FORWARD_ITER) {
       i_ += count;
     } else {
@@ -149,7 +150,7 @@ struct vector_iterator_templ {
   }
 
   /** Decrement iterator by \a count in-place */
-  inline void operator-=(size_t count) {
+  HSHM_ALWAYS_INLINE void operator-=(size_t count) {
     if constexpr(FORWARD_ITER) {
       i_ -= count;
     } else {
@@ -158,37 +159,19 @@ struct vector_iterator_templ {
   }
 
   /** Check if two iterators are equal */
-  inline friend bool operator==(const vector_iterator_templ &a,
+  HSHM_ALWAYS_INLINE friend bool operator==(const vector_iterator_templ &a,
                          const vector_iterator_templ &b) {
     return (a.i_ == b.i_);
   }
 
   /** Check if two iterators are inequal */
-  inline friend bool operator!=(const vector_iterator_templ &a,
+  HSHM_ALWAYS_INLINE friend bool operator!=(const vector_iterator_templ &a,
                          const vector_iterator_templ &b) {
     return (a.i_ != b.i_);
   }
 
-  /** Create the begin iterator */
-  inline vector_iterator_templ const begin() {
-    if constexpr(FORWARD_ITER) {
-      return vector_iterator_templ(vec_, 0);
-    } else {
-      return vector_iterator_templ(vec_, vec_->size() - 1);
-    }
-  }
-
-  /** Create the end iterator */
-  inline vector_iterator_templ const end() {
-    if constexpr(FORWARD_ITER) {
-      return vector_iterator_templ(vec_, vec_->size());
-    } else {
-      return vector_iterator_templ(vec_, -1);
-    }
-  }
-
   /** Set this iterator to end */
-  inline void set_end() {
+  HSHM_ALWAYS_INLINE void set_end() {
     if constexpr(FORWARD_ITER) {
       i_ = vec_->size();
     } else {
@@ -197,7 +180,7 @@ struct vector_iterator_templ {
   }
 
   /** Set this iterator to begin */
-  inline void set_begin() {
+  HSHM_ALWAYS_INLINE void set_begin() {
     if constexpr(FORWARD_ITER) {
       i_ = 0;
     } else {
@@ -206,7 +189,7 @@ struct vector_iterator_templ {
   }
 
   /** Determine whether this iterator is the begin iterator */
-  inline bool is_begin() const {
+  HSHM_ALWAYS_INLINE bool is_begin() const {
     if constexpr(FORWARD_ITER) {
       return (i_ == 0);
     } else {
@@ -215,7 +198,7 @@ struct vector_iterator_templ {
   }
 
   /** Determine whether this iterator is the end iterator */
-  inline bool is_end() const {
+  HSHM_ALWAYS_INLINE bool is_end() const {
     if constexpr(FORWARD_ITER) {
       return i_ >= (int64_t)vec_->size();
     } else {
@@ -391,12 +374,12 @@ class vector_templ : public ShmContainer {
    * ===================================*/
 
   /** Check if null */
-  bool IsNull() const {
+  HSHM_ALWAYS_INLINE bool IsNull() const {
     return header_->vec_ptr_.IsNull();
   }
 
   /** Make null */
-  void SetNull() {
+  HSHM_ALWAYS_INLINE void SetNull() {
     header_->length_ = 0;
     header_->max_length_ = 0;
     header_->vec_ptr_.SetNull();
@@ -467,25 +450,25 @@ class vector_templ : public ShmContainer {
   }
 
   /** Index the vector_templ at position i */
-  hipc::Ref<T> operator[](const size_t i) {
+  HSHM_ALWAYS_INLINE hipc::Ref<T> operator[](const size_t i) {
+    ShmArchive<T> *vec = data_ar();
+    return hipc::Ref<T>(vec[i], alloc_);
+  }
+
+  /** Index the vector_templ at position i */
+  HSHM_ALWAYS_INLINE const hipc::Ref<T> operator[](const size_t i) const {
     ShmArchive<T> *vec = data_ar();
     return hipc::Ref<T>(vec[i], alloc_);
   }
 
   /** Get first element of vector_templ */
-  hipc::Ref<T> front() {
+  HSHM_ALWAYS_INLINE hipc::Ref<T> front() {
     return (*this)[0];
   }
 
   /** Get last element of vector_templ */
-  hipc::Ref<T> back() {
+  HSHM_ALWAYS_INLINE hipc::Ref<T> back() {
     return (*this)[size() - 1];
-  }
-
-  /** Index the vector_templ at position i */
-  const hipc::Ref<T> operator[](const size_t i) const {
-    ShmArchive<T> *vec = data_ar();
-    return hipc::Ref<T>(vec[i], alloc_);
   }
 
   /** Construct an element at the back of the vector_templ */
@@ -501,7 +484,7 @@ class vector_templ : public ShmContainer {
 
   /** Construct an element in the front of the vector_templ */
   template<typename ...Args>
-  void emplace_front(Args&& ...args) {
+  HSHM_ALWAYS_INLINE void emplace_front(Args&& ...args) {
     emplace(begin(), std::forward<Args>(args)...);
   }
 
@@ -555,27 +538,28 @@ class vector_templ : public ShmContainer {
   }
 
   /** Delete all elements from the vector_templ */
-  void clear() {
+  HSHM_ALWAYS_INLINE void clear() {
     erase(begin(), end());
   }
 
   /** Get the size of the vector_templ */
-  size_t size() const {
-    return header_->length_;
+  template<typename SizeT=size_t>
+  HSHM_ALWAYS_INLINE SizeT size() const {
+    return static_cast<SizeT>(header_->length_);
   }
 
   /** Get the data in the vector_templ */
-  void* data() {
+  HSHM_ALWAYS_INLINE void* data() {
     return reinterpret_cast<void*>(data_ar());
   }
 
   /** Get constant pointer to the data */
-  void* data() const {
+  HSHM_ALWAYS_INLINE void* data() const {
     return reinterpret_cast<void*>(data_ar());
   }
 
   /** Retreives a pointer to the internal array */
-  ShmArchive<T>* data_ar() {
+  HSHM_ALWAYS_INLINE ShmArchive<T>* data_ar() {
     if constexpr(FIXED) {
       return cache_;
     } else {
@@ -585,7 +569,7 @@ class vector_templ : public ShmContainer {
   }
 
   /** Retreives a pointer to the array */
-  ShmArchive<T>* data_ar() const {
+  HSHM_ALWAYS_INLINE ShmArchive<T>* data_ar() const {
     if constexpr(FIXED) {
       return cache_;
     } else {
@@ -704,58 +688,42 @@ class vector_templ : public ShmContainer {
  public:
   /** Beginning of the forward iterator */
   iterator_t begin() {
-    iterator_t iter(ShmDeserialize<vector_templ<T, FIXED>>(header_, alloc_));
-    iter.set_begin();
-    return iter;
+    return iterator_t(GetShmDeserialize(), 0);
   }
 
   /** End of the forward iterator */
-  iterator_t const end() {
-    iterator_t iter(ShmDeserialize<vector_templ<T, FIXED>>(header_, alloc_));
-    iter.set_end();
-    return iter;
+  iterator_t end() {
+    return iterator_t(GetShmDeserialize(), size());
   }
 
   /** Beginning of the constant forward iterator */
   citerator_t cbegin() const {
-    citerator_t iter(ShmDeserialize<vector_templ<T, FIXED>>(header_, alloc_));
-    iter.set_begin();
-    return iter;
+    return citerator_t(GetShmDeserialize(), 0);
   }
 
   /** End of the forward iterator */
   citerator_t cend() const {
-    citerator_t iter(ShmDeserialize<vector_templ<T, FIXED>>(header_, alloc_));
-    iter.set_end();
-    return iter;
+    return citerator_t(GetShmDeserialize(), size());
   }
 
   /** Beginning of the reverse iterator */
   riterator_t rbegin() {
-    riterator_t iter(ShmDeserialize<vector_templ<T, FIXED>>(header_, alloc_));
-    iter.set_begin();
-    return iter;
+    return riterator_t(GetShmDeserialize(), size<off64_t>() - 1);
   }
 
   /** End of the reverse iterator */
   riterator_t rend() {
-    citerator_t iter(ShmDeserialize<vector_templ<T, FIXED>>(header_, alloc_));
-    iter.set_end();
-    return iter;
+    return citerator_t(GetShmDeserialize(), (off64_t)-1);
   }
 
   /** Beginning of the constant reverse iterator */
   criterator_t crbegin() const {
-    criterator_t iter(ShmDeserialize(header_, alloc_));
-    iter.set_begin();
-    return iter;
+    return criterator_t(GetShmDeserialize(), size<off64_t>() - 1);
   }
 
   /** End of the constant reverse iterator */
   criterator_t crend() const {
-    criterator_t iter(ShmDeserialize(header_, alloc_));
-    iter.set_end();
-    return iter;
+    return criterator_t(GetShmDeserialize(), (off64_t)-1);
   }
 };
 
