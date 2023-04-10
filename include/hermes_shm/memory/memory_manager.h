@@ -186,7 +186,7 @@ class MemoryManager {
   template<typename T, typename POINTER_T = Pointer>
   POINTER_T Convert(T *ptr) {
     for (auto &alloc : HERMES_MEMORY_REGISTRY_REF.allocators_) {
-      if (alloc->ContainsPtr(ptr)) {
+      if (alloc && alloc->ContainsPtr(ptr)) {
         return alloc->template
           Convert<T, POINTER_T>(ptr);
       }

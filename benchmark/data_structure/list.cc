@@ -65,7 +65,7 @@ class ListTest {
 
   /** Run the tests */
   void Test() {
-    size_t count = 1000;
+    size_t count = 10000;
     AllocateTest(count);
     EmplaceTest(count);
     ForwardIteratorTest(count);

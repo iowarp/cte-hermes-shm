@@ -19,12 +19,12 @@
 template<typename T, bool SHM>
 void TestCase() {
   std::string str_type = InternalTypeName<T>::Get();
-  size_t count = 1000000;
+  /*size_t count = 1000000;
   auto test2 = hipc::make_uptr<hipc::string>();
   auto alloc = test2->GetAllocator();
   size_t x;
   hipc::ShmArchive<T> ar;
-  void *ptr_;
+  void *ptr_; */
 
   Timer t;
   t.Resume();

@@ -225,7 +225,7 @@ class UnorderedMapTest {
   /** Allocate an arbitrary unordered_map for the test cases */
   void Allocate() {
     if constexpr(std::is_same_v<MapT, hipc::unordered_map<size_t, T>>) {
-      map_ptr_ = hipc::make_mptr<MapT>();
+      map_ptr_ = hipc::make_mptr<MapT>(5000);
       map_ = map_ptr_.get();
     } else if constexpr(std::is_same_v<MapT, std::unordered_map<size_t, T>>) {
       map_ptr_ = new std::unordered_map<size_t, T>();

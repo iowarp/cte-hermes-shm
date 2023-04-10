@@ -42,7 +42,7 @@ template<typename T, bool EXTENSIBLE>
 class spsc_queue_templ : public ShmContainer {
  public:
   SHM_CONTAINER_TEMPLATE((CLASS_NAME), (TYPED_CLASS))
-  vector<pair<bitfield32_t, T>> queue_;
+  ShmArchive<vector<pair<bitfield32_t, T>>> queue_;
   _qtok_t tail_;
   _qtok_t head_;
 
@@ -55,8 +55,7 @@ class spsc_queue_templ : public ShmContainer {
   explicit spsc_queue_templ(Allocator *alloc,
                       size_t depth = 1024) {
     shm_init_container(alloc);
-    make_ref<vector<pair<bitfield32_t, T>>>(
-      queue_, GetAllocator(), depth);
+    HSHM_MAKE_AR(queue_, GetAllocator(), depth)
     SetNull();
   }
 
@@ -130,12 +129,12 @@ class spsc_queue_templ : public ShmContainer {
 
   /** SHM destructor.  */
   void shm_destroy_main() {
-    queue_.shm_destroy();
+    (*queue_).shm_destroy();
   }
 
   /** Check if the list is empty */
   bool IsNull() const {
-    return queue_.IsNull();
+    return (*queue_).IsNull();
   }
 
   /** Sets this list as empty */
@@ -156,8 +155,7 @@ class spsc_queue_templ : public ShmContainer {
     _qtok_t tail = tail_ + 1;
 
     // Emplace into queue at our slot
-    // uint32_t idx = tail % queue_.size();
-    // _emplace(tail, std::forward<Args>(args)...);
+    _emplace(tail, std::forward<Args>(args)...);
     return qtok_t(tail);
   }
 
@@ -165,29 +163,26 @@ class spsc_queue_templ : public ShmContainer {
   /** Emplace operation */
   template<typename ...Args>
   HSHM_ALWAYS_INLINE void _emplace(const _qtok_t &tail, Args&& ...args) {
-    // uint32_t idx = tail % queue_.size();
-    /*auto x = hipc::Ref<vector<pair<bitfield32_t, T>>>(
-      queue_.GetShmDeserialize());*/
-    // auto iter = queue_.begin(); // + idx;
-    // (void) iter;
-    /*queue_.replace(iter,
+    uint32_t idx = tail % (*queue_).size();
+    auto iter = (*queue_).begin() + idx;
+    (*queue_).replace(iter,
                     hshm::PiecewiseConstruct(),
                     make_argpack(),
-                    make_argpack(std::forward<Args>(args)...));*/
+                    make_argpack(std::forward<Args>(args)...));
 
     // Let pop know that the data is fully prepared
-    // Ref<pair<bitfield32_t, T>> entry = (*iter);
-    // entry->first_->SetBits(1);
+    pair<bitfield32_t, T> &entry = (*iter);
+    entry.GetFirst().SetBits(1);
   }
 
  public:
   /** Consumer pops the head object */
-  qtok_t pop(Ref<T> &val) {
+  qtok_t pop(T &val) {
     return _pop(val);
   }
 
   /** Pop operation */
-  qtok_t _pop(Ref<T> &val) {
+  qtok_t _pop(T &val) {
     // Don't pop if there's no entries
     _qtok_t head = head_;
     _qtok_t tail = tail_;
@@ -196,11 +191,11 @@ class spsc_queue_templ : public ShmContainer {
     }
 
     // Pop the element, but only if it's marked valid
-    _qtok_t idx = head % queue_.size();
-    hipc::Ref<hipc::pair<bitfield32_t, T>> entry = (*queue_)[idx];
-    if (entry->first_->Any(1)) {
-      (*val) = std::move(*entry->second_);
-      entry->first_->Clear();
+    _qtok_t idx = head % (*queue_).size();
+    hipc::pair<bitfield32_t, T> &entry = (*queue_)[idx];
+    if (entry.GetFirst().Any(1)) {
+      (val) = std::move(entry.GetSecond());
+      entry.GetFirst().Clear();
       head_ += 1;
       return qtok_t(head);
     } else {

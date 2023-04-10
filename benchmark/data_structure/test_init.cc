@@ -22,7 +22,8 @@ void MainPretest() {
   auto backend = mem_mngr->CreateBackend<hipc::PosixShmMmap>(
     MemoryManager::GetDefaultBackendSize(), shm_url);
   memset(backend->data_, 0, MEGABYTES(128));
-  mem_mngr->CreateAllocator<hipc::FixedPageAllocator>(
+  // TODO(llogan): back to good allocator
+  mem_mngr->CreateAllocator<hipc::StackAllocator>(
     shm_url, alloc_id, 0);
 
   // Boost shared memory
