@@ -337,7 +337,8 @@ class Allocator {
     typename T,
     typename POINTER_T = Pointer,
     typename ...Args>
-  HSHM_ALWAYS_INLINE T* AllocateConstructObjs(size_t count, POINTER_T &p, Args&& ...args) {
+  HSHM_ALWAYS_INLINE T* AllocateConstructObjs(size_t count,
+                                              POINTER_T &p, Args&& ...args) {
     T *ptr = AllocateObjs<T>(count, p);
     ConstructObjs<T>(ptr, 0, count, std::forward<Args>(args)...);
     return ptr;

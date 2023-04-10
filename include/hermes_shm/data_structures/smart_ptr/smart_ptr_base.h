@@ -150,7 +150,8 @@ class smart_ptr_base {
   }
 
   /** Move assignment operator */
-  HSHM_ALWAYS_INLINE smart_ptr_base& operator=(smart_ptr_base&& other) noexcept {
+  HSHM_ALWAYS_INLINE smart_ptr_base&
+  operator=(smart_ptr_base&& other) noexcept {
     if (this != &other) {
       shm_strong_move(std::forward<smart_ptr_base>(other));
     }

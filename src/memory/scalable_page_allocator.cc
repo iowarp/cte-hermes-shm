@@ -160,12 +160,14 @@ MpPage *ScalablePageAllocator::CheckCaches(size_t size_mp) {
         }
         return page;
       }
-    }*/
+    } */
   } else {
     // Check the arbitrary buffer cache
     pair<FreeListStats, iqueue<MpPage>> &last_free_list =
       (*free_lists_)[cpu_start + num_caches_];
-    page = FindFirstFit(size_mp, last_free_list.GetFirst(), last_free_list.GetSecond());
+    page = FindFirstFit(size_mp,
+                        last_free_list.GetFirst(),
+                        last_free_list.GetSecond());
     return page;
   }
 }

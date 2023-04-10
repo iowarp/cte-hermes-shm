@@ -508,7 +508,7 @@ class vector : public ShmContainer {
   }
 
   /** Get the size of the vector */
-  template<typename SizeT=size_t>
+  template<typename SizeT = size_t>
   HSHM_ALWAYS_INLINE SizeT size() const {
     return static_cast<SizeT>(length_);
   }

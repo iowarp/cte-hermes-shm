@@ -10,8 +10,8 @@
 * have access to the file, you may request a copy from help@hdfgroup.org.   *
 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_SHM_INCLUDE_HERMES_SHM_DATA_STRUCTURES_CONTAINERS_FUNCTIONAL_H_
-#define HERMES_SHM_INCLUDE_HERMES_SHM_DATA_STRUCTURES_CONTAINERS_FUNCTIONAL_H_
+#ifndef HERMES_SHM_SHM_DATA_STRUCTURES_CONTAINERS_FUNCTIONAL_H_
+#define HERMES_SHM_SHM_DATA_STRUCTURES_CONTAINERS_FUNCTIONAL_H_
 
 namespace hshm {
 
@@ -28,4 +28,4 @@ IteratorT find(IteratorT start, const IteratorT &end, T &val) {
 
 }  // namespace hshm
 
-#endif  // HERMES_SHM_INCLUDE_HERMES_SHM_DATA_STRUCTURES_CONTAINERS_FUNCTIONAL_H_
+#endif  // HERMES_SHM_SHM_DATA_STRUCTURES_CONTAINERS_FUNCTIONAL_H_
