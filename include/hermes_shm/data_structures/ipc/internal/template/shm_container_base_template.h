@@ -37,44 +37,6 @@ HSHM_ALWAYS_INLINE void shm_destroy() {
 }
 
 /**====================================
- * Serialization
- * ===================================*/
-
-/** Serialize into a Pointer */
-HSHM_ALWAYS_INLINE void shm_serialize(
-  hipc::Pointer &ar) const {
-  auto &alloc = GetAllocator();
-  ar = alloc->template
-    Convert<CLASS_NAME, hipc::Pointer>(this);
-}
-
-/** Serialize into an AtomicPointer */
-HSHM_ALWAYS_INLINE void shm_serialize(
-  hipc::AtomicPointer &ar) const {
-  auto &alloc = GetAllocator();
-  ar = alloc->template
-    Convert<CLASS_NAME, hipc::Pointer>(this);
-}
-
-/**====================================
- * Deserialization
- * ===================================*/
-
-/** Deserialize from a Pointer */
-static HSHM_ALWAYS_INLINE CLASS_NAME* shm_deserialize(
-  const hipc::Pointer &ar) {
-  auto &alloc = HERMES_MEMORY_REGISTRY_REF.GetAllocator(ar.allocator_id_);
-  return alloc->Convert<CLASS_NAME, hipc::Pointer>(ar.ToOffsetPointer());
-}
-
-/** Deserialize from an AtomicPointer */
-static HSHM_ALWAYS_INLINE CLASS_NAME* shm_deserialize(
-  const hipc::AtomicPointer &ar) {
-  auto &alloc = HERMES_MEMORY_REGISTRY_REF.GetAllocator(ar.allocator_id_);
-  return alloc->Convert<CLASS_NAME, hipc::Pointer>(ar.ToOffsetPointer());
-}
-
-/**====================================
  * Header Operations
  * ===================================*/
 

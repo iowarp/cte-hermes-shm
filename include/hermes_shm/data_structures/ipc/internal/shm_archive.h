@@ -66,6 +66,16 @@ class ShmArchive {
     return get_ref();
   }
 
+  /** Arrow operator */
+  HSHM_ALWAYS_INLINE T* operator->() {
+    return get();
+  }
+
+  /** Arrow operator */
+  HSHM_ALWAYS_INLINE const T* operator->() const {
+    return get();
+  }
+
   /** Copy constructor */
   ShmArchive(const ShmArchive &other) = delete;
 
