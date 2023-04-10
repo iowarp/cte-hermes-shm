@@ -55,8 +55,16 @@ class smart_ptr_base {
 
   /** Create the mptr contents */
   template<typename ...Args>
-  void shm_init(Args&& ...args) {
-    shm_init(std::forward<Args>(args)...);
+  void shm_init(Allocator *alloc, Args&& ...args) {
+    alloc_ = alloc;
+    OffsetPointer p;
+    if constexpr(IS_SHM_ARCHIVEABLE(T)) {
+      obj_ = alloc_->template AllocateConstructObjs<T>(
+        1, p, alloc, std::forward<Args>(args)...);
+    } else {
+      obj_ = alloc_->template AllocateConstructObjs<T>(
+        1, p, std::forward<Args>(args)...);
+    }
     if constexpr(unique) {
       flags_.SetBits(POINTER_IS_OWNED);
     }

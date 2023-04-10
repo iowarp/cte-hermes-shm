@@ -70,7 +70,6 @@ class MemoryRegistry {
 
   /** Registers an allocator. */
   Allocator* RegisterAllocator(std::unique_ptr<Allocator> &alloc) {
-    auto &ref = *alloc;
     if (default_allocator_ == nullptr ||
         default_allocator_ == &root_allocator_ ||
         default_allocator_->GetId() == alloc->GetId()) {

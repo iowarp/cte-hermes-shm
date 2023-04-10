@@ -33,15 +33,12 @@ union allocator_id_t {
   } bits_;
   uint64_t int_;
 
-  /**
-   * Null allocator ID is -1 (for now)
-   * */
-  allocator_id_t() : int_(0) {}
+  HSHM_ALWAYS_INLINE allocator_id_t() = default;
 
   /**
    * Constructor which sets major & minor
    * */
-  explicit allocator_id_t(uint32_t major, uint32_t minor) {
+  HSHM_ALWAYS_INLINE explicit allocator_id_t(uint32_t major, uint32_t minor) {
     bits_.major_ = major;
     bits_.minor_ = minor;
   }
@@ -49,33 +46,33 @@ union allocator_id_t {
   /**
    * Set this allocator to null
    * */
-  void SetNull() {
+  HSHM_ALWAYS_INLINE void SetNull() {
     int_ = 0;
   }
 
   /**
    * Check if this is the null allocator
    * */
-  bool IsNull() const { return int_ == 0; }
+  HSHM_ALWAYS_INLINE bool IsNull() const { return int_ == 0; }
 
   /** Equality check */
-  bool operator==(const allocator_id_t &other) const {
+  HSHM_ALWAYS_INLINE bool operator==(const allocator_id_t &other) const {
     return other.int_ == int_;
   }
 
   /** Inequality check */
-  bool operator!=(const allocator_id_t &other) const {
+  HSHM_ALWAYS_INLINE bool operator!=(const allocator_id_t &other) const {
     return other.int_ != int_;
   }
 
   /** Get the null allocator */
-  static allocator_id_t GetNull() {
+  HSHM_ALWAYS_INLINE static allocator_id_t GetNull() {
     static allocator_id_t alloc(0, 0);
     return alloc;
   }
 
   /** To index */
-  uint32_t ToIndex() {
+  HSHM_ALWAYS_INLINE uint32_t ToIndex() {
     return bits_.major_ * 4 + bits_.minor_;
   }
 };

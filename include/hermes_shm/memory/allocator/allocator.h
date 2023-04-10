@@ -485,7 +485,7 @@ class Allocator {
    * */
   template<typename T, typename POINTER_T = Pointer>
   HSHM_ALWAYS_INLINE T* Convert(const POINTER_T &p) {
-    // if (p.IsNull()) { return nullptr; }
+    if (p.IsNull()) { return nullptr; }
     return reinterpret_cast<T*>(buffer_ + p.off_.load());
   }
 

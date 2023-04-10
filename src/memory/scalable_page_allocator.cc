@@ -22,7 +22,6 @@ void ScalablePageAllocator::shm_init(allocator_id_t id,
                                      size_t buffer_size,
                                      RealNumber coalesce_trigger,
                                      size_t coalesce_window) {
-  Allocator *alloc = &alloc_;
   buffer_ = buffer;
   buffer_size_ = buffer_size;
   header_ = reinterpret_cast<ScalablePageAllocatorHeader*>(buffer_);
@@ -55,7 +54,6 @@ void ScalablePageAllocator::shm_init(allocator_id_t id,
 
 void ScalablePageAllocator::shm_deserialize(char *buffer,
                                             size_t buffer_size) {
-  Allocator *alloc = &alloc_;
   buffer_ = buffer;
   buffer_size_ = buffer_size;
   header_ = reinterpret_cast<ScalablePageAllocatorHeader*>(buffer_);

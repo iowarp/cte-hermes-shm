@@ -60,8 +60,8 @@ class string_templ : public ShmContainer {
 
  public:
   size_t length_;
-  char sso_[SSO];
   Pointer text_;
+  char sso_[SSO];
 
  public:
   /**====================================
@@ -153,7 +153,7 @@ class string_templ : public ShmContainer {
    * ===================================*/
 
   /** Strong copy operation */
-  void strong_copy(const string_templ &other) {
+  HSHM_ALWAYS_INLINE void strong_copy(const string_templ &other) {
     length_ = other.length_;
     text_ = other.text_;
     if (length_ < SSO) {
@@ -193,18 +193,18 @@ class string_templ : public ShmContainer {
    * ===================================*/
 
   /** Check if this string is NULL */
-  bool IsNull() const {
+  HSHM_ALWAYS_INLINE bool IsNull() const {
     return length_ == 0;
   }
 
   /** Set this string to NULL */
-  void SetNull() {
+  HSHM_ALWAYS_INLINE void SetNull() {
     text_.SetNull();
     length_ = 0;
   }
 
   /** Destroy the shared-memory data. */
-  void shm_destroy_main() {
+  HSHM_ALWAYS_INLINE void shm_destroy_main() {
     if (size() >= SSO) {
       GetAllocator()->Free(text_);
     }
@@ -215,33 +215,46 @@ class string_templ : public ShmContainer {
    * ===================================*/
 
   /** Get character at index i in the string */
-  char& operator[](size_t i) const {
+  HSHM_ALWAYS_INLINE char& operator[](size_t i) {
+    return data()[i];
+  }
+
+  /** Get character at index i in the string */
+  HSHM_ALWAYS_INLINE const char& operator[](size_t i) const {
     return data()[i];
   }
 
   /** Convert into a std::string */
-  std::string str() const {
+  HSHM_ALWAYS_INLINE std::string str() const {
     return {c_str(), length_};
   }
 
   /** Get the size of the current string */
-  size_t size() const {
+  HSHM_ALWAYS_INLINE size_t size() const {
     return length_;
   }
 
   /** Get a constant reference to the C-style string */
-  char* c_str() const {
+  HSHM_ALWAYS_INLINE const char* c_str() const {
     return data();
   }
 
   /** Get a constant reference to the C-style string */
-  char* data() const {
-    return GetAllocator()->template Convert<char, Pointer>(text_);
+  HSHM_ALWAYS_INLINE const char* data() const {
+    if (length_ < SSO) {
+      return sso_;
+    } else {
+      return GetAllocator()->template Convert<char, Pointer>(text_);
+    }
   }
 
   /** Get a mutable reference to the C-style string */
-  char* data() {
-    return GetAllocator()->template Convert<char, Pointer>(text_);
+  HSHM_ALWAYS_INLINE char* data() {
+    if (length_ < SSO) {
+      return sso_;
+    } else {
+      return GetAllocator()->template Convert<char, Pointer>(text_);
+    }
   }
 
   /** Resize this string */
@@ -294,7 +307,7 @@ class string_templ : public ShmContainer {
 #undef HERMES_STR_CMP_OPERATOR
 
  private:
-  inline void _create_str(size_t length) {
+  HSHM_ALWAYS_INLINE void _create_str(size_t length) {
     if (length < SSO) {
       // NOTE(llogan): less than and not equal because length doesn't
       // account for trailing 0.
@@ -303,7 +316,7 @@ class string_templ : public ShmContainer {
     }
     length_ = length;
   }
-  inline void _create_str(const char *text, size_t length) {
+  HSHM_ALWAYS_INLINE void _create_str(const char *text, size_t length) {
     _create_str(length);
     char *str = data();
     memcpy(str, text, length);

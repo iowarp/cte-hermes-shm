@@ -51,7 +51,6 @@ void save_vec(A &ar, ContainerT &obj) {
 template <typename A, typename ContainerT, typename T>
 void load_vec(A &ar, ContainerT &obj) {
   size_t size;
-  hipc::allocator_id_t alloc_id;
   ar >> size;
   obj.resize(size);
   for (size_t i = 0; i < size; ++i) {
