@@ -187,7 +187,7 @@ class Allocator {
   /**
    * Get the allocator identifier
    * */
-  virtual allocator_id_t GetId() = 0;
+  virtual allocator_id_t &GetId() = 0;
 
   /**
    * Get the amount of memory that was allocated, but not yet freed.
@@ -374,13 +374,32 @@ class Allocator {
     typename POINTER_T = Pointer,
     typename ...Args>
   HSHM_ALWAYS_INLINE T* ReallocateConstructObjs(POINTER_T &p,
-                                    size_t old_count,
-                                    size_t new_count,
-                                    Args&& ...args) {
+                                                size_t old_count,
+                                                size_t new_count,
+                                                Args&& ...args) {
     T *ptr = ReallocatePtr<T>(p, new_count*sizeof(T));
     ConstructObjs<T>(ptr, old_count, new_count, std::forward<Args>(args)...);
     return ptr;
   }
+
+  /**====================================
+  * Object Deallocators
+  * ===================================*/
+
+  /**
+   * Free + destruct objects
+   * */
+  template <typename T>
+  HSHM_ALWAYS_INLINE void FreeDestructObjs(T *ptr, size_t count) {
+    DestructObjs<T>(ptr, count);
+    auto p = Convert<T, OffsetPointer>(ptr);
+    Free(p);
+  }
+
+
+  /**====================================
+  * Object Constructors
+  * ===================================*/
 
   /**
    * Construct each object in an array of objects.
@@ -428,7 +447,7 @@ class Allocator {
   HSHM_ALWAYS_INLINE static void DestructObjs(T *ptr, size_t count) {
     if (ptr == nullptr) { return; }
     for (size_t i = 0; i < count; ++i) {
-      DestructObj<T>((ptr + i));
+      DestructObj<T>(*(ptr + i));
     }
   }
 
@@ -443,6 +462,10 @@ class Allocator {
   HSHM_ALWAYS_INLINE static void DestructObj(T &obj) {
     obj.~T();
   }
+
+  /**====================================
+  * Helpers
+  * ===================================*/
 
   /**
    * Get the custom header of the shared-memory allocator
@@ -462,7 +485,7 @@ class Allocator {
    * */
   template<typename T, typename POINTER_T = Pointer>
   HSHM_ALWAYS_INLINE T* Convert(const POINTER_T &p) {
-    if (p.IsNull()) { return nullptr; }
+    // if (p.IsNull()) { return nullptr; }
     return reinterpret_cast<T*>(buffer_ + p.off_.load());
   }
 

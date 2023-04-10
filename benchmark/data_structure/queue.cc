@@ -36,8 +36,7 @@ class QueueTest {
   QueueT *queue_;
   ListTPtr queue_ptr_;
   void *ptr_;
-  hipc::uptr<T> x_ptr_;
-  hipc::Ref<T> x_;
+  hipc::uptr<T> x_;
 
   /**====================================
    * Test Runner
@@ -55,9 +54,7 @@ class QueueTest {
       HELOG(kFatal, "none of the queue tests matched")
     }
     internal_type_ = InternalTypeName<T>::Get();
-
-    x_ptr_ = hipc::make_uptr<T>();
-    x_ = hipc::to_ref(x_ptr_);
+    x_ = hipc::make_uptr<T>();
   }
 
   /** Run the tests */
@@ -134,10 +131,10 @@ class QueueTest {
         USE(x);
         queue_->pop();
       } else if constexpr(std::is_same_v<QueueT, hipc::mpsc_queue<T>>) {
-        queue_->pop(x_);
+        queue_->pop(*x_);
         USE(*x_);
       } else if constexpr(std::is_same_v<QueueT, hipc::spsc_queue<T>>) {
-        queue_->pop(x_);
+        queue_->pop(*x_);
         USE(*x_);
       }
     }

@@ -1,14 +1,11 @@
 #ifndef HERMES_DATA_STRUCTURES_INTERNAL_SHM_CONTAINER_MACRO_H_
 #define HERMES_DATA_STRUCTURES_INTERNAL_SHM_CONTAINER_MACRO_H_
-#define SHM_CONTAINER_TEMPLATE(CLASS_NAME,TYPED_CLASS,TYPED_HEADER)\
+#define SHM_CONTAINER_TEMPLATE(CLASS_NAME,TYPED_CLASS)\
 public:\
 /**====================================\
  * Variables & Types\
  * ===================================*/\
-\
-typedef TYPE_UNWRAP(TYPED_HEADER) header_t; /** Header type query */\
-header_t *header_; /**< Header of the shared-memory data structure */\
-hipc::Allocator *alloc_; /**< hipc::Allocator used for this data structure */\
+hipc::allocator_id_t alloc_id_;\
 \
 /**====================================\
  * Constructors\
@@ -23,12 +20,9 @@ TYPE_UNWRAP(CLASS_NAME)(TYPE_UNWRAP(CLASS_NAME) &&other) = delete;\
 /** Copy constructor. Deleted. */\
 TYPE_UNWRAP(CLASS_NAME)(const TYPE_UNWRAP(CLASS_NAME) &other) = delete;\
 \
-/** Initialize header + allocator */\
-HSHM_ALWAYS_INLINE void shm_init_header(TYPE_UNWRAP(TYPE_UNWRAP(TYPED_HEADER)) *header,\
-                     hipc::Allocator *alloc) {\
-  header_ = header;\
-  hipc::Allocator::ConstructObj<TYPE_UNWRAP(TYPE_UNWRAP(TYPED_HEADER))>(*header_);\
-  alloc_ = alloc;\
+/** Initialize container */\
+void shm_init_container(hipc::Allocator *alloc) {\
+  alloc_id_ = alloc->GetId();\
 }\
 \
 /**====================================\
@@ -36,7 +30,7 @@ HSHM_ALWAYS_INLINE void shm_init_header(TYPE_UNWRAP(TYPE_UNWRAP(TYPED_HEADER)) *
  * ===================================*/\
 \
 /** Destructor. */\
-~TYPE_UNWRAP(CLASS_NAME)() = default;\
+HSHM_ALWAYS_INLINE ~TYPE_UNWRAP(CLASS_NAME)() = default;\
 \
 /** Destruction operation */\
 HSHM_ALWAYS_INLINE void shm_destroy() {\
@@ -50,65 +44,37 @@ HSHM_ALWAYS_INLINE void shm_destroy() {\
  * ===================================*/\
 \
 /** Serialize into a Pointer */\
-HSHM_ALWAYS_INLINE void shm_serialize(hipc::TypedPointer<TYPE_UNWRAP(TYPED_CLASS)> &ar) const {\
-  ar = alloc_->template\
-    Convert<TYPE_UNWRAP(TYPED_HEADER), hipc::Pointer>(header_);\
+HSHM_ALWAYS_INLINE void shm_serialize(\
+  hipc::Pointer &ar) const {\
+  auto &alloc = GetAllocator();\
+  ar = alloc->template\
+    Convert<TYPE_UNWRAP(CLASS_NAME), hipc::Pointer>(this);\
 }\
 \
 /** Serialize into an AtomicPointer */\
-HSHM_ALWAYS_INLINE void shm_serialize(hipc::TypedAtomicPointer<TYPE_UNWRAP(TYPED_CLASS)> &ar) const {\
-  ar = alloc_->template\
-    Convert<TYPE_UNWRAP(TYPED_HEADER), hipc::AtomicPointer>(header_);\
+HSHM_ALWAYS_INLINE void shm_serialize(\
+  hipc::AtomicPointer &ar) const {\
+  auto &alloc = GetAllocator();\
+  ar = alloc->template\
+    Convert<TYPE_UNWRAP(CLASS_NAME), hipc::Pointer>(this);\
 }\
 \
 /**====================================\
  * Deserialization\
  * ===================================*/\
 \
-/** Deserialize object from a raw pointer */\
-HSHM_ALWAYS_INLINE bool shm_deserialize(const hipc::TypedPointer<TYPE_UNWRAP(TYPED_CLASS)> &ar) {\
-  return shm_deserialize(\
-    HERMES_MEMORY_REGISTRY->GetAllocator(ar.allocator_id_),\
-    ar.ToOffsetPointer()\
-  );\
+/** Deserialize from a Pointer */\
+static HSHM_ALWAYS_INLINE TYPE_UNWRAP(CLASS_NAME)* shm_deserialize(\
+  const hipc::Pointer &ar) {\
+  auto &alloc = HERMES_MEMORY_REGISTRY_REF.GetAllocator(ar.allocator_id_);\
+  return alloc->Convert<TYPE_UNWRAP(CLASS_NAME), hipc::Pointer>(ar.ToOffsetPointer());\
 }\
 \
-/** Deserialize object from allocator + offset */\
-HSHM_ALWAYS_INLINE bool shm_deserialize(hipc::Allocator *alloc, hipc::OffsetPointer header_ptr) {\
-  if (header_ptr.IsNull()) { return false; }\
-  return shm_deserialize(alloc->Convert<\
-                           TYPE_UNWRAP(TYPED_HEADER),\
-                           hipc::OffsetPointer>(header_ptr),\
-                         alloc);\
-}\
-\
-/** Deserialize object from "Deserialize" object */\
-HSHM_ALWAYS_INLINE bool shm_deserialize(const hipc::ShmDeserialize<TYPE_UNWRAP(TYPED_CLASS)> &other) {\
-  return shm_deserialize(other.header_, other.alloc_);\
-}\
-\
-/** Deserialize object from allocator + header */\
-HSHM_ALWAYS_INLINE bool shm_deserialize(TYPE_UNWRAP(TYPED_HEADER) *header,\
-                     hipc::Allocator *alloc) {\
-  header_ = header;\
-  alloc_ = alloc;\
-  shm_deserialize_main();\
-  return true;\
-}\
-\
-/** Constructor. Deserialize the object from the reference. */\
-HSHM_ALWAYS_INLINE explicit TYPE_UNWRAP(CLASS_NAME)(hipc::Ref<TYPE_UNWRAP(TYPED_CLASS)> &obj) {\
-shm_deserialize(obj->header_, obj->GetAllocator());\
-}\
-\
-/** Constructor. Deserialize the object deserialize reference. */\
-HSHM_ALWAYS_INLINE explicit TYPE_UNWRAP(CLASS_NAME)(const hipc::ShmDeserialize<TYPE_UNWRAP(TYPED_CLASS)> &other) {\
-  shm_deserialize(other);\
-}\
-\
-/** Constructor. Deserialize the object deserialize reference. */\
-HSHM_ALWAYS_INLINE explicit TYPE_UNWRAP(CLASS_NAME)(const hipc::ShmDeserialize<TYPE_UNWRAP(TYPED_CLASS)> &&other) {\
-  shm_deserialize(other);\
+/** Deserialize from an AtomicPointer */\
+static HSHM_ALWAYS_INLINE TYPE_UNWRAP(CLASS_NAME)* shm_deserialize(\
+  const hipc::AtomicPointer &ar) {\
+  auto &alloc = HERMES_MEMORY_REGISTRY_REF.GetAllocator(ar.allocator_id_);\
+  return alloc->Convert<TYPE_UNWRAP(CLASS_NAME), hipc::Pointer>(ar.ToOffsetPointer());\
 }\
 \
 /**====================================\
@@ -118,12 +84,7 @@ HSHM_ALWAYS_INLINE explicit TYPE_UNWRAP(CLASS_NAME)(const hipc::ShmDeserialize<T
 /** Get a typed pointer to the object */\
 template<typename POINTER_T>\
 HSHM_ALWAYS_INLINE POINTER_T GetShmPointer() const {\
-  return alloc_->Convert<TYPE_UNWRAP(TYPED_HEADER), POINTER_T>(header_);\
-}\
-\
-/** Get a ShmDeserialize object */\
-HSHM_ALWAYS_INLINE hipc::ShmDeserialize<TYPE_UNWRAP(CLASS_NAME)> GetShmDeserialize() const {\
-  return hipc::ShmDeserialize<TYPE_UNWRAP(CLASS_NAME)>(header_, alloc_);\
+  return GetAllocator()->template Convert<TYPE_UNWRAP(TYPED_CLASS), POINTER_T>(this);\
 }\
 \
 /**====================================\
@@ -131,18 +92,13 @@ HSHM_ALWAYS_INLINE hipc::ShmDeserialize<TYPE_UNWRAP(CLASS_NAME)> GetShmDeseriali
  * ===================================*/\
 \
 /** Get the allocator for this container */\
-HSHM_ALWAYS_INLINE hipc::Allocator* GetAllocator() {\
-  return alloc_;\
-}\
-\
-/** Get the allocator for this container */\
 HSHM_ALWAYS_INLINE hipc::Allocator* GetAllocator() const {\
-  return alloc_;\
+  return HERMES_MEMORY_REGISTRY_REF.GetAllocator(alloc_id_);\
 }\
 \
 /** Get the shared-memory allocator id */\
-HSHM_ALWAYS_INLINE hipc::allocator_id_t GetAllocatorId() const {\
-  return alloc_->GetId();\
+HSHM_ALWAYS_INLINE hipc::allocator_id_t& GetAllocatorId() const {\
+  return GetAllocator()->GetId();\
 }\
 
 #endif  // HERMES_DATA_STRUCTURES_INTERNAL_SHM_CONTAINER_MACRO_H_

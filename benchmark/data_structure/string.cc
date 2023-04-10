@@ -67,7 +67,6 @@ class StringTestSuite {
     std::string data(length, 1);
     std::string *test1 = &data;
     auto test2 = hipc::make_uptr<hipc::string>(data);
-    auto test2_s = test2->GetShmDeserialize();
     bipc_string *test3 = BOOST_SEGMENT->find_or_construct<bipc_string>("MyString")(
       BOOST_ALLOCATOR(bipc_string));
     test3->assign(data);
@@ -79,7 +78,7 @@ class StringTestSuite {
         auto info = test1->data();
         USE(info);
       } else if constexpr(std::is_same_v<hipc::string, T>) {
-        auto info = hipc::Ref<hipc::string>(test2_s);
+        auto info = test2->data();
         USE(info);
       } else if constexpr(std::is_same_v<bipc_string, T>) {
         auto info = test3->c_str();
@@ -105,8 +104,8 @@ class StringTestSuite {
 template<typename T>
 void StringTest() {
   size_t count = 100000;
-  // StringTestSuite<T>().ConstructDestructTest(count, 16);
-  // StringTestSuite<T>().ConstructDestructTest(count, 256);
+  StringTestSuite<T>().ConstructDestructTest(count, 16);
+  StringTestSuite<T>().ConstructDestructTest(count, 256);
   StringTestSuite<T>().DeserializeTest(count, 16);
 }
 

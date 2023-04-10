@@ -56,10 +56,12 @@ struct ShmHeader<string_templ<SSO>> {
 template<size_t SSO>
 class string_templ : public ShmContainer {
  public:
-  SHM_CONTAINER_TEMPLATE((CLASS_NAME), (TYPED_CLASS), (TYPED_HEADER))
+  SHM_CONTAINER_TEMPLATE((CLASS_NAME), (TYPED_CLASS))
 
  public:
-  char *text_;
+  size_t length_;
+  char sso_[SSO];
+  Pointer text_;
 
  public:
   /**====================================
@@ -67,8 +69,8 @@ class string_templ : public ShmContainer {
    * ===================================*/
 
   /** SHM Constructor. Default. */
-  explicit string_templ(TYPED_HEADER *header, Allocator *alloc) {
-    shm_init_header(header, alloc);
+  explicit string_templ(Allocator *alloc) {
+    shm_init_container(alloc);
     SetNull();
   }
 
@@ -77,9 +79,9 @@ class string_templ : public ShmContainer {
    * ===================================*/
 
   /** SHM Constructor. Just allocate space. */
-  explicit string_templ(TYPED_HEADER *header, Allocator *alloc,
-                  size_t length) {
-    shm_init_header(header, alloc);
+  explicit string_templ(Allocator *alloc,
+                        size_t length) {
+    shm_init_container(alloc);
     _create_str(length);
   }
 
@@ -88,24 +90,24 @@ class string_templ : public ShmContainer {
    * ===================================*/
 
   /** SHM Constructor. From const char* */
-  explicit string_templ(TYPED_HEADER *header, Allocator *alloc,
-                  const char *text) {
-    shm_init_header(header, alloc);
+  explicit string_templ(Allocator *alloc,
+                        const char *text) {
+    shm_init_container(alloc);
     size_t length = strlen(text);
     _create_str(text, length);
   }
 
   /** SHM Constructor. From const char* and size */
-  explicit string_templ(TYPED_HEADER *header, Allocator *alloc,
-                  const char *text, size_t length) {
-    shm_init_header(header, alloc);
+  explicit string_templ(Allocator *alloc,
+                        const char *text, size_t length) {
+    shm_init_container(alloc);
     _create_str(text, length);
   }
 
   /** SHM Constructor. From std::string */
-  explicit string_templ(TYPED_HEADER *header, Allocator *alloc,
-                  const std::string &text) {
-    shm_init_header(header, alloc);
+  explicit string_templ(Allocator *alloc,
+                        const std::string &text) {
+    shm_init_container(alloc);
     _create_str(text.data(), text.size());
   }
 
@@ -117,9 +119,9 @@ class string_templ : public ShmContainer {
   }
 
   /** SHM Constructor. From std::string */
-  explicit string_templ(TYPED_HEADER *header, Allocator *alloc,
-                  const hshm::charbuf &text) {
-    shm_init_header(header, alloc);
+  explicit string_templ(Allocator *alloc,
+                        const hshm::charbuf &text) {
+    shm_init_container(alloc);
     _create_str(text.data(), text.size());
   }
 
@@ -131,9 +133,9 @@ class string_templ : public ShmContainer {
   }
 
   /** SHM copy constructor. From string. */
-  explicit string_templ(TYPED_HEADER *header, Allocator *alloc,
-                  const string_templ &other) {
-    shm_init_header(header, alloc);
+  explicit string_templ(Allocator *alloc,
+                        const string_templ &other) {
+    shm_init_container(alloc);
     _create_str(other.data(), other.size());
   }
 
@@ -150,12 +152,20 @@ class string_templ : public ShmContainer {
    * Move Constructors
    * ===================================*/
 
+  /** Strong copy operation */
+  void strong_copy(const string_templ &other) {
+    length_ = other.length_;
+    text_ = other.text_;
+    if (length_ < SSO) {
+      memcpy(sso_, other.sso_, other.length_ + 1);
+    }
+  }
+
   /** SHM move constructor. */
-  string_templ(TYPED_HEADER *header, Allocator *alloc, string_templ &&other) {
-    shm_init_header(header, alloc);
-    if (alloc_ == other.alloc_) {
-      (*header_) = (*other.header_);
-      shm_deserialize_main();
+  string_templ(Allocator *alloc, string_templ &&other) {
+    shm_init_container(alloc);
+    if (GetAllocator() == other.GetAllocator()) {
+      strong_copy(other);
       other.SetNull();
     } else {
       _create_str(other.data(), other.size());
@@ -167,9 +177,8 @@ class string_templ : public ShmContainer {
   string_templ& operator=(string_templ &&other) noexcept {
     if (this != &other) {
       shm_destroy();
-      if (alloc_ == other.alloc_) {
-        (*header_) = (*other.header_);
-        shm_deserialize_main();
+      if (GetAllocator() == other.GetAllocator()) {
+        strong_copy(other);
         other.SetNull();
       } else {
         _create_str(other.data(), other.size());
@@ -185,33 +194,19 @@ class string_templ : public ShmContainer {
 
   /** Check if this string is NULL */
   bool IsNull() const {
-    return header_->length_ == 0;
+    return length_ == 0;
   }
 
   /** Set this string to NULL */
   void SetNull() {
-    header_->text_.SetNull();
-    header_->length_ = 0;
+    text_.SetNull();
+    length_ = 0;
   }
 
   /** Destroy the shared-memory data. */
   void shm_destroy_main() {
     if (size() >= SSO) {
-      alloc_->Free(header_->text_);
-    }
-  }
-
-  /**====================================
-   * SHM Deserialization
-   * ===================================*/
-
-  /** Load from shared memory */
-  void shm_deserialize_main() {
-    if (size() < SSO) {
-      text_ = header_->sso_;
-    } else {
-      text_ = alloc_->template
-        Convert<char>(header_->text_);
+      GetAllocator()->Free(text_);
     }
   }
 
@@ -221,32 +216,32 @@ class string_templ : public ShmContainer {
 
   /** Get character at index i in the string */
   char& operator[](size_t i) const {
-    return text_[i];
+    return data()[i];
   }
 
   /** Convert into a std::string */
   std::string str() const {
-    return {text_, header_->length_};
+    return {c_str(), length_};
   }
 
   /** Get the size of the current string */
   size_t size() const {
-    return header_->length_;
+    return length_;
   }
 
   /** Get a constant reference to the C-style string */
   char* c_str() const {
-    return text_;
+    return data();
   }
 
   /** Get a constant reference to the C-style string */
   char* data() const {
-    return text_;
+    return GetAllocator()->template Convert<char, Pointer>(text_);
   }
 
   /** Get a mutable reference to the C-style string */
   char* data() {
-    return text_;
+    return GetAllocator()->template Convert<char, Pointer>(text_);
   }
 
   /** Resize this string */
@@ -254,10 +249,10 @@ class string_templ : public ShmContainer {
     if (IsNull()) {
       _create_str(new_size);
     } else if (new_size > size()) {
-      text_ = alloc_->ReallocatePtr<char, Pointer>(header_->text_, new_size);
-      header_->length_ = new_size;
+      GetAllocator()->template Reallocate<Pointer>(text_, new_size);
+      length_ = new_size;
     } else {
-      header_->length_ = new_size;
+      length_ = new_size;
     }
   }
 
@@ -303,16 +298,16 @@ class string_templ : public ShmContainer {
     if (length < SSO) {
       // NOTE(llogan): less than and not equal because length doesn't
       // account for trailing 0.
-      text_ = header_->sso_;
     } else {
-      text_ = alloc_->AllocatePtr<char>(length + 1, header_->text_);
+      text_ = GetAllocator()->Allocate(length + 1);
     }
-    header_->length_ = length;
+    length_ = length;
   }
   inline void _create_str(const char *text, size_t length) {
     _create_str(length);
-    memcpy(text_, text, length);
-    text_[length] = 0;
+    char *str = data();
+    memcpy(str, text, length);
+    str[length] = 0;
   }
 };
 

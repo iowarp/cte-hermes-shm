@@ -66,7 +66,7 @@ class VectorTest {
   /** Run the tests */
   void Test() {
     size_t count = 100000;
-    AllocateTest(count);
+    // AllocateTest(count);
     // ResizeTest(count);
     // ReserveEmplaceTest(count);
     GetTest(count);
@@ -279,10 +279,18 @@ class VectorTest {
       USE(x);
     } else if constexpr(std::is_same_v<hipc::vector<T>, VecT>) {
       hipc::Ref<T> x = (*vec_)[i];
-      USE(*x);
+      USE(x);
     } else if constexpr(std::is_same_v<hipc::array<T>, VecT>) {
-      hipc::Ref<T> x = (*vec_)[i];
-      USE(*x);
+      if constexpr(std::is_same_v<T, size_t>) {
+        // hipc::ShmArchive<T> &a = vec_->data_ar()[i];
+        // hipc::Ref<T> x(vec_->cache_[i]);
+        auto alloc = HERMES_MEMORY_MANAGER->GetDefaultAllocator();
+        // USE(alloc);
+        USE(alloc);
+      } else {
+        hipc::Ref<T> x = (*vec_)[i];
+        USE(x);
+      }
     } else if constexpr(std::is_same_v<bipc_vector<T>, VecT>) {
       T &x = (*vec_)[i];
       USE(x);

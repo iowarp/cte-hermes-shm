@@ -43,7 +43,7 @@ template <typename A, typename ContainerT, typename T>
 void save_vec(A &ar, ContainerT &obj) {
   ar << obj.size();
   for (auto iter = obj.cbegin(); iter != obj.cend(); ++iter) {
-    ar << *(*iter);
+    ar << (*iter);
   }
 }
 
@@ -55,7 +55,7 @@ void load_vec(A &ar, ContainerT &obj) {
   ar >> size;
   obj.resize(size);
   for (size_t i = 0; i < size; ++i) {
-    ar >> *(obj[i]);
+    ar >> (obj[i]);
   }
 }
 

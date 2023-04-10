@@ -73,6 +73,11 @@ union allocator_id_t {
     static allocator_id_t alloc(0, 0);
     return alloc;
   }
+
+  /** To index */
+  uint32_t ToIndex() {
+    return bits_.major_ * 4 + bits_.minor_;
+  }
 };
 
 typedef uint32_t slot_id_t;  // Uniquely ids a MemoryBackend slot

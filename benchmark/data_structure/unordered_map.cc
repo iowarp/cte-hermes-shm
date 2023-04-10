@@ -133,17 +133,8 @@ class UnorderedMapTest {
     Emplace(count);
 
     t.Resume();
-    volatile int i = 0;
-    if constexpr(IS_SHM_ARCHIVEABLE(MapT)) {
-      for (hipc::Ref<hipc::pair<size_t, T>> x : *map_) {
-        USE(*x);
-        ++i;
-      }
-    } else {
-      for (auto &x : *map_) {
-        USE(x);
-        ++i;
-      }
+    for (auto &x : *map_) {
+      USE(x);
     }
     t.Pause();
 
@@ -212,8 +203,8 @@ class UnorderedMapTest {
       auto iter = (*map_).find(i);
       USE(*iter);
     } else if constexpr(std::is_same_v<MapT, hipc::unordered_map<size_t, T>>) {
-      hipc::Ref<T> x = (*map_)[i];
-      USE(*x);
+      T &x = (*map_)[i];
+      USE(x);
     }
   }
 

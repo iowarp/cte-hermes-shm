@@ -114,16 +114,9 @@ class ListTest {
 
     t.Resume();
     int i = 0;
-    if constexpr(IS_SHM_ARCHIVEABLE(ListT)) {
-      for (auto x : *lp_) {
-        USE(*x);
-        ++i;
-      }
-    } else {
-      for (auto &x : *lp_) {
-        USE(x);
-        ++i;
-      }
+    for (auto &x : *lp_) {
+      USE(x);
+      ++i;
     }
     t.Pause();
 
@@ -194,11 +187,11 @@ class ListTest {
       T &x = (*lp_)[i];
       USE(x);
     } else if constexpr(std::is_same_v<ListT, hipc::list<T>>) {
-      hipc::Ref<T> x = (*lp_)[i];
-      USE(*x);
+      T &x = (*lp_)[i];
+      USE(x);
     } else if constexpr(std::is_same_v<ListT, hipc::slist<T>>) {
-      hipc::Ref<T> x = (*lp_)[i];
-      USE(*x);
+      T &x = (*lp_)[i];
+      USE(x);
     }
   }
 

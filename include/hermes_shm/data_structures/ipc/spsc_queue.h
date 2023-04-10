@@ -35,31 +35,16 @@ class spsc_queue_templ;
 #define TYPED_HEADER ShmHeader<spsc_queue_templ<T, EXTENSIBLE>>
 
 /**
- * The spsc_queue_templ shared-memory header
- * */
-template<typename T, bool EXTENSIBLE>
-struct ShmHeader<spsc_queue_templ<T, EXTENSIBLE>> {
-  SHM_CONTAINER_HEADER_TEMPLATE(ShmHeader)
-  ShmArchive<vector_templ<pair<bitfield32_t, T>, !EXTENSIBLE>> queue_;
-  _qtok_t tail_;
-  _qtok_t head_;
-
-  /** Strong copy operation */
-  void strong_copy(const ShmHeader &other) {
-    head_ = other.head_;
-    tail_ = other.tail_;
-  }
-};
-
-/**
  * A queue optimized for multiple producers (emplace) with a single
  * consumer (pop).
  * */
 template<typename T, bool EXTENSIBLE>
 class spsc_queue_templ : public ShmContainer {
  public:
-  SHM_CONTAINER_TEMPLATE((CLASS_NAME), (TYPED_CLASS), (TYPED_HEADER))
-  Ref<vector_templ<pair<bitfield32_t, T>, !EXTENSIBLE>> queue_;
+  SHM_CONTAINER_TEMPLATE((CLASS_NAME), (TYPED_CLASS))
+  vector<pair<bitfield32_t, T>> queue_;
+  _qtok_t tail_;
+  _qtok_t head_;
 
  public:
   /**====================================
@@ -67,11 +52,11 @@ class spsc_queue_templ : public ShmContainer {
    * ===================================*/
 
   /** SHM constructor. Default. */
-  explicit spsc_queue_templ(TYPED_HEADER *header, Allocator *alloc,
+  explicit spsc_queue_templ(Allocator *alloc,
                       size_t depth = 1024) {
-    shm_init_header(header, alloc);
-    queue_ = make_ref<vector_templ<pair<bitfield32_t, T>, !EXTENSIBLE>>(
-      header_->queue_, alloc_, depth);
+    shm_init_container(alloc);
+    make_ref<vector<pair<bitfield32_t, T>>>(
+      queue_, GetAllocator(), depth);
     SetNull();
   }
 
@@ -80,9 +65,9 @@ class spsc_queue_templ : public ShmContainer {
    * ===================================*/
 
   /** SHM copy constructor */
-  explicit spsc_queue_templ(TYPED_HEADER *header, Allocator *alloc,
+  explicit spsc_queue_templ(Allocator *alloc,
                             const spsc_queue_templ &other) {
-    shm_init_header(header, alloc);
+    shm_init_container(alloc);
     SetNull();
     shm_strong_copy_construct_and_op(other);
   }
@@ -98,7 +83,8 @@ class spsc_queue_templ : public ShmContainer {
 
   /** SHM copy constructor + operator main */
   void shm_strong_copy_construct_and_op(const spsc_queue_templ &other) {
-    (*header_) = *(other.header_);
+    head_ = other.head_;
+    tail_ = other.tail_;
     (*queue_) = (*other.queue_);
   }
 
@@ -107,11 +93,12 @@ class spsc_queue_templ : public ShmContainer {
    * ===================================*/
 
   /** SHM move constructor. */
-  spsc_queue_templ(TYPED_HEADER *header, Allocator *alloc,
+  spsc_queue_templ(Allocator *alloc,
                    spsc_queue_templ &&other) noexcept {
-    shm_init_header(header, alloc);
-    if (alloc_ == other.alloc_) {
-      (*header_) = std::move(*other.header_);
+    shm_init_container(alloc);
+    if (GetAllocator() == other.GetAllocator()) {
+      head_ = other.head_;
+      tail_ = other.tail_;
       (*queue_) = std::move(*other.queue_);
       other.SetNull();
     } else {
@@ -124,8 +111,9 @@ class spsc_queue_templ : public ShmContainer {
   spsc_queue_templ& operator=(spsc_queue_templ &&other) noexcept {
     if (this != &other) {
       shm_destroy();
-      if (alloc_ == other.alloc_) {
-        (*header_) = std::move(*other.header_);
+      if (GetAllocator() == other.GetAllocator()) {
+        head_ = other.head_;
+        tail_ = other.tail_;
         (*queue_) = std::move(*other.queue_);
         other.SetNull();
       } else {
@@ -142,28 +130,18 @@ class spsc_queue_templ : public ShmContainer {
 
   /** SHM destructor.  */
   void shm_destroy_main() {
-    queue_->shm_destroy();
+    queue_.shm_destroy();
   }
 
   /** Check if the list is empty */
   bool IsNull() const {
-    return queue_->IsNull();
+    return queue_.IsNull();
   }
 
   /** Sets this list as empty */
   void SetNull() {
-    header_->head_ = 0;
-    header_->tail_ = 0;
-  }
-
-  /**====================================
-   * SHM Deserialization
-   * ===================================*/
-
-  /** Load from shared memory */
-  void shm_deserialize_main() {
-    queue_ = Ref<vector_templ<pair<bitfield32_t, T>, !EXTENSIBLE>>(
-      header_->queue_, alloc_);
+    head_ = 0;
+    tail_ = 0;
   }
 
   /**====================================
@@ -175,10 +153,10 @@ class spsc_queue_templ : public ShmContainer {
   qtok_t emplace(Args&&... args) {
     // Allocate a slot in the queue
     // The slot is marked NULL, so pop won't do anything if context switch
-    _qtok_t tail = header_->tail_ + 1;
+    _qtok_t tail = tail_ + 1;
 
     // Emplace into queue at our slot
-    // uint32_t idx = tail % queue_->size();
+    // uint32_t idx = tail % queue_.size();
     // _emplace(tail, std::forward<Args>(args)...);
     return qtok_t(tail);
   }
@@ -187,12 +165,12 @@ class spsc_queue_templ : public ShmContainer {
   /** Emplace operation */
   template<typename ...Args>
   HSHM_ALWAYS_INLINE void _emplace(const _qtok_t &tail, Args&& ...args) {
-    // uint32_t idx = tail % queue_->size();
-    /*auto x = hipc::Ref<vector_templ<pair<bitfield32_t, T>, !EXTENSIBLE>>(
-      queue_->GetShmDeserialize());*/
-    // auto iter = queue_->begin(); // + idx;
+    // uint32_t idx = tail % queue_.size();
+    /*auto x = hipc::Ref<vector<pair<bitfield32_t, T>>>(
+      queue_.GetShmDeserialize());*/
+    // auto iter = queue_.begin(); // + idx;
     // (void) iter;
-    /*queue_->replace(iter,
+    /*queue_.replace(iter,
                     hshm::PiecewiseConstruct(),
                     make_argpack(),
                     make_argpack(std::forward<Args>(args)...));*/
@@ -211,19 +189,19 @@ class spsc_queue_templ : public ShmContainer {
   /** Pop operation */
   qtok_t _pop(Ref<T> &val) {
     // Don't pop if there's no entries
-    _qtok_t head = header_->head_;
-    _qtok_t tail = header_->tail_;
+    _qtok_t head = head_;
+    _qtok_t tail = tail_;
     if (head >= tail) {
       return qtok_t::GetNull();
     }
 
     // Pop the element, but only if it's marked valid
-    _qtok_t idx = head % queue_->size();
+    _qtok_t idx = head % queue_.size();
     hipc::Ref<hipc::pair<bitfield32_t, T>> entry = (*queue_)[idx];
     if (entry->first_->Any(1)) {
       (*val) = std::move(*entry->second_);
       entry->first_->Clear();
-      header_->head_ += 1;
+      head_ += 1;
       return qtok_t(head);
     } else {
       return qtok_t::GetNull();

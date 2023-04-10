@@ -9,6 +9,7 @@ add_executable(benchmark_data_structures
         ${TEST_MAIN}/main.cc
         test_init.cc
         atomic.cc
+        ref.cc
         string.cc
         list.cc
         vector.cc
