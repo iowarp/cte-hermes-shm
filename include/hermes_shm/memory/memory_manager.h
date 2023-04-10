@@ -99,6 +99,14 @@ class MemoryManager {
   }
 
   /**
+   * Registers an allocator. Used internally by ScanBackends, but may
+   * also be used externally.
+   * */
+  void RegisterAllocator(Allocator *alloc) {
+    HERMES_MEMORY_REGISTRY_REF.RegisterAllocator(alloc);
+  }
+
+  /**
    * Destroys an allocator
    * */
   void UnregisterAllocator(allocator_id_t alloc_id) {

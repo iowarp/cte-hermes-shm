@@ -28,7 +28,9 @@ void ScalablePageAllocator::shm_init(allocator_id_t id,
   custom_header_ = reinterpret_cast<char*>(header_ + 1);
   size_t region_off = (custom_header_ - buffer_) + custom_header_size;
   size_t region_size = buffer_size_ - region_off;
-  alloc_.shm_init(id, 0, buffer + region_off, region_size);
+  allocator_id_t sub_id(id.bits_.major_, id.bits_.minor_ + 1);
+  alloc_.shm_init(sub_id, 0, buffer + region_off, region_size);
+  HERMES_MEMORY_REGISTRY_REF.RegisterAllocator(&alloc_);
   header_->Configure(id, custom_header_size, &alloc_,
                      buffer_size, coalesce_trigger, coalesce_window);
   free_lists_ = header_->free_lists_.get();
@@ -61,6 +63,7 @@ void ScalablePageAllocator::shm_deserialize(char *buffer,
   size_t region_off = (custom_header_ - buffer_) + header_->custom_header_size_;
   size_t region_size = buffer_size_ - region_off;
   alloc_.shm_deserialize(buffer + region_off, region_size);
+  HERMES_MEMORY_REGISTRY_REF.RegisterAllocator(&alloc_);
   free_lists_ = header_->free_lists_.get();
 }
 
@@ -113,7 +116,7 @@ OffsetPointer ScalablePageAllocator::AllocateOffset(size_t size) {
 
 MpPage *ScalablePageAllocator::CheckCaches(size_t size_mp) {
   MpPage *page;
-  ScopedRwReadLock coalesce_lock(header_->coalesce_lock_, 0);
+  // ScopedRwReadLock coalesce_lock(header_->coalesce_lock_, 0);
   uint32_t cpu = NodeThreadId().hash() % HERMES_SYSTEM_INFO->ncpu_;
   uint32_t cpu_start = cpu * num_free_lists_;
   pair<FreeListStats, iqueue<MpPage>> &first_free_list =
@@ -135,10 +138,12 @@ MpPage *ScalablePageAllocator::CheckCaches(size_t size_mp) {
                  page, rem_page, size_mp,
                  16);
       return page;
+    } else {
+      return nullptr;
     }
 
     // Check all upper buffer caches
-    for (size_t i = exp + 1; i < num_caches_; ++i) {
+    /* for (size_t i = exp + 1; i < num_caches_; ++i) {
       pair<FreeListStats, iqueue<MpPage>> &high_free_list =
         (*free_lists_)[cpu_start + i];
       if (high_free_list.GetSecond().size()) {
@@ -155,14 +160,14 @@ MpPage *ScalablePageAllocator::CheckCaches(size_t size_mp) {
         }
         return page;
       }
-    }
+    }*/
+  } else {
+    // Check the arbitrary buffer cache
+    pair<FreeListStats, iqueue<MpPage>> &last_free_list =
+      (*free_lists_)[cpu_start + num_caches_];
+    page = FindFirstFit(size_mp, last_free_list.GetFirst(), last_free_list.GetSecond());
+    return page;
   }
-
-  // Check the arbitrary buffer cache
-  pair<FreeListStats, iqueue<MpPage>> &last_free_list =
-    (*free_lists_)[cpu_start + num_caches_];
-  page = FindFirstFit(size_mp, last_free_list.GetFirst(), last_free_list.GetSecond());
-  return page;
 }
 
 MpPage* ScalablePageAllocator::FindFirstFit(

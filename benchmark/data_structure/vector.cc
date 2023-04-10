@@ -63,14 +63,14 @@ class VectorTest {
 
   /** Run the tests */
   void Test() {
-    size_t count = 100000;
+    size_t count = 1000000;
     // AllocateTest(count);
     // ResizeTest(count);
-    // ReserveEmplaceTest(count);
+    ReserveEmplaceTest(count);
     GetTest(count);
-    // BeginIteratorTest(count);
-    // EndIteratorTest(count);
-    // ForwardIteratorTest(count);
+    BeginIteratorTest(count);
+    EndIteratorTest(count);
+    ForwardIteratorTest(count);
     // CopyTest(count);
     // MoveTest(count);
   }
@@ -197,18 +197,15 @@ class VectorTest {
 
     t.Resume();
     int i = 0;
-    if constexpr(IS_SHM_ARCHIVEABLE(VecT)) {
-      for (auto x : *vec_) {
-        USE(*x);
-        ++i;
-      }
-    } else {
-      for (auto &x : *vec_) {
-        USE(x);
-        ++i;
-      }
+    for (auto &x : *vec_) {
+      USE(x);
+      ++i;
     }
     t.Pause();
+
+    if (ptr_ == nullptr) {
+      std::cout << "hm" << std::endl;
+    }
 
     TestOutput("ForwardIterator", t);
     Destroy();
@@ -281,6 +278,7 @@ class VectorTest {
     } else if constexpr(std::is_same_v<bipc_vector<T>, VecT>) {
       T &x = (*vec_)[i];
       USE(x);
+      if (!ptr_) { std::cout << "h" << std::endl; }
     }
   }
 

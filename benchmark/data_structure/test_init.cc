@@ -21,9 +21,8 @@ void MainPretest() {
   auto mem_mngr = HERMES_MEMORY_MANAGER;
   auto backend = mem_mngr->CreateBackend<hipc::PosixShmMmap>(
     MemoryManager::GetDefaultBackendSize(), shm_url);
-  memset(backend->data_, 0, MEGABYTES(128));
   // TODO(llogan): back to good allocator
-  mem_mngr->CreateAllocator<hipc::StackAllocator>(
+  mem_mngr->CreateAllocator<hipc::ScalablePageAllocator>(
     shm_url, alloc_id, 0);
 
   // Boost shared memory
