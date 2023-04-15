@@ -13,6 +13,9 @@
 #ifndef HERMES_SHM_INCLUDE_HERMES_SHM_UTIL_LOGGING_H_
 #define HERMES_SHM_INCLUDE_HERMES_SHM_UTIL_LOGGING_H_
 
+#include <sys/types.h>
+#include <sys/syscall.h>
+
 #include <unistd.h>
 #include <climits>
 
@@ -139,7 +142,7 @@ class Logger {
     if (LOG_LEVEL > verbosity_) { return; }
     std::string msg =
       hshm::Formatter::format(fmt, std::forward<Args>(args)...);
-    int tid = gettid();
+    int tid = GetTid();
     std::string out = hshm::Formatter::format(
       "{}:{} {} {} {}\n",
       path, line, tid, func, msg);
@@ -179,7 +182,7 @@ class Logger {
 
     std::string msg =
       hshm::Formatter::format(fmt, std::forward<Args>(args)...);
-    int tid = gettid();
+    int tid = GetTid();
     std::string out = hshm::Formatter::format(
       "{}:{} {} {} {} {}\n",
       path, line, level, tid, func, msg);
@@ -190,6 +193,24 @@ class Logger {
     if (LOG_LEVEL == kFatal) {
       exit(1);
     }
+  }
+
+  int GetTid() {
+#ifdef SYS_gettid
+    return (pid_t)syscall(SYS_gettid);
+#else
+#warning "GetTid is not defined"
+    return GetPid();
+#endif
+  }
+
+  int GetPid() {
+#ifdef SYS_getpid
+    return (pid_t)syscall(SYS_getpid);
+#else
+#warning "GetPid is not defined"
+    return 0;
+#endif
   }
 };
 
