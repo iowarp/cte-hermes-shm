@@ -128,8 +128,10 @@ class Logger {
              Args&& ...args) {
     std::string out =
       hshm::Formatter::format(fmt, std::forward<Args>(args)...);
-    std::cout << out;
-    fwrite(out.data(), 1, out.size(), fout_);
+    fwrite(out.data(), 1, out.size(), stderr);
+    if (fout_) {
+      fwrite(out.data(), 1, out.size(), fout_);
+    }
   }
 
   template<typename ...Args>
@@ -146,7 +148,7 @@ class Logger {
     std::string out = hshm::Formatter::format(
       "{}:{} {} {} {}\n",
       path, line, tid, func, msg);
-    std::cerr << out;
+    fwrite(out.data(), 1, out.size(), stderr);
     if (fout_) {
       fwrite(out.data(), 1, out.size(), fout_);
     }
@@ -186,7 +188,7 @@ class Logger {
     std::string out = hshm::Formatter::format(
       "{}:{} {} {} {} {}\n",
       path, line, level, tid, func, msg);
-    std::cerr << out;
+    fwrite(out.data(), 1, out.size(), stderr);
     if (fout_) {
       fwrite(out.data(), 1, out.size(), fout_);
     }
