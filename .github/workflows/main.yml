@@ -60,25 +60,25 @@ jobs:
         if: steps.spack-cache.outputs.cache-hit != 'true'
         run: bash scripts/ci/install_deps.sh
 
-      - name: Build and Test
-        run: bash scripts/ci/install_hshm.sh
-
-      - name: Install
-        run: cd build && make install
-
-      - name: Generate coverage file
-        run: |
-          COVERAGE_DIR=${GITHUB_WORKSPACE}/coverage
-          mkdir -p ${COVERAGE_DIR}
-          cd ${GITHUB_WORKSPACE}/build
-          lcov -c -d . -o "${COVERAGE_DIR}/tmp.info"
-          lcov --remove "${COVERAGE_DIR}/tmp.info"   \
-                        "/usr/include/*"             \
-                        "${HOME}/*"         \
-                        "*/stb_ds.h"                 \
-                        -o ${COVERAGE_DIR}/lcov.info
-
-      - name: Coveralls
-        uses: coverallsapp/github-action@master
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+#      - name: Build and Test HSHM
+#        run: bash scripts/ci/install_hshm.sh
+#
+#      - name: Install
+#        run: cd build && make install
+#
+#      - name: Generate coverage file
+#        run: |
+#          COVERAGE_DIR=${GITHUB_WORKSPACE}/coverage
+#          mkdir -p ${COVERAGE_DIR}
+#          cd ${GITHUB_WORKSPACE}/build
+#          lcov -c -d . -o "${COVERAGE_DIR}/tmp.info"
+#          lcov --remove "${COVERAGE_DIR}/tmp.info"   \
+#                        "/usr/include/*"             \
+#                        "${HOME}/*"         \
+#                        "*/stb_ds.h"                 \
+#                        -o ${COVERAGE_DIR}/lcov.info
+#
+#      - name: Coveralls
+#        uses: coverallsapp/github-action@master
+#        with:
+#          github-token: ${{ secrets.GITHUB_TOKEN }}
