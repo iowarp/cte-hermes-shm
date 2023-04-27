@@ -27,14 +27,7 @@ namespace hshm {
 void RwLock::ReadLock(uint32_t owner) {
   bool ret = false;
   RwLockPayload expected, desired;
-  size_t count = 0;
   do {
-#ifdef HERMES_DEBUG_LOCK
-    if (count > US_TO_CLOCKS(1000000)) {
-      HILOG(kDebug, "Taking a while");
-      count = 5;
-    }
-#endif
     for (int i = 0; i < 1; ++i) {
       expected.as_int_ = payload_.load();
       if (expected.IsWriteLocked()) {
@@ -48,12 +41,12 @@ void RwLock::ReadLock(uint32_t owner) {
       if (ret) {
 #ifdef HERMES_DEBUG_LOCK
         owner_ = owner;
+        HILOG(kDebug, "Acquired read lock for {}", owner);
 #endif
         return;
       }
     }
     HERMES_THREAD_MODEL->Yield();
-    ++count;
   } while (true);
 }
 
@@ -82,14 +75,7 @@ void RwLock::ReadUnlock() {
 void RwLock::WriteLock(uint32_t owner) {
   bool ret = false;
   RwLockPayload expected, desired;
-  size_t count = 0;
   do {
-#ifdef HERMES_DEBUG_LOCK
-    if (count > US_TO_CLOCKS(1000000)) {
-      HILOG(kDebug, "Taking a while");
-      count = 5;
-    }
-#endif
     for (int i = 0; i < 1; ++i) {
       expected.as_int_ = payload_.load();
       if (expected.IsReadLocked() || expected.IsWriteLocked()) {
@@ -103,17 +89,12 @@ void RwLock::WriteLock(uint32_t owner) {
       if (ret) {
 #ifdef HERMES_DEBUG_LOCK
         owner_ = owner;
+        HILOG(kDebug, "Acquired write lock for {}", owner);
 #endif
         return;
       }
     }
-
-    if (count < 5) {
-      HERMES_THREAD_MODEL->Yield();
-    } else {
-      usleep(100);
-    }
-    ++count;
+    HERMES_THREAD_MODEL->Yield();
   } while (true);
 }
 

@@ -128,7 +128,7 @@ class Logger {
              Args&& ...args) {
     std::string out =
       hshm::Formatter::format(fmt, std::forward<Args>(args)...);
-    fwrite(out.data(), 1, out.size(), stderr);
+    std::cout << out;
     if (fout_) {
       fwrite(out.data(), 1, out.size(), fout_);
     }
@@ -148,7 +148,7 @@ class Logger {
     std::string out = hshm::Formatter::format(
       "{}:{} {} {} {}\n",
       path, line, tid, func, msg);
-    fwrite(out.data(), 1, out.size(), stderr);
+    std::cerr << out;
     if (fout_) {
       fwrite(out.data(), 1, out.size(), fout_);
     }
@@ -188,7 +188,7 @@ class Logger {
     std::string out = hshm::Formatter::format(
       "{}:{} {} {} {} {}\n",
       path, line, level, tid, func, msg);
-    fwrite(out.data(), 1, out.size(), stderr);
+    std::cerr << out;
     if (fout_) {
       fwrite(out.data(), 1, out.size(), fout_);
     }
@@ -201,7 +201,7 @@ class Logger {
 #ifdef SYS_gettid
     return (pid_t)syscall(SYS_gettid);
 #else
-#warning "GetTid is not defined"
+    #warning "GetTid is not defined"
     return GetPid();
 #endif
   }
@@ -210,7 +210,7 @@ class Logger {
 #ifdef SYS_getpid
     return (pid_t)syscall(SYS_getpid);
 #else
-#warning "GetPid is not defined"
+    #warning "GetPid is not defined"
     return 0;
 #endif
   }
