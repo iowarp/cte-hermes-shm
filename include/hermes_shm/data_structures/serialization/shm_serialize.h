@@ -5,6 +5,8 @@
 #ifndef HERMES_SHM_INCLUDE_HERMES_SHM_DATA_STRUCTURES_SERIALIZATION_SHM_SERIALIZE_H_
 #define HERMES_SHM_INCLUDE_HERMES_SHM_DATA_STRUCTURES_SERIALIZATION_SHM_SERIALIZE_H_
 
+#define NOREF typename std::remove_reference<decltype(arg)>::type
+
 namespace hshm::ipc {
 
 class ShmSerializer {
@@ -19,10 +21,10 @@ class ShmSerializer {
   HSHM_ALWAYS_INLINE static size_t shm_buf_size(Args&& ...args) {
     size_t size = 0;
     auto lambda = [&size](auto i, auto &&arg) {
-      if constexpr(std::is_pod<std::remove_reference<decltype(arg)>>()) {
-        size += sizeof(arg);
-      } else if constexpr(IS_SHM_ARCHIVEABLE(decltype(arg))) {
+      if constexpr(IS_SHM_ARCHIVEABLE(NOREF)) {
         size += sizeof(hipc::OffsetPointer);
+      } else if constexpr(std::is_pod<NOREF>()) {
+        size += sizeof(arg);
       } else {
         throw IPC_ARGS_NOT_SHM_COMPATIBLE.format();
       }
@@ -40,13 +42,13 @@ class ShmSerializer {
     memcpy(buf, &p.allocator_id_, sizeof(allocator_id_t));
     off_ = sizeof(allocator_id_t);
     auto lambda = [buf, this](auto i, auto &&arg) {
-      if constexpr(std::is_pod<std::remove_reference<decltype(arg)>>()) {
-        memcpy(buf + this->off_, &arg, sizeof(arg));
-        this->off_ += sizeof(arg);
-      } else if constexpr(IS_SHM_ARCHIVEABLE(decltype(arg))) {
-        OffsetPointer p = arg.ToOffsetPointer();
+      if constexpr(IS_SHM_ARCHIVEABLE(NOREF)) {
+        OffsetPointer p = arg.template GetShmPointer<OffsetPointer>();
         memcpy(buf + this->off_, (void*)&p, sizeof(p));
         this->off_ += sizeof(p);
+      } else if constexpr(std::is_pod<NOREF>()) {
+        memcpy(buf + this->off_, &arg, sizeof(arg));
+        this->off_ += sizeof(arg);
       } else {
         throw IPC_ARGS_NOT_SHM_COMPATIBLE.format();
       }
@@ -66,11 +68,20 @@ class ShmSerializer {
   /** Deserialize an argument from the SHM buffer */
   template<typename T, typename ...Args>
   HSHM_ALWAYS_INLINE T deserialize(Allocator *alloc, char *buf) {
-    T arg;
     if constexpr(std::is_pod<T>()) {
+      T arg;
       memcpy(&arg, buf + off_, sizeof(arg));
       off_ += sizeof(arg);
-    } else if constexpr(IS_SHM_ARCHIVEABLE(T)) {
+      return arg;
+    } else {
+      throw IPC_ARGS_NOT_SHM_COMPATIBLE.format();
+    }
+  }
+
+  /** Deserialize an argument from the SHM buffer */
+  template<typename T, typename ...Args>
+  HSHM_ALWAYS_INLINE void deserialize(Allocator *alloc, char *buf, hipc::mptr<T> &arg) {
+    if constexpr(IS_SHM_ARCHIVEABLE(T)) {
       OffsetPointer p;
       memcpy((void*)&p, buf + off_, sizeof(p));
       arg.shm_deserialize(alloc, p);
@@ -78,10 +89,11 @@ class ShmSerializer {
     } else {
       throw IPC_ARGS_NOT_SHM_COMPATIBLE.format();
     }
-    return arg;
   }
 };
 
 }  // namespace hshm
+
+#undef NOREF
 
 #endif  // HERMES_SHM_INCLUDE_HERMES_SHM_DATA_STRUCTURES_SERIALIZATION_SHM_SERIALIZE_H_
