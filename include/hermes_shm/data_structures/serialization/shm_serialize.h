@@ -19,8 +19,7 @@ class ShmSerializer {
   HSHM_ALWAYS_INLINE static size_t shm_buf_size(Args&& ...args) {
     size_t size = 0;
     auto lambda = [&size](auto i, auto &&arg) {
-      size_t size = 0;
-      if constexpr(std::is_pod<decltype(arg)>()) {
+      if constexpr(std::is_pod<std::remove_reference<decltype(arg)>>()) {
         size += sizeof(arg);
       } else if constexpr(IS_SHM_ARCHIVEABLE(decltype(arg))) {
         size += sizeof(hipc::OffsetPointer);
@@ -34,18 +33,20 @@ class ShmSerializer {
 
   /** Serialize a set of arguments into shared memory */
   template<typename ...Args>
-  HSHM_ALWAYS_INLINE char* shm_serialize(Allocator *alloc, Args&& ..args) {
-    size_t buf_size = sizeof(allocator_id) + shm_buf_size(std::forward<Args>(args)...);
+  HSHM_ALWAYS_INLINE char* serialize(Allocator *alloc, Args&& ...args) {
+    size_t buf_size = sizeof(allocator_id_t) + shm_buf_size(std::forward<Args>(args)...);
     Pointer p;
     char *buf = alloc->AllocatePtr<char>(buf_size, p);
-    memcpy(buf, &p.alloc_id_, sizeof(allocator_id));
-    off_ = sizeof(allocator_id);
-    auto lambda = [&off_](auto i, auto &&arg) {
-      if constexpr(std::is_pod<decltype(arg)>()) {
-        memcpy(buf + off_, &arg, sizeof(arg));
+    memcpy(buf, &p.allocator_id_, sizeof(allocator_id_t));
+    off_ = sizeof(allocator_id_t);
+    auto lambda = [buf, this](auto i, auto &&arg) {
+      if constexpr(std::is_pod<std::remove_reference<decltype(arg)>>()) {
+        memcpy(buf + this->off_, &arg, sizeof(arg));
+        this->off_ += sizeof(arg);
       } else if constexpr(IS_SHM_ARCHIVEABLE(decltype(arg))) {
         OffsetPointer p = arg.ToOffsetPointer();
-        memcpy(buf + off_, &p, sizeof(p));
+        memcpy(buf + this->off_, (void*)&p, sizeof(p));
+        this->off_ += sizeof(p);
       } else {
         throw IPC_ARGS_NOT_SHM_COMPATIBLE.format();
       }
@@ -55,23 +56,23 @@ class ShmSerializer {
   }
 
   /** Deserialize an allocator from the SHM buffer */
-  HSHM_ALWAYS_INLINE Allocator* shm_deserialize(char *buf) {
+  HSHM_ALWAYS_INLINE Allocator* deserialize(char *buf) {
     allocator_id_t alloc_id;
-    memcpy(&alloc_id, buf + off_, sizeof(allocator_id_t));
+    memcpy((void*)&alloc_id, buf + off_, sizeof(allocator_id_t));
     off_ += sizeof(allocator_id_t);
     return HERMES_MEMORY_MANAGER->GetAllocator(alloc_id);
   }
 
   /** Deserialize an argument from the SHM buffer */
   template<typename T, typename ...Args>
-  HSHM_ALWAYS_INLINE T shm_deserialize(Allocator *alloc, char *buf, Args&& ..args) {
+  HSHM_ALWAYS_INLINE T deserialize(Allocator *alloc, char *buf) {
     T arg;
-    if constexpr(std::is_pod<decltype(arg)>()) {
+    if constexpr(std::is_pod<T>()) {
       memcpy(&arg, buf + off_, sizeof(arg));
       off_ += sizeof(arg);
-    } else if constexpr(IS_SHM_ARCHIVEABLE(decltype(arg))) {
+    } else if constexpr(IS_SHM_ARCHIVEABLE(T)) {
       OffsetPointer p;
-      memcpy(&p, buf + off_, sizeof(p));
+      memcpy((void*)&p, buf + off_, sizeof(p));
       arg.shm_deserialize(alloc, p);
       off_ += sizeof(p);
     } else {

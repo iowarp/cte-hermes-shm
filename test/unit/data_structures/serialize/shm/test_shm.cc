@@ -13,13 +13,26 @@
 #include "basic_test.h"
 #include "test_init.h"
 #include "hermes_shm/data_structures/ipc/string.h"
+#include "hermes_shm/data_structures/data_structure.h"
 
-TEST_CASE("SerializeInt") {
+TEST_CASE("SerializePod") {
   hipc::ShmSerializer istream;
-  Allocator *alloc = HERME_MEMORY_MANAGER->GetMainAllocator();
+  Allocator *alloc = HERMES_MEMORY_MANAGER->GetDefaultAllocator();
   int a = 1;
   double b = 2;
   float c = 3;
-  istream.serialize(alloc, a, b, c);
+  int size = sizeof(int) + sizeof(double) + sizeof(float) + sizeof(allocator_id_t);
+  REQUIRE(istream.shm_buf_size(alloc->GetId(), a, b, c) == size);
+  char *buf = istream.serialize(alloc, a, b, c);
+
+  hipc::ShmSerializer ostream;
+  Allocator *alloc2 = ostream.deserialize(buf);
+  REQUIRE(alloc == alloc2);
+  auto a2 = ostream.deserialize<int>(alloc, buf);
+  REQUIRE(a2 == a);
+  auto b2 = ostream.deserialize<double>(alloc, buf);
+  REQUIRE(b2 == b);
+  auto c2 = ostream.deserialize<float>(alloc, buf);
+  REQUIRE(c2 == c);
 }
 
