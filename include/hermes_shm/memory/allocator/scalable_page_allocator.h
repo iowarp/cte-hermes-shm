@@ -161,8 +161,8 @@ class ScalablePageAllocator : public Allocator {
   OffsetPointer AllocateOffset(size_t size) override;
 
  private:
-  /** Check if a cached page can be re-used */
-  MpPage *CheckCaches(size_t size_mp);
+  /** Check if a cached page on this core can be re-used */
+  MpPage *CheckLocalCaches(size_t size_mp);
 
   /**
    * Find the first fit of an element in a free list

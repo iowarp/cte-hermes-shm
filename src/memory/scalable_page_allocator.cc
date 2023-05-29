@@ -89,7 +89,7 @@ OffsetPointer ScalablePageAllocator::AllocateOffset(size_t size) {
   size_t size_mp = size + sizeof(MpPage);
 
   // Case 1: Can we re-use an existing page?
-  page = CheckCaches(size_mp);
+  page = CheckLocalCaches(size_mp);
 
   // Case 2: Coalesce if enough space is being wasted
   // if (page == nullptr) {}
@@ -114,7 +114,7 @@ OffsetPointer ScalablePageAllocator::AllocateOffset(size_t size) {
   return p + sizeof(MpPage);
 }
 
-MpPage *ScalablePageAllocator::CheckCaches(size_t size_mp) {
+MpPage *ScalablePageAllocator::CheckLocalCaches(size_t size_mp) {
   MpPage *page;
   // ScopedRwReadLock coalesce_lock(header_->coalesce_lock_, 0);
   uint32_t cpu = NodeThreadId().hash() % HERMES_SYSTEM_INFO->ncpu_;
