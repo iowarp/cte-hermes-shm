@@ -10,19 +10,21 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-
-#ifndef HERMES_DATA_STRUCTURES_DATA_STRUCTURE_H_
-#define HERMES_DATA_STRUCTURES_DATA_STRUCTURE_H_
-
-#include "hermes_shm/data_structures/ipc/internal/shm_internal.h"
-#include "hermes_shm/memory/memory_manager.h"
-#include "hermes_shm/data_structures/ipc/pair.h"
+#include <iostream>
+#include "test_init.h"
 #include "hermes_shm/data_structures/ipc/string.h"
-#include "ipc/list.h"
-#include "ipc/vector.h"
-#include "ipc/unordered_map.h"
-#include "hermes_shm/memory/memory_manager.h"
+#include "hermes_shm/data_structures/serialization/thallium.h"
+#include "hermes_shm/data_structures/containers/charbuf.h"
+#include <memory>
 
-namespace hipc = hshm::ipc;
+void MainPretest() {
+  std::string shm_url = "test_serializers";
+  allocator_id_t alloc_id(0, 1);
+  auto mem_mngr = HERMES_MEMORY_MANAGER;
+  mem_mngr->CreateBackend<PosixShmMmap>(
+      MemoryManager::GetDefaultBackendSize(), shm_url);
+  mem_mngr->CreateAllocator<hipc::ScalablePageAllocator>(shm_url, alloc_id, 0);
+}
 
-#endif  // HERMES_DATA_STRUCTURES_DATA_STRUCTURE_H_
+void MainPosttest() {
+}
