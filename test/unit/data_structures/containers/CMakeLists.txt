@@ -21,6 +21,7 @@ add_executable(test_data_structure_exec
         unique_ptr.cc
         unordered_map.cc
         mpsc_queue.cc
+        mpmc_queue.cc
 )
 
 add_dependencies(test_data_structure_exec hermes_shm_data_structures)
@@ -67,6 +68,14 @@ add_test(NAME test_unordered_map_of_str_int COMMAND
         ${CMAKE_BINARY_DIR}/bin/test_data_structure_exec "UnorderedMapOfStringInt")
 add_test(NAME test_unordered_map_of_str_str COMMAND
         ${CMAKE_BINARY_DIR}/bin/test_data_structure_exec "UnorderedMapOfStringString")
+
+# MPSC TESTS
+add_test(NAME test_mpsc COMMAND
+        ${CMAKE_BINARY_DIR}/bin/test_data_structure_exec "TestMpsc*")
+
+# MPMC TESTS
+add_test(NAME test_mpmc COMMAND
+        ${CMAKE_BINARY_DIR}/bin/test_data_structure_exec "TestMpmc*")
 
 #------------------------------------------------------------------------------
 # Install Targets

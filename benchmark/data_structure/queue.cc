@@ -21,6 +21,7 @@
 #include "hermes_shm/data_structures/ipc/string.h"
 #include <hermes_shm/data_structures/ipc/mpsc_queue.h>
 #include <hermes_shm/data_structures/ipc/spsc_queue.h>
+#include <hermes_shm/data_structures/ipc/mpmc_queue.h>
 
 /**
  * A series of performance tests for vectors
@@ -52,6 +53,8 @@ class QueueTest {
       queue_type_ = "hipc::mpsc_queue_ext";
     } else if constexpr(std::is_same_v<hipc::spsc_queue<T>, QueueT>) {
       queue_type_ = "hipc::spsc_queue";
+    } else if constexpr(std::is_same_v<hipc::mpmc_queue<T>, QueueT>) {
+      queue_type_ = "hipc::mpmc_queue";
     } else {
       HELOG(kFatal, "none of the queue tests matched")
     }
@@ -94,7 +97,7 @@ class QueueTest {
     Emplace(count);
     t.Pause();
 
-    TestOutput("Enqueue", t);
+    TestOutput("Enqueue", t, count);
     Destroy();
   }
 
@@ -110,7 +113,7 @@ class QueueTest {
     Dequeue(count);
     t.Pause();
 
-    TestOutput("Dequeue", t);
+    TestOutput("Dequeue", t, count);
     Destroy();
   }
 
@@ -120,9 +123,10 @@ class QueueTest {
    * ===================================*/
 
   /** Output as CSV */
-  void TestOutput(const std::string &test_name, Timer &t) {
-    HIPRINT("{},{},{},{}\n",
-            test_name, queue_type_, internal_type_, t.GetMsec())
+  void TestOutput(const std::string &test_name, Timer &t, size_t count) {
+    HIPRINT("{},{},{},{},{}\n",
+            test_name, queue_type_, internal_type_, t.GetMsec(),
+            (float)count / t.GetUsec())
   }
 
   /** Get element at position i */
@@ -141,6 +145,8 @@ class QueueTest {
       } else if constexpr(std::is_same_v<QueueT, hipc::spsc_queue<T>>) {
         queue_->pop(*x_);
         USE(*x_);
+      } else if constexpr(std::is_same_v<QueueT, hipc::mpmc_queue<T>>) {
+        while (queue_->pop(*x_).IsNull());
       }
     }
   }
@@ -157,6 +163,11 @@ class QueueTest {
         queue_->emplace(var.Get());
       } else if constexpr(std::is_same_v<QueueT, hipc::spsc_queue<T>>) {
         queue_->emplace(var.Get());
+      } else if constexpr(std::is_same_v<QueueT, hipc::mpmc_queue<T>>) {
+        if (queue_->emplace(var.Get()).IsNull()) {
+          std::cout << hshm::Formatter::format("Failed on {}", i);
+          exit(1);
+        }
       }
     }
   }
@@ -175,6 +186,9 @@ class QueueTest {
     } else if constexpr(std::is_same_v<QueueT, hipc::spsc_queue<T>>) {
       queue_ptr_ = hipc::make_mptr<QueueT>(count);
       queue_ = queue_ptr_.get();
+    } else if constexpr(std::is_same_v<QueueT, hipc::mpmc_queue<T>>) {
+      queue_ptr_ = hipc::make_mptr<QueueT>(count);
+      queue_ = queue_ptr_.get();
     }
   }
 
@@ -188,6 +202,8 @@ class QueueTest {
       queue_ptr_.shm_destroy();
     } else if constexpr(std::is_same_v<QueueT, hipc::spsc_queue<T>>) {
       queue_ptr_.shm_destroy();
+    } else if constexpr(std::is_same_v<QueueT, hipc::mpmc_queue<T>>) {
+      queue_ptr_.shm_destroy();
     }
   }
 };
@@ -197,7 +213,7 @@ void FullQueueTest() {
   QueueTest<size_t, std::queue<size_t>>().Test();
   // QueueTest<std::string, std::queue<std::string>>().Test();
 
-  // hipc::mpsc_queue tests
+  // hipc::mpmc_queue tests
   QueueTest<size_t, hipc::mpsc_queue<size_t>>().Test();
   // QueueTest<std::string, hipc::mpsc_queue<std::string>>().Test();
   // QueueTest<hipc::string, hipc::mpsc_queue<hipc::string>>().Test();
@@ -211,6 +227,12 @@ void FullQueueTest() {
   QueueTest<size_t, hipc::spsc_queue<size_t>>().Test();
   // QueueTest<std::string, hipc::spsc_queue<std::string>>().Test();
   // QueueTest<hipc::string, hipc::spsc_queue<hipc::string>>().Test();
+
+  // hipc::mpmc_queue tests
+  QueueTest<size_t, hipc::mpmc_queue<size_t>>().Test();
+  // QueueTest<std::string, hipc::mpsc_queue<std::string>>().Test();
+  // QueueTest<hipc::string, hipc::mpsc_queue<hipc::string>>().Test();
+
 }
 
 TEST_CASE("QueueBenchmark") {

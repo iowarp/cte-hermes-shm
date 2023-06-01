@@ -173,7 +173,7 @@ class mpsc_queue_templ : public ShmContainer {
           (*queue_) = std::move(*new_queue);
         }
       } else {
-        while (1) {
+        while (true) {
           head = head_.load();
           size = tail - head + 1;
           if (size <= (*queue_).size()) {
@@ -212,7 +212,7 @@ class mpsc_queue_templ : public ShmContainer {
 
  public:
   /** Consumer pops the head object */
-  HSHM_ALWAYS_INLINE qtok_t pop(T &val) {
+  qtok_t pop(T &val) {
     if constexpr(EXTENSIBLE) {
       ScopedRwReadLock resize_lock(lock_, 0);
       return _pop(val);

@@ -475,7 +475,7 @@ class vector : public ShmContainer {
       return;
     }
     ShmArchive<T> *vec = data_ar();
-    (*this)[pos.i_].shm_destroy();
+    hipc::Allocator::DestructObj((*this)[pos.i_]);
     HSHM_MAKE_AR(vec[pos.i_], GetAllocator(),
                  std::forward<Args>(args)...)
   }
