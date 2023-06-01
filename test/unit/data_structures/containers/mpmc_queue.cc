@@ -31,7 +31,7 @@ class QueueTestSuite {
       for (size_t i = 0; i < count_per_rank; ++i) {
         size_t idx = rank * count_per_rank + i;
         CREATE_SET_VAR_TO_INT_OR_STRING(T, var, idx);
-        while (queue_->emplace(var).IsNull());
+        while (queue_->emplace(var).IsNull()) {}
       }
     } catch (hshm::Error &e) {
       HELOG(kFatal, e.what())
