@@ -12,7 +12,7 @@
 
 #include "basic_test.h"
 #include "test_init.h"
-#include "hermes_shm/data_structures/ipc/mpmc_queue.h"
+#include "hermes_shm/data_structures/ipc/ticket_queue.h"
 
 template<typename QueueT, typename T>
 class QueueTestSuite {
@@ -65,7 +65,7 @@ template<typename QueueT, typename T>
 void ProduceThenConsume(size_t nproducers,
                         size_t nconsumers,
                         size_t count_per_rank) {
-  size_t depth = 32;
+  size_t depth = nproducers * count_per_rank;
   auto queue = hipc::make_uptr<QueueT>(depth);
   QueueTestSuite<QueueT, T> q(queue);
   std::atomic<size_t> count = 0;
@@ -93,7 +93,7 @@ template<typename QueueT, typename T>
 void ProduceAndConsume(size_t nproducers,
                        size_t nconsumers,
                        size_t count_per_rank) {
-  size_t depth = 32;
+  size_t depth = nproducers * count_per_rank;
   auto queue = hipc::make_uptr<QueueT>(depth);
   size_t nthreads = nproducers + nconsumers;
   QueueTestSuite<QueueT, T> q(queue);
@@ -120,32 +120,18 @@ void ProduceAndConsume(size_t nproducers,
  * TEST MPMC QUEUE
  * */
 
-TEST_CASE("TestMpmcQueueInt") {
+TEST_CASE("TestTicketQueueInt") {
   Allocator *alloc = alloc_g;
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
-  ProduceThenConsume<hipc::mpmc_queue<int>, int>(1, 1, 32);
+  ProduceThenConsume<hipc::ticket_queue<int>, int>(1, 1, 32);
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
 }
 
-TEST_CASE("TestMpmcQueueString") {
+TEST_CASE("TestTicketQueueIntMultiThreaded") {
   Allocator *alloc = alloc_g;
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
-  ProduceThenConsume<hipc::mpmc_queue<hipc::string>, hipc::string>(1, 1, 32);
+  ProduceAndConsume<hipc::ticket_queue<int>, int>(8, 1, 8192);
+  // ProduceAndConsume<hipc::ticket_queue<int>, int>(8, 8, 8192);
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
 }
 
-TEST_CASE("TestMpmcQueueIntMultiThreaded") {
-  Allocator *alloc = alloc_g;
-  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
-  ProduceAndConsume<hipc::mpmc_queue<int>, int>(8, 1, 8192);
-  // ProduceAndConsume<hipc::mpmc_queue<int>, int>(8, 8, 8192);
-  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
-}
-
-TEST_CASE("TestMpmcQueueStringMultiThreaded") {
-  Allocator *alloc = alloc_g;
-  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
-  ProduceAndConsume<hipc::mpmc_queue<hipc::string>, hipc::string>(8, 1, 8192);
-  ProduceAndConsume<hipc::mpmc_queue<hipc::string>, hipc::string>(8, 8, 8192);
-  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
-}

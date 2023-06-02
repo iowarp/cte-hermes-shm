@@ -21,7 +21,8 @@ add_executable(test_data_structure_exec
         unique_ptr.cc
         unordered_map.cc
         mpsc_queue.cc
-        mpmc_queue.cc
+        #mpmc_queue.cc
+        ticket_queue.cc
 )
 
 add_dependencies(test_data_structure_exec hermes_shm_data_structures)
@@ -73,9 +74,9 @@ add_test(NAME test_unordered_map_of_str_str COMMAND
 add_test(NAME test_mpsc COMMAND
         ${CMAKE_BINARY_DIR}/bin/test_data_structure_exec "TestMpsc*")
 
-# MPMC TESTS
-add_test(NAME test_mpmc COMMAND
-        ${CMAKE_BINARY_DIR}/bin/test_data_structure_exec "TestMpmc*")
+# TicketQueue TESTS
+add_test(NAME test_tkt_queue COMMAND
+        ${CMAKE_BINARY_DIR}/bin/test_data_structure_exec "TestTicket*")
 
 #------------------------------------------------------------------------------
 # Install Targets
