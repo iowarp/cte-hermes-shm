@@ -115,51 +115,6 @@ void ProduceAndConsume(size_t nproducers, size_t count_per_rank) {
 }
 
 /**
- * TEST MPSC EXTENSIBLE QUEUE
- * */
-
-TEST_CASE("TestMpscQueueExtInt") {
-  Allocator *alloc = alloc_g;
-  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
-  ProduceThenConsume<hipc::mpsc_queue_ext<int>, int>(1, 32);
-  ProduceThenConsume<hipc::mpsc_queue_ext<int>, int>(1, 64);
-  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
-}
-
-TEST_CASE("TestMpscQueueExtString") {
-  Allocator *alloc = alloc_g;
-  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
-  ProduceThenConsume<hipc::mpsc_queue_ext<hipc::string>, hipc::string>(1, 32);
-  ProduceThenConsume<hipc::mpsc_queue_ext<hipc::string>, hipc::string>(1, 64);
-  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
-}
-
-TEST_CASE("TestMpscQueueExtIntMultiThreaded") {
-  Allocator *alloc = alloc_g;
-  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
-  ProduceThenConsume<hipc::mpsc_queue_ext<int>, int>(2, 16);
-  ProduceThenConsume<hipc::mpsc_queue_ext<int>, int>(4, 64);
-  ProduceThenConsume<hipc::mpsc_queue_ext<int>, int>(8, 256);
-  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
-}
-
-TEST_CASE("TestMpscQueueExtStringMultiThreaded") {
-  Allocator *alloc = alloc_g;
-  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
-  ProduceThenConsume<hipc::mpsc_queue_ext<hipc::string>, hipc::string>(2, 16);
-  ProduceThenConsume<hipc::mpsc_queue_ext<hipc::string>, hipc::string>(4, 64);
-  ProduceThenConsume<hipc::mpsc_queue_ext<hipc::string>, hipc::string>(8, 256);
-  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
-}
-
-TEST_CASE("TestMpscQueueExtStringMultiThreaded2") {
-  Allocator *alloc = alloc_g;
-  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
-  ProduceAndConsume<hipc::mpsc_queue_ext<hipc::string>, hipc::string>(8, 8192);
-  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
-}
-
-/**
  * TEST MPSC QUEUE
  * */
 

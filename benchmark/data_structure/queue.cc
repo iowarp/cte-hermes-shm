@@ -51,8 +51,6 @@ class QueueTest {
       queue_type_ = "std::queue";
     } else if constexpr(std::is_same_v<hipc::mpsc_queue<T>, QueueT>) {
       queue_type_ = "hipc::mpsc_queue";
-    } else if constexpr(std::is_same_v<hipc::mpsc_queue_ext<T>, QueueT>) {
-      queue_type_ = "hipc::mpsc_queue_ext";
     } else if constexpr(std::is_same_v<hipc::spsc_queue<T>, QueueT>) {
       queue_type_ = "hipc::spsc_queue";
     } else if constexpr(std::is_same_v<hipc::ticket_queue<T>, QueueT>) {
@@ -143,9 +141,6 @@ class QueueTest {
       } else if constexpr(std::is_same_v<QueueT, hipc::mpsc_queue<T>>) {
         queue_->pop(*x_);
         USE(*x_);
-      } else if constexpr(std::is_same_v<QueueT, hipc::mpsc_queue_ext<T>>) {
-        queue_->pop(*x_);
-        USE(*x_);
       } else if constexpr(std::is_same_v<QueueT, hipc::spsc_queue<T>>) {
         queue_->pop(*x_);
         USE(*x_);
@@ -165,8 +160,6 @@ class QueueTest {
         lock_.unlock();
       } else if constexpr(std::is_same_v<QueueT, hipc::mpsc_queue<T>>) {
         queue_->emplace(var.Get());
-      } else if constexpr(std::is_same_v<QueueT, hipc::mpsc_queue_ext<T>>) {
-        queue_->emplace(var.Get());
       } else if constexpr(std::is_same_v<QueueT, hipc::spsc_queue<T>>) {
         queue_->emplace(var.Get());
       } else if constexpr(std::is_same_v<QueueT, hipc::ticket_queue<T>>) {
@@ -183,9 +176,6 @@ class QueueTest {
     } else if constexpr(std::is_same_v<QueueT, hipc::mpsc_queue<T>>) {
       queue_ptr_ = hipc::make_mptr<QueueT>(count);
       queue_ = queue_ptr_.get();
-    } else if constexpr(std::is_same_v<QueueT, hipc::mpsc_queue_ext<T>>) {
-      queue_ptr_ = hipc::make_mptr<QueueT>(count);
-      queue_ = queue_ptr_.get();
     } else if constexpr(std::is_same_v<QueueT, hipc::spsc_queue<T>>) {
       queue_ptr_ = hipc::make_mptr<QueueT>(count);
       queue_ = queue_ptr_.get();
@@ -200,8 +190,6 @@ class QueueTest {
     if constexpr(std::is_same_v<QueueT, std::queue<T>>) {
       delete queue_ptr_;
     } else if constexpr(std::is_same_v<QueueT, hipc::mpsc_queue<T>>) {
-      queue_ptr_.shm_destroy();
-    } else if constexpr(std::is_same_v<QueueT, hipc::mpsc_queue_ext<T>>) {
       queue_ptr_.shm_destroy();
     } else if constexpr(std::is_same_v<QueueT, hipc::spsc_queue<T>>) {
       queue_ptr_.shm_destroy();
@@ -220,11 +208,6 @@ void FullQueueTest() {
   QueueTest<size_t, hipc::mpsc_queue<size_t>>().Test();
   // QueueTest<std::string, hipc::mpsc_queue<std::string>>().Test();
   // QueueTest<hipc::string, hipc::mpsc_queue<hipc::string>>().Test();
-
-  // hipc::mpsc_ext_queue tests
-  QueueTest<size_t, hipc::mpsc_queue_ext<size_t>>().Test();
-  // QueueTest<std::string, hipc::mpsc_queue_ext<std::string>>().Test();
-  // QueueTest<hipc::string, hipc::mpsc_queue_ext<hipc::string>>().Test();
 
   // hipc::spsc_queue tests
   QueueTest<size_t, hipc::spsc_queue<size_t>>().Test();
