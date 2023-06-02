@@ -21,7 +21,7 @@ add_executable(test_data_structure_exec
         unique_ptr.cc
         unordered_map.cc
         mpsc_queue.cc
-        #mpmc_queue.cc
+        spsc_queue.cc
         ticket_queue.cc
 )
 
