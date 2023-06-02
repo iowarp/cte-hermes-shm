@@ -56,14 +56,10 @@ class ticket_queue_templ : public ShmContainer {
 
   /** SHM constructor. Default. */
   explicit ticket_queue_templ(Allocator *alloc,
-                              size_t depth = 1024,
-                              size_t off = 0) {
+                              size_t depth = 1024) {
     shm_init_container(alloc);
     HSHM_MAKE_AR(queue_, GetAllocator(), depth);
     SetNull();
-    for (T i = 0; i < (T)depth; ++i) {
-      (*queue_)[i] = i + off;
-    }
   }
 
   /**====================================
