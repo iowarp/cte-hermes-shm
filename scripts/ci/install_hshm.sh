@@ -23,7 +23,7 @@ cmake ../ \
 -BUILD_HSHM_BENCHMARKS=ON \
 -BUILD_HSHM_TESTS=ON \
 -DCMAKE_INSTALL_PREFIX=${HOME}/install
-cmake --build . -- -j4
+make -j8
 
 export CXXFLAGS=-Wall
 ctest -VV
