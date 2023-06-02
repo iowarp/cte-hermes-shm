@@ -6,5 +6,5 @@ lcov -c -d . -o "${COVERAGE_DIR}/tmp.info"
 lcov --remove "${COVERAGE_DIR}/tmp.info"   \
               "/usr/include/*"             \
               "${HOME}/*"         \
-              "*/stb_ds.h"                 \
+              "../" \
               -o ${COVERAGE_DIR}/lcov.info
