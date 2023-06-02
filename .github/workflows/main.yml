@@ -60,16 +60,16 @@ jobs:
         if: steps.spack-cache.outputs.cache-hit != 'true'
         run: bash scripts/ci/install_deps.sh
 
-#      - name: Build and Test HSHM
-#        run: bash scripts/ci/install_hshm.sh
-#
-#      - name: Install
-#        run: cd build && make install
+      - name: Build and Test HSHM
+        run: bash scripts/ci/install_hshm.sh
 
-#      - name: Generate coverage file
-#        run: bash scripts/ci/coverage.sh
-#
-#      - name: Coveralls
-#        uses: coverallsapp/github-action@master
-#        with:
-#          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Install
+        run: cd build && make install
+
+      - name: Generate coverage file
+        run: bash scripts/ci/coverage.sh
+
+      - name: Coveralls
+        uses: coverallsapp/github-action@master
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
