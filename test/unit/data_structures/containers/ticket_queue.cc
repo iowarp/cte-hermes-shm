@@ -30,7 +30,7 @@ TEST_CASE("TestTicketQueueIntMultiThreaded") {
   Allocator *alloc = alloc_g;
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
   ProduceAndConsume<hipc::ticket_queue<int>, int>(8, 1, 8192, 8192 * 8);
-  ProduceAndConsume<hipc::ticket_queue<int>, int>(8, 8, 8192, 8192 * 8);
+  ProduceAndConsume<hipc::ticket_queue<int>, int>(8, 32, 100000, 100000 * 8);
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
 }
 

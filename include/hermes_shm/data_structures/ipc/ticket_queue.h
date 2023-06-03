@@ -38,6 +38,20 @@ class ticket_queue_templ;
 #define IS_MARKED(tkt) ((tkt) & MARK_FIRST_BIT)
 #define UNMARK_TICKET(tkt) ((tkt) & ~MARK_FIRST_BIT)
 
+struct Conc {
+  std::atomic<uint32_t> &conc_;
+  uint32_t val_;
+
+  HSHM_ALWAYS_INLINE explicit Conc(std::atomic<uint32_t> &conc)
+  : conc_(conc) {
+    val_ = conc_.fetch_add(1);
+  }
+
+  HSHM_ALWAYS_INLINE ~Conc() {
+    conc_.fetch_sub(1);
+  }
+};
+
 /**
  * A queue optimized for allocating (integer) tickets.
  * The queue has a fixed size.
@@ -48,6 +62,7 @@ class ticket_queue_templ : public ShmContainer {
   SHM_CONTAINER_TEMPLATE((CLASS_NAME), (TYPED_CLASS))
   ShmArchive<vector<T>> queue_;
   std::atomic<_qtok_t> head_, tail_;
+  // std::atomic<_qtok_t> head_max_, tail_min_;
 
  public:
   /**====================================
@@ -144,52 +159,75 @@ class ticket_queue_templ : public ShmContainer {
   void SetNull() {
     head_ = 0;
     tail_ = 0;
+    // head_max_ = 0;
+    // tail_min_ = 0;
   }
 
   /**====================================
    * ticket Queue Methods
    * ===================================*/
 
-  /** Construct an element at \a pos position in the list */
+  /** Construct an element at \a pos position in the queue */
   template<typename ...Args>
   qtok_t emplace(T &tkt) {
-    _qtok_t entry_tok = tail_.fetch_add(1);
-    uint32_t idx = entry_tok % (*queue_).size();
-    (*queue_)[idx] = MARK_TICKET(tkt);
-    return qtok_t(entry_tok);
+    do {
+      // Get the current tail
+      _qtok_t entry_tok = tail_.load();
+      _qtok_t tail = entry_tok + 1;
+      _qtok_t head = head_.load();
+      size_t size = tail - head;
+
+      // Verify tail exists
+      if (size > (*queue_).size()) {
+        return qtok_t::GetNull();
+      }
+
+      // Claim the tail
+      bool ret = tail_.compare_exchange_weak(entry_tok, tail);
+      if (!ret) {
+        continue;
+      }
+
+      // Update the tail
+      uint32_t idx = entry_tok % (*queue_).size();
+      (*queue_)[idx] = MARK_TICKET(tkt);
+      return qtok_t(entry_tok);
+    } while (true);
   }
 
  public:
-  /** Consumer pops the head object */
+  /** Pop an element from the queue */
   qtok_t pop(T &tkt) {
-    _qtok_t head, tail;
-    _qtok_t entry_tok;
-    bool ret;
-
     do {
       // Get the current head
-      entry_tok = head_.load();
-      tail = tail_.load();
+      _qtok_t entry_tok = head_.load();
+      _qtok_t tail = tail_.load();
       if (entry_tok >= tail) {
         return qtok_t::GetNull();
       }
-      head = entry_tok + 1;
+      _qtok_t head = entry_tok + 1;
 
-      // Verify head exists
+      // Verify head is marked
       uint32_t idx = entry_tok % (*queue_).size();
       auto &entry = (*queue_)[idx];
       tkt = entry;
       if (!IS_MARKED(tkt)) {
         return qtok_t::GetNull();
       }
-      entry = 0;
-      tkt = UNMARK_TICKET(tkt);
 
       // Claim the head
-      ret = head_.compare_exchange_weak(entry_tok, head);
+      bool ret = head_.compare_exchange_weak(entry_tok, head);
       if (ret) {
         return qtok_t(entry_tok);
       }
+
+      // Update the head
+      tkt = entry;
+      if (!IS_MARKED(tkt)) {
+        return qtok_t::GetNull();
+      }
+      entry = 0;
+      tkt = UNMARK_TICKET(tkt);
     } while (true);
   }
 };
