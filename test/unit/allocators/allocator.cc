@@ -155,3 +155,7 @@ TEST_CASE("ScalablePageAllocator") {
 
   Posttest();
 }
+
+TEST_CASE("SimpleAllocator") {
+
+}
