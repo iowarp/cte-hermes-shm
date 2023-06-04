@@ -194,7 +194,7 @@ class ticket_queue : public ShmContainer {
       // Claim the head
       bool ret = head_.compare_exchange_weak(entry_tok, head);
       if (!ret) {
-        return qtok_t::GetNull();
+        continue;
       }
 
       // Update the head
