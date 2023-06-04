@@ -50,9 +50,10 @@ class LockTest {
   }
 
   /** Run the tests */
-  void Test(size_t count_per_rank=100000, int nthreads = 1) {
+  void Test(size_t count_per_rank = 100000, int nthreads = 1) {
     // AllocateTest(count);
     EmplaceTest(count_per_rank, nthreads);
+    GatherTest(count_per_rank, nthreads);
   }
 
   /**====================================
@@ -69,6 +70,18 @@ class LockTest {
     t.Pause();
 
     TestOutput("Enqueue", t, count, nthreads);
+  }
+
+  /** Reader lock scalability */
+  void GatherTest(size_t count_per_rank, int nthreads) {
+    Timer t;
+
+    size_t count = count_per_rank * nthreads;
+    t.Resume();
+    Gather(count_per_rank, nthreads);
+    t.Pause();
+
+    TestOutput("Gather", t, count, nthreads);
   }
 
  private:
@@ -106,10 +119,35 @@ class LockTest {
       }
     }
   }
+
+  /** Emplace elements into the queue */
+  void Gather(size_t count_per_rank, int nthreads) {
+    std::vector<int> data(count_per_rank * nthreads);
+    omp_set_dynamic(0);
+#pragma omp parallel shared(data) num_threads(nthreads)
+    {
+      size_t sum = 0;
+      for (size_t i = 0; i < count_per_rank; ++i) {
+        if constexpr(std::is_same_v<LockT, std::mutex>) {
+          lock_.lock();
+          sum += data[i];
+          lock_.unlock();
+        } else if constexpr(std::is_same_v<LockT, hshm::Mutex>) {
+          lock_.Lock(0);
+          sum += data[i];
+          lock_.Unlock();
+        } else if constexpr(std::is_same_v<LockT, hshm::RwLock>) {
+          lock_.ReadLock(0);
+          sum += data[i];
+          lock_.ReadUnlock();
+        }
+      }
+    }
+  }
 };
 
 TEST_CASE("LockBenchmark") {
-  size_t count_per_rank = 100000;
+  size_t count_per_rank = 1000000;
   LockTest<std::mutex>().Test(count_per_rank, 1);
   LockTest<std::mutex>().Test(count_per_rank, 8);
   LockTest<std::mutex>().Test(count_per_rank, 16);

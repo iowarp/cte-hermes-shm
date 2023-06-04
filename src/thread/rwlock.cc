@@ -27,14 +27,8 @@ namespace hshm {
 void RwLock::ReadLock(uint32_t owner) {
   RwLockMode mode;
 
-  // Ensure that mode is updated
-  UpdateMode(mode);
-
   // Increment # readers. Check if in read mode.
   readers_.fetch_add(1);
-  if (mode_ == RwLockMode::kRead) {
-    return;
-  }
 
   // Wait until we are in read mode
   do {
@@ -70,28 +64,26 @@ void RwLock::WriteLock(uint32_t owner) {
   RwLockMode mode;
   uint32_t cur_writer;
 
-  // Ensure that mode is updated
-  UpdateMode(mode);
-
-  // Increment # readers. Check if in read mode.
-  uint32_t tkt = writers_.fetch_add(1) + 1;
+  // Increment # writers & get ticket
+  writers_.fetch_add(1);
+  uint64_t tkt = ticket_.fetch_add(1);
 
   // Wait until we are in read mode
   do {
     UpdateMode(mode);
-    cur_writer = cur_writer_.load();
-    if (mode == RwLockMode::kWrite && cur_writer == 0) {
-      bool ret = cur_writer_.compare_exchange_weak(cur_writer, tkt);
-      if (ret) {
+    if (mode == RwLockMode::kNone) {
+      mode_.compare_exchange_weak(mode, RwLockMode::kWrite);
+      mode = mode_.load();
+    }
+    if (mode == RwLockMode::kWrite) {
+      cur_writer = cur_writer_.load();
+      if (cur_writer == tkt) {
 #ifdef HERMES_DEBUG_LOCK
         owner_ = owner;
         HILOG(kDebug, "Acquired write lock for {}", owner);
 #endif
         return;
       }
-    }
-    if (mode == RwLockMode::kNone) {
-      mode_.compare_exchange_weak(mode, RwLockMode::kWrite);
     }
     HERMES_THREAD_MODEL->Yield();
   } while (true);
@@ -101,8 +93,8 @@ void RwLock::WriteLock(uint32_t owner) {
  * Release the write lock
  * */
 void RwLock::WriteUnlock() {
-  cur_writer_ = 0;
   writers_.fetch_sub(1);
+  cur_writer_.fetch_add(1);
 }
 
 /**====================================

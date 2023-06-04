@@ -29,6 +29,7 @@ enum class RwLockMode {
 struct RwLock {
   std::atomic<uint32_t> readers_;
   std::atomic<uint32_t> writers_;
+  std::atomic<uint64_t> ticket_;
   std::atomic<RwLockMode> mode_;
   std::atomic<uint32_t> cur_writer_;
 #ifdef HERMES_DEBUG_LOCK
@@ -39,6 +40,7 @@ struct RwLock {
   RwLock()
   : readers_(0),
     writers_(0),
+    ticket_(0),
     mode_(RwLockMode::kNone),
     cur_writer_(0) {}
 
@@ -46,6 +48,7 @@ struct RwLock {
   void Init() {
     readers_ = 0;
     writers_ = 0;
+    ticket_ = 0;
     mode_ = RwLockMode::kNone;
     cur_writer_ = 0;
   }
@@ -57,6 +60,7 @@ struct RwLock {
   RwLock(RwLock &&other) noexcept
   : readers_(other.readers_.load()),
     writers_(other.writers_.load()),
+    ticket_(other.ticket_.load()),
     mode_(other.mode_.load()),
     cur_writer_(other.cur_writer_.load()) {}
 
@@ -65,6 +69,7 @@ struct RwLock {
     if (this != &other) {
       readers_ = other.readers_.load();
       writers_ = other.writers_.load();
+      ticket_ = other.ticket_.load();
       mode_ = other.mode_.load();
       cur_writer_ = other.cur_writer_.load();
     }
