@@ -41,7 +41,7 @@ class split_ticket_queue : public ShmContainer {
  public:
   SHM_CONTAINER_TEMPLATE((CLASS_NAME), (TYPED_CLASS))
   ShmArchive<vector<ticket_queue<T>>> splits_;
-  std::atomic<uint16_t> rr_;
+  std::atomic<uint16_t> rr_tail_, rr_head_;
 
  public:
   /**====================================
@@ -134,7 +134,8 @@ class split_ticket_queue : public ShmContainer {
 
   /** Sets this list as empty */
   void SetNull() {
-    rr_ = 0;
+    rr_tail_ = 0;
+    rr_head_ = 0;
   }
 
   /**====================================
@@ -144,7 +145,7 @@ class split_ticket_queue : public ShmContainer {
   /** Construct an element at \a pos position in the queue */
   template<typename ...Args>
   qtok_t emplace(T &tkt) {
-    uint16_t rr = rr_.fetch_add(1);
+    uint16_t rr = rr_tail_.fetch_add(1);
     auto &splits = (*splits_);
     size_t num_splits = splits.size();
     uint16_t qid_start = rr % num_splits;
@@ -162,7 +163,7 @@ class split_ticket_queue : public ShmContainer {
  public:
   /** Pop an element from the queue */
   qtok_t pop(T &tkt) {
-    uint16_t rr = rr_.fetch_add(1);
+    uint16_t rr = rr_head_.fetch_add(1);
     auto &splits = (*splits_);
     size_t num_splits = splits.size();
     uint16_t qid_start = rr % num_splits;
