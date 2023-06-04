@@ -44,7 +44,7 @@ class ticket_queue;
 template<typename T>
 class ticket_queue : public ShmContainer {
  public:
- SHM_CONTAINER_TEMPLATE((CLASS_NAME), (TYPED_CLASS))
+  SHM_CONTAINER_TEMPLATE((CLASS_NAME), (TYPED_CLASS))
   ShmArchive<vector<T>> queue_;
   std::atomic<_qtok_t> head_, tail_;
 

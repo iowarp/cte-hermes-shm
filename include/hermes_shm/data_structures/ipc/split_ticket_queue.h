@@ -53,7 +53,7 @@ struct Conc {
 template<typename T>
 class split_ticket_queue : public ShmContainer {
  public:
- SHM_CONTAINER_TEMPLATE((CLASS_NAME), (TYPED_CLASS))
+  SHM_CONTAINER_TEMPLATE((CLASS_NAME), (TYPED_CLASS))
   ShmArchive<vector<ticket_queue<T>>> splits_;
   std::atomic<uint16_t> conc_, rr_;
   std::atomic<size_t> size_;
