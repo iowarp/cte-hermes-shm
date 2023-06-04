@@ -25,19 +25,25 @@ namespace hshm {
  * Acquire the read lock
  * */
 void RwLock::ReadLock(uint32_t owner) {
-  bool ret = false;
-  RwLockPayload expected, desired;
+  RwLockMode mode;
+
+  // Ensure that mode is updated
+  UpdateMode(mode);
+
+  // Increment # readers. Check if in read mode.
+  readers_.fetch_add(1);
+  if (mode_ == RwLockMode::kRead) {
+    return;
+  }
+
+  // Wait until we are in read mode
   do {
-    for (int i = 0; i < 1; ++i) {
-      expected.as_int_ = payload_.load();
-      if (expected.IsWriteLocked()) {
-        continue;
-      }
-      desired = expected;
-      desired.bits_.r_ += 1;
-      ret = payload_.compare_exchange_weak(
-        expected.as_int_,
-        desired.as_int_);
+    UpdateMode(mode);
+    if (mode == RwLockMode::kRead) {
+      return;
+    }
+    if (mode == RwLockMode::kNone) {
+      bool ret = mode_.compare_exchange_weak(mode, RwLockMode::kRead);
       if (ret) {
 #ifdef HERMES_DEBUG_LOCK
         owner_ = owner;
@@ -54,38 +60,28 @@ void RwLock::ReadLock(uint32_t owner) {
  * Release the read lock
  * */
 void RwLock::ReadUnlock() {
-  bool ret;
-  RwLockPayload expected, desired;
-#ifdef HERMES_DEBUG_LOCK
-  owner_ = 0;
-#endif
-  do {
-    expected.as_int_ = payload_.load();
-    desired = expected;
-    desired.bits_.r_ -= 1;
-    ret = payload_.compare_exchange_weak(
-      expected.as_int_,
-      desired.as_int_);
-  } while (!ret);
+  readers_.fetch_sub(1);
 }
 
 /**
  * Acquire the write lock
  * */
 void RwLock::WriteLock(uint32_t owner) {
-  bool ret = false;
-  RwLockPayload expected, desired;
+  RwLockMode mode;
+  uint32_t cur_writer;
+
+  // Ensure that mode is updated
+  UpdateMode(mode);
+
+  // Increment # readers. Check if in read mode.
+  uint32_t tkt = writers_.fetch_add(1) + 1;
+
+  // Wait until we are in read mode
   do {
-    for (int i = 0; i < 1; ++i) {
-      expected.as_int_ = payload_.load();
-      if (expected.IsReadLocked() || expected.IsWriteLocked()) {
-        continue;
-      }
-      desired = expected;
-      desired.bits_.w_ += 1;
-      ret = payload_.compare_exchange_weak(
-        expected.as_int_,
-        desired.as_int_);
+    UpdateMode(mode);
+    cur_writer = cur_writer_.load();
+    if (mode == RwLockMode::kWrite && cur_writer == 0) {
+      bool ret = cur_writer_.compare_exchange_weak(cur_writer, tkt);
       if (ret) {
 #ifdef HERMES_DEBUG_LOCK
         owner_ = owner;
@@ -93,6 +89,9 @@ void RwLock::WriteLock(uint32_t owner) {
 #endif
         return;
       }
+    }
+    if (mode == RwLockMode::kNone) {
+      mode_.compare_exchange_weak(mode, RwLockMode::kWrite);
     }
     HERMES_THREAD_MODEL->Yield();
   } while (true);
@@ -102,19 +101,8 @@ void RwLock::WriteLock(uint32_t owner) {
  * Release the write lock
  * */
 void RwLock::WriteUnlock() {
-  bool ret;
-  RwLockPayload expected, desired;
-#ifdef HERMES_DEBUG_LOCK
-  owner_ = 0;
-#endif
-  do {
-    expected.as_int_ = payload_.load();
-    desired = expected;
-    desired.bits_.w_ -= 1;
-    ret = payload_.compare_exchange_weak(
-      expected.as_int_,
-      desired.as_int_);
-  } while (!ret);
+  cur_writer_ = 0;
+  writers_.fetch_sub(1);
 }
 
 /**====================================
