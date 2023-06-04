@@ -19,6 +19,7 @@
 
 // hermes
 #include "hermes_shm/data_structures/ipc/string.h"
+#include "hermes_shm/data_structures/ipc/split_ticket_queue.h"
 #include <hermes_shm/data_structures/ipc/mpsc_queue.h>
 #include <hermes_shm/data_structures/ipc/spsc_queue.h>
 #include <hermes_shm/data_structures/ipc/ticket_queue.h>
@@ -55,6 +56,8 @@ class QueueTest {
       queue_type_ = "hipc::spsc_queue";
     } else if constexpr(std::is_same_v<hipc::ticket_queue<T>, QueueT>) {
       queue_type_ = "hipc::ticket_queue";
+    } else if constexpr(std::is_same_v<hipc::split_ticket_queue<T>, QueueT>) {
+      queue_type_ = "hipc::split_ticket_queue";
     } else {
       HELOG(kFatal, "none of the queue tests matched")
     }
@@ -78,7 +81,7 @@ class QueueTest {
     Timer t;
     t.Resume();
     for (size_t i = 0; i < count; ++i) {
-      Allocate(count);
+      Allocate(count, count, 1);
       Destroy();
     }
     t.Pause();
@@ -91,7 +94,7 @@ class QueueTest {
     Timer t;
 
     size_t count = count_per_rank * nthreads;
-    Allocate(count);
+    Allocate(count, count_per_rank, nthreads);
     t.Resume();
     Emplace(count_per_rank, nthreads);
     t.Pause();
@@ -106,7 +109,7 @@ class QueueTest {
     StringOrInt<T> var(124);
 
     size_t count = count_per_rank * nthreads;
-    Allocate(count);
+    Allocate(count, count_per_rank, nthreads);
     Emplace(count, 1);
 
     t.Resume();
@@ -147,6 +150,9 @@ class QueueTest {
           queue_->emplace(var.Get());
         } else if constexpr(std::is_same_v<QueueT, hipc::ticket_queue<T>>) {
           queue_->emplace(var.Get());
+        } else if constexpr(
+          std::is_same_v<QueueT, hipc::split_ticket_queue<T>>) {
+          queue_->emplace(var.Get());
         }
       }
     }
@@ -172,13 +178,17 @@ class QueueTest {
           USE(*x_);
         } else if constexpr(std::is_same_v<QueueT, hipc::ticket_queue<T>>) {
           while (queue_->pop(*x_).IsNull());
+        } else if constexpr(
+          std::is_same_v<QueueT, hipc::split_ticket_queue<T>>) {
+          while (queue_->pop(*x_).IsNull());
         }
       }
     }
   }
 
   /** Allocate an arbitrary queue for the test cases */
-  void Allocate(size_t count) {
+  void Allocate(size_t count, size_t count_per_rank, int nthreads) {
+    (void) count_per_rank; (void) nthreads;
     if constexpr(std::is_same_v<QueueT, std::queue<T>>) {
       queue_ptr_ = new std::queue<T>();
       queue_ = queue_ptr_;
@@ -190,6 +200,9 @@ class QueueTest {
       queue_ = queue_ptr_.get();
     } else if constexpr(std::is_same_v<QueueT, hipc::ticket_queue<T>>) {
       queue_ptr_ = hipc::make_mptr<QueueT>(count);
+      queue_ = queue_ptr_.get();
+    } else if constexpr(std::is_same_v<QueueT, hipc::split_ticket_queue<T>>) {
+      queue_ptr_ = hipc::make_mptr<QueueT>(count_per_rank, nthreads);
       queue_ = queue_ptr_.get();
     }
   }
@@ -203,6 +216,8 @@ class QueueTest {
     } else if constexpr(std::is_same_v<QueueT, hipc::spsc_queue<T>>) {
       queue_ptr_.shm_destroy();
     } else if constexpr(std::is_same_v<QueueT, hipc::ticket_queue<T>>) {
+      queue_ptr_.shm_destroy();
+    } else if constexpr(std::is_same_v<QueueT, hipc::split_ticket_queue<T>>) {
       queue_ptr_.shm_destroy();
     }
   }
@@ -222,6 +237,14 @@ void FullQueueTest() {
   QueueTest<size_t, hipc::ticket_queue<size_t>>().Test(count_per_rank, 4);
   QueueTest<size_t, hipc::ticket_queue<size_t>>().Test(count_per_rank, 8);
   QueueTest<size_t, hipc::ticket_queue<size_t>>().Test(count_per_rank, 16);
+  // QueueTest<std::string, hipc::mpsc_queue<std::string>>().Test();
+  // QueueTest<hipc::string, hipc::mpsc_queue<hipc::string>>().Test();
+
+  // hipc::ticket_queue tests
+  QueueTest<size_t, hipc::split_ticket_queue<size_t>>().Test(count_per_rank, 1);
+  QueueTest<size_t, hipc::split_ticket_queue<size_t>>().Test(count_per_rank, 4);
+  QueueTest<size_t, hipc::split_ticket_queue<size_t>>().Test(count_per_rank, 8);
+  QueueTest<size_t, hipc::split_ticket_queue<size_t>>().Test(count_per_rank, 16);
   // QueueTest<std::string, hipc::mpsc_queue<std::string>>().Test();
   // QueueTest<hipc::string, hipc::mpsc_queue<hipc::string>>().Test();
 

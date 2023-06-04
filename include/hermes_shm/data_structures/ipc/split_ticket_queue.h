@@ -10,43 +10,54 @@
 * have access to the file, you may request a copy from help@hdfgroup.org.   *
 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_SHM_INCLUDE_HERMES_SHM_DATA_STRUCTURES_IPC_TICKET_QUEUE_H_
-#define HERMES_SHM_INCLUDE_HERMES_SHM_DATA_STRUCTURES_IPC_TICKET_QUEUE_H_
+#ifndef HERMES_SHM__DATA_STRUCTURES_IPC_SPLIT_TICKET_QUEUE_H_
+#define HERMES_SHM__DATA_STRUCTURES_IPC_SPLIT_TICKET_QUEUE_H_
 
 #include "hermes_shm/data_structures/ipc/internal/shm_internal.h"
 #include "hermes_shm/thread/lock.h"
 #include "vector.h"
-#include "_queue.h"
+#include "ticket_queue.h"
 
 namespace hshm::ipc {
 
-/** Forward declaration of ticket_queue */
+/** Forward declaration of split_ticket_queue */
 template<typename T>
-class ticket_queue;
+class split_ticket_queue;
 
 /**
- * MACROS used to simplify the ticket_queue namespace
+ * MACROS used to simplify the split_ticket_queue namespace
  * Used as inputs to the SHM_CONTAINER_TEMPLATE
  * */
-#define CLASS_NAME ticket_queue
-#define TYPED_CLASS ticket_queue<T>
-#define TYPED_HEADER ShmHeader<ticket_queue<T>>
+#define CLASS_NAME split_ticket_queue
+#define TYPED_CLASS split_ticket_queue<T>
+#define TYPED_HEADER ShmHeader<split_ticket_queue<T>>
 
-#define MARK_FIRST_BIT (((T)1) << (8 * sizeof(T) - 1))
-#define MARK_TICKET(tkt) ((tkt) | MARK_FIRST_BIT)
-#define IS_MARKED(tkt) ((tkt) & MARK_FIRST_BIT)
-#define UNMARK_TICKET(tkt) ((tkt) & ~MARK_FIRST_BIT)
+struct Conc {
+  std::atomic<uint16_t> &conc_;
+  uint16_t val_;
+
+  HSHM_ALWAYS_INLINE explicit Conc(std::atomic<uint16_t> &conc)
+    : conc_(conc) {
+    val_ = conc_.fetch_add(1);
+  }
+
+  HSHM_ALWAYS_INLINE ~Conc() {
+    conc_.fetch_sub(1);
+  }
+};
 
 /**
  * A MPMC queue for allocating tickets. Handles concurrency
  * without blocking.
  * */
 template<typename T>
-class ticket_queue : public ShmContainer {
+class split_ticket_queue : public ShmContainer {
  public:
  SHM_CONTAINER_TEMPLATE((CLASS_NAME), (TYPED_CLASS))
-  ShmArchive<vector<T>> queue_;
-  std::atomic<_qtok_t> head_, tail_;
+  ShmArchive<vector<ticket_queue<T>>> splits_;
+  std::atomic<uint16_t> conc_, rr_;
+  std::atomic<size_t> size_;
+  size_t max_size_;
 
  public:
   /**====================================
@@ -54,10 +65,16 @@ class ticket_queue : public ShmContainer {
    * ===================================*/
 
   /** SHM constructor. Default. */
-  explicit ticket_queue(Allocator *alloc,
-                        size_t depth = 1024) {
+  explicit split_ticket_queue(Allocator *alloc,
+                              size_t depth_per_split = 1024,
+                              size_t split = 0) {
     shm_init_container(alloc);
-    HSHM_MAKE_AR(queue_, GetAllocator(), depth, 0);
+    if (split == 0) {
+      split = HERMES_SYSTEM_INFO->ncpu_;
+    }
+    HSHM_MAKE_AR(splits_, GetAllocator(), split, depth_per_split);
+    size_ = 0;
+    max_size_ = depth_per_split * split;
     SetNull();
   }
 
@@ -66,15 +83,15 @@ class ticket_queue : public ShmContainer {
    * ===================================*/
 
   /** SHM copy constructor */
-  explicit ticket_queue(Allocator *alloc,
-                        const ticket_queue &other) {
+  explicit split_ticket_queue(Allocator *alloc,
+                              const split_ticket_queue &other) {
     shm_init_container(alloc);
     SetNull();
     shm_strong_copy_construct_and_op(other);
   }
 
   /** SHM copy assignment operator */
-  ticket_queue& operator=(const ticket_queue &other) {
+  split_ticket_queue& operator=(const split_ticket_queue &other) {
     if (this != &other) {
       shm_destroy();
       shm_strong_copy_construct_and_op(other);
@@ -83,10 +100,8 @@ class ticket_queue : public ShmContainer {
   }
 
   /** SHM copy constructor + operator main */
-  void shm_strong_copy_construct_and_op(const ticket_queue &other) {
-    head_ = other.head_.load();
-    tail_ = other.tail_.load();
-    (*queue_) = (*other.queue_);
+  void shm_strong_copy_construct_and_op(const split_ticket_queue &other) {
+    (*splits_) = (*other.splits_);
   }
 
   /**====================================
@@ -94,13 +109,11 @@ class ticket_queue : public ShmContainer {
    * ===================================*/
 
   /** SHM move constructor. */
-  ticket_queue(Allocator *alloc,
-               ticket_queue &&other) noexcept {
+  split_ticket_queue(Allocator *alloc,
+                     split_ticket_queue &&other) noexcept {
     shm_init_container(alloc);
     if (GetAllocator() == other.GetAllocator()) {
-      head_ = other.head_.load();
-      tail_ = other.tail_.load();
-      (*queue_) = std::move(*other.queue_);
+      (*splits_) = std::move(*other.splits_);
       other.SetNull();
     } else {
       shm_strong_copy_construct_and_op(other);
@@ -109,13 +122,11 @@ class ticket_queue : public ShmContainer {
   }
 
   /** SHM move assignment operator. */
-  ticket_queue& operator=(ticket_queue &&other) noexcept {
+  split_ticket_queue& operator=(split_ticket_queue &&other) noexcept {
     if (this != &other) {
       shm_destroy();
       if (GetAllocator() == other.GetAllocator()) {
-        head_ = other.head_.load();
-        tail_ = other.tail_.load();
-        (*queue_) = std::move(*other.queue_);
+        (*splits_) = std::move(*other.splits_);
         other.SetNull();
       } else {
         shm_strong_copy_construct_and_op(other);
@@ -131,18 +142,18 @@ class ticket_queue : public ShmContainer {
 
   /** SHM destructor.  */
   void shm_destroy_main() {
-    (*queue_).shm_destroy();
+    (*splits_).shm_destroy();
   }
 
   /** Check if the list is empty */
   bool IsNull() const {
-    return (*queue_).IsNull();
+    return (*splits_).IsNull();
   }
 
   /** Sets this list as empty */
   void SetNull() {
-    head_ = 0;
-    tail_ = 0;
+    conc_ = 0;
+    rr_ = 0;
   }
 
   /**====================================
@@ -152,56 +163,45 @@ class ticket_queue : public ShmContainer {
   /** Construct an element at \a pos position in the queue */
   template<typename ...Args>
   qtok_t emplace(T &tkt) {
-    do {
-      // Get the current tail
-      _qtok_t entry_tok = tail_.load();
-      _qtok_t tail = entry_tok + 1;
-
-      // Verify tail exists
-      uint32_t idx = entry_tok % (*queue_).size();
-      auto &entry = (*queue_)[idx];
-      if (IS_MARKED(entry)) {
-        return qtok_t::GetNull();
+    Conc conc(conc_);
+    uint16_t rr = rr_.fetch_add(1);
+    size_t num_splits = splits_->size();
+    uint32_t qid_start = rr % num_splits;
+    for (size_t i = 0; i < num_splits; ++i) {
+      if (size_.load() + conc.val_ == max_size_) {
+        break;
       }
-
-      // Claim the tail
-      bool ret = tail_.compare_exchange_weak(entry_tok, tail);
-      if (!ret) {
-        continue;
+      uint32_t qid = (qid_start + i) % num_splits;
+      ticket_queue<T> &queue = (*splits_)[qid];
+      qtok_t qtok = queue.emplace(tkt);
+      if (!qtok.IsNull()) {
+        size_.fetch_add(1);
+        return qtok;
       }
-
-      // Update the tail
-      entry = MARK_TICKET(tkt);
-      return qtok_t(entry_tok);
-    } while (true);
+    }
+    return qtok_t::GetNull();
   }
 
  public:
   /** Pop an element from the queue */
   qtok_t pop(T &tkt) {
-    do {
-      // Get the current head
-      _qtok_t entry_tok = head_.load();
-      _qtok_t head = entry_tok + 1;
-
-      // Verify head is marked
-      uint32_t idx = entry_tok % (*queue_).size();
-      auto &entry = (*queue_)[idx];
-      if (!IS_MARKED(entry)) {
-        return qtok_t::GetNull();
+    Conc conc(conc_);
+    uint16_t rr = rr_.fetch_add(1);
+    size_t num_splits = splits_->size();
+    uint32_t qid_start = rr % num_splits;
+    for (size_t i = 0; i < num_splits; ++i) {
+      if (size_.load() < conc.val_) {
+        break;
       }
-
-      // Claim the head
-      bool ret = head_.compare_exchange_weak(entry_tok, head);
-      if (!ret) {
-        return qtok_t::GetNull();
+      uint32_t qid = (qid_start + i) % num_splits;
+      ticket_queue<T> &queue = (*splits_)[qid];
+      qtok_t qtok = queue.pop(tkt);
+      if (!qtok.IsNull()) {
+        size_.fetch_sub(1);
+        return qtok;
       }
-
-      // Update the head
-      tkt = UNMARK_TICKET(tkt);
-      entry = 0;
-      return qtok_t(entry_tok);
-    } while (true);
+    }
+    return qtok_t::GetNull();
   }
 };
 
@@ -211,4 +211,4 @@ class ticket_queue : public ShmContainer {
 #undef TYPED_CLASS
 #undef CLASS_NAME
 
-#endif  // HERMES_SHM_INCLUDE_HERMES_SHM_DATA_STRUCTURES_IPC_TICKET_QUEUE_H_
+#endif  // HERMES_SHM__DATA_STRUCTURES_IPC_SPLIT_TICKET_QUEUE_H_
