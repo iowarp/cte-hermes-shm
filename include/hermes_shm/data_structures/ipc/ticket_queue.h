@@ -152,14 +152,15 @@ class ticket_queue : public ShmContainer {
   /** Construct an element at \a pos position in the queue */
   template<typename ...Args>
   qtok_t emplace(T &tkt) {
+    auto &queue = *queue_;
     do {
       // Get the current tail
       _qtok_t entry_tok = tail_.load();
       _qtok_t tail = entry_tok + 1;
 
       // Verify tail exists
-      uint32_t idx = entry_tok % (*queue_).size();
-      auto &entry = (*queue_)[idx];
+      uint32_t idx = entry_tok % queue.size();
+      auto &entry = queue[idx];
       if (IS_MARKED(entry)) {
         return qtok_t::GetNull();
       }
@@ -179,14 +180,15 @@ class ticket_queue : public ShmContainer {
  public:
   /** Pop an element from the queue */
   qtok_t pop(T &tkt) {
+    auto &queue = *queue_;
     do {
       // Get the current head
       _qtok_t entry_tok = head_.load();
       _qtok_t head = entry_tok + 1;
 
       // Verify head is marked
-      uint32_t idx = entry_tok % (*queue_).size();
-      auto &entry = (*queue_)[idx];
+      uint32_t idx = entry_tok % queue.size();
+      auto &entry = queue[idx];
       if (!IS_MARKED(entry)) {
         return qtok_t::GetNull();
       }

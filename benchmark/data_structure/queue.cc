@@ -230,33 +230,29 @@ void FullQueueTest() {
   QueueTest<size_t, std::queue<size_t>>().Test(count_per_rank, 4);
   QueueTest<size_t, std::queue<size_t>>().Test(count_per_rank, 8);
   QueueTest<size_t, std::queue<size_t>>().Test(count_per_rank, 16);
-  // QueueTest<std::string, std::queue<std::string>>().Test();
+  QueueTest<std::string, std::queue<std::string>>().Test();
 
   // hipc::ticket_queue tests
   QueueTest<size_t, hipc::ticket_queue<size_t>>().Test(count_per_rank, 1);
   QueueTest<size_t, hipc::ticket_queue<size_t>>().Test(count_per_rank, 4);
   QueueTest<size_t, hipc::ticket_queue<size_t>>().Test(count_per_rank, 8);
   QueueTest<size_t, hipc::ticket_queue<size_t>>().Test(count_per_rank, 16);
-  // QueueTest<std::string, hipc::mpsc_queue<std::string>>().Test();
-  // QueueTest<hipc::string, hipc::mpsc_queue<hipc::string>>().Test();
 
   // hipc::ticket_queue tests
   QueueTest<size_t, hipc::split_ticket_queue<size_t>>().Test(count_per_rank, 1);
   QueueTest<size_t, hipc::split_ticket_queue<size_t>>().Test(count_per_rank, 4);
   QueueTest<size_t, hipc::split_ticket_queue<size_t>>().Test(count_per_rank, 8);
   QueueTest<size_t, hipc::split_ticket_queue<size_t>>().Test(count_per_rank, 16);
-  // QueueTest<std::string, hipc::mpsc_queue<std::string>>().Test();
-  // QueueTest<hipc::string, hipc::mpsc_queue<hipc::string>>().Test();
 
   // hipc::mpsc_queue tests
   QueueTest<size_t, hipc::mpsc_queue<size_t>>().Test(count_per_rank, 1);
-  // QueueTest<std::string, hipc::mpsc_queue<std::string>>().Test();
-  // QueueTest<hipc::string, hipc::mpsc_queue<hipc::string>>().Test();
+  QueueTest<std::string, hipc::mpsc_queue<std::string>>().Test();
+  QueueTest<hipc::string, hipc::mpsc_queue<hipc::string>>().Test();
 
   // hipc::spsc_queue tests
   QueueTest<size_t, hipc::spsc_queue<size_t>>().Test(count_per_rank, 1);
-  // QueueTest<std::string, hipc::spsc_queue<std::string>>().Test();
-  // QueueTest<hipc::string, hipc::spsc_queue<hipc::string>>().Test();
+  QueueTest<std::string, hipc::spsc_queue<std::string>>().Test();
+  QueueTest<hipc::string, hipc::spsc_queue<hipc::string>>().Test();
 
 }
 

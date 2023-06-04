@@ -32,20 +32,6 @@ class split_ticket_queue;
 #define TYPED_CLASS split_ticket_queue<T>
 #define TYPED_HEADER ShmHeader<split_ticket_queue<T>>
 
-struct Conc {
-  std::atomic<uint16_t> &conc_;
-  uint16_t val_;
-
-  HSHM_ALWAYS_INLINE explicit Conc(std::atomic<uint16_t> &conc)
-    : conc_(conc) {
-    val_ = conc_.fetch_add(1);
-  }
-
-  HSHM_ALWAYS_INLINE ~Conc() {
-    conc_.fetch_sub(1);
-  }
-};
-
 /**
  * A MPMC queue for allocating tickets. Handles concurrency
  * without blocking.
@@ -55,9 +41,7 @@ class split_ticket_queue : public ShmContainer {
  public:
   SHM_CONTAINER_TEMPLATE((CLASS_NAME), (TYPED_CLASS))
   ShmArchive<vector<ticket_queue<T>>> splits_;
-  std::atomic<uint16_t> conc_, rr_;
-  std::atomic<size_t> size_;
-  size_t max_size_;
+  std::atomic<uint16_t> rr_;
 
  public:
   /**====================================
@@ -73,8 +57,6 @@ class split_ticket_queue : public ShmContainer {
       split = HERMES_SYSTEM_INFO->ncpu_;
     }
     HSHM_MAKE_AR(splits_, GetAllocator(), split, depth_per_split);
-    size_ = 0;
-    max_size_ = depth_per_split * split;
     SetNull();
   }
 
@@ -152,7 +134,6 @@ class split_ticket_queue : public ShmContainer {
 
   /** Sets this list as empty */
   void SetNull() {
-    conc_ = 0;
     rr_ = 0;
   }
 
@@ -163,19 +144,15 @@ class split_ticket_queue : public ShmContainer {
   /** Construct an element at \a pos position in the queue */
   template<typename ...Args>
   qtok_t emplace(T &tkt) {
-    Conc conc(conc_);
     uint16_t rr = rr_.fetch_add(1);
-    size_t num_splits = splits_->size();
-    uint32_t qid_start = rr % num_splits;
+    auto &splits = (*splits_);
+    size_t num_splits = splits.size();
+    uint16_t qid_start = rr % num_splits;
     for (size_t i = 0; i < num_splits; ++i) {
-      if (size_.load() + conc.val_ == max_size_) {
-        break;
-      }
       uint32_t qid = (qid_start + i) % num_splits;
       ticket_queue<T> &queue = (*splits_)[qid];
       qtok_t qtok = queue.emplace(tkt);
       if (!qtok.IsNull()) {
-        size_.fetch_add(1);
         return qtok;
       }
     }
@@ -185,19 +162,15 @@ class split_ticket_queue : public ShmContainer {
  public:
   /** Pop an element from the queue */
   qtok_t pop(T &tkt) {
-    Conc conc(conc_);
     uint16_t rr = rr_.fetch_add(1);
-    size_t num_splits = splits_->size();
-    uint32_t qid_start = rr % num_splits;
+    auto &splits = (*splits_);
+    size_t num_splits = splits.size();
+    uint16_t qid_start = rr % num_splits;
     for (size_t i = 0; i < num_splits; ++i) {
-      if (size_.load() < conc.val_) {
-        break;
-      }
       uint32_t qid = (qid_start + i) % num_splits;
       ticket_queue<T> &queue = (*splits_)[qid];
       qtok_t qtok = queue.pop(tkt);
       if (!qtok.IsNull()) {
-        size_.fetch_sub(1);
         return qtok;
       }
     }
