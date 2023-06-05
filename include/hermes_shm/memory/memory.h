@@ -154,16 +154,16 @@ struct OffsetPointerBase {
   }
 
   /** Atomic compare exchange weak wrapper */
-  HSHM_ALWAYS_INLINE bool compare_exchange_weak(size_t& expected, size_t desired,
-                                    std::memory_order order =
-                                    std::memory_order_seq_cst) {
+  HSHM_ALWAYS_INLINE bool compare_exchange_weak(
+    size_t& expected, size_t desired,
+    std::memory_order order = std::memory_order_seq_cst) {
     return off_.compare_exchange_weak(expected, desired, order);
   }
 
   /** Atomic compare exchange strong wrapper */
-  HSHM_ALWAYS_INLINE bool compare_exchange_strong(size_t& expected, size_t desired,
-                                      std::memory_order order =
-                                      std::memory_order_seq_cst) {
+  HSHM_ALWAYS_INLINE bool compare_exchange_strong(
+    size_t& expected, size_t desired,
+    std::memory_order order = std::memory_order_seq_cst) {
     return off_.compare_exchange_weak(expected, desired, order);
   }
 
@@ -196,7 +196,8 @@ struct OffsetPointerBase {
   }
 
   /** Atomic copy assign operator */
-  HSHM_ALWAYS_INLINE OffsetPointerBase& operator=(const OffsetPointerBase &count) {
+  HSHM_ALWAYS_INLINE OffsetPointerBase& operator=(
+    const OffsetPointerBase &count) {
     off_ = count.load();
     return *this;
   }

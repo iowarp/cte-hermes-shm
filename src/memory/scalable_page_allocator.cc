@@ -38,9 +38,15 @@ void ScalablePageAllocator::shm_init(allocator_id_t id,
   // Cache every power-of-two between 64B and 16MB
   size_t splits = HERMES_SYSTEM_INFO->ncpu_;
   page_caches_->reserve(num_page_caches_);
-  for (size_t i = 0; i < num_page_caches_; ++i) {
+  for (size_t exp = 0; exp < num_page_caches_; ++exp) {
     size_t depth_per_split = MEGABYTES(1) / sizeof(uint32_t) / splits;
     page_caches_->emplace_back(depth_per_split, splits);
+    size_t size_mp = GetPageSize(exp);
+    size_t expand = 64;
+    if (expand * size_mp <= MEGABYTES(1)) {
+      expand = MEGABYTES(1) / size_mp;
+    }
+    ExpandFromHeap(size_mp, exp, 64);
   }
 }
 

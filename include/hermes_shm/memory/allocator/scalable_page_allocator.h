@@ -65,13 +65,14 @@ class ScalablePageAllocator : public Allocator {
   /** The minimum size that can be cached directly (64 bytes) */
   static const size_t min_cached_size_ = (1 << min_cached_size_exp_);
   /** The power-of-two exponent of the minimum size that can be cached */
-  static const size_t max_cached_size_exp_ = 24;
-  /** The maximum size that can be cached directly (16MB) */
+  static const size_t max_cached_size_exp_ = 22;
+  /** The maximum size that can be cached directly (4MB) */
   static const size_t max_cached_size_ = (1 << max_cached_size_exp_);
-  /** Cache every size between 64 (2^6) BYTES and 16MB (2^24): (19 entries) */
-  static const size_t num_caches_ = 24 - 6 + 1;
+  /** Cache every size between 64 (2^6) BYTES and 4MB (2^22): (17 entries) */
+  static const size_t num_caches_ = max_cached_size_exp_ -
+                                    min_cached_size_exp_ + 1;
   /**
-   * The last free list stores sizes larger than 16MB or sizes which are
+   * The last free list stores sizes larger than 4MB or sizes which are
    * not exactly powers-of-two.
    * */
   static const size_t num_page_caches_ = num_caches_ + 1;
@@ -124,36 +125,43 @@ class ScalablePageAllocator : public Allocator {
   HSHM_ALWAYS_INLINE MpPage* AllocateFromHeap(size_t size_mp,
                                               size_t exp,
                                               OffsetPointer &p_mp) {
-    // Get number of pages to allocate from the heap
-    size_t expand = 1024;
-    if (expand * size_mp > KILOBYTES(64)) {
-      expand = KILOBYTES(64) / size_mp;
-    }
-    size_t expand_size = expand * size_mp;
+    MpPage *page;
 
+    // Get number of pages to allocate from the heap
+    size_t expand = 32;
+    if (size_mp > max_cached_size_) {
+      expand = 1;
+    }
+    do {
+      ExpandFromHeap(size_mp, exp, expand);
+      page = CheckLocalCaches(size_mp, exp, p_mp);
+    } while (page == nullptr);
+    return page;
+  }
+
+  /** Allocate a page from the heap */
+  HSHM_ALWAYS_INLINE MpPage* ExpandFromHeap(size_t size_mp,
+                                            size_t exp,
+                                            size_t expand) {
     // Make one large allocation to the heap
-    p_mp = heap_->AllocateOffset(expand_size);
+    size_t expand_size = expand * size_mp;
+    OffsetPointer p_mp = heap_->AllocateOffset(expand_size);
 
     // Divide allocation into pages
     if (!p_mp.IsNull()) {
       // Store the first page
       SPA_PAGE_CACHE &pages = (*page_caches_)[exp];
       auto *page = alloc_.Convert<MpPage>(p_mp);
-      page->page_size_ = size_mp;
-      page->off_ = 0;
       p_mp = Convert<MpPage, OffsetPointer>(page);
-
-      // Begin dividing
       size_t p_mp_cur = p_mp.load();
       MpPage *page_cur = page;
-      for (size_t i = 1; i < expand; ++i) {
+      for (size_t i = 0; i < expand; ++i) {
         p_mp_cur += size_mp;
         page_cur = (MpPage*)((char*)page_cur + size_mp);
         page_cur->page_size_ = size_mp;
         page_cur->off_ = 0;
         pages.emplace(p_mp_cur);
       }
-      return page;
     }
     return nullptr;
   }
@@ -257,12 +265,19 @@ class ScalablePageAllocator : public Allocator {
   size_t GetCurrentlyAllocatedSize() override;
 
  private:
+  /** Get the page size corresponding to exp */
+  HSHM_ALWAYS_INLINE size_t GetPageSize(size_t exp) {
+    size_t round;
+    round = 1 << (exp + min_cached_size_exp_);
+    round += sizeof(MpPage);
+    return round;
+  }
+
   /** Round a number up to the nearest page size. */
   HSHM_ALWAYS_INLINE size_t RoundUp(size_t num, size_t &exp) {
     size_t round;
     for (exp = 0; exp < num_caches_; ++exp) {
-      round = 1 << (exp + min_cached_size_exp_);
-      round += sizeof(MpPage);
+      round = GetPageSize(exp);
       if (num <= round) {
         return round;
       }

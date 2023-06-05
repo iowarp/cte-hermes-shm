@@ -88,17 +88,17 @@ class AllocatorTestSuite {
 
   /** Allocate a window of pages, free the window. Random page sizes. */
   void AllocateAndFreeRandomWindow(size_t count, size_t window_length) {
-    size_t min_page = 64;
+    /* size_t min_page = 64;
     size_t max_page = MEGABYTES(1);
     std::mt19937 rng(23522523);
-    std::uniform_int_distribution<size_t> uni(min_page, max_page);
+    std::uniform_int_distribution<size_t> uni(min_page, max_page); */
 
     StartTimer();
     size_t num_windows = count / window_length;
     std::vector<Pointer> window(window_length);
     for (size_t w = 0; w < num_windows; ++w) {
       for (size_t i = 0; i < window_length; ++i) {
-        size_t size = uni(rng);
+        size_t size = 64; // uni(rng);
         window[i] = alloc_->Allocate(size);
       }
       for (size_t i = 0; i < window_length; ++i) {
@@ -170,12 +170,15 @@ Allocator* Pretest(MemoryBackendType backend_type,
     mem_mngr->UnregisterBackend(shm_url);
     mem_mngr->CreateBackend<BackendT>(
       MemoryManager::GetDefaultBackendSize(), shm_url);
-    alloc = mem_mngr->CreateAllocator<AllocT>(
+    mem_mngr->CreateAllocator<AllocT>(
       shm_url, alloc_id, 0, std::forward<Args>(args)...);
   }
 #pragma omp barrier
 
   alloc = mem_mngr->GetAllocator(alloc_id);
+  if (alloc == nullptr) {
+    HELOG(kFatal, "Failed to find the memory allocator?")
+  }
   return alloc;
 }
 
@@ -188,11 +191,9 @@ void Posttest() {
     HERMES_MEMORY_MANAGER->UnregisterAllocator(
       alloc_id);
     HERMES_MEMORY_MANAGER->DestroyBackend(shm_url);
-  }
-# pragma omp barrier
-  if (rank == 0) {
     minor += 1;
   }
+# pragma omp barrier
 }
 
 /** A series of allocator benchmarks for a particular thread */
@@ -205,31 +206,31 @@ void AllocatorTest(AllocatorType alloc_type,
   size_t count = (1 << 20);
   // Allocate many and then free many
   /*AllocatorTestSuite(alloc_type, alloc).AllocateThenFreeFixedSize(
-    count, KILOBYTES(1));
-  // Allocate and free immediately
-  AllocatorTestSuite(alloc_type, alloc).AllocateAndFreeFixedSize(
     count, KILOBYTES(1));*/
-  // Allocate and free randomly
+  // Allocate and free immediately
+  /*AllocatorTestSuite(alloc_type, alloc).AllocateAndFreeFixedSize(
+    count, KILOBYTES(1));*/
   if (alloc_type != AllocatorType::kStackAllocator) {
+    // Allocate and free randomly
     AllocatorTestSuite(alloc_type, alloc).AllocateAndFreeRandomWindow(
-      count, 32);
+      count, 16);
   }
   Posttest();
 }
 
 /** Test different allocators on a particular thread */
 void FullAllocatorTestPerThread() {
+  // Scalable page allocator
+  AllocatorTest<hipc::PosixShmMmap, hipc::ScalablePageAllocator>(
+    AllocatorType::kScalablePageAllocator,
+    MemoryBackendType::kPosixShmMmap);
   // Malloc allocator
-  /*AllocatorTest<hipc::NullBackend, hipc::MallocAllocator>(
+  AllocatorTest<hipc::NullBackend, hipc::MallocAllocator>(
     AllocatorType::kMallocAllocator,
     MemoryBackendType::kNullBackend);
   // Stack allocator
   AllocatorTest<hipc::PosixShmMmap, hipc::StackAllocator>(
     AllocatorType::kStackAllocator,
-    MemoryBackendType::kPosixShmMmap);*/
-  // Scalable page allocator
-  AllocatorTest<hipc::PosixShmMmap, hipc::ScalablePageAllocator>(
-    AllocatorType::kScalablePageAllocator,
     MemoryBackendType::kPosixShmMmap);
 }
 
@@ -246,12 +247,9 @@ void FullAllocatorTestThreaded(int nthreads) {
 
 TEST_CASE("AllocatorBenchmark") {
   AllocatorTestSuite::PrintTestHeader();
-  try {
-    /*FullAllocatorTestThreaded(1);
-    FullAllocatorTestThreaded(2);
-    FullAllocatorTestThreaded(4);*/
-    FullAllocatorTestThreaded(8);
-  } catch (hshm::Error &err) {
-    err.print();
-  }
+  FullAllocatorTestThreaded(1);
+  FullAllocatorTestThreaded(2);
+  FullAllocatorTestThreaded(4);
+  FullAllocatorTestThreaded(8);
+  FullAllocatorTestThreaded(16);
 }
