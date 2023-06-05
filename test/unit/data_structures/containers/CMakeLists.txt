@@ -22,6 +22,7 @@ add_executable(test_data_structure_exec
         unordered_map.cc
         mpsc_queue.cc
         spsc_queue.cc
+        charbuf.cc
         ticket_queue.cc
 )
 
