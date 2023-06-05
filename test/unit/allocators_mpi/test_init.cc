@@ -13,19 +13,21 @@
 
 #include "basic_test.h"
 #include "test_init.h"
-#include <mpi.h>
 
 Allocator *alloc_g = nullptr;
 
-void Posttest() {
+void PretestRankN() {
   std::string shm_url = "test_allocators";
-  alloc_g = nullptr;
+  allocator_id_t alloc_id(0, 1);
+  auto mem_mngr = HERMES_MEMORY_MANAGER;
+  mem_mngr->UnregisterAllocator(alloc_id);
+  mem_mngr->UnregisterBackend(shm_url);
+  mem_mngr->AttachBackend(MemoryBackendType::kPosixShmMmap, shm_url);
+  alloc_g = mem_mngr->GetAllocator(alloc_id);
 }
 
 void MainPretest() {
-  Pretest<hipc::ScalablePageAllocator>();
 }
 
 void MainPosttest() {
-  Posttest();
 }
