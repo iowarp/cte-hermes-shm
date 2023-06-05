@@ -167,15 +167,9 @@ class split_ticket_queue : public ShmContainer {
     auto &splits = (*splits_);
     size_t num_splits = splits.size();
     uint16_t qid_start = rr % num_splits;
-    for (size_t i = 0; i < num_splits; ++i) {
-      uint32_t qid = (qid_start + i) % num_splits;
-      ticket_queue<T> &queue = (*splits_)[qid];
-      qtok_t qtok = queue.pop(tkt);
-      if (!qtok.IsNull()) {
-        return qtok;
-      }
-    }
-    return qtok_t::GetNull();
+    ticket_queue<T> &queue = (*splits_)[qid_start];
+    qtok_t qtok = queue.pop(tkt);
+    return qtok;
   }
 };
 

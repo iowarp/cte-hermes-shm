@@ -200,7 +200,7 @@ class ticket_queue : public ShmContainer {
       }
 
       // Update the head
-      tkt = UNMARK_TICKET(tkt);
+      tkt = UNMARK_TICKET(entry);
       entry = 0;
       return qtok_t(entry_tok);
     } while (true);
