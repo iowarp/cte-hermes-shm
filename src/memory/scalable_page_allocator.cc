@@ -46,7 +46,7 @@ void ScalablePageAllocator::shm_init(allocator_id_t id,
     if (expand * size_mp <= MEGABYTES(1)) {
       expand = MEGABYTES(1) / size_mp;
     }
-    ExpandFromHeap(size_mp, exp, 64);
+    ExpandFromHeap(size_mp, exp, expand);
   }
 }
 

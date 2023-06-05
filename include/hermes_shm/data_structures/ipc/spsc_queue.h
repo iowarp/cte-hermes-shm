@@ -53,7 +53,7 @@ class spsc_queue_templ : public ShmContainer {
 
   /** SHM constructor. Default. */
   explicit spsc_queue_templ(Allocator *alloc,
-                      size_t depth = 1024) {
+                            size_t depth = 1024) {
     shm_init_container(alloc);
     HSHM_MAKE_AR(queue_, GetAllocator(), depth)
     SetNull();
