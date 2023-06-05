@@ -59,6 +59,7 @@ void ScalablePageAllocator::shm_deserialize(char *buffer,
   size_t region_off = (custom_header_ - buffer_) + header_->custom_header_size_;
   size_t region_size = buffer_size_ - region_off;
   alloc_.shm_deserialize(buffer + region_off, region_size);
+  heap_ = alloc_.heap_;
   HERMES_MEMORY_REGISTRY_REF.RegisterAllocator(&alloc_);
   page_caches_ = header_->page_caches_.get();
 }
