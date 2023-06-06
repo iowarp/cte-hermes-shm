@@ -10,29 +10,29 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+#ifndef HERMES_SHM_INCLUDE_HERMES_SHM_HERMES_SHM_H_
+#define HERMES_SHM_INCLUDE_HERMES_SHM_HERMES_SHM_H_
 
-#ifndef HERMES_DATA_STRUCTURES_DATA_STRUCTURE_H_
-#define HERMES_DATA_STRUCTURES_DATA_STRUCTURE_H_
+#include "thread/thread_model_manager.h"
+#include "thread/lock.h"
 
-#include "ipc/internal/shm_internal.h"
-#include "hermes_shm/memory/memory_manager.h"
+#include "util/singleton.h"
+#include "util/auto_trace.h"
+#include "util/config_parse.h"
+#include "util/errors.h"
+#include "util/formatter.h"
+#include "util/logging.h"
+#include "util/partitioner.h"
+#include "util/timer.h"
+#include "util/type_switch.h"
 
-#include "containers/charbuf.h"
-#include "containers/converters.h"
-#include "containers/functional.h"
-#include "containers/tuple_base.h"
+#include "types/argpack.h"
+#include "types/atomic.h"
+#include "types/bitfield.h"
+#include "types/real_number.h"
 
-#include "ipc/pair.h"
-#include "ipc/string.h"
-#include "ipc/list.h"
-#include "ipc/vector.h"
-#include "ipc/mpsc_queue.h"
-#include "ipc/slist.h"
-#include "ipc/split_ticket_queue.h"
-#include "ipc/spsc_queue.h"
-#include "ipc/ticket_queue.h"
-#include "ipc/unordered_map.h"
+#include "memory/memory_manager.h"
 
-namespace hipc = hshm::ipc;
+#include "data_structures/data_structure.h"
 
-#endif  // HERMES_DATA_STRUCTURES_DATA_STRUCTURE_H_
+#endif  // HERMES_SHM_INCLUDE_HERMES_SHM_HERMES_SHM_H_
