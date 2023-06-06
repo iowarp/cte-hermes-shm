@@ -150,10 +150,18 @@ class spsc_queue_templ : public ShmContainer {
   /** Construct an element at \a pos position in the list */
   template<typename ...Args>
   qtok_t emplace(Args&&... args) {
+    // Don't emplace if there is no space
     _qtok_t entry_tok = tail_;
-    uint32_t idx = entry_tok % (*queue_).size();
-    auto iter = (*queue_).begin() + idx;
-    (*queue_).replace(iter, std::forward<Args>(args)...);
+    size_t size = tail_ - head_;
+    auto &queue = (*queue_);
+    if (size >= queue.size()) {
+      return qtok_t::GetNull();
+    }
+
+    // Do the emplace
+    _qtok_t idx = entry_tok % queue.size();
+    auto iter = queue.begin() + idx;
+    queue.replace(iter, std::forward<Args>(args)...);
     tail_ += 1;
     return qtok_t(entry_tok);
   }
@@ -169,8 +177,9 @@ class spsc_queue_templ : public ShmContainer {
     }
 
     // Pop the element
-    _qtok_t idx = head % (*queue_).size();
-    T &entry = (*queue_)[idx];
+    auto &queue = (*queue_);
+    _qtok_t idx = head % queue.size();
+    T &entry = queue[idx];
     (val) = std::move(entry);
     head_ += 1;
     return qtok_t(head);

@@ -31,8 +31,9 @@ TEST_CASE("TestTicketStackInt") {
 TEST_CASE("TestTicketStackIntMultiThreaded") {
   Allocator *alloc = alloc_g;
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+  ProduceThenConsume<hipc::ticket_stack<int>, int>(8, 1, 8192, 8192 * 8);
   ProduceAndConsume<hipc::ticket_stack<int>, int>(8, 1, 8192, 64);
-  // ProduceAndConsume<hipc::ticket_stack<int>, int>(8, 8, 8192, 64);
+  ProduceAndConsume<hipc::ticket_stack<int>, int>(8, 8, 8192, 64);
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
 }
 

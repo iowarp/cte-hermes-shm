@@ -23,7 +23,7 @@ void Posttest() {
 }
 
 void MainPretest() {
-  Pretest<hipc::ScalablePageAllocator>();
+  Pretest<hipc::StackAllocator>();
 }
 
 void MainPosttest() {

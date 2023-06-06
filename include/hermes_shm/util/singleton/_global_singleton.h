@@ -53,4 +53,4 @@ T* GlobalSingleton<T>::obj_ = &GlobalSingleton<T>::_GetObj();
 
 }  // namespace hshm
 
-#endif //HERMES_SHM_INCLUDE_HERMES_SHM_UTIL_SINGLETON__GLOBAL_SINGLETON_H_
+#endif  // HERMES_SHM_INCLUDE_HERMES_SHM_UTIL_SINGLETON__GLOBAL_SINGLETON_H_
