@@ -86,22 +86,36 @@ class AllocatorTestSuite {
     TestOutput("AllocateThenFreeFixedSize", count, size, timer_);
   }
 
+  void seq(std::vector<size_t> &vec, size_t rep, size_t count) {
+    for (size_t i = 0; i < count; ++i) {
+      vec.emplace_back(rep);
+    }
+  }
+
   /** Allocate a window of pages, free the window. Random page sizes. */
-  void AllocateAndFreeRandomWindow(size_t count, size_t window_length) {
-    /* size_t min_page = 64;
+  void AllocateAndFreeRandomWindow(size_t count) {
+    size_t min_page = 64;
     size_t max_page = MEGABYTES(1);
     std::mt19937 rng(23522523);
-    std::uniform_int_distribution<size_t> uni(min_page, max_page); */
+    std::vector<size_t> sizes_;
+
+    seq(sizes_, 64, MEGABYTES(1) / 64);
+    seq(sizes_, 190, MEGABYTES(1) / 190);
+    seq(sizes_, KILOBYTES(1), MEGABYTES(1) / KILOBYTES(1));
+    seq(sizes_, KILOBYTES(4), MEGABYTES(8) / KILOBYTES(4));
+    seq(sizes_, KILOBYTES(32), MEGABYTES(4) / KILOBYTES(4));
+    seq(sizes_, MEGABYTES(1), MEGABYTES(64) / MEGABYTES(1));
+    std::shuffle(std::begin(sizes_), std::end(sizes_), rng);
+    std::vector<Pointer> window(sizes_.size());
+    size_t num_windows = 500;
 
     StartTimer();
-    size_t num_windows = count / window_length;
-    std::vector<Pointer> window(window_length);
     for (size_t w = 0; w < num_windows; ++w) {
-      for (size_t i = 0; i < window_length; ++i) {
-        size_t size = 64; // uni(rng);
+      for (size_t i = 0; i < sizes_.size(); ++i) {
+        auto &size = sizes_[i];
         window[i] = alloc_->Allocate(size);
       }
-      for (size_t i = 0; i < window_length; ++i) {
+      for (size_t i = 0; i < sizes_.size(); ++i) {
         alloc_->Free(window[i]);
       }
     }
@@ -125,7 +139,10 @@ class AllocatorTestSuite {
 
   void StopTimer() {
 #pragma omp barrier
-    timer_.Pause();
+    int rank = omp_get_thread_num();
+    if (rank == 0) {
+      timer_.Pause();
+    }
   }
 
   /** The CSV test case */
@@ -213,7 +230,7 @@ void AllocatorTest(AllocatorType alloc_type,
   if (alloc_type != AllocatorType::kStackAllocator) {
     // Allocate and free randomly
     AllocatorTestSuite(alloc_type, alloc).AllocateAndFreeRandomWindow(
-      count, 16);
+      count);
   }
   Posttest();
 }
@@ -247,7 +264,7 @@ void FullAllocatorTestThreaded(int nthreads) {
 
 TEST_CASE("AllocatorBenchmark") {
   AllocatorTestSuite::PrintTestHeader();
-  FullAllocatorTestThreaded(1);
+  FullAllocatorTestThreaded(8);
   /*FullAllocatorTestThreaded(2);
   FullAllocatorTestThreaded(4);
   FullAllocatorTestThreaded(8);
