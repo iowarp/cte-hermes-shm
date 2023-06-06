@@ -27,7 +27,7 @@
 
 namespace hshm::ipc {
 
-typedef spsc_queue<size_t> SPA_PAGE_CACHE;
+typedef split_ticket_queue<size_t> SPA_PAGE_CACHE;
 
 struct ScalablePageAllocatorHeader : public AllocatorHeader {
   ShmArchive<vector<SPA_PAGE_CACHE>> page_caches_;
