@@ -98,10 +98,6 @@ endif()
 # External libraries
 #------------------------------------------------------------------------------
 
-# YAML-CPP
-find_package(yaml-cpp REQUIRED)
-message(STATUS "found yaml-cpp at ${yaml-cpp_DIR}")
-
 # Catch2
 find_package(Catch2 3.0.1 REQUIRED)
 message(STATUS "found catch2.h at ${Catch2_CXX_INCLUDE_DIRS}")
@@ -199,3 +195,15 @@ endif()
 # Install hshm
 #------------------------------------------------------------------------------
 install(DIRECTORY include DESTINATION ${CMAKE_INSTALL_PREFIX})
+
+configure_file(
+        ${CMAKE_SOURCE_DIR}/CMake/HermesShmConfig.cmake
+        ${PROJECT_BINARY_DIR}/CMakeFiles/HermesShmConfig.cmake @ONLY
+)
+
+install(
+    FILES
+        ${PROJECT_BINARY_DIR}/CMakeFiles/HermesShmConfig.cmake
+    DESTINATION
+        ${CMAKE_INSTALL_PREFIX}/cmake
+)

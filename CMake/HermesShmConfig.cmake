@@ -26,7 +26,7 @@ if( HermesShm_INCLUDE_DIR )
     # Set uncached variables as per standard.
     set(HermesShm_FOUND ON)
     set(HermesShm_INCLUDE_DIRS ${HermesShm_INCLUDE_DIR})
-    set(HermesShm_LIBRARIES ${HermesShm_LIBRARY})
+    set(HermesShm_LIBRARIES yaml-cpp ${HermesShm_LIBRARY})
   endif(HermesShm_LIBRARY)
 else(HermesShm_INCLUDE_DIR)
   message(STATUS "FindHermesShm: Could not find hermes_shm.h")
