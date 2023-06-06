@@ -27,6 +27,7 @@ void MpiPageAllocationTest(Allocator *alloc, size_t count) {
   std::mt19937 rng(23522523);
   std::uniform_int_distribution<size_t> uni(min_page, max_page);
 
+  MPI_Barrier(MPI_COMM_WORLD);
   size_t num_windows = count / window_length;
   std::vector<Record> window(window_length);
   for (size_t w = 0; w < num_windows; ++w) {
@@ -55,6 +56,7 @@ Allocator* TestAllocatorMpi() {
   if (rank != 0) {
     PretestRankN();
   }
+  HILOG(kInfo, "Allocator: {}", (size_t)alloc_g);
   return alloc_g;
 }
 
