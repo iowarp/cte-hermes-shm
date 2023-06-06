@@ -17,6 +17,7 @@
 #include "hermes_shm/memory/allocator/allocator_factory.h"
 #include "hermes_shm/memory/memory_registry.h"
 #include "hermes_shm/constants/macros.h"
+#include "hermes_shm/util/logging.h"
 #include <hermes_shm/constants/data_structure_singleton_macros.h>
 
 namespace hipc = hshm::ipc;

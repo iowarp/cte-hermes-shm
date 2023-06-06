@@ -17,6 +17,7 @@
 #include "hermes_shm/thread/lock.h"
 #include "vector.h"
 #include "_queue.h"
+#include "spsc_queue.h"
 
 namespace hshm::ipc {
 
