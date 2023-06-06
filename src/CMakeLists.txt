@@ -7,13 +7,13 @@ set(CMAKE_CXX_STANDARD 17)
 # Build HSHM
 #-----------------------------------------------------------------------------
 add_library(hermes_shm_data_structures
-        thread/mutex.cc
-        thread/rwlock.cc
         memory/malloc_allocator.cc
         memory/stack_allocator.cc
         memory/scalable_page_allocator.cc
         memory/memory_registry.cc
         memory/memory_manager.cc
+        thread_model_manager.cc
+        thread_factory.cc
         data_structure_singleton.cc)
 target_link_libraries(hermes_shm_data_structures
         yaml-cpp pthread -lrt -ldl OpenMP::OpenMP_CXX

@@ -43,7 +43,7 @@ class QueueTestSuite {
   /** Consumer method */
   void Consume(std::atomic<size_t> &count,
                size_t total_count) {
-    std::vector<int> entries;
+    std::vector<size_t> entries;
     entries.reserve(total_count);
     auto entry = hipc::make_uptr<T>();
     auto &entry_ref = *entry;
@@ -61,6 +61,12 @@ class QueueTestSuite {
 
     // Ensure there's no data left in the queue
     REQUIRE(queue_->pop(entry_ref).IsNull());
+
+    // Ensure the data is all correct
+    std::sort(entries.begin(), entries.end());
+    for (size_t i = 0; i < total_count; ++i) {
+      REQUIRE(entries[i] == i);
+    }
   }
 };
 

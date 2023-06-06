@@ -13,12 +13,28 @@
 #include "basic_test.h"
 #include "test_init.h"
 #include "hermes_shm/data_structures/ipc/ticket_queue.h"
+#include "hermes_shm/data_structures/ipc/ticket_stack.h"
 #include "hermes_shm/data_structures/ipc/split_ticket_queue.h"
 #include "queue.h"
 
 /**
  * TEST TICKET QUEUE
  * */
+
+TEST_CASE("TestTicketStackInt") {
+  Allocator *alloc = alloc_g;
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+  ProduceThenConsume<hipc::ticket_stack<int>, int>(1, 1, 32, 32);
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+}
+
+TEST_CASE("TestTicketStackIntMultiThreaded") {
+  Allocator *alloc = alloc_g;
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+  ProduceAndConsume<hipc::ticket_stack<int>, int>(8, 1, 8192, 64);
+  // ProduceAndConsume<hipc::ticket_stack<int>, int>(8, 8, 8192, 64);
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+}
 
 TEST_CASE("TestTicketQueueInt") {
   Allocator *alloc = alloc_g;

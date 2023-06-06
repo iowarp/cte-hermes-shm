@@ -10,38 +10,35 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_SYSINFO_INFO_H_
-#define HERMES_SYSINFO_INFO_H_
+#include "hermes_shm/thread/thread_model/thread_model_factory.h"
+#include "hermes_shm/thread/thread_model/thread_model.h"
+#include "hermes_shm/thread/thread_model/pthread.h"
+#include "hermes_shm/thread/thread_model/argobots.h"
+#include "hermes_shm/util/logging.h"
 
-#include <unistd.h>
-#include <sys/sysinfo.h>
-#include "hermes_shm/util/singleton/_global_singleton.h"
+namespace hshm::thread_model {
 
-#define HERMES_SYSTEM_INFO hshm::GlobalSingleton<hshm::SystemInfo>::GetInstance()
-#define HERMES_SYSTEM_INFO_T hshm::SystemInfo*
-
-namespace hshm {
-
-struct SystemInfo {
-  int pid_;
-  int ncpu_;
-  int page_size_;
-  int uid_;
-  int gid_;
-  size_t ram_size_;
-
-  SystemInfo() {
-    pid_ = getpid();
-    ncpu_ = get_nprocs_conf();
-    page_size_ = getpagesize();
-    struct sysinfo info;
-    sysinfo(&info);
-    uid_ = getuid();
-    gid_ = getgid();
-    ram_size_ = info.totalram;
+std::unique_ptr<ThreadModel> ThreadFactory::Get(ThreadType type) {
+  switch (type) {
+    case ThreadType::kPthread: {
+#ifdef HERMES_PTHREADS_ENABLED
+      return std::make_unique<Pthread>();
+#else
+      return nullptr;
+#endif
+    }
+    case ThreadType::kArgobots: {
+#ifdef HERMES_RPC_THALLIUM
+      return std::make_unique<Argobots>();
+#else
+      return nullptr;
+#endif
+    }
+    default: {
+      HELOG(kWarning, "No such thread type");
+      return nullptr;
+    }
   }
-};
+}
 
-}  // namespace hshm
-
-#endif  // HERMES_SYSINFO_INFO_H_
+}  // namespace hshm::thread_model

@@ -21,12 +21,13 @@
 #include "hermes_shm/data_structures/ipc/list.h"
 #include "hermes_shm/data_structures/ipc/pair.h"
 #include "hermes_shm/data_structures/ipc/split_ticket_queue.h"
+#include "hermes_shm/data_structures/ipc/spsc_queue.h"
 #include <hermes_shm/memory/allocator/stack_allocator.h>
 #include "mp_page.h"
 
 namespace hshm::ipc {
 
-typedef split_ticket_queue<size_t> SPA_PAGE_CACHE;
+typedef spsc_queue<size_t> SPA_PAGE_CACHE;
 
 struct ScalablePageAllocatorHeader : public AllocatorHeader {
   ShmArchive<vector<SPA_PAGE_CACHE>> page_caches_;

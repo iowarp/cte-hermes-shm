@@ -10,38 +10,31 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_SYSINFO_INFO_H_
-#define HERMES_SYSINFO_INFO_H_
+#ifndef HERMES_SHM_INCLUDE_HERMES_SHM_UTIL_SINGLETON_EASY_GLOBAL_SINGLETON_H_
+#define HERMES_SHM_INCLUDE_HERMES_SHM_UTIL_SINGLETON_EASY_GLOBAL_SINGLETON_H_
 
-#include <unistd.h>
-#include <sys/sysinfo.h>
-#include "hermes_shm/util/singleton/_global_singleton.h"
-
-#define HERMES_SYSTEM_INFO hshm::GlobalSingleton<hshm::SystemInfo>::GetInstance()
-#define HERMES_SYSTEM_INFO_T hshm::SystemInfo*
+#include <memory>
+#include "hermes_shm/constants/macros.h"
 
 namespace hshm {
 
-struct SystemInfo {
-  int pid_;
-  int ncpu_;
-  int page_size_;
-  int uid_;
-  int gid_;
-  size_t ram_size_;
-
-  SystemInfo() {
-    pid_ = getpid();
-    ncpu_ = get_nprocs_conf();
-    page_size_ = getpagesize();
-    struct sysinfo info;
-    sysinfo(&info);
-    uid_ = getuid();
-    gid_ = getgid();
-    ram_size_ = info.totalram;
+/**
+ * Makes a singleton. Constructs during initialization of program.
+ * Does not require specific initialization of the static variable.
+ * */
+template<typename T>
+class EasyGlobalSingleton {
+ private:
+  static T obj_;
+ public:
+  EasyGlobalSingleton() = default;
+  static T* GetInstance() {
+    return &obj_;
   }
 };
+template <typename T>
+T EasyGlobalSingleton<T>::obj_;
 
 }  // namespace hshm
 
-#endif  // HERMES_SYSINFO_INFO_H_
+#endif  // HERMES_SHM_INCLUDE_HERMES_SHM_UTIL_SINGLETON_EASY_GLOBAL_SINGLETON_H_

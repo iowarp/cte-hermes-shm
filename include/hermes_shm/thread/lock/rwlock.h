@@ -16,6 +16,8 @@
 
 #include <atomic>
 #include <hermes_shm/constants/macros.h>
+#include "hermes_shm/thread/lock.h"
+#include "hermes_shm/thread/thread_model_manager.h"
 
 namespace hshm {
 
@@ -77,16 +79,72 @@ struct RwLock {
   }
 
   /** Acquire read lock */
-  void ReadLock(uint32_t owner);
+  void ReadLock(uint32_t owner) {
+    RwLockMode mode;
+
+    // Increment # readers. Check if in read mode.
+    readers_.fetch_add(1);
+
+    // Wait until we are in read mode
+    do {
+      UpdateMode(mode);
+      if (mode == RwLockMode::kRead) {
+        return;
+      }
+      if (mode == RwLockMode::kNone) {
+        bool ret = mode_.compare_exchange_weak(mode, RwLockMode::kRead);
+        if (ret) {
+#ifdef HERMES_DEBUG_LOCK
+          owner_ = owner;
+        HILOG(kDebug, "Acquired read lock for {}", owner);
+#endif
+          return;
+        }
+      }
+      HERMES_THREAD_MODEL->Yield();
+    } while (true);
+  }
 
   /** Release read lock */
-  void ReadUnlock();
+  void ReadUnlock() {
+    readers_.fetch_sub(1);
+  }
 
   /** Acquire write lock */
-  void WriteLock(uint32_t owner);
+  void WriteLock(uint32_t owner) {
+    RwLockMode mode;
+    uint32_t cur_writer;
+
+    // Increment # writers & get ticket
+    writers_.fetch_add(1);
+    uint64_t tkt = ticket_.fetch_add(1);
+
+    // Wait until we are in read mode
+    do {
+      UpdateMode(mode);
+      if (mode == RwLockMode::kNone) {
+        mode_.compare_exchange_weak(mode, RwLockMode::kWrite);
+        mode = mode_.load();
+      }
+      if (mode == RwLockMode::kWrite) {
+        cur_writer = cur_writer_.load();
+        if (cur_writer == tkt) {
+#ifdef HERMES_DEBUG_LOCK
+          owner_ = owner;
+        HILOG(kDebug, "Acquired write lock for {}", owner);
+#endif
+          return;
+        }
+      }
+      HERMES_THREAD_MODEL->Yield();
+    } while (true);
+  }
 
   /** Release write lock */
-  void WriteUnlock();
+  void WriteUnlock() {
+    writers_.fetch_sub(1);
+    cur_writer_.fetch_add(1);
+  }
 
  private:
   /** Update the mode of the lock */
@@ -107,16 +165,31 @@ struct ScopedRwReadLock {
   bool is_locked_;
 
   /** Acquire the read lock */
-  explicit ScopedRwReadLock(RwLock &lock, uint32_t owner);
+  explicit ScopedRwReadLock(RwLock &lock, uint32_t owner)
+    : lock_(lock), is_locked_(false) {
+    Lock(owner);
+  }
 
   /** Release the read lock */
-  ~ScopedRwReadLock();
+  ~ScopedRwReadLock() {
+    Unlock();
+  }
 
   /** Explicitly acquire read lock */
-  void Lock(uint32_t owner);
+  void Lock(uint32_t owner) {
+    if (!is_locked_) {
+      lock_.ReadLock(owner);
+      is_locked_ = true;
+    }
+  }
 
   /** Explicitly release read lock */
-  void Unlock();
+  void Unlock() {
+    if (is_locked_) {
+      lock_.ReadUnlock();
+      is_locked_ = false;
+    }
+  }
 };
 
 /** Acquire scoped write lock */
@@ -125,16 +198,31 @@ struct ScopedRwWriteLock {
   bool is_locked_;
 
   /** Acquire the write lock */
-  explicit ScopedRwWriteLock(RwLock &lock, uint32_t owner);
+  explicit ScopedRwWriteLock(RwLock &lock, uint32_t owner)
+  : lock_(lock), is_locked_(false) {
+    Lock(owner);
+  }
 
   /** Release the write lock */
-  ~ScopedRwWriteLock();
+  ~ScopedRwWriteLock() {
+    Unlock();
+  }
 
   /** Explicity acquire the write lock */
-  void Lock(uint32_t owner);
+  void Lock(uint32_t owner) {
+    if (!is_locked_) {
+      lock_.WriteLock(owner);
+      is_locked_ = true;
+    }
+  }
 
   /** Explicitly release the write lock */
-  void Unlock();
+  void Unlock() {
+    if (is_locked_) {
+      lock_.WriteUnlock();
+      is_locked_ = false;
+    }
+  }
 };
 
 }  // namespace hshm
