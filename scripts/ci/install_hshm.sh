@@ -24,6 +24,7 @@ cmake ../ \
 -DBUILD_HSHM_TESTS=ON \
 -DCMAKE_INSTALL_PREFIX=${HOME}/install
 make -j8
+make install
 
 export CXXFLAGS=-Wall
 ctest -VV
