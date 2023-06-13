@@ -186,7 +186,7 @@ Allocator* Pretest(MemoryBackendType backend_type,
     mem_mngr->UnregisterAllocator(alloc_id);
     mem_mngr->UnregisterBackend(shm_url);
     mem_mngr->CreateBackend<BackendT>(
-      MemoryManager::GetDefaultBackendSize(), shm_url);
+      MEGABYTES(100), shm_url);
     mem_mngr->CreateAllocator<AllocT>(
       shm_url, alloc_id, 0, std::forward<Args>(args)...);
   }

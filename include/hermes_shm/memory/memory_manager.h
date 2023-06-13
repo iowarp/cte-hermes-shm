@@ -31,7 +31,7 @@ class MemoryManager {
 
   /** Default backend size */
   static size_t GetDefaultBackendSize() {
-    return HERMES_SYSTEM_INFO->ram_size_ / 4;
+    return HERMES_SYSTEM_INFO->ram_size_;
   }
 
   /**
