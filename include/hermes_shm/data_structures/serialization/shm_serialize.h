@@ -20,9 +20,30 @@ namespace hshm::ipc {
 class ShmSerializer {
  public:
   size_t off_;
+  char *buf_;
+  Pointer p_;
 
   /** Default constructor */
-  ShmSerializer() : off_(0) {}
+  template<typename ...Args>
+  ShmSerializer(Allocator *alloc, Args&& ...args) : off_(0) {
+    size_t buf_size = sizeof(allocator_id_t) + shm_buf_size(
+        std::forward<Args>(args)...);
+    buf_ = alloc->AllocatePtr<char>(buf_size, p_);
+    auto lambda = [this](auto i, auto &&arg) {
+      if constexpr(IS_SHM_ARCHIVEABLE(NOREF)) {
+        OffsetPointer p = arg.template GetShmPointer<OffsetPointer>();
+        memcpy(this->buf_ + this->off_, (void*)&p, sizeof(p));
+        this->off_ += sizeof(p);
+      } else if constexpr(std::is_pod<NOREF>()) {
+        memcpy(this->buf_ + this->off_, &arg, sizeof(arg));
+        this->off_ += sizeof(arg);
+      } else {
+        throw IPC_ARGS_NOT_SHM_COMPATIBLE.format();
+      }
+    };
+    ForwardIterateArgpack::Apply(make_argpack(
+        std::forward<Args>(args)...), lambda);
+  }
 
   /** Get the SHM serialized size of an argument pack */
   template<typename ...Args>
@@ -41,40 +62,15 @@ class ShmSerializer {
       std::forward<Args>(args)...), lambda);
     return size;
   }
+};
 
-  /** Serialize a set of arguments into shared memory */
-  template<typename ...Args>
-  HSHM_ALWAYS_INLINE char* serialize(Allocator *alloc, Args&& ...args) {
-    size_t buf_size = sizeof(allocator_id_t) + shm_buf_size(
-      std::forward<Args>(args)...);
-    Pointer p;
-    char *buf = alloc->AllocatePtr<char>(buf_size, p);
-    memcpy(buf, &p.allocator_id_, sizeof(allocator_id_t));
-    off_ = sizeof(allocator_id_t);
-    auto lambda = [buf, this](auto i, auto &&arg) {
-      if constexpr(IS_SHM_ARCHIVEABLE(NOREF)) {
-        OffsetPointer p = arg.template GetShmPointer<OffsetPointer>();
-        memcpy(buf + this->off_, (void*)&p, sizeof(p));
-        this->off_ += sizeof(p);
-      } else if constexpr(std::is_pod<NOREF>()) {
-        memcpy(buf + this->off_, &arg, sizeof(arg));
-        this->off_ += sizeof(arg);
-      } else {
-        throw IPC_ARGS_NOT_SHM_COMPATIBLE.format();
-      }
-    };
-    ForwardIterateArgpack::Apply(make_argpack(
-      std::forward<Args>(args)...), lambda);
-    return buf;
-  }
+class ShmDeserializer {
+ public:
+  size_t off_;
 
-  /** Deserialize an allocator from the SHM buffer */
-  HSHM_ALWAYS_INLINE Allocator* deserialize(char *buf) {
-    allocator_id_t alloc_id;
-    memcpy((void*)&alloc_id, buf + off_, sizeof(allocator_id_t));
-    off_ += sizeof(allocator_id_t);
-    return HERMES_MEMORY_MANAGER->GetAllocator(alloc_id);
-  }
+ public:
+  /** Default constructor */
+  ShmDeserializer() : off_(0) {}
 
   /** Deserialize an argument from the SHM buffer */
   template<typename T, typename ...Args>
