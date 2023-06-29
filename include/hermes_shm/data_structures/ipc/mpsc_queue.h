@@ -45,6 +45,7 @@ class mpsc_queue : public ShmContainer {
   std::atomic<_qtok_t> tail_;
   std::atomic<_qtok_t> head_;
   RwLock lock_;
+  bitfield32_t flags_;
 
  public:
   /**====================================
@@ -56,6 +57,7 @@ class mpsc_queue : public ShmContainer {
                       size_t depth = 1024) {
     shm_init_container(alloc);
     HSHM_MAKE_AR(queue_, GetAllocator(), depth);
+    flags_.Clear();
     SetNull();
   }
 
@@ -93,7 +95,7 @@ class mpsc_queue : public ShmContainer {
 
   /** SHM move constructor. */
   mpsc_queue(Allocator *alloc,
-                   mpsc_queue &&other) noexcept {
+             mpsc_queue &&other) noexcept {
     shm_init_container(alloc);
     if (GetAllocator() == other.GetAllocator()) {
       head_ = other.head_.load();
