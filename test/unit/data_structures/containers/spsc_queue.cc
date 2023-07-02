@@ -13,6 +13,7 @@
 #include "basic_test.h"
 #include "test_init.h"
 #include "hermes_shm/data_structures/ipc/spsc_queue.h"
+#include "hermes_shm/data_structures/containers/spsc_queue.h"
 #include "queue.h"
 
 /**
@@ -31,5 +32,20 @@ TEST_CASE("TestSpscQueueString") {
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
   ProduceThenConsume<hipc::spsc_queue<hipc::string>, hipc::string>(
     1, 1, 32, 32);
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+}
+
+TEST_CASE("TestPrivateSpscQueueInt") {
+  Allocator *alloc = alloc_g;
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+  ProduceThenConsume<hshm::spsc_queue<int>, int>(1, 1, 32, 32);
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+}
+
+TEST_CASE("TestPrivateSpscQueueString") {
+  Allocator *alloc = alloc_g;
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+  ProduceThenConsume<hshm::spsc_queue<std::string>, std::string>(
+      1, 1, 32, 32);
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
 }

@@ -16,7 +16,7 @@
 #include "hermes_shm/data_structures/ipc/internal/shm_internal.h"
 #include "hermes_shm/thread/lock.h"
 #include "spsc_queue.h"
-#include "_queue.h"
+#include "hermes_shm/types/qtok.h"
 
 namespace hshm::ipc {
 

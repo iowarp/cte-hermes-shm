@@ -17,7 +17,7 @@
 #include "hermes_shm/thread/lock.h"
 #include "vector.h"
 #include "pair.h"
-#include "_queue.h"
+#include "hermes_shm/types/qtok.h"
 
 namespace hshm::ipc {
 
