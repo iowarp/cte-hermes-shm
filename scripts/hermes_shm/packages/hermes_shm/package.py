@@ -10,8 +10,13 @@ class HermesShm(CMakePackage):
     depends_on('boost@1.7:')
     depends_on('doxygen@1.9.3')
 
+    variant('debug', default=False, description='Build shared libraries')
+
     def cmake_args(self):
-        return []
+        args = []
+        if '+debug' in self.spec:
+            args.append('-DCMAKE_BUILD_TYPE=Debug')
+        return args
 
     def set_include(self, env, path):
         env.append_flags('CFLAGS', '-I{}'.format(path))
