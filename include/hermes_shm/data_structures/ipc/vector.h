@@ -239,7 +239,7 @@ class vector : public ShmContainer {
   /**====================================
    * Variables
    * ===================================*/
-  AtomicPointer vec_ptr_;
+  OffsetPointer vec_ptr_;
   size_t max_length_, length_;
 
  public:
@@ -567,7 +567,7 @@ class vector : public ShmContainer {
         ReallocateObjs<ShmArchive<T>>(vec_ptr_, max_length);
     } else {
       // Use std::move for unpredictable objects
-      Pointer new_p;
+      OffsetPointer new_p;
       new_vec = GetAllocator()->template
         AllocateObjs<ShmArchive<T>>(max_length, new_p);
       for (size_t i = 0; i < length_; ++i) {
