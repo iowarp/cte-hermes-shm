@@ -10,8 +10,8 @@
 * have access to the file, you may request a copy from help@hdfgroup.org.   *
 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_SHM_INCLUDE_HERMES_SHM_DATA_STRUCTURES_IPC_mpsc_queue_H_
-#define HERMES_SHM_INCLUDE_HERMES_SHM_DATA_STRUCTURES_IPC_mpsc_queue_H_
+#ifndef HERMES_SHM_INCLUDE_HERMES_SHM_DATA_STRUCTURES_IPC_mpsc_ptr_queue_H_
+#define HERMES_SHM_INCLUDE_HERMES_SHM_DATA_STRUCTURES_IPC_mpsc_ptr_queue_H_
 
 #include "hermes_shm/data_structures/ipc/internal/shm_internal.h"
 #include "hermes_shm/thread/lock.h"
@@ -21,27 +21,27 @@
 
 namespace hshm::ipc {
 
-/** Forward declaration of mpsc_queue */
+/** Forward declaration of mpsc_ptr_queue */
 template<typename T>
-class mpsc_queue;
+class mpsc_ptr_queue;
 
 /**
- * MACROS used to simplify the mpsc_queue namespace
+ * MACROS used to simplify the mpsc_ptr_queue namespace
  * Used as inputs to the SHM_CONTAINER_TEMPLATE
  * */
-#define CLASS_NAME mpsc_queue
-#define TYPED_CLASS mpsc_queue<T>
-#define TYPED_HEADER ShmHeader<mpsc_queue<T>>
+#define CLASS_NAME mpsc_ptr_queue
+#define TYPED_CLASS mpsc_ptr_queue<T>
+#define TYPED_HEADER ShmHeader<mpsc_ptr_queue<T>>
 
 /**
  * A queue optimized for multiple producers (emplace) with a single
  * consumer (pop).
  * */
 template<typename T>
-class mpsc_queue : public ShmContainer {
+class mpsc_ptr_queue : public ShmContainer {
  public:
   SHM_CONTAINER_TEMPLATE((CLASS_NAME), (TYPED_CLASS))
-  ShmArchive<vector<pair<bitfield32_t, T>>> queue_;
+  ShmArchive<vector<T>> queue_;
   std::atomic<_qtok_t> tail_;
   std::atomic<_qtok_t> head_;
   RwLock lock_;
@@ -53,7 +53,7 @@ class mpsc_queue : public ShmContainer {
    * ===================================*/
 
   /** SHM constructor. Default. */
-  explicit mpsc_queue(Allocator *alloc,
+  explicit mpsc_ptr_queue(Allocator *alloc,
                       size_t depth = 1024) {
     shm_init_container(alloc);
     HSHM_MAKE_AR(queue_, GetAllocator(), depth);
@@ -66,15 +66,15 @@ class mpsc_queue : public ShmContainer {
    * ===================================*/
 
   /** SHM copy constructor */
-  explicit mpsc_queue(Allocator *alloc,
-                      const mpsc_queue &other) {
+  explicit mpsc_ptr_queue(Allocator *alloc,
+                      const mpsc_ptr_queue &other) {
     shm_init_container(alloc);
     SetNull();
     shm_strong_copy_construct_and_op(other);
   }
 
   /** SHM copy assignment operator */
-  mpsc_queue& operator=(const mpsc_queue &other) {
+  mpsc_ptr_queue& operator=(const mpsc_ptr_queue &other) {
     if (this != &other) {
       shm_destroy();
       shm_strong_copy_construct_and_op(other);
@@ -83,7 +83,7 @@ class mpsc_queue : public ShmContainer {
   }
 
   /** SHM copy constructor + operator main */
-  void shm_strong_copy_construct_and_op(const mpsc_queue &other) {
+  void shm_strong_copy_construct_and_op(const mpsc_ptr_queue &other) {
     head_ = other.head_.load();
     tail_ = other.tail_.load();
     (*queue_) = (*other.queue_);
@@ -94,8 +94,8 @@ class mpsc_queue : public ShmContainer {
    * ===================================*/
 
   /** SHM move constructor. */
-  mpsc_queue(Allocator *alloc,
-             mpsc_queue &&other) noexcept {
+  mpsc_ptr_queue(Allocator *alloc,
+             mpsc_ptr_queue &&other) noexcept {
     shm_init_container(alloc);
     if (GetAllocator() == other.GetAllocator()) {
       head_ = other.head_.load();
@@ -109,7 +109,7 @@ class mpsc_queue : public ShmContainer {
   }
 
   /** SHM move assignment operator. */
-  mpsc_queue& operator=(mpsc_queue &&other) noexcept {
+  mpsc_ptr_queue& operator=(mpsc_ptr_queue &&other) noexcept {
     if (this != &other) {
       shm_destroy();
       if (GetAllocator() == other.GetAllocator()) {
@@ -151,13 +151,13 @@ class mpsc_queue : public ShmContainer {
 
   /** Construct an element at \a pos position in the list */
   template<typename ...Args>
-  qtok_t emplace(Args&&... args) {
+  qtok_t emplace(const T &val) {
     // Allocate a slot in the queue
     // The slot is marked NULL, so pop won't do anything if context switch
     _qtok_t head = head_.load();
     _qtok_t tail = tail_.fetch_add(1);
     size_t size = tail - head + 1;
-    vector<pair<bitfield32_t, T>> &queue = (*queue_);
+    vector<T> &queue = (*queue_);
 
     // Check if there's space in the queue.
     if (size > queue.size()) {
@@ -173,15 +173,17 @@ class mpsc_queue : public ShmContainer {
 
     // Emplace into queue at our slot
     uint32_t idx = tail % queue.size();
-    auto iter = queue.begin() + idx;
-    queue.replace(iter,
-                      hshm::PiecewiseConstruct(),
-                      make_argpack(),
-                      make_argpack(std::forward<Args>(args)...));
+    if constexpr(std::is_arithmetic<T>::value) {
+      queue[idx] = MARK_FIRST_BIT(T, val);
+    } else if constexpr(std::is_same_v<T, OffsetPointer>
+        || std::is_same_v<T, AtomicOffsetPointer>) {
+      queue[idx] = T(MARK_FIRST_BIT(size_t, val.off_));
+    } else if constexpr(std::is_same_v<T, Pointer>
+        || std::is_same_v<T, AtomicPointer>) {
+      queue[idx] = T(val.allocator_id_, MARK_FIRST_BIT(size_t, val.off_));
+    }
 
     // Let pop know that the data is fully prepared
-    pair<bitfield32_t, T> &entry = (*iter);
-    entry.GetFirst().SetBits(1);
     return qtok_t(tail);
   }
 
@@ -197,10 +199,20 @@ class mpsc_queue : public ShmContainer {
 
     // Pop the element, but only if it's marked valid
     _qtok_t idx = head % (*queue_).size();
-    hipc::pair<bitfield32_t, T> &entry = (*queue_)[idx];
-    if (entry.GetFirst().Any(1)) {
-      val = std::move(entry.GetSecond());
-      entry.GetFirst().Clear();
+    T &entry = (*queue_)[idx];
+
+    // Check if bit is marked
+    bool is_marked;
+    if constexpr(std::is_arithmetic<T>::value) {
+      is_marked = IS_FIRST_BIT_MARKED(T, entry);
+    } else {
+      is_marked = IS_FIRST_BIT_MARKED(T, entry.off_);
+    }
+
+    // Complete dequeue if marked
+    if (is_marked) {
+      val = UNMARK_FIRST_BIT(T, entry);
+      entry = 0;
       head_.fetch_add(1);
       return qtok_t(head);
     } else {
@@ -215,4 +227,4 @@ class mpsc_queue : public ShmContainer {
 #undef TYPED_CLASS
 #undef TYPED_HEADER
 
-#endif  // HERMES_SHM_INCLUDE_HERMES_SHM_DATA_STRUCTURES_IPC_mpsc_queue_H_
+#endif  // HERMES_SHM_INCLUDE_HERMES_SHM_DATA_STRUCTURES_IPC_mpsc_ptr_queue_H_

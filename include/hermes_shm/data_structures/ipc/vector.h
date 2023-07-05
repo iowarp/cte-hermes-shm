@@ -603,7 +603,7 @@ class vector : public ShmContainer {
    * @param pos the starting position
    * @param count the amount to shift left by
    * */
-  void shift_left(const iterator_t pos, size_t count = 1) {
+  HSHM_ALWAYS_INLINE void shift_left(const iterator_t pos, size_t count = 1) {
     ShmArchive<T> *vec = data_ar();
     for (size_t i = 0; i < count; ++i) {
       HSHM_DESTROY_AR(vec[pos.i_ + i])
@@ -624,7 +624,7 @@ class vector : public ShmContainer {
    * @param pos the starting position
    * @param count the amount to shift right by
    * */
-  void shift_right(const iterator_t pos, size_t count = 1) {
+  HSHM_ALWAYS_INLINE void shift_right(const iterator_t pos, size_t count = 1) {
     auto src = data_ar() + size() - 1;
     auto dst = src + count;
     auto sz = static_cast<off64_t>(size());
@@ -639,42 +639,42 @@ class vector : public ShmContainer {
    * ===================================*/
  public:
   /** Beginning of the forward iterator */
-  iterator_t begin() {
+  HSHM_ALWAYS_INLINE iterator_t begin() {
     return iterator_t(this, 0);
   }
 
   /** End of the forward iterator */
-  iterator_t end() {
+  HSHM_ALWAYS_INLINE iterator_t end() {
     return iterator_t(this, size());
   }
 
   /** Beginning of the constant forward iterator */
-  citerator_t cbegin() const {
+  HSHM_ALWAYS_INLINE citerator_t cbegin() const {
     return citerator_t(const_cast<vector*>(this), 0);
   }
 
   /** End of the forward iterator */
-  citerator_t cend() const {
+  HSHM_ALWAYS_INLINE citerator_t cend() const {
     return citerator_t(const_cast<vector*>(this), size<off64_t>());
   }
 
   /** Beginning of the reverse iterator */
-  riterator_t rbegin() {
+  HSHM_ALWAYS_INLINE riterator_t rbegin() {
     return riterator_t(this, size<off64_t>() - 1);
   }
 
   /** End of the reverse iterator */
-  riterator_t rend() {
+  HSHM_ALWAYS_INLINE riterator_t rend() {
     return citerator_t(this, (off64_t)-1);
   }
 
   /** Beginning of the constant reverse iterator */
-  criterator_t crbegin() const {
+  HSHM_ALWAYS_INLINE criterator_t crbegin() const {
     return criterator_t(const_cast<vector*>(this), size<off64_t>() - 1);
   }
 
   /** End of the constant reverse iterator */
-  criterator_t crend() const {
+  HSHM_ALWAYS_INLINE criterator_t crend() const {
     return criterator_t(const_cast<vector*>(this), (off64_t)-1);
   }
 };

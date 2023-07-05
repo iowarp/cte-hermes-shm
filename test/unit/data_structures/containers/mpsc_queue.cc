@@ -13,6 +13,7 @@
 #include "basic_test.h"
 #include "test_init.h"
 #include "hermes_shm/data_structures/ipc/mpsc_queue.h"
+#include "hermes_shm/data_structures/ipc/mpsc_ptr_queue.h"
 #include "queue.h"
 
 /**
@@ -46,5 +47,23 @@ TEST_CASE("TestMpscQueueStringMultiThreaded") {
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
   ProduceAndConsume<hipc::mpsc_queue<hipc::string>, hipc::string>(
     8, 1, 8192, 32);
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+}
+
+/**
+ * MPSC Pointer Queue
+ * */
+
+TEST_CASE("TestMpscPtrQueueInt") {
+  Allocator *alloc = alloc_g;
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+  ProduceThenConsume<hipc::mpsc_ptr_queue<int>, int>(1, 1, 32, 32);
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+}
+
+TEST_CASE("TestMpscPtrQueueIntMultiThreaded") {
+  Allocator *alloc = alloc_g;
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+  ProduceAndConsume<hipc::mpsc_ptr_queue<int>, int>(8, 1, 8192, 32);
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
 }
