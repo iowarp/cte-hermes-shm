@@ -400,5 +400,12 @@ struct hash<hshm::ipc::allocator_id_t> {
 
 }  // namespace std
 
+#define IS_SHM_OFFSET_POINTER(T) \
+  std::is_same_v<T, OffsetPointer> || \
+  std::is_same_v<T, AtomicOffsetPointer>
+
+#define IS_SHM_POINTER(T) \
+  std::is_same_v<T, Pointer> || \
+  std::is_same_v<T, AtomicPointer>
 
 #endif  // HERMES_MEMORY_MEMORY_H_

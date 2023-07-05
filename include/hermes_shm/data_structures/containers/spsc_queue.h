@@ -44,7 +44,7 @@ class spsc_queue {
   spsc_queue() : head_(0), tail_(0) {}
 
   /** Emplace constructor */
-  spsc_queue(size_t max_size) : head_(0), tail_(0) {
+  explicit spsc_queue(size_t max_size) : head_(0), tail_(0) {
     queue_.reserve(max_size);
   }
 

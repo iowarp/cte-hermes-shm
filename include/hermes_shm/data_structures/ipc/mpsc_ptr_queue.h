@@ -54,7 +54,7 @@ class mpsc_ptr_queue : public ShmContainer {
 
   /** SHM constructor. Default. */
   explicit mpsc_ptr_queue(Allocator *alloc,
-                      size_t depth = 1024) {
+                          size_t depth = 1024) {
     shm_init_container(alloc);
     HSHM_MAKE_AR(queue_, GetAllocator(), depth);
     flags_.Clear();
@@ -67,7 +67,7 @@ class mpsc_ptr_queue : public ShmContainer {
 
   /** SHM copy constructor */
   explicit mpsc_ptr_queue(Allocator *alloc,
-                      const mpsc_ptr_queue &other) {
+                          const mpsc_ptr_queue &other) {
     shm_init_container(alloc);
     SetNull();
     shm_strong_copy_construct_and_op(other);
@@ -95,7 +95,7 @@ class mpsc_ptr_queue : public ShmContainer {
 
   /** SHM move constructor. */
   mpsc_ptr_queue(Allocator *alloc,
-             mpsc_ptr_queue &&other) noexcept {
+                 mpsc_ptr_queue &&other) noexcept {
     shm_init_container(alloc);
     if (GetAllocator() == other.GetAllocator()) {
       head_ = other.head_.load();
@@ -175,12 +175,11 @@ class mpsc_ptr_queue : public ShmContainer {
     uint32_t idx = tail % queue.size();
     if constexpr(std::is_arithmetic<T>::value) {
       queue[idx] = MARK_FIRST_BIT(T, val);
-    } else if constexpr(std::is_same_v<T, OffsetPointer>
-        || std::is_same_v<T, AtomicOffsetPointer>) {
+    } else if constexpr(IS_SHM_OFFSET_POINTER(T)) {
       queue[idx] = T(MARK_FIRST_BIT(size_t, val.off_.load()));
-    } else if constexpr(std::is_same_v<T, Pointer>
-        || std::is_same_v<T, AtomicPointer>) {
-      queue[idx] = T(val.allocator_id_, MARK_FIRST_BIT(size_t, val.off_.load()));
+    } else if constexpr(IS_SHM_POINTER(T)) {
+      queue[idx] = T(val.allocator_id_,
+                     MARK_FIRST_BIT(size_t, val.off_.load()));
     }
 
     // Let pop know that the data is fully prepared
@@ -214,12 +213,10 @@ class mpsc_ptr_queue : public ShmContainer {
       if constexpr(std::is_arithmetic<T>::value) {
         val = UNMARK_FIRST_BIT(T, entry);
         entry = 0;
-      } else if constexpr(std::is_same_v<T, OffsetPointer>
-          || std::is_same_v<T, AtomicOffsetPointer>) {
+      } else if constexpr(IS_SHM_OFFSET_POINTER(T)) {
         val = T(UNMARK_FIRST_BIT(size_t, entry.off_.load()));
         entry.off_ = 0;
-      } else if constexpr(std::is_same_v<T, Pointer>
-          || std::is_same_v<T, AtomicPointer>) {
+      } else if constexpr(IS_SHM_POINTER(T)) {
         val = T(entry.allocator_id_,
                 UNMARK_FIRST_BIT(size_t, entry.off_.load()));
         entry.off_ = 0;
