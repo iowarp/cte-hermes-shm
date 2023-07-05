@@ -177,10 +177,10 @@ class mpsc_ptr_queue : public ShmContainer {
       queue[idx] = MARK_FIRST_BIT(T, val);
     } else if constexpr(std::is_same_v<T, OffsetPointer>
         || std::is_same_v<T, AtomicOffsetPointer>) {
-      queue[idx] = T(MARK_FIRST_BIT(size_t, val.off_));
+      queue[idx] = T(MARK_FIRST_BIT(size_t, val.off_.load()));
     } else if constexpr(std::is_same_v<T, Pointer>
         || std::is_same_v<T, AtomicPointer>) {
-      queue[idx] = T(val.allocator_id_, MARK_FIRST_BIT(size_t, val.off_));
+      queue[idx] = T(val.allocator_id_, MARK_FIRST_BIT(size_t, val.off_.load()));
     }
 
     // Let pop know that the data is fully prepared
@@ -206,13 +206,24 @@ class mpsc_ptr_queue : public ShmContainer {
     if constexpr(std::is_arithmetic<T>::value) {
       is_marked = IS_FIRST_BIT_MARKED(T, entry);
     } else {
-      is_marked = IS_FIRST_BIT_MARKED(T, entry.off_);
+      is_marked = IS_FIRST_BIT_MARKED(size_t, entry.off_.load());
     }
 
     // Complete dequeue if marked
     if (is_marked) {
-      val = UNMARK_FIRST_BIT(T, entry);
-      entry = 0;
+      if constexpr(std::is_arithmetic<T>::value) {
+        val = UNMARK_FIRST_BIT(T, entry);
+        entry = 0;
+      } else if constexpr(std::is_same_v<T, OffsetPointer>
+          || std::is_same_v<T, AtomicOffsetPointer>) {
+        val = T(UNMARK_FIRST_BIT(size_t, entry.off_.load()));
+        entry.off_ = 0;
+      } else if constexpr(std::is_same_v<T, Pointer>
+          || std::is_same_v<T, AtomicPointer>) {
+        val = T(entry.allocator_id_,
+                UNMARK_FIRST_BIT(size_t, entry.off_.load()));
+        entry.off_ = 0;
+      }
       head_.fetch_add(1);
       return qtok_t(head);
     } else {
