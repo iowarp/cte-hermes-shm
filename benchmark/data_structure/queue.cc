@@ -237,7 +237,7 @@ class QueueTest {
 };
 
 void FullQueueTest() {
-  const size_t count_per_rank = 1000000;
+  const size_t count_per_rank = (1 << 20);
 //  // std::queue tests
 //  QueueTest<size_t, std::queue<size_t>>().Test(count_per_rank, 1);
 //  QueueTest<size_t, std::queue<size_t>>().Test(count_per_rank, 4);
