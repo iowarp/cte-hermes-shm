@@ -187,8 +187,22 @@ struct charbuf {
   }
 
   /** Convert to std::string */
-  HSHM_ALWAYS_INLINE std::string str() {
+  HSHM_ALWAYS_INLINE const std::string str() {
     return std::string(data(), size());
+  }
+
+  /**====================================
+   * Operators
+   * ===================================*/
+
+  /** Index operator */
+  HSHM_ALWAYS_INLINE char& operator[](size_t idx) {
+      return data_[idx];
+  }
+
+  /** Const index operator */
+  HSHM_ALWAYS_INLINE const char& operator[](size_t idx) const {
+    return data_[idx];
   }
 
   /**====================================
@@ -263,5 +277,23 @@ struct charbuf {
 typedef charbuf string;
 
 }  // namespace hshm
+
+namespace std {
+
+/** Hash function for string */
+template<>
+struct hash<hshm::charbuf> {
+  size_t operator()(const hshm::charbuf &text) const {
+    size_t sum = 0;
+    for (size_t i = 0; i < text.size(); ++i) {
+      auto shift = static_cast<size_t>(i % sizeof(size_t));
+      auto c = static_cast<size_t>((unsigned char)text[i]);
+      sum = 31*sum + (c << shift);
+    }
+    return sum;
+  }
+};
+
+}  // namespace std
 
 #endif  // HERMES_INCLUDE_HERMES_TYPES_CHARBUF_H_
