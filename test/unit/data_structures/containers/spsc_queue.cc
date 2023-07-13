@@ -35,14 +35,14 @@ TEST_CASE("TestSpscQueueString") {
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
 }
 
-TEST_CASE("TestPrivateSpscQueueInt") {
+TEST_CASE("TestSpscQueuePrivateInt") {
   Allocator *alloc = alloc_g;
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
   ProduceThenConsume<hshm::spsc_queue<int>, int>(1, 1, 32, 32);
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
 }
 
-TEST_CASE("TestPrivateSpscQueueString") {
+TEST_CASE("TestSpscQueuePrivateString") {
   Allocator *alloc = alloc_g;
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
   ProduceThenConsume<hshm::spsc_queue<std::string>, std::string>(

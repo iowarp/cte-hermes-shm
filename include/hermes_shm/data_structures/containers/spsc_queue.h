@@ -10,8 +10,8 @@
 * have access to the file, you may request a copy from help@hdfgroup.org.   *
 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_SHM_INCLUDE_HERMES_SHM_DATA_STRUCTURES_IPC_spsc_queue_H_
-#define HERMES_SHM_INCLUDE_HERMES_SHM_DATA_STRUCTURES_IPC_spsc_queue_H_
+#ifndef HERMES_SHM_INCLUDE_HERMES_SHM_DATA_STRUCTURES_spsc_queue_H_
+#define HERMES_SHM_INCLUDE_HERMES_SHM_DATA_STRUCTURES_spsc_queue_H_
 
 #include "hermes_shm/data_structures/ipc/internal/shm_internal.h"
 #include "hermes_shm/util/auto_trace.h"
@@ -46,6 +46,36 @@ class spsc_queue {
   /** Emplace constructor */
   explicit spsc_queue(size_t max_size) : head_(0), tail_(0) {
     queue_.reserve(max_size);
+  }
+
+  /** Copy constructor */
+  spsc_queue(const spsc_queue &other) {
+    queue_ = other.queue_;
+    head_ = other.head_;
+    tail_ = other.tail_;
+  }
+
+  /** Copy assignment operator */
+  spsc_queue &operator=(const spsc_queue &other) {
+    queue_ = other.queue_;
+    head_ = other.head_;
+    tail_ = other.tail_;
+    return *this;
+  }
+
+  /** Move constructor */
+  spsc_queue(spsc_queue &&other) noexcept {
+    queue_ = std::move(other.queue_);
+    head_ = other.head_;
+    tail_ = other.tail_;
+  }
+
+  /** Move assignment operator */
+  spsc_queue &operator=(spsc_queue &&other) noexcept {
+    queue_ = std::move(other.queue_);
+    head_ = other.head_;
+    tail_ = other.tail_;
+    return *this;
   }
 
   /**====================================
@@ -99,4 +129,4 @@ class spsc_queue {
 
 }  // namespace hshm
 
-#endif  // HERMES_SHM_INCLUDE_HERMES_SHM_DATA_STRUCTURES_IPC_spsc_queue_H_
+#endif  // HERMES_SHM_INCLUDE_HERMES_SHM_DATA_STRUCTURES_spsc_queue_H_
