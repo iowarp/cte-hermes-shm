@@ -429,7 +429,7 @@ class Allocator {
    * */
   template <typename T>
   HSHM_ALWAYS_INLINE void DelObj(T *ptr) {
-    FreeDestructObjs<T>(ptr);
+    FreeDestructObjs<T>(ptr, 1);
   }
 
   /**====================================
