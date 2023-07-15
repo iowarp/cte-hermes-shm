@@ -344,6 +344,24 @@ class Allocator {
     return ptr;
   }
 
+  /** Allocate + construct an array of objects */
+  template<
+      typename T,
+      typename POINTER_T = Pointer,
+      typename ...Args>
+  HSHM_ALWAYS_INLINE T* NewObjs(size_t count, POINTER_T &p, Args&& ...args) {
+    AllocateConstructObjs(count, p, std::forward<Args>(args)...);
+  }
+
+  /** Allocate + construct a single object */
+  template<
+      typename T,
+      typename POINTER_T = Pointer,
+      typename ...Args>
+  HSHM_ALWAYS_INLINE T* NewObj(POINTER_T &p, Args&& ...args) {
+    return NewObjs<T>(1, p, std::forward<Args>(args)...);
+  }
+
   /**
    * Reallocate a pointer of objects to a new size.
    *
@@ -355,7 +373,7 @@ class Allocator {
    * */
   template<typename T, typename POINTER_T = Pointer>
   HSHM_ALWAYS_INLINE T* ReallocateObjs(POINTER_T &p, size_t new_count) {
-    T *ptr = ReallocatePtr<T>(p, new_count*sizeof(T));
+    T *ptr = ReallocatePtr<T>(p, new_count * sizeof(T));
     return ptr;
   }
 
@@ -378,7 +396,7 @@ class Allocator {
                                                 size_t old_count,
                                                 size_t new_count,
                                                 Args&& ...args) {
-    T *ptr = ReallocatePtr<T>(p, new_count*sizeof(T));
+    T *ptr = ReallocatePtr<T>(p, new_count * sizeof(T));
     ConstructObjs<T>(ptr, old_count, new_count, std::forward<Args>(args)...);
     return ptr;
   }
@@ -397,6 +415,22 @@ class Allocator {
     Free(p);
   }
 
+
+  /**
+   * Free + destruct objects
+   * */
+  template <typename T>
+  HSHM_ALWAYS_INLINE void DelObjs(T *ptr, size_t count) {
+    FreeDestructObjs<T>(ptr, count);
+  }
+
+  /**
+   * Free + destruct an object
+   * */
+  template <typename T>
+  HSHM_ALWAYS_INLINE void DelObj(T *ptr) {
+    FreeDestructObjs<T>(ptr);
+  }
 
   /**====================================
   * Object Constructors
