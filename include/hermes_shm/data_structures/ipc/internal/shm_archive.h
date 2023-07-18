@@ -18,8 +18,23 @@
 #include "hermes_shm/memory/memory.h"
 #include "hermes_shm/types/argpack.h"
 #include "hermes_shm/memory/allocator/allocator.h"
+#include "shm_container.h"
 
 namespace hshm::ipc {
+
+template<typename T>
+struct ShmArchiveShm {
+  static void shm_destroy(T &obj) {
+    obj.shm_destroy();
+  }
+};
+
+template<typename T>
+struct ShmArchiveNoShm {
+  static void shm_destroy(T &obj) {
+    Allocator::DestructObj<T>(obj);
+  }
+};
 
 /**
  * Represents the layout of a data structure in shared memory.
@@ -107,6 +122,15 @@ class ShmArchive {
         Allocator::ConstructObj<T>(std::forward<decltype(args)>(args)...);
       });
   }
+
+  HSHM_ALWAYS_INLINE
+  void shm_destroy() {
+    if constexpr(IS_SHM_ARCHIVEABLE(T)) {
+      ShmArchiveShm<T>::shm_destroy(get_ref());
+    } else {
+      ShmArchiveNoShm<T>::shm_destroy(get_ref());
+    }
+  }
 };
 
 #define HSHM_AR_GET_TYPE(AR) \
@@ -134,9 +158,7 @@ class ShmArchive {
   }
 
 #define HSHM_DESTROY_AR(AR) \
-  if constexpr(IS_SHM_ARCHIVEABLE(HSHM_AR_GET_TYPE(AR))) { \
-    (AR).get_ref().shm_destroy(); \
-  }
+  (AR).shm_destroy();
 
 }  // namespace hshm::ipc
 

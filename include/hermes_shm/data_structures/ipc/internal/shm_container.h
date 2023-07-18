@@ -18,7 +18,6 @@
 #include "hermes_shm/constants/macros.h"
 #include "shm_container_macro.h"
 #include "shm_macros.h"
-#include "shm_archive.h"
 
 namespace hipc = hshm::ipc;
 
