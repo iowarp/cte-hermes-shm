@@ -237,7 +237,7 @@ struct PointerBase {
   OffsetPointerBase<ATOMIC> off_;   /// Offset within the allocator's slot
 
   /** Default constructor */
-  PointerBase() = default;
+  HSHM_ALWAYS_INLINE PointerBase() = default;
 
   /** Full constructor */
   HSHM_ALWAYS_INLINE explicit PointerBase(allocator_id_t id, size_t off)

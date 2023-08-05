@@ -62,7 +62,7 @@
  * Ensure that the compiler ALWAYS inlines a particular function.
  * */
 #define HSHM_ALWAYS_INLINE \
-  __attribute__((always_inline))
+  inline __attribute__((always_inline))
 
 #define MARK_FIRST_BIT_MASK(T) ((T)1 << (sizeof(T) * 8 - 1))
 #define MARK_FIRST_BIT(T, X) ((X) | MARK_FIRST_BIT_MASK(T))
