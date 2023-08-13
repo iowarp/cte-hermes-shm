@@ -15,6 +15,7 @@
 #define HERMES_DATA_STRUCTURES_LOCKLESS_VECTOR_H_
 
 #include "hermes_shm/data_structures/ipc/internal/shm_internal.h"
+#include "hermes_shm/data_structures/serialization/serialize_common.h"
 
 #include <vector>
 
@@ -676,6 +677,18 @@ class vector : public ShmContainer {
   /** End of the constant reverse iterator */
   HSHM_ALWAYS_INLINE criterator_t crend() const {
     return criterator_t(const_cast<vector*>(this), (off64_t)-1);
+  }
+
+  /** Lets Thallium know how to serialize an hipc::vector. */
+  template <typename Ar>
+  void save(Ar &ar) {
+    save_vec<Ar, hipc::vector<T>, T>(ar, *this);
+  }
+
+  /** Lets Thallium know how to deserialize an hipc::vector. */
+  template <typename Ar>
+  void load(Ar &ar) {
+    load_vec<Ar, hipc::vector<T>, T>(ar, *this);
   }
 };
 

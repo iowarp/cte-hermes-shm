@@ -16,6 +16,7 @@
 
 #include "hermes_shm/data_structures/ipc/internal/shm_internal.h"
 #include "hermes_shm/data_structures/containers/charbuf.h"
+#include "hermes_shm/data_structures/serialization/serialize_common.h"
 #include <string>
 
 namespace hshm::ipc {
@@ -267,6 +268,22 @@ class string_templ : public ShmContainer {
     } else {
       length_ = new_size;
     }
+  }
+
+  /**====================================
+   * Serialization
+   * ===================================*/
+
+  /** Serialize */
+  template <typename A>
+  void save(A &ar) {
+    save_string<A, string_templ>(ar, *this);
+  }
+
+  /** Deserialize */
+  template <typename A>
+  void load(A &ar) {
+    load_string<A, string_templ>(ar, *this);
   }
 
   /**====================================

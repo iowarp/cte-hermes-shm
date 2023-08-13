@@ -32,6 +32,11 @@ class Argobots : public ThreadModel {
 
   /** Yield the current thread for a period of time */
   void SleepForUs(size_t us) override {
+    /**
+     * TODO(llogan): make this API flexible enough to support argobots fully
+     * tl::thread::self().sleep(*HERMES->rpc_.server_engine_,
+                               HERMES->server_config_.borg_.blob_reorg_period_);
+     */
     usleep(us);
   }
 

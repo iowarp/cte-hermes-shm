@@ -75,6 +75,13 @@ union allocator_id_t {
   HSHM_ALWAYS_INLINE uint32_t ToIndex() {
     return bits_.major_ * 4 + bits_.minor_;
   }
+
+  /** Serialize an hipc::allocator_id */
+  template <typename Ar>
+  HSHM_ALWAYS_INLINE
+  void serialize(Ar &ar) {
+    ar &int_;
+  }
 };
 
 typedef uint32_t slot_id_t;  // Uniquely ids a MemoryBackend slot

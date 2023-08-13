@@ -15,6 +15,7 @@
 
 #include "hermes_shm/types/real_number.h"
 #include "hermes_shm/memory/memory_registry.h"
+#include "hermes_shm/data_structures/serialization/serialize_common.h"
 #include <string>
 
 namespace hshm {
@@ -203,6 +204,22 @@ struct charbuf {
   /** Const index operator */
   HSHM_ALWAYS_INLINE const char& operator[](size_t idx) const {
     return data_[idx];
+  }
+
+  /**====================================
+   * Serialization
+   * ===================================*/
+
+  /** Serialize */
+  template <typename A>
+  void save(A &ar) {
+    save_string<A, charbuf>(ar, *this);
+  }
+
+  /** Deserialize */
+  template <typename A>
+  void load(A &ar) {
+    load_string<A, charbuf>(ar, *this);
   }
 
   /**====================================

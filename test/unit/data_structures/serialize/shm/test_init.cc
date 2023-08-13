@@ -13,7 +13,7 @@
 #include <iostream>
 #include "test_init.h"
 #include "hermes_shm/data_structures/ipc/string.h"
-#include "hermes_shm/data_structures/serialization/thallium.h"
+#include "data_structures/serialize/thallium/thallium.h"
 #include "hermes_shm/data_structures/containers/charbuf.h"
 #include <memory>
 

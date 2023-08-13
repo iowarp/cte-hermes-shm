@@ -16,6 +16,7 @@
 
 #include "hermes_shm/data_structures/ipc/internal/shm_internal.h"
 #include "hermes_shm/data_structures/containers/functional.h"
+#include "hermes_shm/data_structures/serialization/serialize_common.h"
 
 #include <list>
 
@@ -467,6 +468,22 @@ class list : public ShmContainer {
   citerator_t cend() const {
     return iterator_t(const_cast<list&>(*this),
                       nullptr, OffsetPointer::GetNull());
+  }
+
+  /**====================================
+  * Serialization
+  * ===================================*/
+
+  /** Serialize */
+  template <typename Ar>
+  void save(Ar &ar) {
+    save_list<Ar, hipc::list<T>, T>(ar, *this);
+  }
+
+  /** Deserialize */
+  template <typename Ar>
+  void load(Ar &ar) {
+    load_list<Ar, hipc::list<T>, T>(ar, *this);
   }
 
  private:

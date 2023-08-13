@@ -276,6 +276,19 @@ uptr<T> make_uptr(Allocator *alloc, Args&& ...args) {
   return make_ptr_base<uptr<T>>(alloc, std::forward<Args>(args)...);
 }
 
+/** Serialize uptr */
+template<typename Ar, typename T>
+void save(Ar &ar, uptr<T> &ptr) {
+  ar(*ptr);
+}
+
+/** Deserialize uptr */
+template<typename Ar, typename T>
+void load(Ar &ar, uptr<T> &ptr) {
+  ptr = hipc::make_uptr<T>();
+  ar(*ptr);
+}
+
 }  // namespace hshm::ipc
 
 #undef CLASS_NAME

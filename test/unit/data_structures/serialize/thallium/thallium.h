@@ -10,24 +10,16 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include <iostream>
-#include "test_init.h"
+
+#ifndef HERMES_DATA_STRUCTURES_SERIALIZATION_THALLIUM_H_
+#define HERMES_DATA_STRUCTURES_SERIALIZATION_THALLIUM_H_
+
+#include "thallium.hpp"
 #include "hermes_shm/data_structures/ipc/string.h"
-#include "thallium.h"
+#include "hermes_shm/data_structures/data_structure.h"
+#include "hermes_shm/data_structures/ipc/vector.h"
+#include "hermes_shm/data_structures/ipc/list.h"
 #include "hermes_shm/data_structures/containers/charbuf.h"
-#include <memory>
+#include "hermes_shm/data_structures/ipc/slist.h"
 
-std::unique_ptr<tl::engine> client_;
-std::unique_ptr<tl::engine> server_;
-
-void MainPretest() {
-  ClientPretest<hipc::StackAllocator>();
-  client_ = std::make_unique<tl::engine>(
-    "ofi+sockets",
-    THALLIUM_CLIENT_MODE);
-}
-
-void MainPosttest() {
-  tl::endpoint server = client_->lookup(tcnst::kServerName);
-  client_->shutdown_remote_engine(server);
-}
+#endif  // HERMES_DATA_STRUCTURES_SERIALIZATION_THALLIUM_H_

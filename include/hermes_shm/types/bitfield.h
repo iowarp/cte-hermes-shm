@@ -59,7 +59,12 @@ struct bitfield {
   HSHM_ALWAYS_INLINE static T MakeMask(int start, int length) {
     return ((((T)1) << length) - 1) << start;
   }
-} __attribute__((packed));
+
+  template<typename Ar>
+  void serialize(Ar &ar) {
+    ar & bits_;
+  }
+};
 typedef bitfield<uint8_t> bitfield8_t;
 typedef bitfield<uint16_t> bitfield16_t;
 typedef bitfield<uint32_t> bitfield32_t;
