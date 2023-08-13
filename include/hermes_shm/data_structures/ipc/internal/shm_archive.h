@@ -123,6 +123,7 @@ class ShmArchive {
       });
   }
 
+  /** Destroy */
   HSHM_ALWAYS_INLINE
   void shm_destroy() {
     if constexpr(IS_SHM_ARCHIVEABLE(T)) {
@@ -159,6 +160,17 @@ class ShmArchive {
 
 #define HSHM_DESTROY_AR(AR) \
   (AR).shm_destroy();
+
+template<typename Ar, typename T>
+void save(Ar &ar, const ShmArchive<T> &obj) {
+  ar & obj.get_ref();
+}
+
+template<typename Ar, typename T>
+void load(Ar &ar, ShmArchive<T> &obj) {
+  HSHM_MAKE_AR0(obj, HERMES_MEMORY_REGISTRY->GetDefaultAllocator());
+  ar & obj.get_ref();
+}
 
 }  // namespace hshm::ipc
 

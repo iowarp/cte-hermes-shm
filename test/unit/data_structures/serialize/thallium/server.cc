@@ -117,6 +117,13 @@ int main() {
   };
   server_->define(tcnst::kBitfieldTest, bitfield_test);
 
+  // Test transfer of ShmArchive
+  auto shm_ar_test = [](const request &req, hipc::ShmArchive<hipc::vector<int>> &vec) {
+    bool ret = VerifyVector(*vec);
+    req.respond(ret);
+  };
+  server_->define(tcnst::kShmArTest, shm_ar_test);
+
   // Start daemon
   server_->enable_remote_shutdown();
   server_->wait_for_finalize();

@@ -51,6 +51,7 @@ class Constants {
   static inline const char *kVecOfString0Test = "kVecOfString0Test";
   static inline const char *kVecOfStringLargeTest = "kVecOfStringLargeTest";
   static inline const char *kBitfieldTest = "kBitfieldTest";
+  static inline const char *kShmArTest = "kShmArTest";
 };
 }  // namespace thallium
 using tcnst = thallium::Constants;

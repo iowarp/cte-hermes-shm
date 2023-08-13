@@ -89,3 +89,18 @@ TEST_CASE("SerializeBitfield") {
   REQUIRE(bitfield_proc.on(server)(field));
 }
 
+TEST_CASE("SerializeShmArchive") {
+  tl::endpoint server = client_->lookup(
+      tcnst::kServerName);
+  tl::remote_procedure shm_ar_proc = client_->define(
+      tcnst::kShmArTest);
+
+  // Send ShmArchive
+  hipc::ShmArchive<hipc::vector<int>> vec;
+  HSHM_MAKE_AR0(vec, HERMES_MEMORY_MANAGER->GetDefaultAllocator());
+  vec->reserve(20);
+  for (int i = 0; i < 20; ++i) {
+    vec->emplace_back(i);
+  }
+  REQUIRE(shm_ar_proc.on(server)(vec));
+}
