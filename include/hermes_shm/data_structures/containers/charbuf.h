@@ -211,9 +211,9 @@ struct charbuf {
    * ===================================*/
 
   /** Serialize */
-  template <typename A>
-  void save(A &ar) {
-    save_string<A, charbuf>(ar, *this);
+  template <typename Ar>
+  void save(Ar &ar) const {
+    save_string<Ar, charbuf>(ar, *this);
   }
 
   /** Deserialize */

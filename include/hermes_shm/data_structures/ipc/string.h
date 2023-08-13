@@ -275,9 +275,9 @@ class string_templ : public ShmContainer {
    * ===================================*/
 
   /** Serialize */
-  template <typename A>
-  void save(A &ar) {
-    save_string<A, string_templ>(ar, *this);
+  template <typename Ar>
+  void save(Ar &ar) const {
+    save_string<Ar, string_templ>(ar, *this);
   }
 
   /** Deserialize */

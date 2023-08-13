@@ -17,7 +17,7 @@
 
 /** Serialize a generic vector */
 template <typename A, typename ContainerT, typename T>
-void save_vec(A &ar, ContainerT &obj) {
+void save_vec(A &ar, const ContainerT &obj) {
   ar << obj.size();
   for (auto iter = obj.cbegin(); iter != obj.cend(); ++iter) {
     ar << (*iter);
@@ -36,7 +36,7 @@ void load_vec(A &ar, ContainerT &obj) {
 
 /** Serialize a generic list */
 template <typename A, typename ContainerT, typename T>
-void save_list(A &ar, ContainerT &obj) {
+void save_list(A &ar, const ContainerT &obj) {
   ar << obj.size();
   for (auto iter = obj.cbegin(); iter != obj.cend(); ++iter) {
     ar << *(*iter);
@@ -56,7 +56,7 @@ void load_list(A &ar, ContainerT &obj) {
 
 /** Serialize a generic string. */
 template <typename A, typename StringT>
-void save_string(A &ar, StringT &text) {
+void save_string(A &ar, const StringT &text) {
   ar << text.size();
   ar.write(text.data(), text.size());
 }

@@ -681,7 +681,7 @@ class vector : public ShmContainer {
 
   /** Lets Thallium know how to serialize an hipc::vector. */
   template <typename Ar>
-  void save(Ar &ar) {
+  void save(Ar &ar) const {
     save_vec<Ar, hipc::vector<T>, T>(ar, *this);
   }
 

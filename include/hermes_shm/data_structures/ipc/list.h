@@ -476,7 +476,7 @@ class list : public ShmContainer {
 
   /** Serialize */
   template <typename Ar>
-  void save(Ar &ar) {
+  void save(Ar &ar) const {
     save_list<Ar, hipc::list<T>, T>(ar, *this);
   }
 
