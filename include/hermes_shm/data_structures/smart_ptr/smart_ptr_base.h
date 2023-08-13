@@ -277,14 +277,14 @@ uptr<T> make_uptr(Allocator *alloc, Args&& ...args) {
 }
 
 /** Serialize uptr */
-template<typename Ar, typename T>
-void save(Ar &ar, uptr<T> &ptr) {
+template<typename Ar, typename T, bool UNIQUE>
+void save(Ar &ar, const smart_ptr_base<T, UNIQUE> &ptr) {
   ar(*ptr);
 }
 
 /** Deserialize uptr */
-template<typename Ar, typename T>
-void load(Ar &ar, uptr<T> &ptr) {
+template<typename Ar, typename T, bool UNIQUE>
+void load(Ar &ar, smart_ptr_base<T, UNIQUE> &ptr) {
   ptr = hipc::make_uptr<T>();
   ar(*ptr);
 }

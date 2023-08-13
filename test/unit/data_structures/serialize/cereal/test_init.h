@@ -10,37 +10,25 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include "hermes_shm/thread/thread_model/thread_model_factory.h"
-#include "hermes_shm/thread/thread_model/thread_model.h"
-#include "hermes_shm/thread/thread_model/pthread.h"
-#ifdef HERMES_RPC_THALLIUM
-#include "hermes_shm/thread/thread_model/argobots.h"
-#endif
-#include "hermes_shm/util/logging.h"
+#ifndef HERMES_SHM_TEST_UNIT_DATA_STRUCTURES_SERIALIZE_THALLIUM_TEST_INIT_H_
+#define HERMES_SHM_TEST_UNIT_DATA_STRUCTURES_SERIALIZE_THALLIUM_TEST_INIT_H_
 
-namespace hshm::thread_model {
+#include "hermes_shm/data_structures/data_structure.h"
 
-std::unique_ptr<ThreadModel> ThreadFactory::Get(ThreadType type) {
-  switch (type) {
-    case ThreadType::kPthread: {
-#ifdef HERMES_PTHREADS_ENABLED
-      return std::make_unique<Pthread>();
-#else
-      return nullptr;
-#endif
-    }
-    case ThreadType::kArgobots: {
-#ifdef HERMES_RPC_THALLIUM
-      return std::make_unique<Argobots>();
-#else
-      return nullptr;
-#endif
-    }
-    default: {
-      HELOG(kWarning, "No such thread type");
-      return nullptr;
-    }
-  }
-}
+using hshm::ipc::PosixShmMmap;
+using hshm::ipc::MemoryBackendType;
+using hshm::ipc::MemoryBackend;
+using hshm::ipc::allocator_id_t;
+using hshm::ipc::AllocatorType;
+using hshm::ipc::Allocator;
+using hshm::ipc::Pointer;
 
-}  // namespace hshm::thread_model
+using hshm::ipc::MemoryBackendType;
+using hshm::ipc::MemoryBackend;
+using hshm::ipc::allocator_id_t;
+using hshm::ipc::AllocatorType;
+using hshm::ipc::Allocator;
+using hshm::ipc::MemoryManager;
+using hshm::ipc::Pointer;
+
+#endif  // HERMES_SHM_TEST_UNIT_DATA_STRUCTURES_SERIALIZE_THALLIUM_TEST_INIT_H_

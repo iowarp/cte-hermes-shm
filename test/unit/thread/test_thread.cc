@@ -18,6 +18,8 @@ TEST_CASE("TestPthread") {
   HERMES_THREAD_MODEL->SetThreadModel(hshm::ThreadType::kPthread);
 }
 
+#ifdef HERMES_RPC_THALLIUM
 TEST_CASE("TestArgobots") {
   HERMES_THREAD_MODEL->SetThreadModel(hshm::ThreadType::kArgobots);
 }
+#endif
