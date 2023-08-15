@@ -17,7 +17,6 @@
 #include "cereal/types/vector.hpp"
 #include "cereal/types/string.hpp"
 
-
 TEST_CASE("SerializePod") {
   std::stringstream ss;
   {
