@@ -24,6 +24,7 @@ class HermesShm(CMakePackage):
         env.append_flags('CXXFLAGS', '-I{}'.format(path))
         env.prepend_path('INCLUDE', '{}'.format(path))
         env.prepend_path('CPATH', '{}'.format(path))
+        env.prepend_path('CMAKE_PREFIX_PATH', '{}'.format(path))
 
     def set_lib(self, env, path):
         env.prepend_path('LIBRARY_PATH', path)
