@@ -15,6 +15,7 @@
 #include "hermes_shm/data_structures/ipc/string.h"
 #include "hermes_shm/data_structures/ipc/mpsc_ptr_queue.h"
 #include "hermes_shm/util/error.h"
+#include "hermes_shm/util/affinity.h"
 
 TEST_CASE("TestMpscQueueMpi") {
   int rank;
@@ -30,11 +31,15 @@ TEST_CASE("TestMpscQueueMpi") {
     // Rank 0 create the pointer queue
     queue_ = hipc::make_uptr<hipc::mpsc_ptr_queue<int>>(alloc, 256);
     queue_ >> (*header);
+    // Affine to CPU 0
+    ProcessAffiner::SetCpuAffinity(getpid(), 0);
   }
   MPI_Barrier(MPI_COMM_WORLD);
   if (rank != 0) {
     // Rank 1 gets the pointer queue
     queue_ << (*header);
+    // Affine to CPU 1
+    ProcessAffiner::SetCpuAffinity(getpid(), 1);
   }
 
   if (rank == 0) {
