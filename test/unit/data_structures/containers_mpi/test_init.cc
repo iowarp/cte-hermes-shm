@@ -41,7 +41,8 @@ void MainPretest() {
   int rank;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   if (rank == 0) {
-    PretestRank0<hipc::StackAllocator>();
+    // PretestRank0<hipc::StackAllocator>();
+    PretestRank0<hipc::ScalablePageAllocator>();
   }
   MPI_Barrier(MPI_COMM_WORLD);
   if (rank != 0) {
