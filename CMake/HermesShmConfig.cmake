@@ -27,6 +27,11 @@ if( HermesShm_INCLUDE_DIR )
     message(FATAL_ERROR "librt is required for POSIX shared memory")
   endif()
 
+  find_package(cereal CONFIG REQUIRED)
+  if(cereal_FOUND)
+    message(STATUS "found cereal at ${cereal_DIR}")
+  endif()
+
   #-----------------------------------------------------------------------------
   # Mark hermes as found and set all needed packages
   #-----------------------------------------------------------------------------
