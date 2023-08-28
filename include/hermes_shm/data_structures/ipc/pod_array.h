@@ -40,6 +40,14 @@ struct pod_array {
     size_ = size;
   }
 
+  /** Destroy */
+  HSHM_ALWAYS_INLINE
+  void destroy() {
+    if (size_ > SO) {
+      HSHM_DESTROY_AR(vec_);
+    }
+  }
+
   /** Get */
   HSHM_ALWAYS_INLINE
   ShmArchive<T>* get() {
