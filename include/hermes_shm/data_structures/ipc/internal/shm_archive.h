@@ -134,9 +134,22 @@ class ShmArchive {
   }
 };
 
+/**
+ * NOTE(llogan): Why use macros here instead of templates?
+ * Good question!
+ *
+ * C++ templates are very annoying! Template types cannot be
+ * inferred when they are nested inside of other templates.
+ *
+ * These macros avoid needing to constantly specify that
+ * template parameter.
+ * */
+
+/** A macro to determine the type of AR automatically */
 #define HSHM_AR_GET_TYPE(AR) \
   (typename std::remove_reference<decltype(AR)>::type::internal_t)
 
+/** Construct the archive AR using ALLOC */
 #define HSHM_MAKE_AR0(AR, ALLOC) \
   if constexpr(IS_SHM_ARCHIVEABLE(HSHM_AR_GET_TYPE(AR))) { \
     (AR).shm_init(ALLOC); \
@@ -144,6 +157,7 @@ class ShmArchive {
     (AR).shm_init(); \
   }
 
+/** Construct the archive AR using ALLOC and params */
 #define HSHM_MAKE_AR(AR, ALLOC, ...) \
   if constexpr(IS_SHM_ARCHIVEABLE(HSHM_AR_GET_TYPE(AR))) { \
     (AR).shm_init(ALLOC, __VA_ARGS__); \
@@ -151,6 +165,7 @@ class ShmArchive {
     (AR).shm_init(__VA_ARGS__); \
   }
 
+/** Construct a piecewise archive */
 #define HSHM_MAKE_AR_PW(AR, ALLOC, ...) \
   if constexpr(IS_SHM_ARCHIVEABLE(HSHM_AR_GET_TYPE(AR))) { \
     (AR).shm_init_piecewise(make_argpack(ALLOC), __VA_ARGS__); \
@@ -158,6 +173,7 @@ class ShmArchive {
     (AR).shm_init_piecewise(make_argpack(), __VA_ARGS__); \
   }
 
+/** Destroy an archive */
 #define HSHM_DESTROY_AR(AR) \
   (AR).shm_destroy();
 
