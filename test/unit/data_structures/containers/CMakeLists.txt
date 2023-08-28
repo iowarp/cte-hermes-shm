@@ -24,6 +24,7 @@ add_executable(test_data_structure_exec
         spsc_queue.cc
         charbuf.cc
         ticket_queue.cc
+        pod_array.cc
 )
 
 add_dependencies(test_data_structure_exec hermes_shm_data_structures)
@@ -38,6 +39,14 @@ target_link_libraries(test_data_structure_exec
 # STRING TESTS
 add_test(NAME test_string COMMAND
         ${CMAKE_BINARY_DIR}/bin/test_data_structure_exec "String")
+
+# CHARBUF TESTS
+add_test(NAME test_charbuf COMMAND
+        ${CMAKE_BINARY_DIR}/bin/test_data_structure_exec "Charbuf")
+
+# PodArray TESTS
+add_test(NAME test_PodArray COMMAND
+        ${CMAKE_BINARY_DIR}/bin/test_data_structure_exec "PodArray")
 
 # VECTOR TESTS
 add_test(NAME test_vector COMMAND
