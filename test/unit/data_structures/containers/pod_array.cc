@@ -23,11 +23,17 @@ TEST_CASE("PodArray") {
     vec.resize(alloc, 3);
     REQUIRE(vec.size_ == 3);
     REQUIRE(vec.get() != vec.cache_);
+    vec[0] = 25;
+    vec[1] = 26;
+    REQUIRE(vec[0] == 25);
+    REQUIRE(vec[1] == 26);
   }
 
   PAGE_DIVIDE("Get") {
     hipc::pod_array<int, 2> vec;
     vec.resize(alloc, 1);
     REQUIRE(vec.get() == vec.cache_);
+    vec[0] = 25;
+    REQUIRE(vec[0] == 25);
   }
 }

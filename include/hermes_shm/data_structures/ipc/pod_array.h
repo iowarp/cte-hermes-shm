@@ -81,14 +81,14 @@ struct pod_array {
 
   /** Index operator */
   HSHM_ALWAYS_INLINE
-  ShmArchive<T>& operator[](int i) {
-    return get()[i];
+  T& operator[](int i) {
+    return *get()[i];
   }
 
   /** Index operator (const) */
   HSHM_ALWAYS_INLINE
   const ShmArchive<T>& operator[](int i) const {
-    return get()[i];
+    return *get()[i];
   }
 };
 
