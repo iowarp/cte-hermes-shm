@@ -32,6 +32,7 @@
 #include "ipc/spsc_queue.h"
 #include "ipc/ticket_queue.h"
 #include "ipc/unordered_map.h"
+#include "ipc/pod_array.h"
 
 namespace hipc = hshm::ipc;
 

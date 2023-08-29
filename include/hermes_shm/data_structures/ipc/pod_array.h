@@ -22,7 +22,7 @@ namespace hshm::ipc {
  * A vector which avoids memory allocation for a small number of objects
  * The array's size must remain fixed after the first modification to data.
  * */
-template<typename T, int SO>
+template<typename T, int SO = sizeof(hipc::vector<T>) / sizeof(T) + 1>
 struct pod_array {
   int size_;
   union {
@@ -30,10 +30,15 @@ struct pod_array {
     ShmArchive<hipc::vector<T>> vec_;
   };
 
+  /** Default constructor */
+  HSHM_ALWAYS_INLINE
+  pod_array() : size_(0) {}
+
   /** Serialize */
   template<typename Ar>
   void serialize(Ar &ar) {
     ar &size_;
+    resize(size_);
     if (size_ > SO) {
       ar &vec_;
     } else {
@@ -43,12 +48,20 @@ struct pod_array {
     }
   }
 
+  /** Construct */
+  HSHM_ALWAYS_INLINE
+  void construct(Allocator *alloc, int size = 0) {
+    HSHM_MAKE_AR0(vec_, alloc);
+    if (size) {
+      resize(size);
+    }
+  }
+
   /** Reserve */
   HSHM_ALWAYS_INLINE
-  void resize(Allocator *alloc, int size) {
+  void resize(int size) {
     if (size > SO) {
-      HSHM_MAKE_AR0(vec_, alloc);
-      vec_.get_ref().reserve(size);
+      vec_.get_ref().resize(size);
     }
     size_ = size;
   }
@@ -56,9 +69,7 @@ struct pod_array {
   /** Destroy */
   HSHM_ALWAYS_INLINE
   void destroy() {
-    if (size_ > SO) {
-      HSHM_DESTROY_AR(vec_);
-    }
+    HSHM_DESTROY_AR(vec_);
   }
 
   /** Get */
@@ -82,13 +93,13 @@ struct pod_array {
   /** Index operator */
   HSHM_ALWAYS_INLINE
   T& operator[](int i) {
-    return *get()[i];
+    return *(get()[i]);
   }
 
   /** Index operator (const) */
   HSHM_ALWAYS_INLINE
-  const ShmArchive<T>& operator[](int i) const {
-    return *get()[i];
+  const T& operator[](int i) const {
+    return *(get()[i]);
   }
 };
 

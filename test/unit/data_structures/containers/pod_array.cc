@@ -18,22 +18,27 @@
 TEST_CASE("PodArray") {
   Allocator *alloc = HERMES_MEMORY_MANAGER->GetDefaultAllocator();
 
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
   PAGE_DIVIDE("resize") {
     hipc::pod_array<int, 2> vec;
-    vec.resize(alloc, 3);
+    vec.construct(alloc, 3);
     REQUIRE(vec.size_ == 3);
     REQUIRE(vec.get() != vec.cache_);
     vec[0] = 25;
     vec[1] = 26;
     REQUIRE(vec[0] == 25);
     REQUIRE(vec[1] == 26);
+    vec.destroy();
   }
 
   PAGE_DIVIDE("Get") {
     hipc::pod_array<int, 2> vec;
-    vec.resize(alloc, 1);
+    vec.construct(alloc, 1);
     REQUIRE(vec.get() == vec.cache_);
     vec[0] = 25;
     REQUIRE(vec[0] == 25);
+    vec.destroy();
   }
+
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
 }
