@@ -20,7 +20,7 @@ namespace hshm::ipc {
 /**
  * Small object (so) vector.
  * A vector which avoids memory allocation for a small number of objects
- * This vector is assumed to have its size set exactly once.
+ * The array's size must remain fixed after the first modification to data.
  * */
 template<typename T, int SO>
 struct pod_array {
@@ -29,6 +29,19 @@ struct pod_array {
     ShmArchive<T> cache_[SO];
     ShmArchive<hipc::vector<T>> vec_;
   };
+
+  /** Serialize */
+  template<typename Ar>
+  void serialize(Ar &ar) {
+    ar &size_;
+    if (size_ > SO) {
+      ar &vec_;
+    } else {
+      for (int i = 0; i < size_; ++i) {
+        ar &cache_[i];
+      }
+    }
+  }
 
   /** Reserve */
   HSHM_ALWAYS_INLINE
@@ -64,6 +77,18 @@ struct pod_array {
       return vec_.get_ref().data_ar();
     }
     return cache_;
+  }
+
+  /** Index operator */
+  HSHM_ALWAYS_INLINE
+  ShmArchive<T>& operator[](int i) {
+    return get()[i];
+  }
+
+  /** Index operator (const) */
+  HSHM_ALWAYS_INLINE
+  const ShmArchive<T>& operator[](int i) const {
+    return get()[i];
   }
 };
 
