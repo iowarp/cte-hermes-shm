@@ -234,6 +234,22 @@ class ConfigParse {
     }
     return path;
   }
+
+  /** Parse hostfile */
+  std::vector<std::string> ParseHostfile(const std::string &path) {
+    std::vector<std::string> hosts;
+    std::ifstream file(path);
+    if (file.is_open()) {
+      std::string line;
+      while (std::getline(file, line)) {
+        hshm::ConfigParse::ParseHostNameString(line, hosts);
+      }
+      file.close();
+    } else {
+      HELOG(kFatal, "Could not open the hostfile: {}", path)
+    }
+    return hosts;
+  }
 };
 
 }  // namespace hshm

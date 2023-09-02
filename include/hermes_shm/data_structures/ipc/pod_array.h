@@ -91,14 +91,16 @@ struct pod_array {
   }
 
   /** Index operator */
+  template<typename IdxType>
   HSHM_ALWAYS_INLINE
-  T& operator[](int i) {
+  T& operator[](IdxType i) {
     return *(get()[i]);
   }
 
   /** Index operator (const) */
+  template<typename IdxType>
   HSHM_ALWAYS_INLINE
-  const T& operator[](int i) const {
+  const T& operator[](IdxType i) const {
     return *(get()[i]);
   }
 };
