@@ -188,7 +188,7 @@ struct charbuf {
   }
 
   /** Convert to std::string */
-  HSHM_ALWAYS_INLINE const std::string str() {
+  HSHM_ALWAYS_INLINE const std::string str() const {
     return std::string(data(), size());
   }
 
