@@ -236,7 +236,7 @@ class ConfigParse {
   }
 
   /** Parse hostfile */
-  std::vector<std::string> ParseHostfile(const std::string &path) {
+  static std::vector<std::string> ParseHostfile(const std::string &path) {
     std::vector<std::string> hosts;
     std::ifstream file(path);
     if (file.is_open()) {
