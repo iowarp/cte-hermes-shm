@@ -24,7 +24,8 @@ target_link_libraries(test_allocator_exec
 set(ALLOCATORS
         StackAllocator
         MallocAllocator
-        ScalablePageAllocator)
+        ScalablePageAllocator
+        LocalPointers)
 foreach(ALLOCATOR ${ALLOCATORS})
     add_test(NAME test_${ALLOCATOR} COMMAND
             ${CMAKE_BINARY_DIR}/bin/test_allocator_exec "${ALLOCATOR}")

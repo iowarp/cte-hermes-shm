@@ -6,7 +6,7 @@ class HermesShm(CMakePackage):
     version('master', branch='master')
     depends_on('mochi-thallium~cereal@0.10.1')
     depends_on('catch2@3.0.1')
-    depends_on('mpich@3.3.2:')
+    depends_on('mpi')
     depends_on('boost@1.7:')
     depends_on('cereal')
     depends_on('doxygen@1.9.3')

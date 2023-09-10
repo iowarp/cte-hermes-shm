@@ -362,6 +362,13 @@ using TypedPointer = Pointer;
 template<typename T>
 using TypedAtomicPointer = AtomicPointer;
 
+/** Struct containing both private and shared pointer */
+template<typename T=void, typename PointerT=Pointer>
+struct LPointer {
+  T *ptr_;
+  PointerT shm_;
+};
+
 class MemoryAlignment {
  public:
   /**

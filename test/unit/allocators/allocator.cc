@@ -155,3 +155,21 @@ TEST_CASE("ScalablePageAllocator") {
 
   Posttest();
 }
+
+TEST_CASE("LocalPointers") {
+  auto alloc = Pretest<hipc::PosixShmMmap, hipc::ScalablePageAllocator>();
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+  hipc::LPointer p1 = alloc->AllocateLocalPtr<void>(256);
+  REQUIRE(!p1.shm_.IsNull());
+  REQUIRE(p1.ptr_ != nullptr);
+  hipc::LPointer p2 = alloc->ClearAllocateLocalPtr<void>(256);
+  REQUIRE(!p2.shm_.IsNull());
+  REQUIRE(p2.ptr_ != nullptr);
+  hipc::LPointer p3 = alloc->ReallocateLocalPtr<void>(p1, 256);
+  REQUIRE(!p3.shm_.IsNull());
+  REQUIRE(p3.ptr_ != nullptr);
+  alloc->FreeLocalPtr(p1);
+  alloc->FreeLocalPtr(p3);
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+  Posttest();
+}
