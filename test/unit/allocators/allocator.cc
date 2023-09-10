@@ -159,17 +159,27 @@ TEST_CASE("ScalablePageAllocator") {
 TEST_CASE("LocalPointers") {
   auto alloc = Pretest<hipc::PosixShmMmap, hipc::ScalablePageAllocator>();
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
-  hipc::LPointer p1 = alloc->AllocateLocalPtr<void>(256);
+  // Allocate API
+  hipc::LPointer<char> p1 = alloc->AllocateLocalPtr<char>(256);
   REQUIRE(!p1.shm_.IsNull());
   REQUIRE(p1.ptr_ != nullptr);
-  hipc::LPointer p2 = alloc->ClearAllocateLocalPtr<void>(256);
+  hipc::LPointer<char> p2 = alloc->ClearAllocateLocalPtr<char>(256);
   REQUIRE(!p2.shm_.IsNull());
   REQUIRE(p2.ptr_ != nullptr);
-  hipc::LPointer p3 = alloc->ReallocateLocalPtr<void>(p1, 256);
+  REQUIRE(*p2 == 0);
+  hipc::LPointer<char> p3 = alloc->ReallocateLocalPtr<char>(p1, 256);
   REQUIRE(!p3.shm_.IsNull());
   REQUIRE(p3.ptr_ != nullptr);
   alloc->FreeLocalPtr(p1);
   alloc->FreeLocalPtr(p3);
+
+  // OBJ API
+  hipc::LPointer<std::vector<int>> p4 = alloc->NewObjLocal<std::vector<int>>();
+  alloc->DelObjLocal(p4);
+  hipc::LPointer<std::vector<int>> p5 = alloc->NewObjsLocal<std::vector<int>>(4);
+  alloc->ReallocateObjsLocal<std::vector<int>>(p5, 5);
+  alloc->ReallocateConstructObjsLocal<std::vector<int>>(p5, 4, 5);
+  alloc->DelObjsLocal(p5, 5);
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
   Posttest();
 }

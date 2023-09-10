@@ -363,10 +363,20 @@ template<typename T>
 using TypedAtomicPointer = AtomicPointer;
 
 /** Struct containing both private and shared pointer */
-template<typename T=void, typename PointerT=Pointer>
+template<typename T=char, typename PointerT=Pointer>
 struct LPointer {
   T *ptr_;
   PointerT shm_;
+
+  /** Overload arrow */
+  HSHM_ALWAYS_INLINE T* operator->() const {
+    return ptr_;
+  }
+
+  /** Overload dereference */
+  HSHM_ALWAYS_INLINE T& operator*() const {
+    return *ptr_;
+  }
 };
 
 class MemoryAlignment {
