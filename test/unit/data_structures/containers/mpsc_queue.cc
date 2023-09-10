@@ -50,6 +50,23 @@ TEST_CASE("TestMpscQueueStringMultiThreaded") {
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
 }
 
+TEST_CASE("TestMpscQueuePeek") {
+  Allocator *alloc = alloc_g;
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+
+  auto q = hipc::make_mptr<hipc::mpsc_queue<int>>(alloc);
+  q->emplace(1);
+  int *val;
+  q->peek(val, 0);
+  REQUIRE(*val == 1);
+  hipc::pair<hshm::bitfield32_t, int> *val_pair;
+  q->peek(val_pair, 0);
+  REQUIRE(val_pair->GetSecond() == 1);
+  q.shm_destroy();
+
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+}
+
 /**
  * MPSC Pointer Queue
  * */
