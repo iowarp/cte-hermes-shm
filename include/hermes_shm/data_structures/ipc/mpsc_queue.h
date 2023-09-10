@@ -209,7 +209,7 @@ class mpsc_queue : public ShmContainer {
   }
 
   /** Consumer peeks an object */
-  qtok_t peek(T &val, int off = 0) {
+  qtok_t peek(T *&val, int off = 0) {
     // Don't pop if there's no entries
     _qtok_t head = head_.load() + off;
     _qtok_t tail = tail_.load();
@@ -221,7 +221,7 @@ class mpsc_queue : public ShmContainer {
     _qtok_t idx = (head + off) % (*queue_).size();
     hipc::pair<bitfield32_t, T> &entry = (*queue_)[idx];
     if (entry.GetFirst().Any(1)) {
-      val = entry.GetSecond();
+      val = &entry.GetSecond();
       return qtok_t(head + off);
     } else {
       return qtok_t::GetNull();
