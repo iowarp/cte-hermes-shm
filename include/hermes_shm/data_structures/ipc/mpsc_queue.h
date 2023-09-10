@@ -227,6 +227,26 @@ class mpsc_queue : public ShmContainer {
       return qtok_t::GetNull();
     }
   }
+
+  /** Consumer peeks an object */
+  qtok_t peek(pair<bitfield32_t, T> *&val, int off = 0) {
+    // Don't pop if there's no entries
+    _qtok_t head = head_.load() + off;
+    _qtok_t tail = tail_.load();
+    if (head >= tail) {
+      return qtok_t::GetNull();
+    }
+
+    // Pop the element, but only if it's marked valid
+    _qtok_t idx = (head + off) % (*queue_).size();
+    hipc::pair<bitfield32_t, T> &entry = (*queue_)[idx];
+    if (entry.GetFirst().Any(1)) {
+      val = &entry;
+      return qtok_t(head + off);
+    } else {
+      return qtok_t::GetNull();
+    }
+  }
 };
 
 }  // namespace hshm::ipc
