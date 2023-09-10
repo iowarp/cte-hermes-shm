@@ -358,8 +358,9 @@ class Allocator {
    *
    * @return A LocalPointer
    * */
-  template<typename T, typename POINTER_T=Pointer>
-  HSHM_ALWAYS_INLINE LPointer<T, POINTER_T> AllocateObjsLocal(size_t count) {
+  template<typename T, typename POINTER_T = Pointer>
+  HSHM_ALWAYS_INLINE LPointer<T, POINTER_T>
+  AllocateObjsLocal(size_t count) {
     LPointer<T, POINTER_T> p;
     p.ptr_ = AllocateObjs<T>(count, p.shm_);
     return p;
@@ -397,7 +398,8 @@ class Allocator {
    * @return An LPointer
    * */
   template<typename T, typename POINTER_T = Pointer>
-  HSHM_ALWAYS_INLINE LPointer<T, POINTER_T> ClearAllocateObjsLocal(size_t count) {
+  HSHM_ALWAYS_INLINE LPointer<T, POINTER_T>
+  ClearAllocateObjsLocal(size_t count) {
     LPointer<T, POINTER_T> p;
     p.ptr_ = ClearAllocateObjs(count, p.shm_);
     return p;
@@ -451,7 +453,8 @@ class Allocator {
       typename T,
       typename POINTER_T = Pointer,
       typename ...Args>
-  HSHM_ALWAYS_INLINE LPointer<T, POINTER_T> AllocateConstructObjsLocal(size_t count, Args&& ...args) {
+  HSHM_ALWAYS_INLINE LPointer<T, POINTER_T>
+  AllocateConstructObjsLocal(size_t count, Args&& ...args) {
     LPointer<T, POINTER_T> p;
     p.ptr_ = AllocateConstructObjs<T, OffsetPointer>(
         count, p.shm_, std::forward<Args>(args)...);
@@ -481,7 +484,8 @@ class Allocator {
       typename T,
       typename POINTER_T = Pointer,
       typename ...Args>
-  HSHM_ALWAYS_INLINE LPointer<T, POINTER_T> NewObjsLocal(size_t count, Args&& ...args) {
+  HSHM_ALWAYS_INLINE LPointer<T, POINTER_T>
+  NewObjsLocal(size_t count, Args&& ...args) {
     LPointer<T, POINTER_T> p;
     p.ptr_ = NewObjs<T>(count, p.shm_, std::forward<Args>(args)...);
     return p;
@@ -510,7 +514,8 @@ class Allocator {
       typename T,
       typename POINTER_T = Pointer,
       typename ...Args>
-  HSHM_ALWAYS_INLINE LPointer<T, POINTER_T> NewObjLocal(Args&& ...args) {
+  HSHM_ALWAYS_INLINE LPointer<T, POINTER_T>
+  NewObjLocal(Args&& ...args) {
     LPointer<T, POINTER_T> p;
     p.ptr_ = NewObj<T>(p.shm_, std::forward<Args>(args)...);
     return p;
@@ -541,7 +546,8 @@ class Allocator {
    * @return A process-specific pointer
    * */
   template<typename T, typename POINTER_T = Pointer>
-  HSHM_ALWAYS_INLINE void ReallocateObjsLocal(LPointer<T, POINTER_T> &p, size_t new_count) {
+  HSHM_ALWAYS_INLINE void
+  ReallocateObjsLocal(LPointer<T, POINTER_T> &p, size_t new_count) {
     p.ptr_ = ReallocatePtr<T>(p.shm_, new_count * sizeof(T));
   }
 
@@ -584,10 +590,11 @@ class Allocator {
       typename T,
       typename POINTER_T = Pointer,
       typename ...Args>
-  HSHM_ALWAYS_INLINE void ReallocateConstructObjsLocal(LPointer<T, POINTER_T> &p,
-                                                       size_t old_count,
-                                                       size_t new_count,
-                                                       Args&& ...args) {
+  HSHM_ALWAYS_INLINE void
+  ReallocateConstructObjsLocal(LPointer<T, POINTER_T> &p,
+                               size_t old_count,
+                               size_t new_count,
+                               Args&& ...args) {
     p.ptr_ = ReallocateConstructObjs<T>(p.shm_, old_count, new_count,
                                         std::forward<Args>(args)...);
   }
@@ -610,7 +617,8 @@ class Allocator {
    * Free + destruct objects
    * */
   template <typename T, typename POINTER_T>
-  HSHM_ALWAYS_INLINE void FreeDestructObjsLocal(LPointer<T, POINTER_T> &p, size_t count) {
+  HSHM_ALWAYS_INLINE void
+  FreeDestructObjsLocal(LPointer<T, POINTER_T> &p, size_t count) {
     DestructObjs<T>(p.ptr_, count);
     Free(p.shm_);
   }
@@ -627,7 +635,8 @@ class Allocator {
    * Free + destruct objects
    * */
   template <typename T, typename POINTER_T>
-  HSHM_ALWAYS_INLINE void DelObjsLocal(LPointer<T, POINTER_T> &p, size_t count) {
+  HSHM_ALWAYS_INLINE void
+  DelObjsLocal(LPointer<T, POINTER_T> &p, size_t count) {
     FreeDestructObjsLocal<T>(p, count);
   }
 
@@ -664,9 +673,10 @@ class Allocator {
   template<
       typename T,
       typename ...Args>
-  HSHM_ALWAYS_INLINE static void ConstructObjs(T *ptr,
-                                               size_t old_count,
-                                               size_t new_count, Args&& ...args) {
+  HSHM_ALWAYS_INLINE static void
+  ConstructObjs(T *ptr,
+                size_t old_count,
+                size_t new_count, Args&& ...args) {
     if (ptr == nullptr) { return; }
     for (size_t i = old_count; i < new_count; ++i) {
       ConstructObj<T>(*(ptr + i), std::forward<Args>(args)...);
@@ -683,7 +693,8 @@ class Allocator {
   template<
       typename T,
       typename ...Args>
-  HSHM_ALWAYS_INLINE static void ConstructObj(T &obj, Args&& ...args) {
+  HSHM_ALWAYS_INLINE static void
+  ConstructObj(T &obj, Args&& ...args) {
     new (&obj) T(std::forward<Args>(args)...);
   }
 
@@ -695,7 +706,8 @@ class Allocator {
    * @return None
    * */
   template<typename T>
-  HSHM_ALWAYS_INLINE static void DestructObjs(T *ptr, size_t count) {
+  HSHM_ALWAYS_INLINE static void
+  DestructObjs(T *ptr, size_t count) {
     if (ptr == nullptr) { return; }
     for (size_t i = 0; i < count; ++i) {
       DestructObj<T>(*(ptr + i));

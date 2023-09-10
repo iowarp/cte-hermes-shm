@@ -363,7 +363,7 @@ template<typename T>
 using TypedAtomicPointer = AtomicPointer;
 
 /** Struct containing both private and shared pointer */
-template<typename T=char, typename PointerT=Pointer>
+template<typename T = char, typename PointerT = Pointer>
 struct LPointer {
   T *ptr_;
   PointerT shm_;

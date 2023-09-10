@@ -174,9 +174,11 @@ TEST_CASE("LocalPointers") {
   alloc->FreeLocalPtr(p3);
 
   // OBJ API
-  hipc::LPointer<std::vector<int>> p4 = alloc->NewObjLocal<std::vector<int>>();
+  hipc::LPointer<std::vector<int>> p4 =
+      alloc->NewObjLocal<std::vector<int>>();
   alloc->DelObjLocal(p4);
-  hipc::LPointer<std::vector<int>> p5 = alloc->NewObjsLocal<std::vector<int>>(4);
+  hipc::LPointer<std::vector<int>> p5 =
+      alloc->NewObjsLocal<std::vector<int>>(4);
   alloc->ReallocateObjsLocal<std::vector<int>>(p5, 5);
   alloc->ReallocateConstructObjsLocal<std::vector<int>>(p5, 4, 5);
   alloc->DelObjsLocal(p5, 5);
