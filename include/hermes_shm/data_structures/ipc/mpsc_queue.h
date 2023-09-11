@@ -218,11 +218,11 @@ class mpsc_queue : public ShmContainer {
     }
 
     // Pop the element, but only if it's marked valid
-    _qtok_t idx = (head + off) % (*queue_).size();
+    _qtok_t idx = (head) % (*queue_).size();
     hipc::pair<bitfield32_t, T> &entry = (*queue_)[idx];
     if (entry.GetFirst().Any(1)) {
       val = &entry.GetSecond();
-      return qtok_t(head + off);
+      return qtok_t(head);
     } else {
       return qtok_t::GetNull();
     }
@@ -238,11 +238,11 @@ class mpsc_queue : public ShmContainer {
     }
 
     // Pop the element, but only if it's marked valid
-    _qtok_t idx = (head + off) % (*queue_).size();
+    _qtok_t idx = (head) % (*queue_).size();
     hipc::pair<bitfield32_t, T> &entry = (*queue_)[idx];
     if (entry.GetFirst().Any(1)) {
       val = &entry;
-      return qtok_t(head + off);
+      return qtok_t(head);
     } else {
       return qtok_t::GetNull();
     }
