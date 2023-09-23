@@ -52,7 +52,7 @@ namespace hshm {
   const Error NOT_ENOUGH_CONCURRENT_SPACE("{}: Failed to divide memory slot {} among {} devices");
   const Error ALIGNED_ALLOC_NOT_SUPPORTED("Allocator does not support aligned allocations");
   const Error PAGE_SIZE_UNSUPPORTED("Allocator does not support size: {}");
-  const Error OUT_OF_MEMORY("{}: could not allocate memory of size {}");
+  const Error OUT_OF_MEMORY("could not allocate memory of size {} from heap of size {}");
   const Error OUT_OF_CACHE("{}: could not cache a page. Allocator overloaded.");
   const Error INVALID_FREE("{}: could not free memory of size {}");
   const Error DOUBLE_FREE("Freeing the same memory twice!");

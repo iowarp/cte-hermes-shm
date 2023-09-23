@@ -39,7 +39,7 @@ struct HeapAllocator {
   HSHM_ALWAYS_INLINE OffsetPointer AllocateOffset(size_t size) {
     size_t off = heap_off_.fetch_add(size);
     if (off + size > heap_size_) {
-      throw OUT_OF_MEMORY.format();
+      throw OUT_OF_MEMORY.format(size, heap_size_);
     }
     return OffsetPointer(off);
   }

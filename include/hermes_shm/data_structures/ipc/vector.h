@@ -583,7 +583,8 @@ class vector : public ShmContainer {
     }
     if (new_vec == nullptr) {
       throw OUT_OF_MEMORY.format("vector::emplace_back",
-                                 max_length*sizeof(ShmArchive<T>));
+                                 max_length * sizeof(ShmArchive<T>),
+                                 "unkown");
     }
     if (resize) {
       for (size_t i = length_; i < max_length; ++i) {
