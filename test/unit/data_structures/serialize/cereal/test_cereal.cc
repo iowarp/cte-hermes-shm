@@ -48,6 +48,22 @@ TEST_CASE("SerializeVector") {
   }
 }
 
+TEST_CASE("SerializeHipcVec0") {
+  std::stringstream ss;
+  {
+    auto x = hipc::make_uptr<hipc::vector<int>>();
+    cereal::BinaryOutputArchive ar(ss);
+    ar << x;
+  }
+  {
+    hipc::uptr<hipc::vector<int>> x;
+    std::vector<int> y;
+    cereal::BinaryInputArchive ar(ss);
+    ar >> x;
+    REQUIRE(x->vec() == y);
+  }
+}
+
 TEST_CASE("SerializeHipcVec") {
   std::stringstream ss;
   {

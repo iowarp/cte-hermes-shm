@@ -20,7 +20,36 @@
 namespace hshm {
 
 template<typename T>
-class TimerBase {
+class TimepointBase {
+ public:
+  std::chrono::time_point<T> start_;
+
+ public:
+  double GetNsecFromStart() {
+    std::chrono::time_point<T> end_ = T::now();
+    double elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(
+        end_ - start_).count();
+    return elapsed;
+  }
+  double GetUsecFromStart() {
+    std::chrono::time_point<T> end_ = T::now();
+    return std::chrono::duration_cast<std::chrono::microseconds>(
+        end_ - start_).count();
+  }
+  double GetMsecFromStart() {
+    std::chrono::time_point<T> end_ = T::now();
+    return std::chrono::duration_cast<std::chrono::milliseconds>(
+        end_ - start_).count();
+  }
+  double GetSecFromStart() {
+    std::chrono::time_point<T> end_ = T::now();
+    return std::chrono::duration_cast<std::chrono::seconds>(
+        end_ - start_).count();
+  }
+};
+
+template<typename T>
+class TimerBase : public TimepointBase<T> {
  private:
   std::chrono::time_point<T> start_, end_;
   double time_ns_;
@@ -32,38 +61,16 @@ class TimerBase {
     start_ = T::now();
   }
   double Pause() {
-    time_ns_ += GetNsecFromStart();
+    time_ns_ += TimepointBase<T>::GetNsecFromStart();
     return time_ns_;
   }
   double Pause(double &dt) {
-    dt = GetNsecFromStart();
+    dt = TimepointBase<T>::GetNsecFromStart();
     time_ns_ += dt;
     return time_ns_;
   }
   void Reset() {
     time_ns_ = 0;
-  }
-
-  double GetNsecFromStart() {
-    end_ = T::now();
-    double elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(
-        end_ - start_).count();
-    return elapsed;
-  }
-  double GetUsecFromStart() {
-    end_ = T::now();
-    return std::chrono::duration_cast<std::chrono::microseconds>(
-        end_ - start_).count();
-  }
-  double GetMsecFromStart() {
-    end_ = T::now();
-    return std::chrono::duration_cast<std::chrono::milliseconds>(
-        end_ - start_).count();
-  }
-  double GetSecFromStart() {
-    end_ = T::now();
-    return std::chrono::duration_cast<std::chrono::seconds>(
-        end_ - start_).count();
   }
 
   double GetNsec() const {
@@ -90,6 +97,9 @@ class TimerBase {
 typedef TimerBase<std::chrono::high_resolution_clock> HighResCpuTimer;
 typedef TimerBase<std::chrono::steady_clock> HighResMonotonicTimer;
 typedef HighResMonotonicTimer Timer;
+typedef TimepointBase<std::chrono::high_resolution_clock> HighResCpuTimepoint;
+typedef TimepointBase<std::chrono::steady_clock> HighResMonotonicTimepoint;
+typedef HighResMonotonicTimepoint Timepoint;
 
 }  // namespace hshm
 
