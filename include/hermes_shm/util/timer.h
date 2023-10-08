@@ -48,14 +48,34 @@ class TimepointBase {
   }
 };
 
-template<typename T>
-class TimerBase : public TimepointBase<T> {
- private:
-  std::chrono::time_point<T> start_, end_;
+class NsecTimer {
+ public:
   double time_ns_;
 
  public:
-  TimerBase() : time_ns_(0) {}
+  NsecTimer() : time_ns_(0) {}
+
+  double GetNsec() const {
+    return time_ns_;
+  }
+  double GetUsec() const {
+    return time_ns_/1000;
+  }
+  double GetMsec() const {
+    return time_ns_/1000000;
+  }
+  double GetSec() const {
+    return time_ns_/1000000000;
+  }
+};
+
+template<typename T>
+class TimerBase : public TimepointBase<T>, public NsecTimer {
+ private:
+  std::chrono::time_point<T> start_, end_;
+
+ public:
+  TimerBase() {}
 
   void Resume() {
     start_ = T::now();
@@ -71,19 +91,6 @@ class TimerBase : public TimepointBase<T> {
   }
   void Reset() {
     time_ns_ = 0;
-  }
-
-  double GetNsec() const {
-    return time_ns_;
-  }
-  double GetUsec() const {
-    return time_ns_/1000;
-  }
-  double GetMsec() const {
-    return time_ns_/1000000;
-  }
-  double GetSec() const {
-    return time_ns_/1000000000;
   }
 
   double GetUsFromEpoch() const {
