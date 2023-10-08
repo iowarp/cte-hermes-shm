@@ -2,28 +2,31 @@
 // Created by lukemartinlogan on 10/8/23.
 //
 
-#ifndef HERMES_SHM_INCLUDE_HERMES_SHM_UTIL_TIMER_OMP_H_
-#define HERMES_SHM_INCLUDE_HERMES_SHM_UTIL_TIMER_OMP_H_
+#ifndef HERMES_SHM_INCLUDE_HERMES_SHM_UTIL_TIMER_THREAD_H_
+#define HERMES_SHM_INCLUDE_HERMES_SHM_UTIL_TIMER_THREAD_H_
 
 #include "timer.h"
 #include "omp.h"
 
 namespace hshm {
 
-class OmpTimer : public NsecTimer {
+class ThreadTimer : public NsecTimer {
  public:
   int rank_;
   int nprocs_;
   std::vector<Timer> timers_;
 
  public:
-  OmpTimer() {
-    rank_ = omp_get_thread_num();
-    nprocs_ = omp_get_num_threads();
+  ThreadTimer(int nthreads) {
+    nprocs_ = nthreads;
     timers_.resize(nprocs_);
   }
 
-  void Start() {
+  void SetRank(int rank) {
+    rank_ = rank;
+  }
+
+  void Resume() {
     timers_[rank_].Resume();
   }
 
@@ -48,4 +51,4 @@ class OmpTimer : public NsecTimer {
 
 }  // namespace hshm
 
-#endif  // HERMES_SHM_INCLUDE_HERMES_SHM_UTIL_TIMER_OMP_H_
+#endif  // HERMES_SHM_INCLUDE_HERMES_SHM_UTIL_TIMER_THREAD_H_

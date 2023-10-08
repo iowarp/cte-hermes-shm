@@ -23,11 +23,26 @@ set_tests_properties(
         test_fatal_logger PROPERTIES
         WILL_FAIL TRUE)
 
+#------------------------------------------------------------------------------
+# Build Timer Tests
+#------------------------------------------------------------------------------
+add_executable(test_timers_exec
+        ${TEST_MAIN}/main_mpi.cc
+        test_init.cc
+        test_timers.cc)
+add_dependencies(test_timers_exec hermes_shm_data_structures)
+target_link_libraries(test_timers_exec
+        hermes_shm_data_structures Catch2::Catch2 MPI::MPI_CXX OpenMP::OpenMP_CXX)
+
+add_test(NAME test_timers COMMAND
+        ${CMAKE_BINARY_DIR}/bin/test_timers_exec)
+
 #-----------------------------------------------------------------------------
 # Install Targets
 #------------------------------------------------------------------------------
 install(TARGETS
         test_types_exec
+        test_timers_exec
         EXPORT
         ${HERMES_EXPORTED_TARGETS}
         LIBRARY DESTINATION ${HERMES_INSTALL_LIB_DIR}
@@ -39,4 +54,5 @@ install(TARGETS
 #-----------------------------------------------------------------------------
 if(HERMES_ENABLE_COVERAGE)
     set_coverage_flags(test_types_exec)
+    set_coverage_flags(test_timers_exec)
 endif()

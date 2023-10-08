@@ -25,6 +25,10 @@ class TimepointBase {
   std::chrono::time_point<T> start_;
 
  public:
+  void Now() {
+    start_ = T::now();
+  }
+
   double GetNsecFromStart() {
     std::chrono::time_point<T> end_ = T::now();
     double elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(
@@ -72,21 +76,20 @@ class NsecTimer {
 template<typename T>
 class TimerBase : public TimepointBase<T>, public NsecTimer {
  private:
-  std::chrono::time_point<T> start_, end_;
+  std::chrono::time_point<T> end_;
 
  public:
   TimerBase() {}
 
   void Resume() {
-    start_ = T::now();
+    TimepointBase<T>::Now();
   }
   double Pause() {
     time_ns_ += TimepointBase<T>::GetNsecFromStart();
     return time_ns_;
   }
   double Pause(double &dt) {
-    dt = TimepointBase<T>::GetNsecFromStart();
-    time_ns_ += dt;
+    time_ns_ += TimepointBase<T>::GetNsecFromStart();
     return time_ns_;
   }
   void Reset() {
