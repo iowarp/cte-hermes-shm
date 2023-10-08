@@ -10,14 +10,14 @@
 
 namespace hshm {
 
-class Omptimer : public NsecTimer {
+class OmpTimer : public NsecTimer {
  public:
   int rank_;
   int nprocs_;
   std::vector<Timer> timers_;
 
  public:
-  Omptimer() {
+  OmpTimer() {
     rank_ = omp_get_thread_num();
     nprocs_ = omp_get_num_threads();
     timers_.resize(nprocs_);
