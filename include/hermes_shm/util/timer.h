@@ -79,6 +79,9 @@ class NsecTimer {
   HSHM_ALWAYS_INLINE double GetSec() const {
     return time_ns_/1000000000;
   }
+  HSHM_ALWAYS_INLINE void Reset() {
+    time_ns_ = 0;
+  }
 };
 
 template<typename T>
@@ -95,13 +98,6 @@ class TimerBase : public TimepointBase<T>, public NsecTimer {
   HSHM_ALWAYS_INLINE double Pause() {
     time_ns_ += TimepointBase<T>::GetNsecFromStart();
     return time_ns_;
-  }
-  HSHM_ALWAYS_INLINE double Pause(double &dt) {
-    time_ns_ += TimepointBase<T>::GetNsecFromStart();
-    return time_ns_;
-  }
-  HSHM_ALWAYS_INLINE void Reset() {
-    time_ns_ = 0;
   }
   HSHM_ALWAYS_INLINE double GetUsFromEpoch() const {
     std::chrono::time_point<std::chrono::system_clock> point =
