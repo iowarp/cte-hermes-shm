@@ -379,6 +379,31 @@ struct LPointer {
   }
 };
 
+/** Struct containing both a pointer and its size */
+template<typename PointerT = Pointer>
+struct Array {
+  PointerT shm_;
+  size_t size_;
+};
+
+/** Struct containing both a shared pointer, private pointer, and the data size */
+template<typename T = char, typename PointerT = Pointer>
+struct LArray {
+  PointerT shm_;
+  size_t size_;
+  T *ptr_;
+
+  /** Overload arrow */
+  HSHM_ALWAYS_INLINE T* operator->() const {
+    return ptr_;
+  }
+
+  /** Overload dereference */
+  HSHM_ALWAYS_INLINE T& operator*() const {
+    return *ptr_;
+  }
+};
+
 class MemoryAlignment {
  public:
   /**

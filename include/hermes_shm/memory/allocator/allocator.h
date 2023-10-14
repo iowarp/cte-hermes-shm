@@ -94,9 +94,9 @@ class Allocator {
   /**
    * Allocate a region of memory to a specific pointer type
    * */
-  template<typename POINTER_T = Pointer>
-  HSHM_ALWAYS_INLINE POINTER_T Allocate(size_t size) {
-    return POINTER_T(GetId(), AllocateOffset(size).load());
+  template<typename PointerT = Pointer>
+  HSHM_ALWAYS_INLINE PointerT Allocate(size_t size) {
+    return PointerT(GetId(), AllocateOffset(size).load());
   }
 
   /**
@@ -110,9 +110,9 @@ class Allocator {
   /**
    * Allocate a region of memory to a specific pointer type
    * */
-  template<typename POINTER_T = Pointer>
-  HSHM_ALWAYS_INLINE POINTER_T AlignedAllocate(size_t size, size_t alignment) {
-    return POINTER_T(GetId(), AlignedAllocateOffset(size, alignment).load());
+  template<typename PointerT = Pointer>
+  HSHM_ALWAYS_INLINE PointerT AlignedAllocate(size_t size, size_t alignment) {
+    return PointerT(GetId(), AlignedAllocateOffset(size, alignment).load());
   }
 
   /**
@@ -120,12 +120,12 @@ class Allocator {
    * alignment. Will fall back to regular Allocate if
    * alignmnet is 0.
    * */
-  template<typename POINTER_T = Pointer>
-  HSHM_ALWAYS_INLINE  POINTER_T Allocate(size_t size, size_t alignment) {
+  template<typename PointerT = Pointer>
+  HSHM_ALWAYS_INLINE  PointerT Allocate(size_t size, size_t alignment) {
     if (alignment == 0) {
-      return Allocate<POINTER_T>(size);
+      return Allocate<PointerT>(size);
     } else {
-      return AlignedAllocate<POINTER_T>(size, alignment);
+      return AlignedAllocate<PointerT>(size, alignment);
     }
   }
 
@@ -135,10 +135,10 @@ class Allocator {
    *
    * @return true if p was modified.
    * */
-  template<typename POINTER_T = Pointer>
-  HSHM_ALWAYS_INLINE bool Reallocate(POINTER_T &p, size_t new_size) {
+  template<typename PointerT = Pointer>
+  HSHM_ALWAYS_INLINE bool Reallocate(PointerT &p, size_t new_size) {
     if (p.IsNull()) {
-      p = Allocate<POINTER_T>(new_size);
+      p = Allocate<PointerT>(new_size);
       return true;
     }
     auto new_p = ReallocateOffsetNoNullCheck(p.ToOffsetPointer(),
@@ -160,8 +160,8 @@ class Allocator {
   /**
    * Free the memory pointed to by \a p Pointer
    * */
-  template<typename POINTER_T = Pointer>
-  HSHM_ALWAYS_INLINE void Free(POINTER_T &p) {
+  template<typename PointerT = Pointer>
+  HSHM_ALWAYS_INLINE void Free(PointerT &p) {
     if (p.IsNull()) {
       throw INVALID_FREE.format();
     }
@@ -192,10 +192,10 @@ class Allocator {
    * Allocate a pointer of \a size size and return \a p process-independent
    * pointer and a process-specific pointer.
    * */
-  template<typename T, typename POINTER_T = Pointer>
+  template<typename T, typename PointerT = Pointer>
   HSHM_ALWAYS_INLINE T* AllocatePtr(size_t size,
-                                    POINTER_T &p, size_t alignment = 0) {
-    p = Allocate<POINTER_T>(size, alignment);
+                                    PointerT &p, size_t alignment = 0) {
+    p = Allocate<PointerT>(size, alignment);
     if (p.IsNull()) { return nullptr; }
     return reinterpret_cast<T*>(buffer_ + p.off_.load());
   }
@@ -203,22 +203,50 @@ class Allocator {
   /**
    * Allocate a pointer of \a size size
    * */
-  template<typename T, typename POINTER_T = Pointer>
+  template<typename T, typename PointerT = Pointer>
   HSHM_ALWAYS_INLINE T* AllocatePtr(size_t size, size_t alignment = 0) {
-    POINTER_T p;
-    return AllocatePtr<T, POINTER_T>(size, p, alignment);
+    PointerT p;
+    return AllocatePtr<T, PointerT>(size, p, alignment);
   }
 
   /**
    * Allocate a pointer of \a size size and return \a p process-independent
    * pointer and a process-specific pointer.
    * */
-  template<typename T, typename POINTER_T = Pointer>
+  template<typename T, typename PointerT = Pointer>
   HSHM_ALWAYS_INLINE
-  LPointer<T, POINTER_T>
+  LPointer<T, PointerT>
   AllocateLocalPtr(size_t size, size_t alignment = 0) {
-    LPointer<T, POINTER_T> p;
-    p.ptr_ = AllocatePtr<T, POINTER_T>(size, p.shm_, alignment);
+    LPointer<T, PointerT> p;
+    p.ptr_ = AllocatePtr<T, PointerT>(size, p.shm_, alignment);
+    return p;
+  }
+
+  /**
+   * Allocate a pointer of \a size size and return \a p process-independent
+   * pointer and its size.
+   * */
+  template<typename T, typename PointerT = Pointer>
+  HSHM_ALWAYS_INLINE
+  Array<PointerT>
+  AllocateArray(size_t size, size_t alignment = 0) {
+    Array<PointerT> p;
+    p.shm_ = Allocate<PointerT>(size, alignment);
+    p.size_ = size;
+    return p;
+  }
+
+  /**
+   * Allocate a pointer of \a size size and return \a p process-independent
+   * pointer, a process-specific pointer, and its size.
+   * */
+  template<typename T, typename PointerT = Pointer>
+  HSHM_ALWAYS_INLINE
+  LArray<T, PointerT>
+  AllocateLocalArray(size_t size, size_t alignment = 0) {
+    LArray<T, PointerT> p;
+    p.ptr_ = AllocatePtr<T, PointerT>(size, p.shm_, alignment);
+    p.size_ = size;
     return p;
   }
 
@@ -226,10 +254,10 @@ class Allocator {
    * Allocate a pointer of \a size size and return \a p process-independent
    * pointer and a process-specific pointer.
    * */
-  template<typename T, typename POINTER_T = Pointer>
+  template<typename T, typename PointerT = Pointer>
   HSHM_ALWAYS_INLINE T* ClearAllocatePtr(size_t size,
-                                         POINTER_T &p, size_t alignment = 0) {
-    p = Allocate<POINTER_T>(size, alignment);
+                                         PointerT &p, size_t alignment = 0) {
+    p = Allocate<PointerT>(size, alignment);
     if (p.IsNull()) { return nullptr; }
     auto ptr = reinterpret_cast<T*>(buffer_ + p.off_.load());
     if (ptr) {
@@ -241,21 +269,45 @@ class Allocator {
   /**
    * Allocate a pointer of \a size size
    * */
-  template<typename T, typename POINTER_T = Pointer>
+  template<typename T, typename PointerT = Pointer>
   HSHM_ALWAYS_INLINE T* ClearAllocatePtr(size_t size, size_t alignment = 0) {
-    POINTER_T p;
-    return ClearAllocatePtr<T, POINTER_T>(size, p, alignment);
+    PointerT p;
+    return ClearAllocatePtr<T, PointerT>(size, p, alignment);
   }
 
   /**
   * Allocate a pointer of \a size size
   * */
-  template<typename T, typename POINTER_T = Pointer>
+  template<typename T, typename PointerT = Pointer>
   HSHM_ALWAYS_INLINE
-  LPointer<T, POINTER_T>
+  LPointer<T, PointerT>
   ClearAllocateLocalPtr(size_t size, size_t alignment = 0) {
-    LPointer<T, POINTER_T> p;
-    p.ptr_ = ClearAllocatePtr<T, POINTER_T>(size, p.shm_, alignment);
+    LPointer<T, PointerT> p;
+    p.ptr_ = ClearAllocatePtr<T, PointerT>(size, p.shm_, alignment);
+    return p;
+  }
+
+  /**
+   * Allocate a pointer of \a size size
+   * */
+  template<typename T, typename PointerT = Pointer>
+  HSHM_ALWAYS_INLINE Array<PointerT> ClearAllocateArray(size_t size, size_t alignment = 0) {
+    Array<PointerT> p;
+    ClearAllocatePtr<T, PointerT>(size, p.shm_, alignment);
+    p.size_ = size;
+    return p;
+  }
+
+  /**
+  * Allocate a pointer of \a size size
+  * */
+  template<typename T, typename PointerT = Pointer>
+  HSHM_ALWAYS_INLINE
+  LArray<T, PointerT>
+  ClearAllocateLocalArray(size_t size, size_t alignment = 0) {
+    LArray<T, PointerT> p;
+    p.ptr_ = ClearAllocatePtr<T, PointerT>(size, p.shm_, alignment);
+    p.size_ = size;
     return p;
   }
 
@@ -267,10 +319,10 @@ class Allocator {
    * @param modified whether or not p was modified (output)
    * @return A process-specific pointer
    * */
-  template<typename T, typename POINTER_T = Pointer>
-  HSHM_ALWAYS_INLINE T* ReallocatePtr(POINTER_T &p, size_t new_size,
+  template<typename T, typename PointerT = Pointer>
+  HSHM_ALWAYS_INLINE T* ReallocatePtr(PointerT &p, size_t new_size,
                                       bool &modified) {
-    modified = Reallocate<POINTER_T>(p, new_size);
+    modified = Reallocate<PointerT>(p, new_size);
     return Convert<T>(p);
   }
 
@@ -281,9 +333,9 @@ class Allocator {
    * @param new_size the new size to allocate
    * @return A process-specific pointer
    * */
-  template<typename T, typename POINTER_T = Pointer>
-  HSHM_ALWAYS_INLINE T* ReallocatePtr(POINTER_T &p, size_t new_size) {
-    Reallocate<POINTER_T>(p, new_size);
+  template<typename T, typename PointerT = Pointer>
+  HSHM_ALWAYS_INLINE T* ReallocatePtr(PointerT &p, size_t new_size) {
+    Reallocate<PointerT>(p, new_size);
     return Convert<T>(p);
   }
 
@@ -294,12 +346,45 @@ class Allocator {
    * @param new_size the new size to allocate
    * @return A process-specific pointer
    * */
-  template<typename T, typename POINTER_T = Pointer>
+  template<typename T, typename PointerT = Pointer>
   HSHM_ALWAYS_INLINE
-  LPointer<T, POINTER_T>
-  ReallocateLocalPtr(LPointer<T, POINTER_T> &p, size_t new_size) {
-    Reallocate<POINTER_T>(p.shm_, new_size);
+  LPointer<T, PointerT>
+  ReallocateLocalPtr(LPointer<T, PointerT> &p, size_t new_size) {
+    Reallocate<PointerT>(p.shm_, new_size);
     p.ptr_ = Convert<T>(p.shm_);
+    return p;
+  }
+
+  /**
+   * Reallocate a pointer to a new size
+   *
+   * @param p process-independent pointer (input & output)
+   * @param new_size the new size to allocate
+   * @return A process-specific pointer
+   * */
+  template<typename T, typename PointerT = Pointer>
+  HSHM_ALWAYS_INLINE
+  Array<PointerT>
+  ReallocateArray(Array<PointerT> &p, size_t new_size) {
+    Reallocate<PointerT>(p.shm_, new_size);
+    p.size_ = new_size;
+    return p;
+  }
+
+  /**
+   * Reallocate a pointer to a new size
+   *
+   * @param p process-independent pointer (input & output)
+   * @param new_size the new size to allocate
+   * @return A process-specific pointer
+   * */
+  template<typename T, typename PointerT = Pointer>
+  HSHM_ALWAYS_INLINE
+  LArray<T, PointerT>
+  ReallocateLocalArray(LArray<T, PointerT> &p, size_t new_size) {
+    Reallocate<PointerT>(p.shm_, new_size);
+    p.ptr_ = Convert<T>(p.shm_);
+    p.size_ = new_size;
     return p;
   }
 
@@ -338,6 +423,28 @@ class Allocator {
     FreeOffsetNoNullCheck(ptr.shm_.ToOffsetPointer());
   }
 
+  /**
+   * Free the memory pointed to by \a ptr Pointer
+   * */
+  template<typename T = void, typename PointerT = Pointer>
+  HSHM_ALWAYS_INLINE void FreeArray(Array<PointerT> &ptr) {
+    if (ptr.shm_.IsNull()) {
+      throw INVALID_FREE.format();
+    }
+    FreeOffsetNoNullCheck(ptr.shm_.ToOffsetPointer());
+  }
+
+  /**
+   * Free the memory pointed to by \a ptr Pointer
+   * */
+  template<typename T = void, typename PointerT = Pointer>
+  HSHM_ALWAYS_INLINE void FreeLocalArray(LArray<T, PointerT> &ptr) {
+    if (ptr.ptr_ == nullptr) {
+      throw INVALID_FREE.format();
+    }
+    FreeOffsetNoNullCheck(ptr.shm_.ToOffsetPointer());
+  }
+
   /**====================================
   * Object Allocators
   * ===================================*/
@@ -358,10 +465,10 @@ class Allocator {
    *
    * @return A LocalPointer
    * */
-  template<typename T, typename POINTER_T = Pointer>
-  HSHM_ALWAYS_INLINE LPointer<T, POINTER_T>
+  template<typename T, typename PointerT = Pointer>
+  HSHM_ALWAYS_INLINE LPointer<T, PointerT>
   AllocateObjsLocal(size_t count) {
-    LPointer<T, POINTER_T> p;
+    LPointer<T, PointerT> p;
     p.ptr_ = AllocateObjs<T>(count, p.shm_);
     return p;
   }
@@ -373,8 +480,8 @@ class Allocator {
    * @param p process-independent pointer (output)
    * @return A process-specific pointer
    * */
-  template<typename T, typename POINTER_T = Pointer>
-  HSHM_ALWAYS_INLINE T* AllocateObjs(size_t count, POINTER_T &p) {
+  template<typename T, typename PointerT = Pointer>
+  HSHM_ALWAYS_INLINE T* AllocateObjs(size_t count, PointerT &p) {
     return AllocatePtr<T>(count * sizeof(T), p);
   }
 
@@ -385,8 +492,8 @@ class Allocator {
    * @param p process-independent pointer (output)
    * @return A process-specific pointer
    * */
-  template<typename T, typename POINTER_T = Pointer>
-  HSHM_ALWAYS_INLINE T* ClearAllocateObjs(size_t count, POINTER_T &p) {
+  template<typename T, typename PointerT = Pointer>
+  HSHM_ALWAYS_INLINE T* ClearAllocateObjs(size_t count, PointerT &p) {
     return ClearAllocatePtr<T>(count * sizeof(T), p);
   }
 
@@ -397,10 +504,10 @@ class Allocator {
    * @param p process-independent pointer (output)
    * @return An LPointer
    * */
-  template<typename T, typename POINTER_T = Pointer>
-  HSHM_ALWAYS_INLINE LPointer<T, POINTER_T>
+  template<typename T, typename PointerT = Pointer>
+  HSHM_ALWAYS_INLINE LPointer<T, PointerT>
   ClearAllocateObjsLocal(size_t count) {
-    LPointer<T, POINTER_T> p;
+    LPointer<T, PointerT> p;
     p.ptr_ = ClearAllocateObjs(count, p.shm_);
     return p;
   }
@@ -415,10 +522,10 @@ class Allocator {
    * */
   template<
       typename T,
-      typename POINTER_T = Pointer,
+      typename PointerT = Pointer,
       typename ...Args>
   HSHM_ALWAYS_INLINE T* AllocateConstructObjs(size_t count,
-                                              POINTER_T &p, Args&& ...args) {
+                                              PointerT &p, Args&& ...args) {
     T *ptr = AllocateObjs<T>(count, p);
     ConstructObjs<T>(ptr, 0, count, std::forward<Args>(args)...);
     return ptr;
@@ -451,11 +558,11 @@ class Allocator {
    * */
   template<
       typename T,
-      typename POINTER_T = Pointer,
+      typename PointerT = Pointer,
       typename ...Args>
-  HSHM_ALWAYS_INLINE LPointer<T, POINTER_T>
+  HSHM_ALWAYS_INLINE LPointer<T, PointerT>
   AllocateConstructObjsLocal(size_t count, Args&& ...args) {
-    LPointer<T, POINTER_T> p;
+    LPointer<T, PointerT> p;
     p.ptr_ = AllocateConstructObjs<T, OffsetPointer>(
         count, p.shm_, std::forward<Args>(args)...);
     return p;
@@ -464,9 +571,9 @@ class Allocator {
   /** Allocate + construct an array of objects */
   template<
       typename T,
-      typename POINTER_T = Pointer,
+      typename PointerT = Pointer,
       typename ...Args>
-  HSHM_ALWAYS_INLINE T* NewObjs(size_t count, POINTER_T &p, Args&& ...args) {
+  HSHM_ALWAYS_INLINE T* NewObjs(size_t count, PointerT &p, Args&& ...args) {
     return AllocateConstructObjs<T>(count, p, std::forward<Args>(args)...);
   }
 
@@ -482,11 +589,11 @@ class Allocator {
   /** Allocate + construct an array of objects */
   template<
       typename T,
-      typename POINTER_T = Pointer,
+      typename PointerT = Pointer,
       typename ...Args>
-  HSHM_ALWAYS_INLINE LPointer<T, POINTER_T>
+  HSHM_ALWAYS_INLINE LPointer<T, PointerT>
   NewObjsLocal(size_t count, Args&& ...args) {
-    LPointer<T, POINTER_T> p;
+    LPointer<T, PointerT> p;
     p.ptr_ = NewObjs<T>(count, p.shm_, std::forward<Args>(args)...);
     return p;
   }
@@ -494,9 +601,9 @@ class Allocator {
   /** Allocate + construct a single object */
   template<
       typename T,
-      typename POINTER_T = Pointer,
+      typename PointerT = Pointer,
       typename ...Args>
-  HSHM_ALWAYS_INLINE T* NewObj(POINTER_T &p, Args&& ...args) {
+  HSHM_ALWAYS_INLINE T* NewObj(PointerT &p, Args&& ...args) {
     return NewObjs<T>(1, p, std::forward<Args>(args)...);
   }
 
@@ -512,11 +619,11 @@ class Allocator {
   /** Allocate + construct a single object */
   template<
       typename T,
-      typename POINTER_T = Pointer,
+      typename PointerT = Pointer,
       typename ...Args>
-  HSHM_ALWAYS_INLINE LPointer<T, POINTER_T>
+  HSHM_ALWAYS_INLINE LPointer<T, PointerT>
   NewObjLocal(Args&& ...args) {
-    LPointer<T, POINTER_T> p;
+    LPointer<T, PointerT> p;
     p.ptr_ = NewObj<T>(p.shm_, std::forward<Args>(args)...);
     return p;
   }
@@ -530,8 +637,8 @@ class Allocator {
    *
    * @return A process-specific pointer
    * */
-  template<typename T, typename POINTER_T = Pointer>
-  HSHM_ALWAYS_INLINE T* ReallocateObjs(POINTER_T &p, size_t new_count) {
+  template<typename T, typename PointerT = Pointer>
+  HSHM_ALWAYS_INLINE T* ReallocateObjs(PointerT &p, size_t new_count) {
     T *ptr = ReallocatePtr<T>(p, new_count * sizeof(T));
     return ptr;
   }
@@ -545,9 +652,9 @@ class Allocator {
    *
    * @return A process-specific pointer
    * */
-  template<typename T, typename POINTER_T = Pointer>
+  template<typename T, typename PointerT = Pointer>
   HSHM_ALWAYS_INLINE void
-  ReallocateObjsLocal(LPointer<T, POINTER_T> &p, size_t new_count) {
+  ReallocateObjsLocal(LPointer<T, PointerT> &p, size_t new_count) {
     p.ptr_ = ReallocatePtr<T>(p.shm_, new_count * sizeof(T));
   }
 
@@ -564,9 +671,9 @@ class Allocator {
    * */
   template<
       typename T,
-      typename POINTER_T = Pointer,
+      typename PointerT = Pointer,
       typename ...Args>
-  HSHM_ALWAYS_INLINE T* ReallocateConstructObjs(POINTER_T &p,
+  HSHM_ALWAYS_INLINE T* ReallocateConstructObjs(PointerT &p,
                                                 size_t old_count,
                                                 size_t new_count,
                                                 Args&& ...args) {
@@ -588,10 +695,10 @@ class Allocator {
   * */
   template<
       typename T,
-      typename POINTER_T = Pointer,
+      typename PointerT = Pointer,
       typename ...Args>
   HSHM_ALWAYS_INLINE void
-  ReallocateConstructObjsLocal(LPointer<T, POINTER_T> &p,
+  ReallocateConstructObjsLocal(LPointer<T, PointerT> &p,
                                size_t old_count,
                                size_t new_count,
                                Args&& ...args) {
@@ -616,9 +723,9 @@ class Allocator {
   /**
    * Free + destruct objects
    * */
-  template <typename T, typename POINTER_T>
+  template <typename T, typename PointerT>
   HSHM_ALWAYS_INLINE void
-  FreeDestructObjsLocal(LPointer<T, POINTER_T> &p, size_t count) {
+  FreeDestructObjsLocal(LPointer<T, PointerT> &p, size_t count) {
     DestructObjs<T>(p.ptr_, count);
     Free(p.shm_);
   }
@@ -634,9 +741,9 @@ class Allocator {
   /**
    * Free + destruct objects
    * */
-  template <typename T, typename POINTER_T>
+  template <typename T, typename PointerT>
   HSHM_ALWAYS_INLINE void
-  DelObjsLocal(LPointer<T, POINTER_T> &p, size_t count) {
+  DelObjsLocal(LPointer<T, PointerT> &p, size_t count) {
     FreeDestructObjsLocal<T>(p, count);
   }
 
@@ -651,8 +758,8 @@ class Allocator {
   /**
    * Free + destruct an object
    * */
-  template <typename T, typename POINTER_T>
-  HSHM_ALWAYS_INLINE void DelObjLocal(LPointer<T, POINTER_T> &p) {
+  template <typename T, typename PointerT>
+  HSHM_ALWAYS_INLINE void DelObjLocal(LPointer<T, PointerT> &p) {
     FreeDestructObjsLocal<T>(p, 1);
   }
 
@@ -746,8 +853,8 @@ class Allocator {
    * @param p process-independent pointer
    * @return a process-specific pointer
    * */
-  template<typename T, typename POINTER_T = Pointer>
-  HSHM_ALWAYS_INLINE T* Convert(const POINTER_T &p) {
+  template<typename T, typename PointerT = Pointer>
+  HSHM_ALWAYS_INLINE T* Convert(const PointerT &p) {
     if (p.IsNull()) { return nullptr; }
     return reinterpret_cast<T*>(buffer_ + p.off_.load());
   }
@@ -758,10 +865,10 @@ class Allocator {
    * @param ptr process-specific pointer
    * @return a process-independent pointer
    * */
-  template<typename T, typename POINTER_T = Pointer>
-  HSHM_ALWAYS_INLINE POINTER_T Convert(const T *ptr) {
-    if (ptr == nullptr) { return POINTER_T::GetNull(); }
-    return POINTER_T(GetId(),
+  template<typename T, typename PointerT = Pointer>
+  HSHM_ALWAYS_INLINE PointerT Convert(const T *ptr) {
+    if (ptr == nullptr) { return PointerT::GetNull(); }
+    return PointerT(GetId(),
                      reinterpret_cast<size_t>(ptr) -
                          reinterpret_cast<size_t>(buffer_));
   }
