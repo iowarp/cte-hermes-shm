@@ -20,12 +20,12 @@ namespace hshm {
 
 class MpiTimer : public Timer {
  public:
+  MPI_Comm comm_;
   int rank_;
-  int comm_;
   int nprocs_;
 
  public:
-  explicit MpiTimer(int comm) : comm_(comm) {
+  explicit MpiTimer(MPI_Comm comm) : comm_(comm) {
     MPI_Comm_rank(comm_, &rank_);
     MPI_Comm_size(comm_, &nprocs_);
   }
