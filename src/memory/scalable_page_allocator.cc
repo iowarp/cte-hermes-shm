@@ -34,7 +34,8 @@ void ScalablePageAllocator::shm_init(allocator_id_t id,
   header_->Configure(id, custom_header_size, &alloc_,
                      buffer_size, coalesce_trigger, coalesce_window);
   vector<FreeListSetIpc> *free_lists = header_->free_lists_.get();
-  size_t ncpu = HERMES_SYSTEM_INFO->ncpu_;
+  // size_t ncpu = HERMES_SYSTEM_INFO->ncpu_;
+  size_t ncpu = 1;
   free_lists->resize(num_free_lists_, ncpu);
   CacheFreeLists();
 }
