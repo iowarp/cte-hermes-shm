@@ -56,6 +56,8 @@ void PageAllocationTest(Allocator *alloc) {
   for (size_t i = 0; i < count; ++i) {
     alloc->Free(ps[i]);
   }
+
+  return;
 }
 
 void MultiPageAllocationTest(Allocator *alloc) {
