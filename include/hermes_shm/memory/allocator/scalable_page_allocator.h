@@ -327,7 +327,6 @@ class ScalablePageAllocator : public Allocator {
     size_t round;
     for (exp = 0; exp < num_caches_; ++exp) {
       round = 1 << (exp + min_cached_size_exp_);
-      round += sizeof(MpPage);
       if (num <= round) {
         return round;
       }
