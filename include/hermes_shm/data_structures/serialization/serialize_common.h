@@ -44,10 +44,10 @@ void load_string(Ar &ar, StringT &text) {
 /** Serialize a generic vector */
 template <typename Ar, typename ContainerT, typename T>
 void save_vec(Ar &ar, const ContainerT &obj) {
+  ar << obj.size();
   if constexpr(std::is_same_v<char, T>) {
     write_binary(ar, (char*)obj.data(), obj.size() * sizeof(T));
   } else {
-    ar << obj.size();
     for (auto iter = obj.cbegin(); iter != obj.cend(); ++iter) {
       ar << (*iter);
     }

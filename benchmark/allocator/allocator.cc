@@ -268,3 +268,56 @@ TEST_CASE("AllocatorBenchmark") {
   FullAllocatorTestThreaded(8);
   FullAllocatorTestThreaded(16);*/
 }
+
+class AllocBase {
+ public:
+  virtual void Allocate() = 0;
+  virtual void Free() = 0;
+  virtual void Realloc() = 0;
+  virtual void Size() = 0;
+};
+
+class Alloc : public AllocBase {
+ public:
+  void Allocate() override {
+    size_t sum = 0;
+    for(int i = 0; i < 1024; ++i) {
+      sum += i;
+    }
+  }
+
+  void Free() override {
+    size_t sum = 0;
+    for(int i = 0; i < 1024; ++i) {
+      sum += i;
+    }
+  }
+
+  void Realloc() override {
+    size_t sum = 0;
+    for(int i = 0; i < 1024; ++i) {
+      sum += i;
+    }
+  }
+
+  void Size() override {
+    size_t sum = 0;
+    for(int i = 0; i < 1024; ++i) {
+      sum += i;
+    }
+  }
+};
+
+TEST_CASE("TestVirtualFunctionOverhead") {
+  size_t ops = (1 << 20);
+  hshm::Timer t;
+  AllocBase *alloc = new Alloc();
+  t.Resume();
+  for (size_t i = 0; i < ops; ++i) {
+    alloc->Allocate();
+    alloc->Size();
+  }
+  t.Pause();
+  delete alloc;
+  HIPRINT("Virtual function overhead: {} MOps", ops / t.GetUsec());
+}

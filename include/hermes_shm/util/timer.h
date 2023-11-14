@@ -16,70 +16,90 @@
 #include <chrono>
 #include <vector>
 #include <functional>
+#include "hermes_shm/constants/macros.h"
 
 namespace hshm {
 
 template<typename T>
-class TimerBase {
- private:
-  std::chrono::time_point<T> start_, end_;
-  double time_ns_;
+class TimepointBase {
+ public:
+  std::chrono::time_point<T> start_;
 
  public:
-  TimerBase() : time_ns_(0) {}
-
-  void Resume() {
+  HSHM_ALWAYS_INLINE void Now() {
     start_ = T::now();
   }
-  double Pause() {
-    time_ns_ += GetNsecFromStart();
-    return time_ns_;
+  HSHM_ALWAYS_INLINE double GetNsecFromStart(TimepointBase &now) const {
+    double elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(
+        now.start_ - start_).count();
+    return elapsed;
   }
-  double Pause(double &dt) {
-    dt = GetNsecFromStart();
-    time_ns_ += dt;
-    return time_ns_;
+  HSHM_ALWAYS_INLINE double GetUsecFromStart(TimepointBase &now) const {
+    return GetNsecFromStart(now)/1000;
   }
-  void Reset() {
-    time_ns_ = 0;
+  HSHM_ALWAYS_INLINE double GetMsecFromStart(TimepointBase &now) const {
+    return GetNsecFromStart(now)/1000000;
   }
-
-  double GetNsecFromStart() {
-    end_ = T::now();
+  HSHM_ALWAYS_INLINE double GetSecFromStart(TimepointBase &now) const {
+    return GetNsecFromStart(now)/1000000000;
+  }
+  HSHM_ALWAYS_INLINE double GetNsecFromStart() const {
+    std::chrono::time_point<T> end_ = T::now();
     double elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(
         end_ - start_).count();
     return elapsed;
   }
-  double GetUsecFromStart() {
-    end_ = T::now();
-    return std::chrono::duration_cast<std::chrono::microseconds>(
-        end_ - start_).count();
+  HSHM_ALWAYS_INLINE double GetUsecFromStart() const {
+    return GetNsecFromStart()/1000;
   }
-  double GetMsecFromStart() {
-    end_ = T::now();
-    return std::chrono::duration_cast<std::chrono::milliseconds>(
-        end_ - start_).count();
+  HSHM_ALWAYS_INLINE double GetMsecFromStart() const {
+    return GetNsecFromStart()/1000000;
   }
-  double GetSecFromStart() {
-    end_ = T::now();
-    return std::chrono::duration_cast<std::chrono::seconds>(
-        end_ - start_).count();
+  HSHM_ALWAYS_INLINE double GetSecFromStart() const {
+    return GetNsecFromStart()/1000000000;
   }
+};
 
-  double GetNsec() const {
+class NsecTimer {
+ public:
+  double time_ns_;
+
+ public:
+  NsecTimer() : time_ns_(0) {}
+
+  HSHM_ALWAYS_INLINE double GetNsec() const {
     return time_ns_;
   }
-  double GetUsec() const {
+  HSHM_ALWAYS_INLINE double GetUsec() const {
     return time_ns_/1000;
   }
-  double GetMsec() const {
+  HSHM_ALWAYS_INLINE double GetMsec() const {
     return time_ns_/1000000;
   }
-  double GetSec() const {
+  HSHM_ALWAYS_INLINE double GetSec() const {
     return time_ns_/1000000000;
   }
+  HSHM_ALWAYS_INLINE void Reset() {
+    time_ns_ = 0;
+  }
+};
 
-  double GetUsFromEpoch() const {
+template<typename T>
+class TimerBase : public TimepointBase<T>, public NsecTimer {
+ private:
+  std::chrono::time_point<T> end_;
+
+ public:
+  TimerBase() = default;
+
+  HSHM_ALWAYS_INLINE void Resume() {
+    TimepointBase<T>::Now();
+  }
+  HSHM_ALWAYS_INLINE double Pause() {
+    time_ns_ += TimepointBase<T>::GetNsecFromStart();
+    return time_ns_;
+  }
+  HSHM_ALWAYS_INLINE double GetUsFromEpoch() const {
     std::chrono::time_point<std::chrono::system_clock> point =
         std::chrono::system_clock::now();
     return std::chrono::duration_cast<std::chrono::microseconds>(
@@ -90,6 +110,9 @@ class TimerBase {
 typedef TimerBase<std::chrono::high_resolution_clock> HighResCpuTimer;
 typedef TimerBase<std::chrono::steady_clock> HighResMonotonicTimer;
 typedef HighResMonotonicTimer Timer;
+typedef TimepointBase<std::chrono::high_resolution_clock> HighResCpuTimepoint;
+typedef TimepointBase<std::chrono::steady_clock> HighResMonotonicTimepoint;
+typedef HighResMonotonicTimepoint Timepoint;
 
 }  // namespace hshm
 

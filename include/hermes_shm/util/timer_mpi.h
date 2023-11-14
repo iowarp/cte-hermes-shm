@@ -10,32 +10,35 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+#ifndef HERMES_SHM_INCLUDE_HERMES_SHM_UTIL_TIMER_MPI_H_
+#define HERMES_SHM_INCLUDE_HERMES_SHM_UTIL_TIMER_MPI_H_
 
-#ifndef HERMES_DATA_STRUCTURES_DATA_STRUCTURE_H_
-#define HERMES_DATA_STRUCTURES_DATA_STRUCTURE_H_
+#include "timer.h"
+#include <mpi.h>
 
-#include "ipc/internal/shm_internal.h"
-#include "hermes_shm/memory/memory_manager.h"
+namespace hshm {
 
-#include "containers/charbuf.h"
-#include "containers/converters.h"
-#include "containers/functional.h"
-#include "containers/tuple_base.h"
+class MpiTimer : public Timer {
+ public:
+  MPI_Comm comm_;
+  int rank_;
+  int nprocs_;
 
-#include "ipc/pair.h"
-#include "ipc/string.h"
-#include "ipc/list.h"
-#include "ipc/vector.h"
-#include "ipc/mpsc_queue.h"
-#include "ipc/slist.h"
-#include "ipc/split_ticket_queue.h"
-#include "ipc/spsc_queue.h"
-#include "ipc/ticket_queue.h"
-#include "ipc/unordered_map.h"
-#include "ipc/pod_array.h"
+ public:
+  explicit MpiTimer(MPI_Comm comm) : comm_(comm) {
+    MPI_Comm_rank(comm_, &rank_);
+    MPI_Comm_size(comm_, &nprocs_);
+  }
 
-#include "serialization/serialize_common.h"
+  void Collect() {
+    MPI_Barrier(comm_);
+    double my_nsec = GetNsec();
+    MPI_Reduce(&my_nsec, &time_ns_, 1,
+               MPI_DOUBLE, MPI_MAX,
+               0, comm_);
+  }
+};
 
-namespace hipc = hshm::ipc;
+}  // namespace hshm
 
-#endif  // HERMES_DATA_STRUCTURES_DATA_STRUCTURE_H_
+#endif  // HERMES_SHM_INCLUDE_HERMES_SHM_UTIL_TIMER_MPI_H_

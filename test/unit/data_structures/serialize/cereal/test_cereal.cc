@@ -16,6 +16,7 @@
 #include "hermes_shm/data_structures/data_structure.h"
 #include "cereal/types/vector.hpp"
 #include "cereal/types/string.hpp"
+#include <cereal/types/atomic.hpp>
 
 TEST_CASE("SerializePod") {
   std::stringstream ss;
@@ -45,6 +46,22 @@ TEST_CASE("SerializeVector") {
     cereal::BinaryInputArchive ar(ss);
     ar >> x;
     REQUIRE(x == y);
+  }
+}
+
+TEST_CASE("SerializeHipcVec0") {
+  std::stringstream ss;
+  {
+    auto x = hipc::make_uptr<hipc::vector<int>>();
+    cereal::BinaryOutputArchive ar(ss);
+    ar << x;
+  }
+  {
+    hipc::uptr<hipc::vector<int>> x;
+    std::vector<int> y;
+    cereal::BinaryInputArchive ar(ss);
+    ar >> x;
+    REQUIRE(x->vec() == y);
   }
 }
 
@@ -134,5 +151,20 @@ TEST_CASE("SerializePodArray") {
       REQUIRE(x[i] == y[i]);
     }
     x.destroy();
+  }
+}
+
+TEST_CASE("SerializeAtomic") {
+  std::stringstream ss;
+  {
+    std::atomic<int> x(225);
+    cereal::BinaryOutputArchive ar(ss);
+    ar << x;
+  }
+  {
+    std::atomic<int> x(225);
+    cereal::BinaryInputArchive ar(ss);
+    ar >> x;
+    REQUIRE(x == 225);
   }
 }

@@ -56,6 +56,8 @@ void PageAllocationTest(Allocator *alloc) {
   for (size_t i = 0; i < count; ++i) {
     alloc->Free(ps[i]);
   }
+
+  return;
 }
 
 void MultiPageAllocationTest(Allocator *alloc) {
@@ -184,4 +186,37 @@ TEST_CASE("LocalPointers") {
   alloc->DelObjsLocal(p5, 5);
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
   Posttest();
+}
+
+TEST_CASE("Arrays") {
+  auto alloc = Pretest<hipc::PosixShmMmap, hipc::ScalablePageAllocator>();
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+  // Allocate API
+  hipc::Array p1 = alloc->AllocateArray<char>(256);
+  REQUIRE(!p1.shm_.IsNull());
+  hipc::Array p2 = alloc->ClearAllocateArray<char>(256);
+  REQUIRE(!p2.shm_.IsNull());
+  hipc::Array p3 = alloc->ReallocateArray<char>(p1, 256);
+  REQUIRE(!p3.shm_.IsNull());
+  alloc->FreeArray(p1);
+  alloc->FreeArray(p3);
+  Posttest();
+}
+
+TEST_CASE("LocalArrays") {
+  auto alloc = Pretest<hipc::PosixShmMmap, hipc::ScalablePageAllocator>();
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+  // Allocate API
+  hipc::LArray<char> p1 = alloc->AllocateLocalArray<char>(256);
+  REQUIRE(!p1.shm_.IsNull());
+  REQUIRE(p1.ptr_ != nullptr);
+  hipc::LArray<char> p2 = alloc->ClearAllocateLocalArray<char>(256);
+  REQUIRE(!p2.shm_.IsNull());
+  REQUIRE(p2.ptr_ != nullptr);
+  REQUIRE(*p2 == 0);
+  hipc::LArray<char> p3 = alloc->ReallocateLocalArray<char>(p1, 256);
+  REQUIRE(!p3.shm_.IsNull());
+  REQUIRE(p3.ptr_ != nullptr);
+  alloc->FreeLocalArray(p1);
+  alloc->FreeLocalArray(p3);
 }

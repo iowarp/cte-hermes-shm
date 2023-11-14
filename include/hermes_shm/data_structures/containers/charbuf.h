@@ -217,9 +217,9 @@ struct charbuf {
   }
 
   /** Deserialize */
-  template <typename A>
-  void load(A &ar) {
-    load_string<A, charbuf>(ar, *this);
+  template <typename Ar>
+  void load(Ar &ar) {
+    load_string<Ar, charbuf>(ar, *this);
   }
 
   /**====================================

@@ -23,6 +23,12 @@ template<typename T>
 struct nonatomic {
   T x;
 
+  /** Serialization */
+  template <typename Ar>
+  void serialize(Ar &ar) {
+    ar(x);
+  }
+
   /** Constructor */
   HSHM_ALWAYS_INLINE nonatomic() = default;
 
@@ -142,6 +148,12 @@ struct nonatomic {
 template<typename T>
 struct atomic {
   std::atomic<T> x;
+
+  /** Serialization */
+  template <typename Ar>
+  void serialize(Ar &ar) {
+    ar(x);
+  }
 
   /** Constructor */
   HSHM_ALWAYS_INLINE atomic() = default;
