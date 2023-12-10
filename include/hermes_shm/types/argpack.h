@@ -16,6 +16,7 @@
 #include "real_number.h"
 #include "hermes_shm/constants/macros.h"
 #include  <functional>
+#include <stdexcept>
 
 namespace hshm {
 
