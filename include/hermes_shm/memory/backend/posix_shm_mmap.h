@@ -14,6 +14,7 @@
 #define HERMES_INCLUDE_MEMORY_BACKEND_POSIX_SHM_MMAP_H
 
 #include "memory_backend.h"
+#include "hermes_shm/util/logging.h"
 #include <string>
 
 #include <stdio.h>
@@ -57,6 +58,7 @@ class PosixShmMmap : public MemoryBackend {
     shm_unlink(url_.c_str());
     fd_ = shm_open(url_.c_str(), O_CREAT | O_RDWR, 0666);
     if (fd_ < 0) {
+      HILOG(kError, "shm_open failed: {}", strerror(errno));
       return false;
     }
     _Reserve(size + HERMES_SYSTEM_INFO->page_size_);
@@ -74,6 +76,7 @@ class PosixShmMmap : public MemoryBackend {
     url_ = std::move(url);
     fd_ = shm_open(url_.c_str(), O_RDWR, 0666);
     if (fd_ < 0) {
+      HILOG(kError, "shm_open failed: {}", strerror(errno));
       return false;
     }
     header_ = _Map<MemoryBackendHeader>(HERMES_SYSTEM_INFO->page_size_, 0);

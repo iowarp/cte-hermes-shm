@@ -31,22 +31,30 @@ class MemoryBackendFactory {
     if constexpr(std::is_same_v<PosixShmMmap, BackendT>) {
       // PosixShmMmap
       auto backend = std::make_unique<PosixShmMmap>();
-      backend->shm_init(size, url, std::forward<args>(args)...);
+      if (!backend->shm_init(size, url, std::forward<args>(args)...)) {
+        throw MEMORY_BACKEND_CREATE_FAILED.format();
+      }
       return backend;
     } else if constexpr(std::is_same_v<PosixMmap, BackendT>) {
       // PosixMmap
       auto backend = std::make_unique<PosixMmap>();
-      backend->shm_init(size, std::forward<args>(args)...);
+      if (!backend->shm_init(size, std::forward<args>(args)...)) {
+        throw MEMORY_BACKEND_CREATE_FAILED.format();
+      }
       return backend;
     } else if constexpr(std::is_same_v<NullBackend, BackendT>) {
       // NullBackend
       auto backend = std::make_unique<NullBackend>();
-      backend->shm_init(size, url, std::forward<args>(args)...);
+      if (!backend->shm_init(size, url, std::forward<args>(args)...)) {
+        throw MEMORY_BACKEND_CREATE_FAILED.format();
+      }
       return backend;
     } else if constexpr(std::is_same_v<ArrayBackend, BackendT>) {
       // ArrayBackend
       auto backend = std::make_unique<ArrayBackend>();
-      backend->shm_init(size, url, std::forward<args>(args)...);
+      if (!backend->shm_init(size, url, std::forward<args>(args)...)) {
+        throw MEMORY_BACKEND_CREATE_FAILED.format();
+      }
       return backend;
     } else {
       throw MEMORY_BACKEND_NOT_FOUND.format();

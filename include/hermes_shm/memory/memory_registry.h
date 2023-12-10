@@ -18,6 +18,7 @@
 #include "hermes_shm/memory/allocator/stack_allocator.h"
 #include "hermes_shm/memory/backend/posix_mmap.h"
 #include "hermes_shm/util/errors.h"
+#include "hermes_shm/util/logging.h"
 
 namespace hipc = hshm::ipc;
 
@@ -95,7 +96,11 @@ class MemoryRegistry {
 
   /** Registers an allocator. */
   HSHM_ALWAYS_INLINE void RegisterAllocator(Allocator *alloc) {
-    auto idx = alloc->GetId().ToIndex();
+    uint32_t idx = alloc->GetId().ToIndex();
+    if (idx > MAX_ALLOCATORS) {
+      HILOG(kError, "Allocator index out of range: {}", idx)
+      throw std::runtime_error("Too many allocators");
+    }
     allocators_[idx] = alloc;
   }
 

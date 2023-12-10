@@ -44,7 +44,7 @@ class MemoryBackend {
   bitfield32_t flags_;
 
  public:
-  MemoryBackend() = default;
+  MemoryBackend() : header_(nullptr), data_(nullptr) {}
 
   virtual ~MemoryBackend() = default;
 
