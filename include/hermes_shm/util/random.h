@@ -24,6 +24,10 @@ class Distribution {
   void Seed(size_t seed) { 
     generator = std::default_random_engine(seed);
   }
+
+  virtual int GetInt() = 0;
+  virtual double GetDouble() = 0;
+  virtual size_t GetSize() = 0;
 };
 
 class CountDistribution : public Distribution {
@@ -31,10 +35,20 @@ class CountDistribution : public Distribution {
   size_t inc_ = 1;
   size_t count_ = 0;
  public:
-  virtual void Shape(size_t inc) { inc_ = inc; }
-  virtual int GetInt() { int temp = count_; count_+=inc_; return temp; }
-  virtual size_t GetSize() { size_t temp = count_; count_+=inc_; return temp; };
-  virtual double GetDouble() { double temp = count_; count_+=inc_; return temp; };
+  void Shape(size_t inc) { inc_ = inc; }
+  int GetInt() override {
+    int temp = count_; count_+=inc_; return temp;
+  }
+  size_t GetSize() override {
+    size_t temp = count_;
+    count_+=inc_;
+    return temp;
+  };
+  double GetDouble() override {
+    double temp = count_;
+    count_+=inc_;
+    return temp;
+  };
 };
 
 class NormalDistribution : public Distribution {
@@ -49,12 +63,13 @@ class NormalDistribution : public Distribution {
   void Shape(double mean, double std) {
     distribution_ = std::normal_distribution<double>(mean, std);
   }
-  int GetInt() {
+  int GetInt() override {
     return (int)round(distribution_(generator));
   }
-  size_t GetSize() {
-    return (size_t)round(distribution_(generator)); }
-  double GetDouble() {
+  size_t GetSize() override {
+    return (size_t)round(distribution_(generator));
+  }
+  double GetDouble() override {
     return round(distribution_(generator)); }
 };
 
@@ -70,13 +85,13 @@ class GammaDistribution : public Distribution {
   void Shape(double shape, double scale) {
     distribution_ = std::gamma_distribution<double>(shape, scale);
   }
-  int GetInt() {
+  int GetInt() override {
     return (int)round(distribution_(generator));
   }
-  size_t GetSize() {
+  size_t GetSize() override {
     return (size_t)round(distribution_(generator));
   }
-  double GetDouble() {
+  double GetDouble() override {
     return round(distribution_(generator));
   }
 };
@@ -90,9 +105,15 @@ class ExponentialDistribution : public Distribution {
   void Shape(double scale) {
     distribution_ = std::exponential_distribution<double>(scale);
   }
-  int GetInt() { return (int)round(distribution_(generator)); }
-  size_t GetSize() { return (size_t)round(distribution_(generator)); }
-  double GetDouble() { return round(distribution_(generator)); }
+  int GetInt() override {
+    return (int)round(distribution_(generator));
+  }
+  size_t GetSize() override {
+    return (size_t)round(distribution_(generator));
+  }
+  double GetDouble() override {
+    return round(distribution_(generator));
+  }
 };
 
 class UniformDistribution : public Distribution {
@@ -110,13 +131,13 @@ class UniformDistribution : public Distribution {
   void Shape(double low, double high) {
     distribution_ = std::uniform_real_distribution<double>(low, high);
   }
-  int GetInt() {
+  int GetInt() override {
     return (int)round(distribution_(generator));
   }
-  size_t GetSize() {
+  size_t GetSize() override {
     return (size_t)round(distribution_(generator));
   }
-  double GetDouble() {
+  double GetDouble() override {
     return round(distribution_(generator));
   }
 };
