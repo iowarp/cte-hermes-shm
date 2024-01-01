@@ -12,10 +12,6 @@
 
 namespace hshm {
 
-enum class DistributionType {
-  kNone=0, kNormal=1, kGamma=2, kExponential=3, kUniform=4
-};
-
 class Distribution {
  protected:
   std::default_random_engine generator;
@@ -25,17 +21,10 @@ class Distribution {
     generator = std::default_random_engine(
         std::chrono::steady_clock::now().time_since_epoch().count());
   }
-  void Seed(size_t seed) { generator = std::default_random_engine(seed); }
-
-  virtual void Shape(size_t p1) { throw 1; }
-  virtual void Shape(double p1) { throw 1; }
-  virtual void Shape(double p1, double p2) { throw 1; }
-  virtual int GetInt() { throw 1; }
-  virtual size_t GetSize() { throw 1; }
-  virtual double GetDouble() { throw 1; }
+  void Seed(size_t seed) { 
+    generator = std::default_random_engine(seed);
+  }
 };
-
-typedef std::unique_ptr<Distribution> DistributionPtr;
 
 class CountDistribution : public Distribution {
  private:
@@ -54,18 +43,18 @@ class NormalDistribution : public Distribution {
   //TODO: add binomial dist
  public:
   NormalDistribution() = default;
-  void Shape(double std) override {
+  void Shape(double std) {
     distribution_ = std::normal_distribution<double>(0, std);
   }
-  void Shape(double mean, double std) override {
+  void Shape(double mean, double std) {
     distribution_ = std::normal_distribution<double>(mean, std);
   }
-  int GetInt() override {
+  int GetInt() {
     return (int)round(distribution_(generator));
   }
-  size_t GetSize() override {
+  size_t GetSize() {
     return (size_t)round(distribution_(generator)); }
-  double GetDouble() override {
+  double GetDouble() {
     return round(distribution_(generator)); }
 };
 
@@ -75,19 +64,19 @@ class GammaDistribution : public Distribution {
   //TODO: Is there a discrete gamma dist?
  public:
   GammaDistribution() = default;
-  void Shape(double scale) override {
+  void Shape(double scale) {
     distribution_ = std::gamma_distribution<double>(1, scale);
   }
-  void Shape(double shape, double scale) override {
+  void Shape(double shape, double scale) {
     distribution_ = std::gamma_distribution<double>(shape, scale);
   }
-  int GetInt() override {
+  int GetInt() {
     return (int)round(distribution_(generator));
   }
-  size_t GetSize() override {
+  size_t GetSize() {
     return (size_t)round(distribution_(generator));
   }
-  double GetDouble() override {
+  double GetDouble() {
     return round(distribution_(generator));
   }
 };
@@ -98,12 +87,12 @@ class ExponentialDistribution : public Distribution {
   //TODO: add poisson dist
  public:
   ExponentialDistribution() = default;
-  void Shape(double scale) override {
+  void Shape(double scale) {
     distribution_ = std::exponential_distribution<double>(scale);
   }
-  int GetInt() override { return (int)round(distribution_(generator)); }
-  size_t GetSize() override { return (size_t)round(distribution_(generator)); }
-  double GetDouble() override { return round(distribution_(generator)); }
+  int GetInt() { return (int)round(distribution_(generator)); }
+  size_t GetSize() { return (size_t)round(distribution_(generator)); }
+  double GetDouble() { return round(distribution_(generator)); }
 };
 
 class UniformDistribution : public Distribution {
@@ -112,46 +101,23 @@ class UniformDistribution : public Distribution {
   //TODO: add int uniform dist
  public:
   UniformDistribution() = default;
-  void Shape(size_t high) override {
+  void Shape(size_t high) {
     distribution_ = std::uniform_real_distribution<double>(0, (double)high);
   }
-  void Shape(double high) override {
+  void Shape(double high) {
     distribution_ = std::uniform_real_distribution<double>(0, high);
   }
-  void Shape(double low, double high) override {
+  void Shape(double low, double high) {
     distribution_ = std::uniform_real_distribution<double>(low, high);
   }
-  int GetInt() override {
+  int GetInt() {
     return (int)round(distribution_(generator));
   }
-  size_t GetSize() override {
+  size_t GetSize() {
     return (size_t)round(distribution_(generator));
   }
-  double GetDouble() override {
+  double GetDouble() {
     return round(distribution_(generator));
-  }
-};
-
-class DistributionFactory {
- public:
-  static DistributionPtr Get(DistributionType type) {
-    switch(type) {
-      case DistributionType::kNone: {
-        return std::make_unique<CountDistribution>();
-      }
-      case DistributionType::kNormal: {
-        return std::make_unique<NormalDistribution>();
-      }
-      case DistributionType::kGamma: {
-        return std::make_unique<GammaDistribution>();
-      }
-      case DistributionType::kExponential: {
-        return std::make_unique<ExponentialDistribution>();
-      }
-      case DistributionType::kUniform: {
-        return std::make_unique<UniformDistribution>();
-      }
-    }
   }
 };
 
