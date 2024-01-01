@@ -279,30 +279,33 @@ class AllocBase {
 
 class Alloc : public AllocBase {
  public:
+  static inline int counter_ = 1;
+
+ public:
   void Allocate() override {
     size_t sum = 0;
-    for(int i = 0; i < 1024; ++i) {
+    for(int i = 0; i < counter_; ++i) {
       sum += i;
     }
   }
 
   void Free() override {
     size_t sum = 0;
-    for(int i = 0; i < 1024; ++i) {
+    for(int i = 0; i < counter_; ++i) {
       sum += i;
     }
   }
 
   void Realloc() override {
     size_t sum = 0;
-    for(int i = 0; i < 1024; ++i) {
+    for(int i = 0; i < counter_; ++i) {
       sum += i;
     }
   }
 
   void Size() override {
     size_t sum = 0;
-    for(int i = 0; i < 1024; ++i) {
+    for(int i = 0; i < counter_; ++i) {
       sum += i;
     }
   }
