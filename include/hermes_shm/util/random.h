@@ -41,12 +41,12 @@ class CountDistribution : public Distribution {
   }
   size_t GetSize() override {
     size_t temp = count_;
-    count_+=inc_;
+    count_ += inc_;
     return temp;
   };
   double GetDouble() override {
     double temp = count_;
-    count_+=inc_;
+    count_ += inc_;
     return temp;
   };
 };
@@ -64,13 +64,14 @@ class NormalDistribution : public Distribution {
     distribution_ = std::normal_distribution<double>(mean, std);
   }
   int GetInt() override {
-    return (int)round(distribution_(generator));
+    return (int)round(GetDouble());
   }
   size_t GetSize() override {
-    return (size_t)round(distribution_(generator));
+    return (size_t)round(GetDouble());
   }
   double GetDouble() override {
-    return round(distribution_(generator)); }
+    return distribution_(generator);
+  }
 };
 
 class GammaDistribution : public Distribution {
@@ -86,13 +87,13 @@ class GammaDistribution : public Distribution {
     distribution_ = std::gamma_distribution<double>(shape, scale);
   }
   int GetInt() override {
-    return (int)round(distribution_(generator));
+    return (int)round(GetDouble());
   }
   size_t GetSize() override {
-    return (size_t)round(distribution_(generator));
+    return (size_t)round(GetDouble());
   }
   double GetDouble() override {
-    return round(distribution_(generator));
+    return distribution_(generator);
   }
 };
 
@@ -106,13 +107,13 @@ class ExponentialDistribution : public Distribution {
     distribution_ = std::exponential_distribution<double>(scale);
   }
   int GetInt() override {
-    return (int)round(distribution_(generator));
+    return (int)round(GetDouble());
   }
   size_t GetSize() override {
-    return (size_t)round(distribution_(generator));
+    return (size_t)round(GetDouble());
   }
   double GetDouble() override {
-    return round(distribution_(generator));
+    return distribution_(generator);
   }
 };
 
@@ -138,7 +139,7 @@ class UniformDistribution : public Distribution {
     return (size_t)round(distribution_(generator));
   }
   double GetDouble() override {
-    return round(distribution_(generator));
+    return distribution_(generator);
   }
 };
 
