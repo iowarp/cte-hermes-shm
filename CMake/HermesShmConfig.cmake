@@ -41,7 +41,7 @@ if( HermesShm_INCLUDE_DIR )
     # Set uncached variables as per standard.
     set(HermesShm_FOUND ON)
     set(HermesShm_INCLUDE_DIRS ${HermesShm_INCLUDE_DIR})
-    set(HermesShm_LIBRARIES -lrt -ldl cereal::cereal ${HermesShm_LIBRARY})
+    set(HermesShm_LIBRARIES -lrt -ldl cereal::cereal -lstdc++fs ${HermesShm_LIBRARY})
   endif(HermesShm_LIBRARY)
 
 else(HermesShm_INCLUDE_DIR)
