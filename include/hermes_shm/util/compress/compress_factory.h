@@ -8,5 +8,7 @@
 #include "bzip2.h"
 #include "lzo.h"
 #include "zstd.h"
+#include "lz4.h"
+#include "zlib.h"
 
 #endif //HERMES_SHM_INCLUDE_HERMES_SHM_UTIL_COMPRESS_COMPRESS_FACTORY_H_

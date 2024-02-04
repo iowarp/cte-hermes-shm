@@ -150,16 +150,32 @@ if(HERMES_ENABLE_COMPRESS)
     pkg_check_modules(libzstd REQUIRED libzstd)
     message(STATUS "found zstd.h at ${libzstd_INCLUDE_DIRS}")
 
-    set(COMPRESS_LIBS bz2 ${lzo2_LIBRARIES} ${libzstd_LIBRARIES})
+    pkg_check_modules(liblz4 REQUIRED liblz4)
+    message(STATUS "found lz4.h at ${liblz4_INCLUDE_DIRS}")
+
+    pkg_check_modules(zlib REQUIRED zlib)
+    message(STATUS "found zlib.h at ${zlib_INCLUDE_DIRS}")
+
+    set(COMPRESS_LIBS
+            bz2
+            ${lzo2_LIBRARIES}
+            ${libzstd_LIBRARIES}
+            ${liblz4_LIBRARIES}
+            ${zlib_LIBRARIES}
+    )
     include_directories(
             ${BZip2_INCLUDE_DIRS}
             ${lzo2_INCLUDE_DIRS} ${lzo2_dir}
             ${libzstd_INCLUDE_DIRS}
+            ${liblz4_INCLUDE_DIRS}
+            ${zlib_INCLUDE_DIRS}
     )
     link_directories(
             ${BZip2_LIBRARY_DIRS}
             ${lzo2_LIBRARY_DIRS}
             ${libzstd_LIBRARY_DIRS}
+            ${liblz4_LIBRARY_DIRS}
+            ${zlib_LIBRARY_DIRS}
     )
 endif()
 

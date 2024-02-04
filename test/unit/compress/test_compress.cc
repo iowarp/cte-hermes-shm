@@ -42,4 +42,23 @@ TEST_CASE("TestCompress") {
     zstd.Decompress(decompressed.data(), raw_size, compressed.data(), cmpr_size);
     REQUIRE(raw == std::string(decompressed.data(), raw_size));
   }
+
+  PAGE_DIVIDE("LZ4") {
+    hshm::Lz4 lz4;
+    size_t cmpr_size = 1024, raw_size = 1024;
+    lz4.Compress(compressed.data(), cmpr_size, raw.data(), raw.size());
+    lz4.Decompress(decompressed.data(), raw_size, compressed.data(), cmpr_size);
+    REQUIRE(raw == std::string(decompressed.data(), raw_size));
+  }
+
+  PAGE_DIVIDE("Zlib") {
+    hshm::Zlib zlib;
+    size_t cmpr_size = 1024, raw_size = 1024;
+    zlib.Compress(compressed.data(), cmpr_size, raw.data(), raw.size());
+    zlib.Decompress(decompressed.data(), raw_size, compressed.data(), cmpr_size);
+    REQUIRE(raw == std::string(decompressed.data(), raw_size));
+  }
+
+  PAGE_DIVIDE("Zlib") {
+  }
 }
