@@ -23,7 +23,6 @@ class HermesShm(CMakePackage):
     depends_on('zlib', when='+compress')
     depends_on('xz', when='+compress')
     depends_on('brotli', when='+compress')
-
     depends_on('snappy', when='+compress')
     depends_on('c-blosc2', when='+compress')
 

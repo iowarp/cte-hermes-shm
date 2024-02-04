@@ -1,0 +1,11 @@
+//
+// Created by lukemartinlogan on 2/3/24.
+//
+
+#ifndef HERMES_SHM_INCLUDE_HERMES_SHM_UTIL_ENCRYPT_ENCRYPT_H_
+#define HERMES_SHM_INCLUDE_HERMES_SHM_UTIL_ENCRYPT_ENCRYPT_H_
+
+#include <string>
+#include "aes.h"
+
+#endif //HERMES_SHM_INCLUDE_HERMES_SHM_UTIL_ENCRYPT_ENCRYPT_H_

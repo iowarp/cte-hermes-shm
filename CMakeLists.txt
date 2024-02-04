@@ -204,9 +204,12 @@ if(HERMES_ENABLE_COMPRESS)
 endif()
 
 if(HERMES_ENABLE_ENCRYPT)
-    set(ENCRYPT_LIBS ${OPENSSL_LIBRARIES})
-    set(ENCRYPT_INCLUDE_DIRS ${OPENSSL_INCLUDE_DIR})
-    include_directories(${ENCRYPT_INCLUDE_DIRS})
+    pkg_check_modules(libcrypto REQUIRED libcrypto)
+    message(STATUS "found libcrypto.h at ${libcrypto_INCLUDE_DIRS}")
+
+    set(ENCRYPT_LIBS ${libcrypto_LIBRARIES})
+    include_directories(${libcrypto_INCLUDE_DIRS})
+    link_directories(${libcrypto_LIBRARY_DIRS})
 endif()
 
 #------------------------------------------------------------------------------

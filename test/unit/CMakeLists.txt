@@ -19,5 +19,6 @@ if (HERMES_ENABLE_COMPRESS)
 endif()
 
 if (HERMES_ENABLE_ENCRYPT)
+    message("HERMES ENABLE ENCRYPT")
     add_subdirectory(encrypt)
 endif()

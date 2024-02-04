@@ -20,6 +20,7 @@ target_link_libraries(hermes_shm_data_structures
         cereal::cereal
         $<$<BOOL:${HERMES_RPC_THALLIUM}>:thallium>
         ${COMPRESS_LIBS}
+        ${ENCRYPT_LIBS}
 )
 
 #-----------------------------------------------------------------------------
