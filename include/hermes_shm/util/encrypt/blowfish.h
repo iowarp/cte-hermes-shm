@@ -10,8 +10,8 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_SHM_INCLUDE_HERMES_SHM_UTIL_ENCRYPT_AES_H_
-#define HERMES_SHM_INCLUDE_HERMES_SHM_UTIL_ENCRYPT_AES_H_
+#ifndef HERMES_SHM_INCLUDE_HERMES_SHM_UTIL_ENCRYPT_BLOWFISH_H
+#define HERMES_SHM_INCLUDE_HERMES_SHM_UTIL_ENCRYPT_BLOWFISH_H
 
 #include <openssl/evp.h>
 #include <openssl/aes.h>
@@ -22,7 +22,7 @@
 
 namespace hshm {
 
-class AES {
+class Blowfish {
  public:
   std::string key_;
   std::string iv_;
@@ -31,21 +31,21 @@ class AES {
  public:
   void CreateInitialVector(const std::string &salt = "") {
     salt_ = salt;
-    iv_ = std::string(EVP_CIPHER_iv_length(EVP_aes_256_cbc()), 0);
-    RAND_bytes((unsigned char *) iv_.c_str(),
-               EVP_CIPHER_iv_length(EVP_aes_256_cbc()));
+    iv_ = std::string(EVP_CIPHER_iv_length(EVP_bf_cbc()), 0);
+    RAND_bytes((unsigned char*)iv_.c_str(),
+               EVP_CIPHER_iv_length(EVP_bf_cbc()));
   }
 
   void GenerateKey(const std::string &password) {
-    const EVP_CIPHER *cipher = EVP_aes_256_cbc();
+    const EVP_CIPHER *cipher = EVP_bf_cbc();
     const EVP_MD *digest = EVP_sha256();
     key_ = std::string(32, 0);
     int ret = EVP_BytesToKey(cipher, digest,
-                             (unsigned char *) salt_.c_str(),
-                             (unsigned char *) password.c_str(),
+                             (unsigned char*)salt_.c_str(),
+                             (unsigned char*)password.c_str(),
                              password.size(), 1,
-                             (unsigned char *) key_.c_str(),
-                             (unsigned char *) iv_.c_str());
+                             (unsigned char*)key_.c_str(),
+                             (unsigned char*)iv_.c_str());
     if (!ret) {
       HELOG(kError, "Failed to generate key");
     }
@@ -59,24 +59,24 @@ class AES {
     if (!(ctx = EVP_CIPHER_CTX_new()))
       return false;
 
-    ret = EVP_EncryptInit_ex(ctx, EVP_aes_256_cbc(), NULL,
-                             (unsigned char *) key_.c_str(),
-                             (unsigned char *) iv_.c_str());
+    ret = EVP_EncryptInit_ex(ctx, EVP_bf_cbc(), NULL,
+                             (unsigned char*)key_.c_str(),
+                             (unsigned char*)iv_.c_str());
     if (1 != ret)
       return false;
 
     int output_len_int = input_size;
-    ret = EVP_EncryptUpdate(ctx,
-                            (unsigned char *) output,
-                            (int *) &output_len_int,
-                            (unsigned char *) input,
-                            input_size);
+    ret =  EVP_EncryptUpdate(ctx,
+                             (unsigned char*)output,
+                             (int*)&output_len_int,
+                             (unsigned char*)input,
+                             input_size);
     if (1 != ret)
       return false;
 
     int ciphertext_len;
     ret = EVP_EncryptFinal_ex(ctx,
-                              (unsigned char *) output + input_size,
+                              (unsigned char*)output + input_size,
                               &ciphertext_len);
     output_size = input_size + ciphertext_len;
     if (1 != ret)
@@ -94,24 +94,25 @@ class AES {
     if (!(ctx = EVP_CIPHER_CTX_new()))
       return false;
 
-    ret = EVP_DecryptInit_ex(ctx, EVP_aes_256_cbc(), NULL,
-                             (unsigned char *) key_.c_str(),
-                             (unsigned char *) iv_.c_str());
+    ret = EVP_DecryptInit_ex(ctx, EVP_bf_cbc(), NULL,
+                             (unsigned char*)key_.c_str(),
+                             (unsigned char*)iv_.c_str());
     if (1 != ret)
       return false;
 
     int output_size_int;
     ret = EVP_DecryptUpdate(
         ctx,
-        (unsigned char *) output, &output_size_int,
-        (unsigned char *) input, input_size);
+        (unsigned char*)output, &output_size_int,
+        (unsigned char*)input, input_size);
     if (1 != ret)
       return false;
     output_size = output_size_int;
 
+
     int plaintext_len;
     ret = EVP_DecryptFinal_ex(
-        ctx, (unsigned char *) output + output_size_int, &plaintext_len);
+        ctx, (unsigned char*)output + output_size_int, &plaintext_len);
     if (1 != ret)
       return false;
 
@@ -122,4 +123,4 @@ class AES {
 
 }  // namespace hshm
 
-#endif  // HERMES_SHM_INCLUDE_HERMES_SHM_UTIL_ENCRYPT_AES_H_
+#endif  // HERMES_SHM_INCLUDE_HERMES_SHM_UTIL_ENCRYPT_BLOWFISH_H

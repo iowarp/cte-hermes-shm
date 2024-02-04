@@ -15,5 +15,6 @@
 
 #include <string>
 #include "aes.h"
+#include "blowfish.h"
 
 #endif  // HERMES_SHM_INCLUDE_HERMES_SHM_UTIL_ENCRYPT_ENCRYPT_H_
