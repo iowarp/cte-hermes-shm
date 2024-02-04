@@ -26,6 +26,8 @@ option(HERMES_CXX_PROFILE "Generate profiling data from benchmarks" OFF)
 option(HERMES_PTHREADS_ENABLED "Support spawning pthreads" ON)
 option(HERMES_DEBUG_LOCK "Used for debugging locks" OFF)
 option(HERMES_ENABLE_PROFILING "View profiling logs" OFF)
+option(HERMES_ENABLE_COMPRESS "Enable compression" OFF)
+option(HERMES_ENABLE_ENCRYPT "Enable encryption" OFF)
 
 if (HERMES_PTHREADS_ENABLED)
     add_compile_definitions(HERMES_PTHREADS_ENABLED)
@@ -135,6 +137,36 @@ endif()
 if(BUILD_Boost_TESTS)
     find_package(Boost REQUIRED)
     message(STATUS "found boost.h at ${Boost_INCLUDE_DIRS}")
+endif()
+
+if(HERMES_ENABLE_COMPRESS)
+    find_package(BZip2 REQUIRED)
+    message(STATUS "found bz2.h at ${BZip2_INCLUDE_DIRS}")
+
+    pkg_check_modules(lzo2 REQUIRED lzo2)
+    message(STATUS "found lzo2.h at ${lzo2_INCLUDE_DIRS}")
+    get_filename_component(lzo2_dir "${lzo2_INCLUDE_DIRS}" DIRECTORY)
+
+    pkg_check_modules(libzstd REQUIRED libzstd)
+    message(STATUS "found zstd.h at ${libzstd_INCLUDE_DIRS}")
+
+    set(COMPRESS_LIBS bz2 ${lzo2_LIBRARIES} ${libzstd_LIBRARIES})
+    include_directories(
+            ${BZip2_INCLUDE_DIRS}
+            ${lzo2_INCLUDE_DIRS} ${lzo2_dir}
+            ${libzstd_INCLUDE_DIRS}
+    )
+    link_directories(
+            ${BZip2_LIBRARY_DIRS}
+            ${lzo2_LIBRARY_DIRS}
+            ${libzstd_LIBRARY_DIRS}
+    )
+endif()
+
+if(HERMES_ENABLE_ENCRYPT)
+    set(ENCRYPT_LIBS ${OPENSSL_LIBRARIES})
+    set(ENCRYPT_INCLUDE_DIRS ${OPENSSL_INCLUDE_DIR})
+    include_directories(${ENCRYPT_INCLUDE_DIRS})
 endif()
 
 #------------------------------------------------------------------------------

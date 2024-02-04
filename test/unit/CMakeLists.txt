@@ -12,3 +12,12 @@ add_subdirectory(allocators_mpi)
 add_subdirectory(backend)
 add_subdirectory(types)
 add_subdirectory(thread)
+
+if (HERMES_ENABLE_COMPRESS)
+    message("HERMES ENABLE COMPRESS")
+    add_subdirectory(compress)
+endif()
+
+if (HERMES_ENABLE_ENCRYPT)
+    add_subdirectory(encrypt)
+endif()

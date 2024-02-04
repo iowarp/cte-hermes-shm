@@ -15,6 +15,21 @@ class HermesShm(CMakePackage):
 
     variant('debug', default=False, description='Build shared libraries')
 
+    variant('compress', default=False, description='Build with compression support')
+    depends_on('lzo', when='+compress')
+    depends_on('bzip2', when='+compress')
+
+    depends_on('zstd', when='+compress')
+    depends_on('lz4', when='+compress')
+    depends_on('blosc', when='+compress')
+    depends_on('zlib', when='+compress')
+    depends_on('lzma', when='+compress')
+    depends_on('brotli', when='+compress')
+    depends_on('snappy', when='+compress')
+
+    variant('encrypt', default=False, description='Build with encryption support')
+    depends_on('cryptopp', when='+encrypt')
+
     def cmake_args(self):
         args = []
         if '+debug' in self.spec:

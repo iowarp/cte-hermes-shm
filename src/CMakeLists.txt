@@ -18,7 +18,9 @@ add_library(hermes_shm_data_structures
 target_link_libraries(hermes_shm_data_structures
         pthread -lrt -ldl OpenMP::OpenMP_CXX
         cereal::cereal
-        $<$<BOOL:${HERMES_RPC_THALLIUM}>:thallium>)
+        $<$<BOOL:${HERMES_RPC_THALLIUM}>:thallium>
+        ${COMPRESS_LIBS}
+)
 
 #-----------------------------------------------------------------------------
 # Add Target(s) to CMake Install

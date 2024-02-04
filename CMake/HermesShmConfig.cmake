@@ -22,11 +22,13 @@ if( HermesShm_INCLUDE_DIR )
     HermesShm_LIBRARY
     NAMES hermes_shm_data_structures
   )
+  # RT
   find_library(LIBRT rt)
   if(NOT LIBRT)
     message(FATAL_ERROR "librt is required for POSIX shared memory")
   endif()
 
+  # Cereal
   find_package(cereal CONFIG REQUIRED)
   if(cereal_FOUND)
     message(STATUS "found cereal at ${cereal_DIR}")
