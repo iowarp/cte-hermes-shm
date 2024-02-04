@@ -377,6 +377,16 @@ struct LPointer {
   HSHM_ALWAYS_INLINE T& operator*() const {
     return *ptr_;
   }
+
+  /** Check if null */
+  HSHM_ALWAYS_INLINE bool IsNull() const {
+    return ptr_ == nullptr;
+  }
+
+  /** Set to null */
+  HSHM_ALWAYS_INLINE void SetNull() {
+    ptr_ = nullptr;
+  }
 };
 
 /** Struct containing both a pointer and its size */
@@ -386,7 +396,7 @@ struct Array {
   size_t size_;
 };
 
-/** Struct containing both a shared pointer, private pointer, and the data size */
+/** Struct containing a shared pointer, private pointer, and the data size */
 template<typename T = char, typename PointerT = Pointer>
 struct LArray {
   PointerT shm_;

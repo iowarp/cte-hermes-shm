@@ -1,6 +1,14 @@
-//
-// Created by lukemartinlogan on 2/3/24.
-//
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ * Distributed under BSD 3-Clause license.                                   *
+ * Copyright by The HDF Group.                                               *
+ * Copyright by the Illinois Institute of Technology.                        *
+ * All rights reserved.                                                      *
+ *                                                                           *
+ * This file is part of Hermes. The full Hermes copyright notice, including  *
+ * terms governing use, modification, and redistribution, is contained in    *
+ * the COPYING file, which can be found at the top directory. If you do not  *
+ * have access to the file, you may request a copy from help@hdfgroup.org.   *
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #ifndef HERMES_SHM_INCLUDE_HERMES_SHM_COMPRESS_Brotli_H_
 #define HERMES_SHM_INCLUDE_HERMES_SHM_COMPRESS_Brotli_H_
@@ -38,7 +46,8 @@ class Brotli : public Compressor {
 
   bool Decompress(void *output, size_t &output_size,
                   void *input, size_t input_size) override {
-    BrotliDecoderState* state = BrotliDecoderCreateInstance(nullptr, nullptr, nullptr);
+    BrotliDecoderState* state =
+        BrotliDecoderCreateInstance(nullptr, nullptr, nullptr);
     if (state == nullptr) {
       return false;
     }

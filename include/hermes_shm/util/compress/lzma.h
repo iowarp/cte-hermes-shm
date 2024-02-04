@@ -1,6 +1,14 @@
-//
-// Created by lukemartinlogan on 2/3/24.
-//
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ * Distributed under BSD 3-Clause license.                                   *
+ * Copyright by The HDF Group.                                               *
+ * Copyright by the Illinois Institute of Technology.                        *
+ * All rights reserved.                                                      *
+ *                                                                           *
+ * This file is part of Hermes. The full Hermes copyright notice, including  *
+ * terms governing use, modification, and redistribution, is contained in    *
+ * the COPYING file, which can be found at the top directory. If you do not  *
+ * have access to the file, you may request a copy from help@hdfgroup.org.   *
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #ifndef HERMES_SHM_INCLUDE_HERMES_SHM_COMPRESS_Lzma_H_
 #define HERMES_SHM_INCLUDE_HERMES_SHM_COMPRESS_Lzma_H_
@@ -17,7 +25,7 @@ class Lzma : public Compressor {
     lzma_stream strm = LZMA_STREAM_INIT;
     lzma_ret ret;
 
-    // Initialize the LZMA encoder with preset LZMA_PRESET_DEFAULT (equivalent to -6 compression level)
+    // Initialize the LZMA encoder with preset LZMA_PRESET_DEFAULT
     ret = lzma_easy_encoder(&strm, LZMA_PRESET_DEFAULT, LZMA_CHECK_CRC64);
     if (ret != LZMA_OK) {
       HELOG(kError, "Error initializing LZMA compression.")

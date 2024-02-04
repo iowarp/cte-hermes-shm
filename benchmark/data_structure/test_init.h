@@ -180,4 +180,4 @@ using Timer = hshm::HighResMonotonicTimer;
 /** Avoid compiler warning */
 #define USE(var) ptr_ = (void*)&(var);
 
-#endif //HERMES_BENCHMARK_DATA_STRUCTURE_TEST_INIT_H_
+#endif  // HERMES_BENCHMARK_DATA_STRUCTURE_TEST_INIT_H_

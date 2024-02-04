@@ -43,4 +43,4 @@ using Timer = hshm::HighResMonotonicTimer;
 
 extern const std::string shm_url;
 
-#endif //HERMES_BENCHMARK_DATA_STRUCTURE_TEST_INIT_H_
+#endif  // HERMES_BENCHMARK_DATA_STRUCTURE_TEST_INIT_H_

@@ -1,6 +1,14 @@
-//
-// Created by lukemartinlogan on 2/4/24.
-//
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ * Distributed under BSD 3-Clause license.                                   *
+ * Copyright by The HDF Group.                                               *
+ * Copyright by the Illinois Institute of Technology.                        *
+ * All rights reserved.                                                      *
+ *                                                                           *
+ * This file is part of Hermes. The full Hermes copyright notice, including  *
+ * terms governing use, modification, and redistribution, is contained in    *
+ * the COPYING file, which can be found at the top directory. If you do not  *
+ * have access to the file, you may request a copy from help@hdfgroup.org.   *
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #ifndef HERMES_SHM_INCLUDE_HERMES_SHM_UTIL_ENCRYPT_AES_H_
 #define HERMES_SHM_INCLUDE_HERMES_SHM_UTIL_ENCRYPT_AES_H_
@@ -20,7 +28,7 @@ class AES {
   std::string salt_;
 
  public:
-  void CreateInitialVector(const std::string &salt="") {
+  void CreateInitialVector(const std::string &salt = "") {
     salt_ = salt;
     iv_ = std::string(EVP_CIPHER_iv_length(EVP_aes_256_cbc()), 0);
     RAND_bytes((unsigned char*)iv_.c_str(),
@@ -42,7 +50,8 @@ class AES {
     }
   }
 
-  bool Encrypt(char *output, size_t &output_size, char *input, size_t input_size) {
+  bool Encrypt(char *output, size_t &output_size,
+               char *input, size_t input_size) {
     EVP_CIPHER_CTX *ctx;
     int ret;
 
@@ -111,4 +120,4 @@ class AES {
   }
 };
 
-#endif //HERMES_SHM_INCLUDE_HERMES_SHM_UTIL_ENCRYPT_AES_H_
+#endif  // HERMES_SHM_INCLUDE_HERMES_SHM_UTIL_ENCRYPT_AES_H_

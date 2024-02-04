@@ -1,6 +1,14 @@
-//
-// Created by lukemartinlogan on 1/1/24.
-//
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ * Distributed under BSD 3-Clause license.                                   *
+ * Copyright by The HDF Group.                                               *
+ * Copyright by the Illinois Institute of Technology.                        *
+ * All rights reserved.                                                      *
+ *                                                                           *
+ * This file is part of Hermes. The full Hermes copyright notice, including  *
+ * terms governing use, modification, and redistribution, is contained in    *
+ * the COPYING file, which can be found at the top directory. If you do not  *
+ * have access to the file, you may request a copy from help@hdfgroup.org.   *
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #ifndef HERMES_SHM_INCLUDE_HERMES_SHM_UTIL_RANDOM_H_
 #define HERMES_SHM_INCLUDE_HERMES_SHM_UTIL_RANDOM_H_
@@ -21,10 +29,9 @@ class Distribution {
     generator = std::default_random_engine(
         std::chrono::steady_clock::now().time_since_epoch().count());
   }
-  void Seed(size_t seed) { 
+  void Seed(size_t seed) {
     generator = std::default_random_engine(seed);
   }
-
   virtual int GetInt() = 0;
   virtual double GetDouble() = 0;
   virtual size_t GetSize() = 0;
@@ -54,7 +61,6 @@ class CountDistribution : public Distribution {
 class NormalDistribution : public Distribution {
  private:
   std::normal_distribution<double> distribution_;
-  //TODO: add binomial dist
  public:
   NormalDistribution() = default;
   void Shape(double std) {
@@ -77,7 +83,6 @@ class NormalDistribution : public Distribution {
 class GammaDistribution : public Distribution {
  private:
   std::gamma_distribution<double> distribution_;
-  //TODO: Is there a discrete gamma dist?
  public:
   GammaDistribution() = default;
   void Shape(double scale) {
@@ -100,7 +105,6 @@ class GammaDistribution : public Distribution {
 class ExponentialDistribution : public Distribution {
  private:
   std::exponential_distribution<double> distribution_;
-  //TODO: add poisson dist
  public:
   ExponentialDistribution() = default;
   void Shape(double scale) {
@@ -120,7 +124,6 @@ class ExponentialDistribution : public Distribution {
 class UniformDistribution : public Distribution {
  private:
   std::uniform_real_distribution<double> distribution_;
-  //TODO: add int uniform dist
  public:
   UniformDistribution() = default;
   void Shape(size_t high) {

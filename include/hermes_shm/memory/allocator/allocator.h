@@ -291,7 +291,8 @@ class Allocator {
    * Allocate a pointer of \a size size
    * */
   template<typename T, typename PointerT = Pointer>
-  HSHM_ALWAYS_INLINE Array<PointerT> ClearAllocateArray(size_t size, size_t alignment = 0) {
+  HSHM_ALWAYS_INLINE Array<PointerT> ClearAllocateArray(
+      size_t size, size_t alignment = 0) {
     Array<PointerT> p;
     ClearAllocatePtr<T, PointerT>(size, p.shm_, alignment);
     p.size_ = size;
