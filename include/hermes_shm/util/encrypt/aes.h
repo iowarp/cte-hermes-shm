@@ -17,16 +17,22 @@ class AES {
  public:
   std::string key_;
   std::string iv_;
+  std::string salt_;
 
  public:
-  void GenerateKey(const std::string &password, uint32_t bytes,
-                   const std::string &salt="") {
+  void CreateInitialVector(const std::string &salt="") {
+    salt_ = salt;
+    iv_ = std::string(EVP_CIPHER_iv_length(EVP_aes_256_cbc()), 0);
+    RAND_bytes((unsigned char*)iv_.c_str(),
+               EVP_CIPHER_iv_length(EVP_aes_256_cbc()));
+  }
+
+  void GenerateKey(const std::string &password) {
     const EVP_CIPHER *cipher = EVP_aes_256_cbc();
     const EVP_MD *digest = EVP_sha256();
-    key_ = std::string(bytes, 0);
-    iv_ = std::string(EVP_CIPHER_iv_length(cipher), 0);
+    key_ = std::string(32, 0);
     int ret = EVP_BytesToKey(cipher, digest,
-                             (unsigned char*)salt.c_str(),
+                             (unsigned char*)salt_.c_str(),
                              (unsigned char*)password.c_str(),
                              password.size(), 1,
                              (unsigned char*)key_.c_str(),

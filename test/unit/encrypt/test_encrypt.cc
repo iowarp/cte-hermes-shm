@@ -17,9 +17,10 @@
 TEST_CASE("TestEncrypt") {
   PAGE_DIVIDE("AES") {
     AES aes;
-    aes.GenerateKey("passwd", 32);
+    aes.GenerateKey("passwd");
     size_t encoded_size = 8192 + 256, decoded_size = 8192;
     std::vector<char> data(8192, 0), encoded(8192 + 256, 1), decoded(8192 + 256, 2);
+    aes.CreateInitialVector();
     aes.Encrypt(encoded.data(), encoded_size, data.data(), data.size());
     aes.Decrypt(decoded.data(), decoded_size, encoded.data(), encoded_size);
     decoded.resize(decoded_size);
