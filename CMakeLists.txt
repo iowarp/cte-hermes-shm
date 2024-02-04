@@ -156,12 +156,24 @@ if(HERMES_ENABLE_COMPRESS)
     pkg_check_modules(zlib REQUIRED zlib)
     message(STATUS "found zlib.h at ${zlib_INCLUDE_DIRS}")
 
+    pkg_check_modules(liblzma REQUIRED liblzma)
+    message(STATUS "found liblzma.h at ${liblzma_INCLUDE_DIRS}")
+
+    pkg_check_modules(libbrotlicommon REQUIRED libbrotlicommon libbrotlidec libbrotlienc)
+    message(STATUS "found libbrotli.h at ${libbrotlicommon_INCLUDE_DIRS}")
+
+    pkg_check_modules(snappy REQUIRED snappy)
+    message(STATUS "found libbrotli.h at ${snappy_INCLUDE_DIRS}")
+
     set(COMPRESS_LIBS
             bz2
             ${lzo2_LIBRARIES}
             ${libzstd_LIBRARIES}
             ${liblz4_LIBRARIES}
             ${zlib_LIBRARIES}
+            ${liblzma_LIBRARIES}
+            ${libbrotlicommon_LIBRARIES}
+            ${snappy_LIBRARIES}
     )
     include_directories(
             ${BZip2_INCLUDE_DIRS}
@@ -169,6 +181,9 @@ if(HERMES_ENABLE_COMPRESS)
             ${libzstd_INCLUDE_DIRS}
             ${liblz4_INCLUDE_DIRS}
             ${zlib_INCLUDE_DIRS}
+            ${liblzma_INCLUDE_DIRS}
+            ${libbrotlicommon_INCLUDE_DIRS}
+            ${snappy_INCLUDE_DIRS}
     )
     link_directories(
             ${BZip2_LIBRARY_DIRS}
@@ -176,6 +191,9 @@ if(HERMES_ENABLE_COMPRESS)
             ${libzstd_LIBRARY_DIRS}
             ${liblz4_LIBRARY_DIRS}
             ${zlib_LIBRARY_DIRS}
+            ${liblzma_LIBRARY_DIRS}
+            ${libbrotlicommon_LIBRARY_DIRS}
+            ${snappy_LIBRARY_DIRS}
     )
 endif()
 

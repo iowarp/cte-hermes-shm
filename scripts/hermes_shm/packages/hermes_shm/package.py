@@ -20,10 +20,10 @@ class HermesShm(CMakePackage):
     depends_on('bzip2', when='+compress')
     depends_on('zstd', when='+compress')
     depends_on('lz4', when='+compress')
-
     depends_on('zlib', when='+compress')
-    depends_on('lzma', when='+compress')
+    depends_on('xz', when='+compress')
     depends_on('brotli', when='+compress')
+
     depends_on('snappy', when='+compress')
     depends_on('c-blosc2', when='+compress')
 
