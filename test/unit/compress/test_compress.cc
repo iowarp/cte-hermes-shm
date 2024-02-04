@@ -82,4 +82,12 @@ TEST_CASE("TestCompress") {
     snappy.Decompress(decompressed.data(), raw_size, compressed.data(), cmpr_size);
     REQUIRE(raw == std::string(decompressed.data(), raw_size));
   }
+
+  PAGE_DIVIDE("Blosc2") {
+    hshm::Blosc blosc;
+    size_t cmpr_size = 1024, raw_size = 1024;
+    blosc.Compress(compressed.data(), cmpr_size, raw.data(), raw.size());
+    blosc.Decompress(decompressed.data(), raw_size, compressed.data(), cmpr_size);
+    REQUIRE(raw == std::string(decompressed.data(), raw_size));
+  }
 }

@@ -13,5 +13,6 @@
 #include "lzma.h"
 #include "brotli.h"
 #include "snappy.h"
+#include "blosc.h"
 
 #endif //HERMES_SHM_INCLUDE_HERMES_SHM_UTIL_COMPRESS_COMPRESS_FACTORY_H_

@@ -165,6 +165,9 @@ if(HERMES_ENABLE_COMPRESS)
     pkg_check_modules(snappy REQUIRED snappy)
     message(STATUS "found libbrotli.h at ${snappy_INCLUDE_DIRS}")
 
+    pkg_check_modules(blosc2 REQUIRED blosc2)
+    message(STATUS "found blosc2.h at ${blosc2_INCLUDE_DIRS}")
+
     set(COMPRESS_LIBS
             bz2
             ${lzo2_LIBRARIES}
@@ -174,6 +177,7 @@ if(HERMES_ENABLE_COMPRESS)
             ${liblzma_LIBRARIES}
             ${libbrotlicommon_LIBRARIES}
             ${snappy_LIBRARIES}
+            ${blosc2_LIBRARIES}
     )
     include_directories(
             ${BZip2_INCLUDE_DIRS}
@@ -184,6 +188,7 @@ if(HERMES_ENABLE_COMPRESS)
             ${liblzma_INCLUDE_DIRS}
             ${libbrotlicommon_INCLUDE_DIRS}
             ${snappy_INCLUDE_DIRS}
+            ${blosc2_INCLUDE_DIRS}
     )
     link_directories(
             ${BZip2_LIBRARY_DIRS}
@@ -194,6 +199,7 @@ if(HERMES_ENABLE_COMPRESS)
             ${liblzma_LIBRARY_DIRS}
             ${libbrotlicommon_LIBRARY_DIRS}
             ${snappy_LIBRARY_DIRS}
+            ${blosc2_LIBRARY_DIRS}
     )
 endif()
 

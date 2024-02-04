@@ -2,24 +2,66 @@
 // Created by lukemartinlogan on 2/3/24.
 //
 
-#ifndef HERMES_SHM_INCLUDE_HERMES_SHM_COMPRESS_Lzo_H_
-#define HERMES_SHM_INCLUDE_HERMES_SHM_COMPRESS_Lzo_H_
+#ifndef HERMES_SHM_INCLUDE_HERMES_SHM_COMPRESS_Blosc_H_
+#define HERMES_SHM_INCLUDE_HERMES_SHM_COMPRESS_Blosc_H_
 
 #include "compress.h"
+#include <blosc2.h>
 
 namespace hshm {
+
+class BloscInit {
+ public:
+  BloscInit() {
+    blosc_init();
+  }
+  ~BloscInit() {
+    blosc_destroy();
+  }
+};
+#define BLOSC_INIT \
+hshm::EasySingleton<BloscInit>::GetInstance()
 
 class Blosc : public Compressor {
  public:
   bool Compress(void *output, size_t &output_size,
                 void *input, size_t input_size) override {
+    // Initialize Blosc2
+    BLOSC_INIT;
+
+    // Create a context for compression
+    blosc2_context* cctx = blosc2_create_cctx(BLOSC2_CPARAMS_DEFAULTS);
+    if (!cctx) {
+      return false;
+    }
+
+    // Compress the data
+    output_size = blosc2_compress_ctx(
+        cctx, input, input_size, output, output_size);
+
+    // Release the compression context
+    blosc2_free_ctx(cctx);
+    return true;
   }
 
   bool Decompress(void *output, size_t &output_size,
                   void *input, size_t input_size) override {
+    // Create a context for decompression
+    blosc2_context* dctx = blosc2_create_dctx(BLOSC2_DPARAMS_DEFAULTS);
+    if (!dctx) {
+      return false;
+    }
+
+    // Decompress the data
+    output_size = blosc2_decompress_ctx(
+        dctx, input, input_size, output, output_size);
+
+    // Release the decompression context
+    blosc2_free_ctx(dctx);
+    return true;
   }
 };
 
 }  // namespace hshm
 
-#endif  // HERMES_SHM_INCLUDE_HERMES_SHM_COMPRESS_Lzo_H_
+#endif  // HERMES_SHM_INCLUDE_HERMES_SHM_COMPRESS_Blosc_H_
