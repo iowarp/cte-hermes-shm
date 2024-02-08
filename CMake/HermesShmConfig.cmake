@@ -10,6 +10,7 @@
 find_path(
   HermesShm_INCLUDE_DIR
         hermes_shm/hermes_shm.h
+  HINTS ENV PATH ENV CPATH
 )
 
 if( HermesShm_INCLUDE_DIR )
@@ -21,6 +22,7 @@ if( HermesShm_INCLUDE_DIR )
   find_library(
     HermesShm_LIBRARY
     NAMES hermes_shm_data_structures
+    HINTS ENV LD_LIBRARY_PATH ENV PATH
   )
   # RT
   find_library(LIBRT rt)
