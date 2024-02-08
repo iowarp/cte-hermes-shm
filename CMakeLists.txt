@@ -20,7 +20,7 @@ option(BUILD_HSHM_BENCHMARKS "Build benchmarks" ON)
 option(BUILD_MPI_TESTS "Build tests which depend on MPI" ON)
 option(BUILD_OpenMP_TESTS "Build tests which depend on OpenMP" ON)
 option(BUILD_Boost_TESTS "Build tests which depend on libboost" ON)
-option(HERMES_RPC_THALLIUM "Build tests which depend on thallium" OFF)
+option(HERMES_RPC_THALLIUM "Build tests which depend on thallium" ON)
 option(HERMES_ENABLE_CEREAL "Enable serialization using cereal" ON)
 option(HERMES_ENABLE_COVERAGE "Check how well tests cover code" OFF)
 option(HERMES_ENABLE_DOXYGEN "Check how well the code is documented" ON)
@@ -114,10 +114,10 @@ if(BUILD_MPI_TESTS)
 endif()
 
 # OpenMP
-#if(BUILD_OpenMP_TESTS)
-find_package(OpenMP REQUIRED COMPONENTS C CXX)
-message(STATUS "found omp.h at ${OpenMP_CXX_INCLUDE_DIRS}")
-#endif()
+if(BUILD_OpenMP_TESTS)
+    find_package(OpenMP REQUIRED COMPONENTS C CXX)
+    message(STATUS "found omp.h at ${OpenMP_CXX_INCLUDE_DIRS}")
+endif()
 
 # thallium
 if(HERMES_RPC_THALLIUM)
@@ -128,12 +128,12 @@ if(HERMES_RPC_THALLIUM)
 endif()
 
 # Cereal
-#if(HERMES_ENABLE_CEREAL)
+if(HERMES_ENABLE_CEREAL)
     find_package(cereal CONFIG REQUIRED)
     if(cereal_FOUND)
         message(STATUS "found cereal at ${cereal_DIR}")
     endif()
-#endif()
+endif()
 
 # Boost
 if(BUILD_Boost_TESTS)

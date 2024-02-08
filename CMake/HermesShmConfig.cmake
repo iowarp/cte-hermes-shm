@@ -13,8 +13,13 @@
 set(HERMES_SHM_VERSION_MAJOR @HERMES_SHM_VERSION_MAJOR@)
 set(HERMES_SHM_VERSION_MINOR @HERMES_SHM_VERSION_MINOR@)
 
+set(BUILD_MPI_TESTS @BUILD_MPI_TESTS@)
+set(BUILD_OpenMP_TESTS @BUILD_OpenMP_TESTS@)
+set(BUILD_Boost_TESTS @BUILD_Boost_TESTS@)
 set(HERMES_ENABLE_COMPRESS @HERMES_ENABLE_COMPRESS@)
 set(HERMES_ENABLE_ENCRYPT @HERMES_ENABLE_ENCRYPT@)
+set(HERMES_RPC_THALLIUM @HERMES_RPC_THALLIUM@)
+set(HERMES_ENABLE_CEREAL @HERMES_ENABLE_CEREAL@)
 
 #-----------------------------------------------------------------------------
 # Find hermes_shm header
@@ -55,9 +60,45 @@ if(NOT LIBRT)
 endif()
 
 # Cereal
-find_package(cereal CONFIG REQUIRED)
-if(cereal_FOUND)
+if (HERMES_ENABLE_CEREAL)
+  find_package(cereal CONFIG REQUIRED)
   message(STATUS "found cereal at ${cereal_DIR}")
+endif()
+
+# Catch2
+find_package(Catch2 3.0.1 REQUIRED)
+message(STATUS "found catch2.h at ${Catch2_CXX_INCLUDE_DIRS}")
+
+# YAML-CPP
+find_package(yaml-cpp REQUIRED)
+message(STATUS "found yaml-cpp at ${yaml-cpp_DIR}")
+
+# MPI
+if(BUILD_MPI_TESTS)
+  find_package(MPI REQUIRED COMPONENTS C CXX)
+  set(MPI_LIBS MPI::MPI_CXX)
+  message(STATUS "found mpi.h at ${MPI_CXX_INCLUDE_DIRS}")
+endif()
+
+# OpenMP
+if(BUILD_OpenMP_TESTS)
+  find_package(OpenMP REQUIRED COMPONENTS C CXX)
+  set(OpenMP_LIBS OpenMP::OpenMP_CXX)
+  message(STATUS "found omp.h at ${OpenMP_CXX_INCLUDE_DIRS}")
+endif()
+
+# thallium
+if(HERMES_RPC_THALLIUM)
+  find_package(thallium CONFIG REQUIRED)
+  if(thallium_FOUND)
+    message(STATUS "found thallium at ${thallium_DIR}")
+  endif()
+endif()
+
+# Boost
+if(BUILD_Boost_TESTS)
+  find_package(Boost REQUIRED COMPONENTS regex system filesystem fiber REQUIRED)
+  message(STATUS "found boost at ${Boost_INCLUDE_DIRS}")
 endif()
 
 if(HERMES_ENABLE_COMPRESS)
@@ -148,7 +189,9 @@ set(HermesShm_LIBRARIES
         -lrt -ldl cereal::cereal -lstdc++fs
         ${ENCRYPT_LIBRARIES}
         ${COMPRESS_LIBRARIES}
-        ${HermesShm_LIBRARY})
+        ${HermesShm_LIBRARY}
+        ${MPI_LIBS}
+        ${OpenMP_LIBS})
 set(HermesShm_LIBRARY_DIRS
         ${ENCRYPT_LIBRARY_DIRS}
         ${COMPRESS_LIBRARY_DIRS})
