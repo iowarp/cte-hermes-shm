@@ -142,6 +142,7 @@ if(BUILD_Boost_TESTS)
     message(STATUS "found boost.h at ${Boost_INCLUDE_DIRS}")
 endif()
 
+# Compression libraries
 if(HERMES_ENABLE_COMPRESS)
     find_package(BZip2 REQUIRED)
     message(STATUS "found bz2.h at ${BZip2_INCLUDE_DIRS}")
@@ -206,6 +207,7 @@ if(HERMES_ENABLE_COMPRESS)
     )
 endif()
 
+# Encryption libraries
 if(HERMES_ENABLE_ENCRYPT)
     pkg_check_modules(libcrypto REQUIRED libcrypto)
     message(STATUS "found libcrypto.h at ${libcrypto_INCLUDE_DIRS}")
@@ -213,6 +215,24 @@ if(HERMES_ENABLE_ENCRYPT)
     set(ENCRYPT_LIBS ${libcrypto_LIBRARIES})
     include_directories(${libcrypto_INCLUDE_DIRS})
     link_directories(${libcrypto_LIBRARY_DIRS})
+endif()
+
+#-----------------------------------------------------------------------------
+# Documentation
+#-----------------------------------------------------------------------------
+if(HERMES_ENABLE_DOXYGEN)
+    include(UseDoxygenDoc)
+
+    add_doxygen_doc(
+            BUILD_DIR
+            ${CMAKE_CURRENT_BINARY_DIR}/_build
+            DOXY_FILE
+            ${CMAKE_CURRENT_SOURCE_DIR}/doc/Doxyfile.in
+            TARGET_NAME
+            dox
+            COMMENT
+            "HTML documentation"
+    )
 endif()
 
 #------------------------------------------------------------------------------
@@ -231,25 +251,6 @@ if (NOT IS_HERMES_MAIN)
                     LINK_FLAGS ${COVERAGE_FLAGS}
                     )
         endmacro()
-    endif()
-endif()
-
-#------------------------------------------------------------------------------
-# Documentation
-#------------------------------------------------------------------------------
-if (NOT IS_HERMES_MAIN)
-    if(HERMES_ENABLE_DOXYGEN)
-        include(UseDoxygenDoc)
-        add_doxygen_doc(
-                BUILD_DIR
-                ${CMAKE_BINARY_DIR}/bin/_build
-                DOXY_FILE
-                ${CMAKE_CURRENT_SOURCE_DIR}/doc/Doxyfile.in
-                TARGET_NAME
-                dox
-                COMMENT
-                "HTML documentation"
-        )
     endif()
 endif()
 
@@ -288,9 +289,15 @@ configure_file(
         ${PROJECT_BINARY_DIR}/CMakeFiles/HermesShmConfig.cmake @ONLY
 )
 
+configure_file(
+        ${CMAKE_CURRENT_SOURCE_DIR}/CMake/UseDoxygenDoc.cmake
+        ${PROJECT_BINARY_DIR}/CMakeFiles/UseDoxygenDoc.cmake @ONLY
+)
+
 install(
     FILES
         ${PROJECT_BINARY_DIR}/CMakeFiles/HermesShmConfig.cmake
+        ${PROJECT_BINARY_DIR}/CMakeFiles/UseDoxygenDoc.cmake
     DESTINATION
         ${CMAKE_INSTALL_PREFIX}/cmake
 )
