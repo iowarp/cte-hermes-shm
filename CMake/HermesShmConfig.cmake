@@ -2,39 +2,52 @@
 #
 
 # This module defines the following uncached variables:
-#  HermesShm_FOUND, if false, do not try to use labstor.
-#  HermesShm_INCLUDE_DIRS, where to find labstor.h.
-#  HermesShm_LIBRARIES, the libraries to link against to use the labstor library
-#  HermesShm_LIBRARY_DIRS, the directory where the labstor library is found.
+#  HermesShm_FOUND, if false, do not try to use hermes_shm.
+#  HermesShm_INCLUDE_DIRS, where to find hermes_shm.h.
+#  HermesShm_LIBRARIES, the libraries to link against to use the hermes_shm library
+#  HermesShm_LIBRARY_DIRS, the directory where the hermes_shm library is found.
 
-find_path(
-  HermesShm_INCLUDE_DIR
-        hermes_shm/hermes_shm.h
-  HINTS ENV PATH ENV CPATH
-)
-
+#-----------------------------------------------------------------------------
+# Define constants
+#-----------------------------------------------------------------------------
 set(HERMES_SHM_VERSION_MAJOR @HERMES_SHM_VERSION_MAJOR@)
 set(HERMES_SHM_VERSION_MINOR @HERMES_SHM_VERSION_MINOR@)
 
 set(HERMES_ENABLE_COMPRESS @HERMES_ENABLE_COMPRESS@)
 set(HERMES_ENABLE_ENCRYPT @HERMES_ENABLE_ENCRYPT@)
 
-if( HermesShm_INCLUDE_DIR )
+#-----------------------------------------------------------------------------
+# Find hermes_shm header
+#-----------------------------------------------------------------------------
+find_path(
+  HermesShm_INCLUDE_DIR
+        hermes_shm/hermes_shm.h
+  HINTS ENV PATH ENV CPATH
+)
+if( NOT HermesShm_INCLUDE_DIR )
   message(STATUS "FindHermesShm: Could not find hermes_shm.h")
   set(HermesShm_FOUND OFF)
   return()
 endif()
-
 get_filename_component(HermesShm_DIR ${HermesShm_INCLUDE_DIR} PATH)
+
+#-----------------------------------------------------------------------------
+# Find hermes_shm library
+#-----------------------------------------------------------------------------
+find_library(
+        HermesShm_LIBRARY
+        NAMES hermes_shm_data_structures
+        HINTS ENV LD_LIBRARY_PATH ENV PATH
+)
+if( NOT HermesShm_LIBRARY )
+  message(STATUS "FindHermesShm: Could not find hermes_shm_data_structures.so")
+  set(HermesShm_FOUND OFF)
+  return()
+endif()
 
 #-----------------------------------------------------------------------------
 # Find all packages needed by hermes_shm
 #-----------------------------------------------------------------------------
-find_library(
-  HermesShm_LIBRARY
-  NAMES hermes_shm_data_structures
-  HINTS ENV LD_LIBRARY_PATH ENV PATH
-)
 # RT
 find_library(LIBRT rt)
 if(NOT LIBRT)
@@ -123,31 +136,19 @@ endif()
 #-----------------------------------------------------------------------------
 # Mark hermes as found and set all needed packages
 #-----------------------------------------------------------------------------
-if( HermesShm_LIBRARY )
-  set(HermesShm_LIBRARY_DIR "")
-  get_filename_component(HermesShm_LIBRARY_DIRS ${HermesShm_LIBRARY} PATH)
-  # Set uncached variables as per standard.
-  set(HermesShm_FOUND ON)
-  set(HermesShm_INCLUDE_DIRS
-          ${ENCRYPT_INCLUDE_DIRS}
-          ${COMPRESS_INCLUDE_DIRS}
-          ${HermesShm_INCLUDE_DIR})
-  set(HermesShm_LIBRARIES
-          -lrt -ldl cereal::cereal -lstdc++fs
-          ${ENCRYPT_LIBRARIES}
-          ${COMPRESS_LIBRARIES}
-          ${HermesShm_LIBRARY})
-  set(HermesShm_LIBRARY_DIRS
-          ${ENCRYPT_LIBRARY_DIRS}
-          ${COMPRESS_LIBRARY_DIRS})
-endif(HermesShm_LIBRARY)
-
-if(HermesShm_FOUND)
-  if(NOT HermesShm_FIND_QUIETLY)
-    message(STATUS "FindHermesShm: Found both hermes_shm.h and libhermes_shm.a")
-  endif(NOT HermesShm_FIND_QUIETLY)
-else(HermesShm_FOUND)
-  if(HermesShm_FIND_REQUIRED)
-    message(STATUS "FindHermesShm: Could not find hermes_shm.h and/or libhermes_shm.a")
-  endif(HermesShm_FIND_REQUIRED)
-endif(HermesShm_FOUND)
+set(HermesShm_LIBRARY_DIR "")
+get_filename_component(HermesShm_LIBRARY_DIRS ${HermesShm_LIBRARY} PATH)
+# Set uncached variables as per standard.
+set(HermesShm_FOUND ON)
+set(HermesShm_INCLUDE_DIRS
+        ${ENCRYPT_INCLUDE_DIRS}
+        ${COMPRESS_INCLUDE_DIRS}
+        ${HermesShm_INCLUDE_DIR})
+set(HermesShm_LIBRARIES
+        -lrt -ldl cereal::cereal -lstdc++fs
+        ${ENCRYPT_LIBRARIES}
+        ${COMPRESS_LIBRARIES}
+        ${HermesShm_LIBRARY})
+set(HermesShm_LIBRARY_DIRS
+        ${ENCRYPT_LIBRARY_DIRS}
+        ${COMPRESS_LIBRARY_DIRS})
