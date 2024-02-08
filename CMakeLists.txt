@@ -6,6 +6,8 @@ set(CMAKE_CXX_STANDARD 17)
 #------------------------------------------------------------------------------
 # Global variables
 #------------------------------------------------------------------------------
+set(HERMES_SHM_VERSION_MAJOR 1)
+set(HERMES_SHM_VERSION_MINOR 1)
 set(HERMES_SHM_ROOT ${CMAKE_CURRENT_SOURCE_DIR})
 include_directories(${HERMES_SHM_ROOT}/include)
 
