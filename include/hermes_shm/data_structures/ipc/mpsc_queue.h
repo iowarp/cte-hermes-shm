@@ -268,6 +268,16 @@ class mpsc_queue : public ShmContainer {
       return qtok_t::GetNull();
     }
   }
+
+  /** Get size at this moment */
+  size_t GetSize() {
+    size_t tail = tail_.load();
+    size_t head = head_.load();
+    if (tail < head) {
+      return 0;
+    }
+    return tail - head;
+  }
 };
 
 }  // namespace hshm::ipc
