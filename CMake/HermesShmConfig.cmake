@@ -75,6 +75,10 @@ message(STATUS "found catch2.h at ${Catch2_CXX_INCLUDE_DIRS}")
 find_package(yaml-cpp REQUIRED)
 message(STATUS "found yaml-cpp at ${yaml-cpp_DIR}")
 
+# libelf
+find_package(Elf REQUIRED)
+message(STATUS "found libelf at ${Elf_DIR}")
+
 # MPI
 if(BUILD_MPI_TESTS)
   find_package(MPI REQUIRED COMPONENTS C CXX)
@@ -188,7 +192,7 @@ set(HermesShm_INCLUDE_DIRS
         ${COMPRESS_INCLUDE_DIRS}
         ${HermesShm_INCLUDE_DIR})
 set(HermesShm_LIBRARIES
-        -lrt -ldl cereal::cereal -lstdc++fs
+        -lrt -ldl cereal::cereal -lstdc++fs Elf::Elf
         ${ENCRYPT_LIBRARIES}
         ${COMPRESS_LIBRARIES}
         ${HermesShm_LIBRARY}
