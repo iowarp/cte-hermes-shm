@@ -21,10 +21,10 @@ namespace hshm {
 class BloscInit {
  public:
   BloscInit() {
-    blosc_init();
+    blosc2_init();
   }
   ~BloscInit() {
-    blosc_destroy();
+    blosc2_destroy();
   }
 };
 #define BLOSC_INIT \
