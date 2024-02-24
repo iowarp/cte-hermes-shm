@@ -144,8 +144,8 @@ endif()
 
 # Compression libraries
 if(HERMES_ENABLE_COMPRESS)
-    find_package(BZip2 REQUIRED)
-    message(STATUS "found bz2.h at ${BZip2_INCLUDE_DIRS}")
+    pkg_check_modules(bzip2 REQUIRED bzip2)
+    message(STATUS "found bz2.h at ${bzip2_INCLUDE_DIRS}")
 
     pkg_check_modules(lzo2 REQUIRED lzo2)
     message(STATUS "found lzo2.h at ${lzo2_INCLUDE_DIRS}")
@@ -184,7 +184,7 @@ if(HERMES_ENABLE_COMPRESS)
             ${blosc2_LIBRARIES}
     )
     include_directories(
-            ${BZip2_INCLUDE_DIRS}
+            ${bzip2_INCLUDE_DIRS}
             ${lzo2_INCLUDE_DIRS} ${lzo2_dir}
             ${libzstd_INCLUDE_DIRS}
             ${liblz4_INCLUDE_DIRS}
@@ -195,7 +195,7 @@ if(HERMES_ENABLE_COMPRESS)
             ${blosc2_INCLUDE_DIRS}
     )
     link_directories(
-            ${BZip2_LIBRARY_DIRS}
+            ${bzip2_LIBRARY_DIRS}
             ${lzo2_LIBRARY_DIRS}
             ${libzstd_LIBRARY_DIRS}
             ${liblz4_LIBRARY_DIRS}
