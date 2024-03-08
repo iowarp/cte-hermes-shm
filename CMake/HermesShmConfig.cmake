@@ -55,6 +55,12 @@ endif()
 #-----------------------------------------------------------------------------
 # Find all packages needed by hermes_shm
 #-----------------------------------------------------------------------------
+# Pkg-Config
+find_package(PkgConfig REQUIRED)
+if(PkgConfig)
+  message(STATUS "found pkg config")
+endif()
+
 # RT
 find_library(LIBRT rt)
 if(NOT LIBRT)
