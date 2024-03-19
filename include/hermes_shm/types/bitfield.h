@@ -40,11 +40,11 @@ struct bitfield {
     bits_ &= ~mask;
   }
 
-  HSHM_ALWAYS_INLINE bool Any(T mask) const {
+  HSHM_ALWAYS_INLINE T Any(T mask) const {
     return bits_ & mask;
   }
 
-  HSHM_ALWAYS_INLINE bool All(T mask) const {
+  HSHM_ALWAYS_INLINE T All(T mask) const {
     return Any(mask) == mask;
   }
 
