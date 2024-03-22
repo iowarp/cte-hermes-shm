@@ -45,7 +45,7 @@ class spsc_queue {
 
   /** Emplace constructor */
   explicit spsc_queue(size_t max_size) : head_(0), tail_(0) {
-    queue_.reserve(max_size);
+    queue_.resize(max_size);
   }
 
   /** Copy constructor */
@@ -84,7 +84,12 @@ class spsc_queue {
 
   /** Resize SPSC queue (not thread safe) */
   void Resize(size_t max_size) {
-    queue_.reserve(max_size);
+    spsc_queue new_queue(max_size);
+    T val;
+    while (!pop(val).IsNull()) {
+      new_queue.emplace(val);
+    }
+    (*this) = std::move(new_queue);
   }
 
   /** Construct an element at \a pos position in the list */
@@ -93,12 +98,12 @@ class spsc_queue {
     // Don't emplace if there is no space
     _qtok_t entry_tok = tail_;
     size_t size = tail_ - head_;
-    if (size >= queue_.capacity()) {
+    if (size >= queue_.size()) {
       return qtok_t::GetNull();
     }
 
     // Do the emplace
-    _qtok_t idx = entry_tok % queue_.capacity();
+    _qtok_t idx = entry_tok % queue_.size();
     hipc::Allocator::ConstructObj(queue_[idx], std::forward<Args>(args)...);
     tail_ += 1;
     return qtok_t(entry_tok);
@@ -114,7 +119,7 @@ class spsc_queue {
     }
 
     // Pop the element
-    _qtok_t idx = head % queue_.capacity();
+    _qtok_t idx = head % queue_.size();
     T &entry = queue_[idx];
     (val) = std::move(entry);
     head_ += 1;
