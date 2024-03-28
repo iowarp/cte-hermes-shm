@@ -106,8 +106,8 @@ endif()
 #------------------------------------------------------------------------------
 
 # Catch2
-# find_package(Catch2 3.0.1 REQUIRED)
-find_package(Catch2 REQUIRED)
+find_package(Catch2 3.0.1 REQUIRED)
+# find_package(Catch2 REQUIRED)
 message(STATUS "found catch2.h at ${Catch2_CXX_INCLUDE_DIRS}")
 
 # MPICH
