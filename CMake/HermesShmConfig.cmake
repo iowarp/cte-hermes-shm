@@ -22,6 +22,7 @@ set(HERMES_ENABLE_ENCRYPT @HERMES_ENABLE_ENCRYPT@)
 set(HERMES_RPC_THALLIUM @HERMES_RPC_THALLIUM@)
 set(HERMES_ENABLE_CEREAL @HERMES_ENABLE_CEREAL@)
 set(HERMES_ENABLE_DOXYGEN @HERMES_ENABLE_DOXYGEN@)
+set(HERMES_USE_ELF @HERMES_USE_ELF@)
 
 #-----------------------------------------------------------------------------
 # Find hermes_shm header
@@ -68,10 +69,12 @@ if(NOT LIBRT)
 endif()
 
 # Libelf
-pkg_check_modules(libelf REQUIRED libelf)
-message(STATUS "found libelf at ${libelf_INCLUDE_DIRS}")
-include_directories(${libelf_INCLUDE_DIRS})
-link_directories(${libelf_LIBRARY_DIRS})
+if (HERMES_USE_ELF)
+  pkg_check_modules(libelf REQUIRED libelf)
+  message(STATUS "found libelf at ${libelf_INCLUDE_DIRS}")
+  include_directories(${libelf_INCLUDE_DIRS})
+  link_directories(${libelf_LIBRARY_DIRS})
+endif()
 
 # Cereal
 if (HERMES_ENABLE_CEREAL)
