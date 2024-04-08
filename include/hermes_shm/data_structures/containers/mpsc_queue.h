@@ -246,7 +246,7 @@ class mpsc_queue {
   }
 };
 
-}  // namespace hshm::ipc
+}  // namespace hshm
 
 #undef CLASS_NAME
 #undef TYPED_CLASS
