@@ -10,15 +10,13 @@
 * have access to the file, you may request a copy from help@hdfgroup.org.   *
 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_SHM_INCLUDE_HERMES_SHM_DATA_STRUCTURES_IPC_mpsc_queue_H_
-#define HERMES_SHM_INCLUDE_HERMES_SHM_DATA_STRUCTURES_IPC_mpsc_queue_H_
+#ifndef HERMES_SHM_SHM_DATA_STRUCTURES_CONTAINERS_MPSC_H_
+#define HERMES_SHM_SHM_DATA_STRUCTURES_CONTAINERS_MPSC_H_
 
-#include "hermes_shm/data_structures/ipc/internal/shm_internal.h"
-#include "vector.h"
-#include "pair.h"
+#include <vector>
 #include "hermes_shm/types/qtok.h"
 
-namespace hshm::ipc {
+namespace hshm {
 
 /** Forward declaration of mpsc_queue */
 template<typename T>
@@ -37,10 +35,9 @@ class mpsc_queue;
  * consumer (pop).
  * */
 template<typename T>
-class mpsc_queue : public ShmContainer {
+class mpsc_queue {
  public:
-  SHM_CONTAINER_TEMPLATE((CLASS_NAME), (TYPED_CLASS))
-  ShmArchive<vector<pair<bitfield32_t, T>>> queue_;
+  std::vector<std::pair<bitfield32_t, T>> queue_;
   std::atomic<_qtok_t> tail_;
   std::atomic<_qtok_t> head_;
   bitfield32_t flags_;
@@ -51,10 +48,8 @@ class mpsc_queue : public ShmContainer {
    * ===================================*/
 
   /** SHM constructor. Default. */
-  explicit mpsc_queue(Allocator *alloc,
-                      size_t depth = 1024) {
-    shm_init_container(alloc);
-    HSHM_MAKE_AR(queue_, GetAllocator(), depth);
+  explicit mpsc_queue(size_t depth = 1024) {
+    queue_.resize(depth);
     flags_.Clear();
     SetNull();
   }
@@ -64,27 +59,20 @@ class mpsc_queue : public ShmContainer {
    * ===================================*/
 
   /** SHM copy constructor */
-  explicit mpsc_queue(Allocator *alloc,
-                      const mpsc_queue &other) {
-    shm_init_container(alloc);
-    SetNull();
-    shm_strong_copy_construct_and_op(other);
+  explicit mpsc_queue(const mpsc_queue &other) {
+    head_ = other.head_.load();
+    tail_ = other.tail_.load();
+    queue_ = other.queue_;
   }
 
   /** SHM copy assignment operator */
   mpsc_queue& operator=(const mpsc_queue &other) {
     if (this != &other) {
-      shm_destroy();
-      shm_strong_copy_construct_and_op(other);
+      head_ = other.head_.load();
+      tail_ = other.tail_.load();
+      queue_ = other.queue_;
     }
     return *this;
-  }
-
-  /** SHM copy constructor + operator main */
-  void shm_strong_copy_construct_and_op(const mpsc_queue &other) {
-    head_ = other.head_.load();
-    tail_ = other.tail_.load();
-    (*queue_) = (*other.queue_);
   }
 
   /**====================================
@@ -92,33 +80,20 @@ class mpsc_queue : public ShmContainer {
    * ===================================*/
 
   /** SHM move constructor. */
-  mpsc_queue(Allocator *alloc,
-             mpsc_queue &&other) noexcept {
-    shm_init_container(alloc);
-    if (GetAllocator() == other.GetAllocator()) {
-      head_ = other.head_.load();
-      tail_ = other.tail_.load();
-      (*queue_) = std::move(*other.queue_);
-      other.SetNull();
-    } else {
-      shm_strong_copy_construct_and_op(other);
-      other.shm_destroy();
-    }
+  mpsc_queue(mpsc_queue &&other) noexcept {
+    head_ = other.head_.load();
+    tail_ = other.tail_.load();
+    queue_ = std::move(other.queue_);
+    other.SetNull();
   }
 
   /** SHM move assignment operator. */
   mpsc_queue& operator=(mpsc_queue &&other) noexcept {
     if (this != &other) {
-      shm_destroy();
-      if (GetAllocator() == other.GetAllocator()) {
-        head_ = other.head_.load();
-        tail_ = other.tail_.load();
-        (*queue_) = std::move(*other.queue_);
-        other.SetNull();
-      } else {
-        shm_strong_copy_construct_and_op(other);
-        other.shm_destroy();
-      }
+      head_ = other.head_.load();
+      tail_ = other.tail_.load();
+      queue_ = std::move(other.queue_);
+      other.SetNull();
     }
     return *this;
   }
@@ -127,14 +102,9 @@ class mpsc_queue : public ShmContainer {
    * Destructor
    * ===================================*/
 
-  /** SHM destructor.  */
-  void shm_destroy_main() {
-    (*queue_).shm_destroy();
-  }
-
   /** Check if the list is empty */
   bool IsNull() const {
-    return (*queue_).IsNull();
+    return queue_.IsNull();
   }
 
   /** Sets this list as empty */
@@ -155,14 +125,13 @@ class mpsc_queue : public ShmContainer {
     _qtok_t head = head_.load();
     _qtok_t tail = tail_.fetch_add(1);
     size_t size = tail - head + 1;
-    vector<pair<bitfield32_t, T>> &queue = (*queue_);
 
     // Check if there's space in the queue.
-    if (size > queue.size()) {
+    if (size > queue_.size()) {
       while (true) {
         head = head_.load();
         size = tail - head + 1;
-        if (size <= (*queue_).size()) {
+        if (size <= queue_.size()) {
           break;
         }
         HERMES_THREAD_MODEL->Yield();
@@ -170,16 +139,15 @@ class mpsc_queue : public ShmContainer {
     }
 
     // Emplace into queue at our slot
-    uint32_t idx = tail % queue.size();
-    auto iter = queue.begin() + idx;
-    queue.replace(iter,
-                      hshm::PiecewiseConstruct(),
-                      make_argpack(),
-                      make_argpack(std::forward<Args>(args)...));
+    uint32_t idx = tail % queue_.size();
+    auto iter = queue_.begin() + idx;
+    hipc::Allocator::DestructObj(*iter);
+    hipc::Allocator::ConstructObj(
+        iter->second, std::forward<Args>(args)...);
 
     // Let pop know that the data is fully prepared
-    pair<bitfield32_t, T> &entry = (*iter);
-    entry.GetFirst().SetBits(1);
+    std::pair<bitfield32_t, T> &entry = (*iter);
+    entry.first.SetBits(1);
     return qtok_t(tail);
   }
 
@@ -194,11 +162,11 @@ class mpsc_queue : public ShmContainer {
     }
 
     // Pop the element, but only if it's marked valid
-    _qtok_t idx = head % (*queue_).size();
-    hipc::pair<bitfield32_t, T> &entry = (*queue_)[idx];
-    if (entry.GetFirst().Any(1)) {
-      val = std::move(entry.GetSecond());
-      entry.GetFirst().Clear();
+    _qtok_t idx = head % queue_.size();
+    std::pair<bitfield32_t, T> &entry = queue_[idx];
+    if (entry.first.Any(1)) {
+      val = std::move(entry.second);
+      entry.first.Clear();
       head_.fetch_add(1);
       return qtok_t(head);
     } else {
@@ -216,10 +184,10 @@ class mpsc_queue : public ShmContainer {
     }
 
     // Pop the element, but only if it's marked valid
-    _qtok_t idx = head % (*queue_).size();
-    hipc::pair<bitfield32_t, T> &entry = (*queue_)[idx];
-    if (entry.GetFirst().Any(1)) {
-      entry.GetFirst().Clear();
+    _qtok_t idx = head % queue_.size();
+    std::pair<bitfield32_t, T> &entry = queue_[idx];
+    if (entry.first.Any(1)) {
+      entry.first.Clear();
       head_.fetch_add(1);
       return qtok_t(head);
     } else {
@@ -237,10 +205,10 @@ class mpsc_queue : public ShmContainer {
     }
 
     // Pop the element, but only if it's marked valid
-    _qtok_t idx = (head) % (*queue_).size();
-    hipc::pair<bitfield32_t, T> &entry = (*queue_)[idx];
-    if (entry.GetFirst().Any(1)) {
-      val = &entry.GetSecond();
+    _qtok_t idx = (head) % queue_.size();
+    std::pair<bitfield32_t, T> &entry = queue_[idx];
+    if (entry.first.Any(1)) {
+      val = &entry.second;
       return qtok_t(head);
     } else {
       return qtok_t::GetNull();
@@ -248,7 +216,7 @@ class mpsc_queue : public ShmContainer {
   }
 
   /** Consumer peeks an object */
-  qtok_t peek(pair<bitfield32_t, T> *&val, int off = 0) {
+  qtok_t peek(std::pair<bitfield32_t, T> *&val, int off = 0) {
     // Don't pop if there's no entries
     _qtok_t head = head_.load() + off;
     _qtok_t tail = tail_.load();
@@ -257,9 +225,9 @@ class mpsc_queue : public ShmContainer {
     }
 
     // Pop the element, but only if it's marked valid
-    _qtok_t idx = (head) % (*queue_).size();
-    hipc::pair<bitfield32_t, T> &entry = (*queue_)[idx];
-    if (entry.GetFirst().Any(1)) {
+    _qtok_t idx = (head) % queue_.size();
+    std::pair<bitfield32_t, T> &entry = queue_[idx];
+    if (entry.first.Any(1)) {
       val = &entry;
       return qtok_t(head);
     } else {
@@ -284,4 +252,4 @@ class mpsc_queue : public ShmContainer {
 #undef TYPED_CLASS
 #undef TYPED_HEADER
 
-#endif  // HERMES_SHM_INCLUDE_HERMES_SHM_DATA_STRUCTURES_IPC_mpsc_queue_H_
+#endif  // HERMES_SHM_SHM_DATA_STRUCTURES_CONTAINERS_MPSC_H_

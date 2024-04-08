@@ -10,8 +10,8 @@
 * have access to the file, you may request a copy from help@hdfgroup.org.   *
 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_INCLUDE_HERMES_DATA_STRUCTURES_PAIR_H_
-#define HERMES_INCLUDE_HERMES_DATA_STRUCTURES_PAIR_H_
+#ifndef HERMES_INCLUDE_HERMES_DATA_STRUCTURES_IPC_PAIR_H_
+#define HERMES_INCLUDE_HERMES_DATA_STRUCTURES_IPC_PAIR_H_
 
 #include "hermes_shm/data_structures/ipc/internal/shm_internal.h"
 #include "hermes_shm/data_structures/smart_ptr/smart_ptr_base.h"
@@ -208,4 +208,4 @@ class pair : public ShmContainer {
 
 }  // namespace hshm::ipc
 
-#endif  // HERMES_INCLUDE_HERMES_DATA_STRUCTURES_PAIR_H_
+#endif  // HERMES_INCLUDE_HERMES_DATA_STRUCTURES_IPC_PAIR_H_

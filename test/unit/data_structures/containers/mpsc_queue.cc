@@ -12,6 +12,7 @@
 
 #include "basic_test.h"
 #include "test_init.h"
+#include "hermes_shm/data_structures/containers/mpsc_queue.h"
 #include "hermes_shm/data_structures/ipc/mpsc_queue.h"
 #include "hermes_shm/data_structures/ipc/mpsc_ptr_queue.h"
 #include "queue.h"
@@ -101,4 +102,55 @@ TEST_CASE("TestMpscPointerQueueCompile") {
   p->emplace(hipc::Pointer(allocator_id_t(5, 2), 1));
   p->pop(off_p);
   REQUIRE(off_p == hipc::Pointer(allocator_id_t(5, 2), 1));
+}
+
+/**
+ * TEST MPSC PRIVATE QUEUE
+ * */
+
+TEST_CASE("TestMpscPrivateQueueInt") {
+  Allocator *alloc = alloc_g;
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+  ProduceThenConsume<hshm::mpsc_queue<int>, int>(1, 1, 32, 32);
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+}
+
+TEST_CASE("TestMpscPrivateQueueString") {
+  Allocator *alloc = alloc_g;
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+  ProduceThenConsume<hshm::mpsc_queue<std::string>, std::string>(
+      1, 1, 32, 32);
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+}
+
+TEST_CASE("TestMpscPrivateQueueIntMultiThreaded") {
+  Allocator *alloc = alloc_g;
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+  ProduceAndConsume<hshm::mpsc_queue<int>, int>(8, 1, 8192, 32);
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+}
+
+TEST_CASE("TestMpscPrivateQueueStringMultiThreaded") {
+  Allocator *alloc = alloc_g;
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+  ProduceAndConsume<hshm::mpsc_queue<std::string>, std::string>(
+      8, 1, 8192, 32);
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+}
+
+TEST_CASE("TestMpscPrivateQueuePeek") {
+  Allocator *alloc = alloc_g;
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+
+  auto q = hipc::make_mptr<hshm::mpsc_queue<int>>(alloc);
+  q->emplace(1);
+  int *val;
+  q->peek(val, 0);
+  REQUIRE(*val == 1);
+  std::pair<hshm::bitfield32_t, int> *val_pair;
+  q->peek(val_pair, 0);
+  REQUIRE(val_pair->second == 1);
+  q.shm_destroy();
+
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
 }
