@@ -33,6 +33,7 @@ class MpiTimer : public Timer {
   void Collect() {
     MPI_Barrier(comm_);
     double my_nsec = GetNsec();
+    time_ns_ = 0;
     MPI_Reduce(&my_nsec, &time_ns_, 1,
                MPI_DOUBLE, MPI_MAX,
                0, comm_);
