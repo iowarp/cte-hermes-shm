@@ -15,7 +15,7 @@
 
 #include <vector>
 #include "hermes_shm/types/qtok.h"
-#include "hermes_shm/ipc/mpsc_queue.h"
+#include "hermes_shm/data_structures/ipc/mpsc_queue.h"
 
 namespace hshm {
 
@@ -38,7 +38,7 @@ class mpsc_queue;
 template<typename T>
 class mpsc_queue {
  public:
-  hipc::uptr<hipc::mpsc_queue<T>> queue_;
+  hipc::mptr<hipc::mpsc_queue<T>> queue_;
 
  public:
   /**====================================
@@ -47,7 +47,7 @@ class mpsc_queue {
 
   /** SHM constructor. Default. */
   explicit mpsc_queue(size_t depth = 1024) {
-    queue_ = hipc::make_uptr<hipc::mpsc_queue<T>>(depth);
+    queue_ = hipc::make_mptr<hipc::mpsc_queue<T>>(depth);
   }
 
   /**====================================
