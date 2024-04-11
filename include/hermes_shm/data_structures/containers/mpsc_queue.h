@@ -127,7 +127,7 @@ class mpsc_queue {
   }
 
   /** Consumer peeks an object */
-  qtok_t peek(std::pair<bitfield32_t, T> *&val, int off = 0) {
+  qtok_t peek(hipc::pair<bitfield32_t, T> *&val, int off = 0) {
     return queue_->peek(val, off);
   }
 

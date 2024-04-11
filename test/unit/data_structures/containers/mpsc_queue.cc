@@ -147,9 +147,9 @@ TEST_CASE("TestMpscPrivateQueuePeek") {
   int *val;
   q->peek(val, 0);
   REQUIRE(*val == 1);
-  std::pair<hshm::bitfield32_t, int> *val_pair;
+  hipc::pair<hshm::bitfield32_t, int> *val_pair;
   q->peek(val_pair, 0);
-  REQUIRE(val_pair->second == 1);
+  REQUIRE(val_pair->GetVal() == 1);
   q.shm_destroy();
 
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
