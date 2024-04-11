@@ -82,6 +82,12 @@ union allocator_id_t {
   void serialize(Ar &ar) {
     ar &int_;
   }
+
+  /** String printing */
+  friend std::ostream& operator<<(std::ostream &os, const allocator_id_t &id) {
+    return os << (std::to_string(id.bits_.major_) + "."
+        + std::to_string(id.bits_.minor_));
+  }
 };
 
 typedef uint32_t slot_id_t;  // Uniquely ids a MemoryBackend slot
@@ -345,6 +351,12 @@ struct PointerBase {
   /** Inequality check */
   HSHM_ALWAYS_INLINE bool operator!=(const PointerBase &other) const {
     return (other.allocator_id_ != allocator_id_ || other.off_ != off_);
+  }
+
+  /** String printing */
+  friend std::ostream& operator<<(std::ostream &os, const PointerBase &p) {
+    return os << p.allocator_id_ << "."
+        + std::to_string(p.off_.load());
   }
 };
 
