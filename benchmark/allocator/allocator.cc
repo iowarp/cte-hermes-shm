@@ -16,6 +16,7 @@
 
 #include <string>
 #include "hermes_shm/data_structures/ipc/string.h"
+#include "hermes_shm/util/config_parse.h"
 
 /** Test cases for the allocator */
 class AllocatorTestSuite {
@@ -150,19 +151,8 @@ class AllocatorTestSuite {
     if (rank != 0) { return; }
     int nthreads = omp_get_num_threads();
     double count = (double) count_per_rank * nthreads;
-    HILOG(kInfo, "{},{},{},{},{},{},{}",
-          test_name,
-          alloc_type_,
-          obj_size,
-          t.GetMsec(),
-          nthreads,
-          count,
-          count / t.GetMsec());
-  }
-
-  /** Print the CSV output */
-  static void PrintTestHeader() {
-    HILOG(kInfo, "test_name,alloc_type,obj_size,msec,nthreads,count,KOps");
+    HILOG(kInfo, "Time: {} msec, {} KOps",
+          t.GetMsec(), count / t.GetMsec());
   }
 };
 
@@ -215,112 +205,54 @@ void Posttest() {
 template<typename BackendT, typename AllocT, typename ...Args>
 void AllocatorTest(AllocatorType alloc_type,
                    MemoryBackendType backend_type,
+                   size_t ops,
                    Args&& ...args) {
   Allocator *alloc = Pretest<BackendT, AllocT>(
     backend_type, std::forward<Args>(args)...);
-  size_t count = (1 << 20);
   // Allocate many and then free many
   /*AllocatorTestSuite(alloc_type, alloc).AllocateThenFreeFixedSize(
-    count, KILOBYTES(1));*/
+    ops, KILOBYTES(1));*/
   // Allocate and free immediately
   /*AllocatorTestSuite(alloc_type, alloc).AllocateAndFreeFixedSize(
-    count, KILOBYTES(1));*/
+    ops, KILOBYTES(1));*/
   if (alloc_type != AllocatorType::kStackAllocator) {
     // Allocate and free randomly
     AllocatorTestSuite(alloc_type, alloc).AllocateAndFreeRandomWindow(
-      count);
+        ops);
   }
   Posttest();
 }
 
-/** Test different allocators on a particular thread */
-void FullAllocatorTestPerThread() {
-  // Scalable page allocator
-  AllocatorTest<hipc::PosixShmMmap, hipc::ScalablePageAllocator>(
-    AllocatorType::kScalablePageAllocator,
-    MemoryBackendType::kPosixShmMmap);
-  // Malloc allocator
-  AllocatorTest<hipc::NullBackend, hipc::MallocAllocator>(
-    AllocatorType::kMallocAllocator,
-    MemoryBackendType::kNullBackend);
-  // Stack allocator
-  AllocatorTest<hipc::PosixShmMmap, hipc::StackAllocator>(
-    AllocatorType::kStackAllocator,
-    MemoryBackendType::kPosixShmMmap);
-}
+int main(int argc, char **argv) {
+  if (argc != 4) {
+    HELOG(kFatal, "Usage: allocator [nthreads] [alloc] [ops]");
+    return 1;
+  }
 
-/** Spawn multiple threads and run allocator tests */
-void FullAllocatorTestThreaded(int nthreads) {
+  int nthreads = std::stoi(argv[1]);
+  std::string alloc = argv[2];
+  size_t ops = hshm::ConfigParse::ParseSize(argv[3]);
+
   omp_set_dynamic(0);
 #pragma omp parallel num_threads(nthreads)
   {
 #pragma omp barrier
-    FullAllocatorTestPerThread();
+  if (alloc == "scalable") {
+    AllocatorTest<hipc::PosixShmMmap, hipc::ScalablePageAllocator>(
+        AllocatorType::kScalablePageAllocator,
+        MemoryBackendType::kPosixShmMmap,
+        ops);
+  } else if (alloc == "malloc") {
+    AllocatorTest<hipc::NullBackend, hipc::MallocAllocator>(
+        AllocatorType::kMallocAllocator,
+        MemoryBackendType::kNullBackend,
+        ops);
+  } else if (alloc == "stack") {
+    AllocatorTest<hipc::PosixShmMmap, hipc::StackAllocator>(
+        AllocatorType::kStackAllocator,
+        MemoryBackendType::kPosixShmMmap,
+        ops);
+  }
 #pragma omp barrier
   }
-}
-
-TEST_CASE("AllocatorBenchmark") {
-  AllocatorTestSuite::PrintTestHeader();
-  FullAllocatorTestThreaded(1);
-  /*FullAllocatorTestThreaded(2);
-  FullAllocatorTestThreaded(4);
-  FullAllocatorTestThreaded(8);
-  FullAllocatorTestThreaded(16);*/
-}
-
-class AllocBase {
- public:
-  virtual void Allocate() = 0;
-  virtual void Free() = 0;
-  virtual void Realloc() = 0;
-  virtual void Size() = 0;
-};
-
-class Alloc : public AllocBase {
- public:
-  static inline int counter_ = 1;
-
- public:
-  void Allocate() override {
-    size_t sum = 0;
-    for(int i = 0; i < counter_; ++i) {
-      sum += i;
-    }
-  }
-
-  void Free() override {
-    size_t sum = 0;
-    for(int i = 0; i < counter_; ++i) {
-      sum += i;
-    }
-  }
-
-  void Realloc() override {
-    size_t sum = 0;
-    for(int i = 0; i < counter_; ++i) {
-      sum += i;
-    }
-  }
-
-  void Size() override {
-    size_t sum = 0;
-    for(int i = 0; i < counter_; ++i) {
-      sum += i;
-    }
-  }
-};
-
-TEST_CASE("TestVirtualFunctionOverhead") {
-  size_t ops = (1 << 20);
-  hshm::Timer t;
-  AllocBase *alloc = new Alloc();
-  t.Resume();
-  for (size_t i = 0; i < ops; ++i) {
-    alloc->Allocate();
-    alloc->Size();
-  }
-  t.Pause();
-  delete alloc;
-  HIPRINT("Virtual function overhead: {} MOps", ops / t.GetUsec());
 }

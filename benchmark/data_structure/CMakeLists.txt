@@ -25,4 +25,13 @@ target_link_libraries(benchmark_data_structures
         OpenMP::OpenMP_CXX
         ${Boost_LIBRARIES})
 
-# make_gprof(benchmark_data_structures ${CMAKE_CURRENT_BINARY_DIR})
+#-----------------------------------------------------------------------------
+# Add Target(s) to CMake Install
+#-----------------------------------------------------------------------------
+install(TARGETS
+        benchmark_data_structures
+        EXPORT
+        ${HERMES_EXPORTED_TARGETS}
+        LIBRARY DESTINATION ${HERMES_INSTALL_LIB_DIR}
+        ARCHIVE DESTINATION ${HERMES_INSTALL_LIB_DIR}
+        RUNTIME DESTINATION ${HERMES_INSTALL_BIN_DIR})
