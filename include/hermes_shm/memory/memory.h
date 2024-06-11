@@ -399,6 +399,12 @@ struct LPointer {
   HSHM_ALWAYS_INLINE void SetNull() {
     ptr_ = nullptr;
   }
+
+  /** Implicit copy type cast */
+  template<typename ConvT>
+  HSHM_ALWAYS_INLINE operator LPointer<ConvT, PointerT>() const {
+    return LPointer<ConvT, PointerT>{(ConvT*)ptr_, shm_};
+  }
 };
 
 /** Struct containing both a pointer and its size */
