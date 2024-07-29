@@ -48,7 +48,7 @@ struct SystemInfo {
     RefreshCpuFreqKhz();
   }
 
-  size_t RefreshCpuFreqKhz() {
+  void RefreshCpuFreqKhz() {
     for (int i = 0; i < ncpu_; ++i) {
       cur_cpu_freq_[i] = GetCpuFreqKhz(i);
     }
