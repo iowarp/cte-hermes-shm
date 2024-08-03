@@ -65,6 +65,36 @@ struct SystemInfo {
     return freq_khz;
   }
 
+  size_t GetCpuMaxFreqKhz(int cpu) {
+    // Read /sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_cur_freq
+    std::string cpu_str = hshm::Formatter::format(
+        "/sys/devices/system/cpu/cpu{}/cpufreq/cpuinfo_max_freq",
+        cpu);
+    std::ifstream cpu_file(cpu_str);
+    size_t freq_khz;
+    cpu_file >> freq_khz;
+    return freq_khz;
+  }
+
+  size_t GetCpuMinFreqKhz(int cpu) {
+    // Read /sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_cur_freq
+    std::string cpu_str = hshm::Formatter::format(
+        "/sys/devices/system/cpu/cpu{}/cpufreq/cpuinfo_min_freq",
+        cpu);
+    std::ifstream cpu_file(cpu_str);
+    size_t freq_khz;
+    cpu_file >> freq_khz;
+    return freq_khz;
+  }
+
+  size_t GetCpuMinFreqMhz(int cpu) {
+    return GetCpuMinFreqKhz(cpu) / 1000;
+  }
+
+  size_t GetCpuMaxFreqMhz(int cpu) {
+    return GetCpuMaxFreqKhz(cpu) / 1000;
+  }
+
   void SetCpuFreqMhz(int cpu, size_t cpu_freq_mhz) {
     SetCpuFreqKhz(cpu, cpu_freq_mhz * 1000);
   }
