@@ -65,12 +65,16 @@ struct SystemInfo {
     return freq_khz;
   }
 
-  void SetCpuFreqMhz(int cpu, size_t cpu_freq_khz) {
-    SetCpuMinFreqMhz(cpu, cpu_freq_khz);
-    SetCpuMaxFreqMhz(cpu, cpu_freq_khz);
+  void SetCpuFreqMhz(int cpu, size_t cpu_freq_mhz) {
+    SetCpuFreqKhz(cpu, cpu_freq_mhz * 1000);
   }
 
-  void SetCpuMinFreqMhz(int cpu, size_t cpu_freq_khz) {
+  void SetCpuFreqKhz(int cpu, size_t cpu_freq_khz) {
+    SetCpuMinFreqKhz(cpu, cpu_freq_khz);
+    SetCpuMaxFreqKhz(cpu, cpu_freq_khz);
+  }
+
+  void SetCpuMinFreqKhz(int cpu, size_t cpu_freq_khz) {
     std::string cpu_str = hshm::Formatter::format(
         "/sys/devices/system/cpu/cpu{}/cpufreq/scaling_min_freq",
         cpu);
@@ -78,7 +82,7 @@ struct SystemInfo {
     min_freq_file << cpu_freq_khz;
   }
 
-  void SetCpuMaxFreqMhz(int cpu, size_t cpu_freq_khz) {
+  void SetCpuMaxFreqKhz(int cpu, size_t cpu_freq_khz) {
     std::string cpu_str = hshm::Formatter::format(
         "/sys/devices/system/cpu/cpu{}/cpufreq/scaling_max_freq",
         cpu);
