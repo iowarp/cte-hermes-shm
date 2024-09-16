@@ -24,7 +24,7 @@ git clone https://github.com/lukemartinlogan/hermes_shm.git
 cd hermes_shm
 spack repo add scripts/hermes_shm
 spack install hermes_shm
-spack load --only dependencies hermes_shm
+spack load --only=dependencies hermes_shm
 
 mkdir build
 cd build
