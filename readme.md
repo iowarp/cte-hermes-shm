@@ -1,5 +1,5 @@
 
-# hermes_shmn
+# hermes_shm
 
 This library contains a variety of data structures and synchronization
 primitives which are compatible with shared memory.
