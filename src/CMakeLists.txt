@@ -7,21 +7,24 @@ set(CMAKE_CXX_STANDARD 17)
 # Build HSHM
 #-----------------------------------------------------------------------------
 add_library(hermes_shm_data_structures
-        memory/malloc_allocator.cc
-        memory/stack_allocator.cc
-        memory/scalable_page_allocator.cc
         memory/memory_registry.cc
         memory/memory_manager.cc
         thread_model_manager.cc
         thread_factory.cc
         data_structure_singleton.cc)
 target_link_libraries(hermes_shm_data_structures
-        pthread -lrt -ldl OpenMP::OpenMP_CXX
+        -lrt -ldl
         cereal::cereal
         $<$<BOOL:${HERMES_RPC_THALLIUM}>:thallium>
         ${COMPRESS_LIBS}
         ${ENCRYPT_LIBS}
 )
+if (HERMES_ENABLE_PTHREAD)
+    target_link_libraries(hermes_shm_data_structures pthread)
+endif()
+if (HERMES_ENABLE_OPENMP)
+    target_link_libraries(hermes_shm_data_structures OpenMP::OpenMP_CXX)
+endif()
 
 #-----------------------------------------------------------------------------
 # Add Target(s) to CMake Install

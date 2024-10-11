@@ -16,6 +16,7 @@ add_executable(test_memory_exec
 add_dependencies(test_memory_exec hermes_shm_data_structures)
 target_link_libraries(test_memory_exec
         hermes_shm_data_structures Catch2::Catch2 MPI::MPI_CXX)
+
 #------------------------------------------------------------------------------
 # Test Cases
 #------------------------------------------------------------------------------

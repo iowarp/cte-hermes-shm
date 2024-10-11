@@ -15,7 +15,6 @@
 
 #include "hermes_shm/memory/allocator/allocator.h"
 #include "backend/memory_backend.h"
-#include "hermes_shm/memory/allocator/stack_allocator.h"
 #include "hermes_shm/memory/backend/posix_mmap.h"
 #include "hermes_shm/util/errors.h"
 #include "hermes_shm/util/logging.h"
@@ -30,7 +29,7 @@ class MemoryRegistry {
  public:
   allocator_id_t root_allocator_id_;
   PosixMmap root_backend_;
-  StackAllocator root_allocator_;
+  Allocator *root_allocator_;
   std::unordered_map<std::string, std::unique_ptr<MemoryBackend>> backends_;
   std::unique_ptr<Allocator> allocators_made_[MAX_ALLOCATORS];
   Allocator *allocators_[MAX_ALLOCATORS];
@@ -83,7 +82,7 @@ class MemoryRegistry {
   HSHM_ALWAYS_INLINE Allocator* RegisterAllocator(
       std::unique_ptr<Allocator> &alloc) {
     if (default_allocator_ == nullptr ||
-      default_allocator_ == &root_allocator_ ||
+      default_allocator_ == root_allocator_ ||
       default_allocator_->GetId() == alloc->GetId()) {
       default_allocator_ = alloc.get();
     }
@@ -107,7 +106,7 @@ class MemoryRegistry {
   /** Unregisters an allocator */
   HSHM_ALWAYS_INLINE void UnregisterAllocator(allocator_id_t alloc_id) {
     if (alloc_id == default_allocator_->GetId()) {
-      default_allocator_ = &root_allocator_;
+      default_allocator_ = root_allocator_;
     }
     allocators_made_[alloc_id.ToIndex()] = nullptr;
     allocators_[alloc_id.ToIndex()] = nullptr;
@@ -123,9 +122,7 @@ class MemoryRegistry {
   /**
    * Gets the allocator used for initializing other allocators.
    * */
-  HSHM_ALWAYS_INLINE Allocator* GetRootAllocator() {
-    return &root_allocator_;
-  }
+  Allocator* GetRootAllocator();
 
   /**
    * Gets the allocator used by default when no allocator is

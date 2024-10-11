@@ -33,7 +33,7 @@
 namespace hshm::ipc {
 
 class PosixShmMmap : public MemoryBackend {
- private:
+ protected:
   std::string url_;
   int fd_;
 
@@ -51,7 +51,7 @@ class PosixShmMmap : public MemoryBackend {
   }
 
   /** Initialize backend */
-  bool shm_init(size_t size, std::string url) {
+  bool shm_init(size_t size, const std::string &url) {
     SetInitialized();
     Own();
     url_ = std::move(url);
@@ -62,7 +62,7 @@ class PosixShmMmap : public MemoryBackend {
       return false;
     }
     _Reserve(size + HERMES_SYSTEM_INFO->page_size_);
-    header_ = _Map<MemoryBackendHeader>(HERMES_SYSTEM_INFO->page_size_, 0);
+    header_ = (MemoryBackendHeader*)_Map(HERMES_SYSTEM_INFO->page_size_, 0);
     header_->data_size_ = size;
     data_size_ = size;
     data_ = _Map(size, HERMES_SYSTEM_INFO->page_size_);
@@ -79,7 +79,7 @@ class PosixShmMmap : public MemoryBackend {
       HILOG(kError, "shm_open failed: {}", strerror(errno));
       return false;
     }
-    header_ = _Map<MemoryBackendHeader>(HERMES_SYSTEM_INFO->page_size_, 0);
+    header_ = (MemoryBackendHeader*)_Map(HERMES_SYSTEM_INFO->page_size_, 0);
     data_size_ = header_->data_size_;
     data_ = _Map(data_size_, HERMES_SYSTEM_INFO->page_size_);
     return true;
@@ -105,19 +105,28 @@ class PosixShmMmap : public MemoryBackend {
   }
 
   /** Map shared memory */
-  template<typename T = char>
-  T* _Map(size_t size, off64_t off) {
-    T *ptr = reinterpret_cast<T*>(
-      mmap64(nullptr, size, PROT_READ | PROT_WRITE,
-             MAP_SHARED, fd_, off));
+  virtual char* _Map(size_t size, off64_t off) {
+    return _ShmMap(size, off);
+  };
+
+  /** Map shared memory */
+  char* _ShmMap(size_t size, off64_t off) {
+    char *ptr = reinterpret_cast<char*>(
+        mmap64(nullptr, size, PROT_READ | PROT_WRITE,
+               MAP_SHARED, fd_, off));
     if (ptr == MAP_FAILED) {
       throw SHMEM_CREATE_FAILED.format();
     }
     return ptr;
   }
 
+  /** Unmap shared memory (virtual) */
+  virtual void _Detach() {
+    _ShmDetach();
+  }
+
   /** Unmap shared memory */
-  void _Detach() {
+  void _ShmDetach() {
     if (!IsInitialized()) { return; }
     munmap(data_, data_size_);
     munmap(header_, HERMES_SYSTEM_INFO->page_size_);

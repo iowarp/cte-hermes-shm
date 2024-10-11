@@ -19,6 +19,10 @@
 
 namespace hshm::ipc {
 
+struct MallocPage {
+  size_t page_size_;
+};
+
 struct MallocAllocatorHeader : public AllocatorHeader {
   std::atomic<size_t> total_alloc_size_;
 
@@ -55,25 +59,46 @@ class MallocAllocator : public Allocator {
    * */
   void shm_init(allocator_id_t id,
                 size_t custom_header_size,
-                size_t buffer_size);
+                size_t buffer_size)  {
+    buffer_ = nullptr;
+    buffer_size_ = buffer_size;
+    header_ = reinterpret_cast<MallocAllocatorHeader*>(
+        malloc(sizeof(MallocAllocatorHeader) + custom_header_size));
+    custom_header_ = reinterpret_cast<char*>(header_ + 1);
+    header_->Configure(id, custom_header_size);
+  }
 
   /**
    * Attach an existing allocator from shared memory
    * */
   void shm_deserialize(char *buffer,
-                       size_t buffer_size) override;
+                       size_t buffer_size) override  {
+    throw NOT_IMPLEMENTED.format("MallocAllocator::shm_deserialize");
+  }
 
   /**
    * Allocate a memory of \a size size. The page allocator cannot allocate
    * memory larger than the page size.
    * */
-  OffsetPointer AllocateOffset(size_t size) override;
+  OffsetPointer AllocateOffset(size_t size) override {
+    auto page = reinterpret_cast<MallocPage*>(
+        malloc(sizeof(MallocPage) + size));
+    page->page_size_ = size;
+    header_->total_alloc_size_ += size;
+    return OffsetPointer((size_t)(page + 1));
+  }
 
   /**
    * Allocate a memory of \a size size, which is aligned to \a
    * alignment.
    * */
-  OffsetPointer AlignedAllocateOffset(size_t size, size_t alignment) override;
+  OffsetPointer AlignedAllocateOffset(size_t size, size_t alignment) override {
+    auto page = reinterpret_cast<MallocPage*>(
+        aligned_alloc(alignment, sizeof(MallocPage) + size));
+    page->page_size_ = size;
+    header_->total_alloc_size_ += size;
+    return OffsetPointer(size_t(page + 1));
+  }
 
   /**
    * Reallocate \a p pointer to \a new_size new size.
@@ -81,18 +106,38 @@ class MallocAllocator : public Allocator {
    * @return whether or not the pointer p was changed
    * */
   OffsetPointer ReallocateOffsetNoNullCheck(OffsetPointer p,
-                                            size_t new_size) override;
+                                            size_t new_size) override {
+    // Get the input page
+    auto page = reinterpret_cast<MallocPage*>(
+        p.off_.load() - sizeof(MallocPage));
+    header_->total_alloc_size_ += new_size - page->page_size_;
+
+    // Reallocate the input page
+    auto new_page = reinterpret_cast<MallocPage*>(
+        realloc(page, sizeof(MallocPage) + new_size));
+    new_page->page_size_ = new_size;
+
+    // Create the pointer
+    return OffsetPointer(size_t(new_page + 1));
+  }
 
   /**
    * Free \a ptr pointer. Null check is performed elsewhere.
    * */
-  void FreeOffsetNoNullCheck(OffsetPointer p) override;
+  void FreeOffsetNoNullCheck(OffsetPointer p) override {
+    auto page = reinterpret_cast<MallocPage*>(
+        p.off_.load() - sizeof(MallocPage));
+    header_->total_alloc_size_ -= page->page_size_;
+    free(page);
+  }
 
   /**
    * Get the current amount of data allocated. Can be used for leak
    * checking.
    * */
-  size_t GetCurrentlyAllocatedSize() override;
+  size_t GetCurrentlyAllocatedSize() override {
+    return header_->total_alloc_size_;
+  }
 };
 
 }  // namespace hshm::ipc

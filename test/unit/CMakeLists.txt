@@ -13,6 +13,10 @@ add_subdirectory(backend)
 add_subdirectory(types)
 add_subdirectory(thread)
 
+if (HERMES_ENABLE_CUDA)
+    add_subdirectory(cuda)
+endif()
+
 if (HERMES_ENABLE_COMPRESS)
     message("HERMES ENABLE COMPRESS")
     add_subdirectory(compress)
