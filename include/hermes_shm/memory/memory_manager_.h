@@ -7,6 +7,12 @@
 
 #include "hermes_shm/memory/allocator/allocator.h"
 #include "hermes_shm/memory/backend/posix_mmap.h"
+#include "hermes_shm/util/singleton/_global_singleton.h"
+
+
+#define HERMES_MEMORY_MANAGER \
+  hshm::GlobalSingleton<hshm::ipc::MemoryManager>::GetInstance()
+#define HERMES_MEMORY_MANAGER_T hshm::ipc::MemoryManager*
 
 namespace hipc = hshm::ipc;
 

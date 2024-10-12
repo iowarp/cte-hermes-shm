@@ -4,7 +4,6 @@ HERMES_ROOT=$1
 
 cpplint --recursive \
 --exclude="${HERMES_ROOT}/include/hermes_shm/constants/singleton_macros.h" \
---exclude="${HERMES_ROOT}/include/hermes_shm/constants/data_structure_singleton_macros.h" \
 --exclude="${HERMES_ROOT}/include/hermes_shm/data_structures/ipc/internal/template" \
 --exclude="${HERMES_ROOT}/include/hermes_shm/data_structures/ipc/internal/shm_container_macro.h" \
 --exclude="${HERMES_ROOT}/src/singleton.cc" \

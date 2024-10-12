@@ -10,11 +10,10 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_SHM_INCLUDE_HERMES_SHM_UTIL_SINGLETON_SINGLETON_H_
-#define HERMES_SHM_INCLUDE_HERMES_SHM_UTIL_SINGLETON_SINGLETON_H_
+#ifndef HERMES_SHM_INCLUDE_HERMES_SHM_UTIL_LOCKFREE_SINGLETON_SINGLETON_H_
+#define HERMES_SHM_INCLUDE_HERMES_SHM_UTIL_LOCKFREE_SINGLETON_SINGLETON_H_
 
 #include <memory>
-#include "hermes_shm/thread/lock/mutex.h"
 #include "hermes_shm/constants/macros.h"
 
 namespace hshm {
@@ -25,17 +24,15 @@ namespace hshm {
  * @tparam T
  */
 template<typename T>
-class Singleton {
+class LockfreeSingleton {
  private:
   static T *obj_;
-  static hshm::Mutex lock_;
 
  public:
   /** Get or create an instance of type T */
   HSHM_CROSS_FUN
   inline static T *GetInstance() {
     if (!obj_) {
-      hshm::ScopedMutex lock(lock_, 0);
       if (obj_ == nullptr) {
         obj_ = new T();
       }
@@ -44,10 +41,9 @@ class Singleton {
   }
 };
 
-#define DEFINE_SINGLETON_CC(T)\
-  template<> T* hshm::Singleton<T>::obj_ = nullptr; \
-  template<> hshm::Mutex hshm::Singleton<T>::lock_ = hshm::Mutex();
+#define DEFINE_LOCKFREE_SINGLETON_CC(T)\
+  template<> T* hshm::LockfreeSingleton<T>::obj_ = nullptr;
 
 }  // namespace hshm
 
-#endif  // HERMES_SHM_INCLUDE_HERMES_SHM_UTIL_SINGLETON_SINGLETON_H_
+#endif  // HERMES_SHM_INCLUDE_HERMES_SHM_UTIL_LOCKFREE_SINGLETON_SINGLETON_H_

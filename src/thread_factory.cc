@@ -12,7 +12,11 @@
 
 #include "hermes_shm/thread/thread_model/thread_model_factory.h"
 #include "hermes_shm/thread/thread_model/thread_model.h"
+#include "hermes_shm/memory/memory_manager.h"
+
+#ifdef HERMES_PTHREADS_ENABLED
 #include "hermes_shm/thread/thread_model/pthread.h"
+#endif
 #ifdef HERMES_RPC_THALLIUM
 #include "hermes_shm/thread/thread_model/argobots.h"
 #endif
@@ -20,18 +24,18 @@
 
 namespace hshm::thread_model {
 
-std::unique_ptr<ThreadModel> ThreadFactory::Get(ThreadType type) {
+ThreadModel* ThreadFactory::Get(ThreadType type) {
   switch (type) {
     case ThreadType::kPthread: {
 #ifdef HERMES_PTHREADS_ENABLED
-      return std::make_unique<Pthread>();
+      return HERMES_MEMORY_MANAGER->GetDefaultAllocator()->NewObj<Pthread>();
 #else
       return nullptr;
 #endif
     }
     case ThreadType::kArgobots: {
 #ifdef HERMES_RPC_THALLIUM
-      return std::make_unique<Argobots>();
+      return HERMES_MEMORY_MANAGER->GetDefaultAllocator()->NewObj<Argobots>();
 #else
       return nullptr;
 #endif

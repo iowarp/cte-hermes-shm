@@ -11,14 +11,15 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 
-#include <hermes_shm/memory/memory_manager.h>
+#include "hermes_shm/memory/memory_manager.h"
 #include "hermes_shm/memory/backend/memory_backend_factory.h"
 #include "hermes_shm/memory/allocator/allocator_factory.h"
-#include <hermes_shm/introspect/system_info.h>
-#include "hermes_shm/constants/data_structure_singleton_macros.h"
+#include "hermes_shm/introspect/system_info.h"
 #include "hermes_shm/data_structures/containers/unique_ptr.h"
 #include "hermes_shm/util/errors.h"
 #include "hermes_shm/util/logging.h"
+#include "hermes_shm/thread/thread_model_manager.h"
+
 #include <unordered_map>
 #include <string>
 
@@ -29,6 +30,7 @@ typedef std::unordered_map<std::string, MemoryBackend*> BACKEND_MAP_T;
 /** Create the root allocator */
 HSHM_CROSS_FUN
 MemoryManager::MemoryManager() {
+  HERMES_SYSTEM_INFO->RefreshInfo();
   root_allocator_id_.bits_.major_ = 3;
   root_allocator_id_.bits_.minor_ = 3;
   root_backend_.shm_init(MEGABYTES(128));
@@ -42,6 +44,7 @@ MemoryManager::MemoryManager() {
   memset(allocators_, 0, sizeof(allocators_));
   RegisterAllocator(root_allocator_);
   backends_ = root_allocator_->NewObj<BACKEND_MAP_T>();
+  HERMES_THREAD_MODEL->SetThreadModel(ThreadType::kPthread);
 }
 
 /** Get the root allocator */

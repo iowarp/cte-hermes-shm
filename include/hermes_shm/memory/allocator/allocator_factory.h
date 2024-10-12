@@ -19,7 +19,6 @@
 #include "malloc_allocator.h"
 #include "scalable_page_allocator.h"
 #include "hermes_shm/memory/memory_manager_.h"
-#include <hermes_shm/constants/data_structure_singleton_macros.h>
 
 namespace hshm::ipc {
 

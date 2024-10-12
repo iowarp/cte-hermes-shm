@@ -15,10 +15,10 @@
 
 #include <unistd.h>
 #include <sys/sysinfo.h>
-#include "hermes_shm/util/singleton/_global_singleton.h"
+#include "hermes_shm/util/singleton/_lockfree_singleton.h"
 
 #define HERMES_SYSTEM_INFO \
-  hshm::GlobalSingleton<hshm::SystemInfo>::GetInstance()
+  hshm::LockfreeSingleton<hshm::SystemInfo>::GetInstance()
 #define HERMES_SYSTEM_INFO_T hshm::SystemInfo*
 
 namespace hshm {
@@ -31,7 +31,7 @@ struct SystemInfo {
   int gid_;
   size_t ram_size_;
 
-  SystemInfo() {
+  void RefreshInfo() {
     pid_ = getpid();
     ncpu_ = get_nprocs_conf();
     page_size_ = getpagesize();

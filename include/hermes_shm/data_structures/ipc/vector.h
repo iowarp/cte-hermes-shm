@@ -329,6 +329,7 @@ class vector : public ShmContainer {
   HSHM_CROSS_FUN
   vector(Allocator *alloc, vector &&other) {
     shm_init_container(alloc);
+    SetNull();
     if (GetAllocator() == other.GetAllocator()) {
       memcpy((void *) this, (void *) &other, sizeof(*this));
       other.SetNull();

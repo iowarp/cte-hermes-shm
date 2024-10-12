@@ -20,7 +20,7 @@ namespace hshm::thread_model {
 class ThreadFactory {
  public:
   /** Get a thread instance */
-  static std::unique_ptr<ThreadModel> Get(ThreadType type);
+  static ThreadModel* Get(ThreadType type);
 };
 
 }  // namespace hshm::thread_model

@@ -17,11 +17,10 @@
 #include "hermes_shm/thread/thread_model/thread_model.h"
 #include "hermes_shm/thread/thread_model/thread_model_factory.h"
 #include <hermes_shm/introspect/system_info.h>
-#include <mutex>
 
-#include "hermes_shm/util/singleton/_global_singleton.h"
+#include "hermes_shm/util/singleton/_lockfree_singleton.h"
 #define HERMES_THREAD_MODEL \
-  hshm::GlobalSingleton<hshm::ThreadModelManager>::GetInstance()
+  hshm::LockfreeSingleton<hshm::ThreadModelManager>::GetInstance()
 #define HERMES_THREAD_MODEL_T \
   hshm::ThreadModelManager*
 
@@ -30,46 +29,44 @@ namespace hshm {
 class ThreadModelManager {
  public:
   ThreadType type_; /**< The type of threads used in this program */
-  std::unique_ptr<thread_model::ThreadModel>
-    thread_static_; /**< Functions static to all threads */
-
-  /** Default constructor */
-  ThreadModelManager() {
-    SetThreadModel(ThreadType::kPthread);
-  }
+  thread_model::ThreadModel *thread_static_; /**< Functions static to all threads */
 
   /** Set the threading model of this application */
+  HSHM_CROSS_FUN
   void SetThreadModel(ThreadType type);
 
   /** Sleep for a period of time (microseconds) */
+  HSHM_CROSS_FUN
   void SleepForUs(size_t us);
 
   /** Call Yield */
+  HSHM_CROSS_FUN
   void Yield();
 
   /** Call GetTid */
+  HSHM_CROSS_FUN
   tid_t GetTid();
 };
 
 /** A unique identifier of this thread across processes */
-union NodeThreadId {
-  struct {
-    uint32_t tid_;
-    uint32_t pid_;
-  } bits_;
-  uint64_t as_int_;
-
-  /** Default constructor */
-  NodeThreadId() {
-    bits_.tid_ = HERMES_THREAD_MODEL->GetTid();
-    bits_.pid_ = HERMES_SYSTEM_INFO->pid_;
-  }
-
-  /** Hash function */
-  uint32_t hash() {
-    return as_int_;
-  }
-};
+//union NodeThreadId {
+//  struct {
+//    uint32_t tid_;
+//    uint32_t pid_;
+//  } bits_;
+//  uint64_t as_int_;
+//
+//  /** Default constructor */
+//  NodeThreadId() {
+//    bits_.tid_ = HERMES_THREAD_MODEL->GetTid();
+//    bits_.pid_ = HERMES_SYSTEM_INFO->pid_;
+//  }
+//
+//  /** Hash function */
+//  uint32_t hash() {
+//    return as_int_;
+//  }
+//};
 
 }  // namespace hshm
 

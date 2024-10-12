@@ -25,31 +25,21 @@ namespace hshm {
 template<typename T>
 class GlobalSingleton {
  public:
-  static T *obj_;
+  static T obj_;
 
  public:
-  HSHM_INLINE_CROSS_FUN GlobalSingleton() = default;
-
   /** Get instance of type T */
-  HSHM_INLINE_CROSS_FUN static T* GetInstance() {
-    return obj_;
+  HSHM_CROSS_FUN static T* GetInstance() {
+    return &obj_;
   }
 
   /** Get ref of type T */
   HSHM_INLINE_CROSS_FUN static T& GetRef() {
-    return *obj_;
+    return obj_;
   }
-
-  /** Static initialization method for obj */
-  HSHM_CROSS_FUN static T& _GetObj();
 };
-template<typename T>
-T* GlobalSingleton<T>::obj_ = &GlobalSingleton<T>::_GetObj();
 #define DEFINE_GLOBAL_SINGLETON_CC(T)\
-  template<> T& hshm::GlobalSingleton<T>::_GetObj() {\
-    static T obj; \
-    return obj;\
-  }
+  template<> T hshm::GlobalSingleton<T>::obj_ = T();
 
 }  // namespace hshm
 

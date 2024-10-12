@@ -88,10 +88,16 @@ void VectorOfListOfStringTest() {
 
 TEST_CASE("VectorOfInt") {
   Allocator *alloc = alloc_g;
-  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
-  VectorTest<int, false>();
-  VectorTest<int, true>();
-  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+  try {
+    REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+    VectorTest<int, false>();
+    VectorTest<int, true>();
+    REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+  } catch (std::exception &e) {
+    FAIL(e.what());
+  } catch (hshm::Error &e) {
+    FAIL(e.what());
+  }
 }
 
 TEST_CASE("VectorOfString") {

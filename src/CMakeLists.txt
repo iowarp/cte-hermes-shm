@@ -7,7 +7,7 @@ set(CMAKE_CXX_STANDARD 17)
 # Build HSHM
 #-----------------------------------------------------------------------------
 add_library(hermes_shm_data_structures
-        memory/memory_manager.cc
+        memory_manager.cc
         thread_model_manager.cc
         thread_factory.cc
         data_structure_singleton.cc

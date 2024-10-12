@@ -16,6 +16,7 @@
 // Std
 #include <string>
 #include <queue>
+#include <mutex>
 
 // hermes
 #include "hermes_shm/data_structures/ipc/string.h"
