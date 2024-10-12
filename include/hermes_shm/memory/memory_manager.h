@@ -18,8 +18,6 @@
 #include "hermes_shm/memory/memory_manager_.h"
 #include "hermes_shm/constants/macros.h"
 #include "hermes_shm/util/logging.h"
-#include <hermes_shm/constants/data_structure_singleton_macros.h>
-#include "memory_manager_.h"
 
 namespace hipc = hshm::ipc;
 
@@ -36,31 +34,11 @@ HSHM_CROSS_FUN
 MemoryBackend* MemoryManager::CreateBackend(size_t size,
                              const std::string &url,
                              Args&& ...args) {
-  auto backend_u = MemoryBackendFactory::shm_init<BackendT>(
+  auto backend = MemoryBackendFactory::shm_init<BackendT>(
     size, url, std::forward<Args>(args)...);
-  auto backend = RegisterBackend(url, backend_u);
+  RegisterBackend(url, backend);
   backend->Own();
   return backend;
-}
-
-/**
- * Register a unique memory backend. Throws an exception if the backend
- * already exists. This is because unregistering a backend can cause
- * ramifications across allocators.
- *
- * @param url the backend's unique identifier
- * @param backend the backend to register
- * */
-HSHM_INLINE_CROSS_FUN
-MemoryBackend* MemoryManager::RegisterBackend(
-    const std::string &url,
-    std::unique_ptr<MemoryBackend> &backend) {
-  auto ptr = backend.get();
-  if (GetBackend(url)) {
-    throw MEMORY_BACKEND_REPEATED.format();
-  }
-  backends_.emplace(url, std::move(backend));
-  return ptr;
 }
 
 /**

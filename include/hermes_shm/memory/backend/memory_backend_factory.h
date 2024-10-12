@@ -19,6 +19,7 @@
 #include "posix_shm_mmap.h"
 #include "null_backend.h"
 #include "array_backend.h"
+#include "hermes_shm/memory/memory_manager_.h"
 
 namespace hshm::ipc {
 
@@ -26,32 +27,32 @@ class MemoryBackendFactory {
  public:
   /** Initialize a new backend */
   template<typename BackendT, typename ...Args>
-  static std::unique_ptr<MemoryBackend> shm_init(
+  static MemoryBackend* shm_init(
     size_t size, const std::string &url, Args ...args) {
     if constexpr(std::is_same_v<PosixShmMmap, BackendT>) {
       // PosixShmMmap
-      auto backend = std::make_unique<PosixShmMmap>();
+      auto backend = HERMES_MEMORY_MANAGER->GetDefaultAllocator()->NewObj<PosixShmMmap>();
       if (!backend->shm_init(size, url, std::forward<args>(args)...)) {
         throw MEMORY_BACKEND_CREATE_FAILED.format();
       }
       return backend;
     } else if constexpr(std::is_same_v<PosixMmap, BackendT>) {
       // PosixMmap
-      auto backend = std::make_unique<PosixMmap>();
+      auto backend = HERMES_MEMORY_MANAGER->GetDefaultAllocator()->NewObj<PosixMmap>();
       if (!backend->shm_init(size, std::forward<args>(args)...)) {
         throw MEMORY_BACKEND_CREATE_FAILED.format();
       }
       return backend;
     } else if constexpr(std::is_same_v<NullBackend, BackendT>) {
       // NullBackend
-      auto backend = std::make_unique<NullBackend>();
+      auto backend = HERMES_MEMORY_MANAGER->GetDefaultAllocator()->NewObj<NullBackend>();
       if (!backend->shm_init(size, url, std::forward<args>(args)...)) {
         throw MEMORY_BACKEND_CREATE_FAILED.format();
       }
       return backend;
     } else if constexpr(std::is_same_v<ArrayBackend, BackendT>) {
       // ArrayBackend
-      auto backend = std::make_unique<ArrayBackend>();
+      auto backend = HERMES_MEMORY_MANAGER->GetDefaultAllocator()->NewObj<ArrayBackend>();
       if (!backend->shm_init(size, url, std::forward<args>(args)...)) {
         throw MEMORY_BACKEND_CREATE_FAILED.format();
       }
@@ -62,12 +63,12 @@ class MemoryBackendFactory {
   }
 
   /** Deserialize an existing backend */
-  static std::unique_ptr<MemoryBackend> shm_deserialize(
+  static MemoryBackend* shm_deserialize(
     MemoryBackendType type, const std::string &url) {
     switch (type) {
       // PosixShmMmap
       case MemoryBackendType::kPosixShmMmap: {
-        auto backend = std::make_unique<PosixShmMmap>();
+        auto backend = HERMES_MEMORY_MANAGER->GetDefaultAllocator()->NewObj<PosixShmMmap>();
         if (!backend->shm_deserialize(url)) {
           throw MEMORY_BACKEND_NOT_FOUND.format();
         }
@@ -76,7 +77,7 @@ class MemoryBackendFactory {
 
       // PosixMmap
       case MemoryBackendType::kPosixMmap: {
-        auto backend = std::make_unique<PosixMmap>();
+        auto backend = HERMES_MEMORY_MANAGER->GetDefaultAllocator()->NewObj<PosixMmap>();
         if (!backend->shm_deserialize(url)) {
           throw MEMORY_BACKEND_NOT_FOUND.format();
         }
@@ -85,7 +86,7 @@ class MemoryBackendFactory {
 
       // NullBackend
       case MemoryBackendType::kNullBackend: {
-        auto backend = std::make_unique<NullBackend>();
+        auto backend = HERMES_MEMORY_MANAGER->GetDefaultAllocator()->NewObj<NullBackend>();
         if (!backend->shm_deserialize(url)) {
           throw MEMORY_BACKEND_NOT_FOUND.format();
         }
@@ -94,7 +95,7 @@ class MemoryBackendFactory {
 
       // ArrayBackend
       case MemoryBackendType::kArrayBackend: {
-        auto backend = std::make_unique<ArrayBackend>();
+        auto backend = HERMES_MEMORY_MANAGER->GetDefaultAllocator()->NewObj<ArrayBackend>();
         if (!backend->shm_deserialize(url)) {
           throw MEMORY_BACKEND_NOT_FOUND.format();
         }

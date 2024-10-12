@@ -12,6 +12,7 @@ add_library(hermes_shm_data_structures
         thread_factory.cc
         data_structure_singleton.cc
         ../include/hermes_shm/memory/memory_manager_.h
+        ../include/hermes_shm/data_structures/containers/unique_ptr.h
 )
 target_link_libraries(hermes_shm_data_structures
         -lrt -ldl

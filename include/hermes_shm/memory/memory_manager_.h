@@ -6,12 +6,7 @@
 #define HERMES_SHM_INCLUDE_HERMES_SHM_MEMORY_MEMORY_MANAGER__H_
 
 #include "hermes_shm/memory/allocator/allocator.h"
-#include "backend/memory_backend.h"
 #include "hermes_shm/memory/backend/posix_mmap.h"
-#include "hermes_shm/util/errors.h"
-#include "hermes_shm/util/logging.h"
-#include <unordered_map>
-#include <string>
 
 namespace hipc = hshm::ipc;
 
@@ -24,8 +19,7 @@ class MemoryManager {
   allocator_id_t root_allocator_id_;
   PosixMmap root_backend_;
   Allocator *root_allocator_;
-  std::unordered_map<std::string, std::unique_ptr<MemoryBackend>> backends_;
-  std::unique_ptr<Allocator> allocators_made_[MAX_ALLOCATORS];
+  void *backends_;
   Allocator *allocators_[MAX_ALLOCATORS];
   Allocator *default_allocator_;
 
@@ -58,10 +52,10 @@ class MemoryManager {
    * @param url the backend's unique identifier
    * @param backend the backend to register
    * */
-  HSHM_INLINE_CROSS_FUN
+  HSHM_CROSS_FUN
   MemoryBackend* RegisterBackend(
       const std::string &url,
-      std::unique_ptr<MemoryBackend> &backend);
+      MemoryBackend* backend);
 
   /**
    * Attaches to an existing memory backend located at \a url url.
@@ -95,11 +89,14 @@ class MemoryManager {
   void ScanBackends();
 
   /**
-   * Registers an allocator. Used internally by ScanBackends, but may
-   * also be used externally.
+   * Create and register a memory allocator for a particular backend.
    * */
+  template<typename AllocT, typename ...Args>
   HSHM_CROSS_FUN
-  Allocator* RegisterAllocator(std::unique_ptr<Allocator> &alloc);
+  Allocator* CreateAllocator(const std::string &url,
+                             allocator_id_t alloc_id,
+                             size_t custom_header_size,
+                             Args&& ...args);
 
   /**
    * Registers an allocator. Used internally by ScanBackends, but may
@@ -113,16 +110,6 @@ class MemoryManager {
    * */
   HSHM_CROSS_FUN
   void UnregisterAllocator(allocator_id_t alloc_id);
-
-  /**
-   * Create and register a memory allocator for a particular backend.
-   * */
-  template<typename AllocT, typename ...Args>
-  HSHM_CROSS_FUN
-  Allocator* CreateAllocator(const std::string &url,
-                             allocator_id_t alloc_id,
-                             size_t custom_header_size,
-                             Args&& ...args);
 
   /**
    * Locates an allocator of a particular id

@@ -14,8 +14,8 @@
 #define HERMES_INCLUDE_HERMES_TYPES_ARGPACK_H_
 
 #include "hermes_shm/constants/macros.h"
-//#include <functional>
-//#include <stdexcept>
+#include <functional>
+#include <stdexcept>
 
 namespace hshm {
 

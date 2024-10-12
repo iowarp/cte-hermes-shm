@@ -18,6 +18,8 @@
 #include "stack_allocator.h"
 #include "malloc_allocator.h"
 #include "scalable_page_allocator.h"
+#include "hermes_shm/memory/memory_manager_.h"
+#include <hermes_shm/constants/data_structure_singleton_macros.h>
 
 namespace hshm::ipc {
 
@@ -27,13 +29,13 @@ class AllocatorFactory {
    * Create a new memory allocator
    * */
   template<typename AllocT, typename ...Args>
-  static std::unique_ptr<Allocator> shm_init(allocator_id_t alloc_id,
-                                             size_t custom_header_size,
-                                             MemoryBackend *backend,
-                                             Args&& ...args) {
+  static Allocator* shm_init(allocator_id_t alloc_id,
+                             size_t custom_header_size,
+                             MemoryBackend *backend,
+                             Args&& ...args) {
     if constexpr(std::is_same_v<StackAllocator, AllocT>) {
       // StackAllocator
-      auto alloc = std::make_unique<StackAllocator>();
+      auto alloc = HERMES_MEMORY_MANAGER->GetDefaultAllocator()->NewObj<StackAllocator>();
       alloc->shm_init(alloc_id,
                       custom_header_size,
                       backend->data_,
@@ -42,7 +44,7 @@ class AllocatorFactory {
       return alloc;
     } else if constexpr(std::is_same_v<MallocAllocator, AllocT>) {
       // Malloc Allocator
-      auto alloc = std::make_unique<MallocAllocator>();
+      auto alloc = HERMES_MEMORY_MANAGER->GetDefaultAllocator()->NewObj<MallocAllocator>();
       alloc->shm_init(alloc_id,
                       custom_header_size,
                       backend->data_size_,
@@ -50,7 +52,7 @@ class AllocatorFactory {
       return alloc;
     } else if constexpr(std::is_same_v<ScalablePageAllocator, AllocT>) {
       // Scalable Page Allocator
-      auto alloc = std::make_unique<ScalablePageAllocator>();
+      auto alloc = HERMES_MEMORY_MANAGER->GetDefaultAllocator()->NewObj<ScalablePageAllocator>();
       alloc->shm_init(alloc_id,
                       custom_header_size,
                       backend->data_,
@@ -66,26 +68,26 @@ class AllocatorFactory {
   /**
    * Deserialize the allocator managing this backend.
    * */
-  static std::unique_ptr<Allocator> shm_deserialize(MemoryBackend *backend) {
+  static Allocator* shm_deserialize(MemoryBackend *backend) {
     auto header_ = reinterpret_cast<AllocatorHeader*>(backend->data_);
     switch (static_cast<AllocatorType>(header_->allocator_type_)) {
       // Stack Allocator
       case AllocatorType::kStackAllocator: {
-        auto alloc = std::make_unique<StackAllocator>();
+        auto alloc = HERMES_MEMORY_MANAGER->GetDefaultAllocator()->NewObj<StackAllocator>();
         alloc->shm_deserialize(backend->data_,
                                backend->data_size_);
         return alloc;
       }
       // Malloc Allocator
       case AllocatorType::kMallocAllocator: {
-        auto alloc = std::make_unique<MallocAllocator>();
+        auto alloc = HERMES_MEMORY_MANAGER->GetDefaultAllocator()->NewObj<MallocAllocator>();
         alloc->shm_deserialize(backend->data_,
                                backend->data_size_);
         return alloc;
       }
       // Scalable Page Allocator
       case AllocatorType::kScalablePageAllocator: {
-        auto alloc = std::make_unique<ScalablePageAllocator>();
+        auto alloc = HERMES_MEMORY_MANAGER->GetDefaultAllocator()->NewObj<ScalablePageAllocator>();
         alloc->shm_deserialize(backend->data_,
                                backend->data_size_);
         return alloc;
