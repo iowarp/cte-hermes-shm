@@ -19,14 +19,7 @@
 
 namespace hshm::ipc {
 
-HSHM_CROSS_FUN
-void MemoryManager::ScanBackends() {
-  for (auto &[url, backend] : backends_) {
-    auto alloc = AllocatorFactory::shm_deserialize(backend.get());
-    RegisterAllocator(alloc);
-  }
-}
-
+/** Create the root allocator */
 HSHM_CROSS_FUN
 MemoryManager::MemoryManager() {
   root_allocator_id_.bits_.major_ = 3;
@@ -67,6 +60,18 @@ MemoryBackend* MemoryManager::AttachBackend(MemoryBackendType type,
   backend->Disown();
   return backend;
 }
+
+/**
+ * Scans all attached backends for new memory allocators.
+ * */
+HSHM_CROSS_FUN
+void MemoryManager::ScanBackends() {
+  for (auto &[url, backend] : backends_) {
+    auto alloc = AllocatorFactory::shm_deserialize(backend.get());
+    RegisterAllocator(alloc);
+  }
+}
+
 
 /**
  * Returns a pointer to a backend that has already been attached.

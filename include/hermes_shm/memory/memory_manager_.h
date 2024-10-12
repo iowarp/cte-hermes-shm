@@ -30,7 +30,7 @@ class MemoryManager {
   Allocator *default_allocator_;
 
  public:
-  /** Default constructor. */
+  /** Create the root allocator */
   HSHM_CROSS_FUN
   MemoryManager();
 
