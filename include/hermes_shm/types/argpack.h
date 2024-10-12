@@ -14,7 +14,7 @@
 #define HERMES_INCLUDE_HERMES_TYPES_ARGPACK_H_
 
 #include "hermes_shm/constants/macros.h"
-#include <functional>
+// #include <functional>
 
 namespace hshm {
 
@@ -143,7 +143,7 @@ class PassArgPack {
         std::forward<CurArgs>(args)...,
         FORWARD_ARGPACK_PARAM(pack, i));
     } else {
-      return std::__invoke(f, std::forward<CurArgs>(args)...);
+      return f(std::forward<CurArgs>(args)...);
     }
   }
 };

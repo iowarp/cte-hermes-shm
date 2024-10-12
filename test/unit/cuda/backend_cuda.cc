@@ -15,6 +15,7 @@ struct MyStruct {
 __global__ void my_kernel(MyStruct* ptr) {
   int idx = blockIdx.x * blockDim.x + threadIdx.x;
   char buf[16];
+  hshm::make_argpack(1, 2, 3, 4);
 //  hshm::ForwardIterateArgpack::Apply(hshm::make_argpack(1, 2, 3), [](auto i, auto &&arg) {
 //    printf("i=%d\n", i);
 //  });
