@@ -58,11 +58,28 @@
 #define ESC_(...) VAN ## __VA_ARGS__
 #define VANISH
 
+/** Macros for CUDA functions */
+#ifdef HERMES_ENABLE_CUDA
+#include <cuda_runtime.h>
+#define CUDA_HOST_DEVICE __host__ __device__
+#else
+#define CUDA_HOST_DEVICE
+#endif
+
 /**
  * Ensure that the compiler ALWAYS inlines a particular function.
  * */
 #define HSHM_ALWAYS_INLINE \
   inline __attribute__((always_inline))
+
+/** Macro for functions */
+#define HSHM_CROSS_FUN CUDA_HOST_DEVICE
+
+/** Macro for variables */
+#define HSHM_CROSS_VAR CUDA_HOST_DEVICE
+
+/** Macro for inline functions */
+#define HSHM_INLINE_CROSS_FUN HSHM_ALWAYS_INLINE HSHM_CROSS_FUN
 
 #define MARK_FIRST_BIT_MASK(T) ((T)1 << (sizeof(T) * 8 - 1))
 #define MARK_FIRST_BIT(T, X) ((X) | MARK_FIRST_BIT_MASK(T))

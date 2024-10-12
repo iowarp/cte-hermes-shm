@@ -148,7 +148,7 @@ struct RwLock {
 
  private:
   /** Update the mode of the lock */
-  HSHM_ALWAYS_INLINE void UpdateMode(RwLockMode &mode) {
+  HSHM_INLINE_CROSS_FUN void UpdateMode(RwLockMode &mode) {
     // When # readers is 0, there is a lag to when the mode is updated
     // When # writers is 0, there is a lag to when the mode is updated
     mode = mode_.load();

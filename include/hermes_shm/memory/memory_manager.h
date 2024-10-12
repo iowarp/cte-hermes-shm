@@ -27,9 +27,11 @@ namespace hshm::ipc {
 class MemoryManager {
  public:
   /** Default constructor. */
+  HSHM_CROSS_FUN
   MemoryManager() = default;
 
   /** Default backend size */
+  HSHM_CROSS_FUN
   static size_t GetDefaultBackendSize() {
     return HERMES_SYSTEM_INFO->ram_size_;
   }
@@ -41,6 +43,7 @@ class MemoryManager {
    * policies over a single memory region.
    * */
   template<typename BackendT, typename ...Args>
+  HSHM_CROSS_FUN
   MemoryBackend* CreateBackend(size_t size,
                                const std::string &url,
                                Args&& ...args) {
@@ -54,6 +57,7 @@ class MemoryManager {
   /**
    * Attaches to an existing memory backend located at \a url url.
    * */
+  HSHM_CROSS_FUN
   MemoryBackend* AttachBackend(MemoryBackendType type,
                                const std::string &url) {
     auto backend_u = MemoryBackendFactory::shm_deserialize(type, url);
@@ -66,6 +70,7 @@ class MemoryManager {
   /**
    * Returns a pointer to a backend that has already been attached.
    * */
+  HSHM_CROSS_FUN
   MemoryBackend* GetBackend(const std::string &url) {
     return HERMES_MEMORY_REGISTRY_REF.GetBackend(url);
   }
@@ -73,6 +78,7 @@ class MemoryManager {
   /**
    * Unregister backend
    * */
+  HSHM_CROSS_FUN
   void UnregisterBackend(const std::string &url) {
     HERMES_MEMORY_REGISTRY_REF.UnregisterBackend(url);
   }
@@ -80,6 +86,7 @@ class MemoryManager {
   /**
    * Destroy backend
    * */
+  HSHM_CROSS_FUN
   void DestroyBackend(const std::string &url) {
     auto backend = GetBackend(url);
     backend->Own();
@@ -89,12 +96,14 @@ class MemoryManager {
   /**
    * Scans all attached backends for new memory allocators.
    * */
+  HSHM_CROSS_FUN
   void ScanBackends();
 
   /**
    * Registers an allocator. Used internally by ScanBackends, but may
    * also be used externally.
    * */
+  HSHM_CROSS_FUN
   void RegisterAllocator(std::unique_ptr<Allocator> &alloc) {
     HERMES_MEMORY_REGISTRY_REF.RegisterAllocator(alloc);
   }
@@ -103,6 +112,7 @@ class MemoryManager {
    * Registers an allocator. Used internally by ScanBackends, but may
    * also be used externally.
    * */
+  HSHM_CROSS_FUN
   void RegisterAllocator(Allocator *alloc) {
     HERMES_MEMORY_REGISTRY_REF.RegisterAllocator(alloc);
   }
@@ -110,6 +120,7 @@ class MemoryManager {
   /**
    * Destroys an allocator
    * */
+  HSHM_CROSS_FUN
   void UnregisterAllocator(allocator_id_t alloc_id) {
     HERMES_MEMORY_REGISTRY_REF.UnregisterAllocator(alloc_id);
   }
@@ -118,6 +129,7 @@ class MemoryManager {
    * Create and register a memory allocator for a particular backend.
    * */
   template<typename AllocT, typename ...Args>
+  HSHM_CROSS_FUN
   Allocator* CreateAllocator(const std::string &url,
                              allocator_id_t alloc_id,
                              size_t custom_header_size,
@@ -135,14 +147,14 @@ class MemoryManager {
   /**
    * Locates an allocator of a particular id
    * */
-  HSHM_ALWAYS_INLINE Allocator* GetAllocator(allocator_id_t alloc_id) {
+  HSHM_INLINE_CROSS_FUN Allocator* GetAllocator(allocator_id_t alloc_id) {
     return HERMES_MEMORY_REGISTRY_REF.GetAllocator(alloc_id);
   }
 
   /**
    * Gets the allocator used for initializing other allocators.
    * */
-  HSHM_ALWAYS_INLINE Allocator* GetRootAllocator() {
+  HSHM_INLINE_CROSS_FUN Allocator* GetRootAllocator() {
     return HERMES_MEMORY_REGISTRY_REF.GetRootAllocator();
   }
 
@@ -150,7 +162,7 @@ class MemoryManager {
    * Gets the allocator used by default when no allocator is
    * used to construct an object.
    * */
-  HSHM_ALWAYS_INLINE Allocator* GetDefaultAllocator() {
+  HSHM_INLINE_CROSS_FUN Allocator* GetDefaultAllocator() {
     return HERMES_MEMORY_REGISTRY_REF.GetDefaultAllocator();
   }
 
@@ -158,7 +170,7 @@ class MemoryManager {
    * Sets the allocator used by default when no allocator is
    * used to construct an object.
    * */
-  HSHM_ALWAYS_INLINE void SetDefaultAllocator(Allocator *alloc) {
+  HSHM_INLINE_CROSS_FUN void SetDefaultAllocator(Allocator *alloc) {
     HERMES_MEMORY_REGISTRY_REF.SetDefaultAllocator(alloc);
   }
 
@@ -166,7 +178,7 @@ class MemoryManager {
    * Convert a process-independent pointer into a process-specific pointer.
    * */
   template<typename T, typename POINTER_T = Pointer>
-  HSHM_ALWAYS_INLINE T* Convert(const POINTER_T &p) {
+  HSHM_INLINE_CROSS_FUN T* Convert(const POINTER_T &p) {
     if (p.IsNull()) {
       return nullptr;
     }
@@ -181,7 +193,7 @@ class MemoryManager {
    * @param ptr the pointer to convert
    * */
   template<typename T, typename POINTER_T = Pointer>
-  HSHM_ALWAYS_INLINE POINTER_T Convert(allocator_id_t allocator_id, T *ptr) {
+  HSHM_INLINE_CROSS_FUN POINTER_T Convert(allocator_id_t allocator_id, T *ptr) {
     return GetAllocator(allocator_id)->template
       Convert<T, POINTER_T>(ptr);
   }
@@ -193,7 +205,7 @@ class MemoryManager {
    * @param ptr the pointer to convert
    * */
   template<typename T, typename POINTER_T = Pointer>
-  HSHM_ALWAYS_INLINE POINTER_T Convert(T *ptr) {
+  HSHM_INLINE_CROSS_FUN POINTER_T Convert(T *ptr) {
     for (auto &alloc : HERMES_MEMORY_REGISTRY_REF.allocators_) {
       if (alloc && alloc->ContainsPtr(ptr)) {
         return alloc->template

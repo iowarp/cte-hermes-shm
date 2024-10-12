@@ -25,8 +25,10 @@ struct StackAllocatorHeader : public AllocatorHeader {
   HeapAllocator heap_;
   std::atomic<size_t> total_alloc_;
 
+  HSHM_CROSS_FUN
   StackAllocatorHeader() = default;
 
+  HSHM_CROSS_FUN
   void Configure(allocator_id_t alloc_id,
                  size_t custom_header_size,
                  size_t region_off,
@@ -47,12 +49,14 @@ class StackAllocator : public Allocator {
   /**
    * Allocator constructor
    * */
+  HSHM_CROSS_FUN
   StackAllocator()
   : header_(nullptr) {}
 
   /**
    * Get the ID of this allocator from shared memory
    * */
+  HSHM_CROSS_FUN
   allocator_id_t &GetId() override {
     return header_->allocator_id_;
   }
@@ -60,6 +64,7 @@ class StackAllocator : public Allocator {
   /**
    * Initialize the allocator in shared memory
    * */
+  HSHM_CROSS_FUN
   void shm_init(allocator_id_t id,
                 size_t custom_header_size,
                 char *buffer,
@@ -77,6 +82,7 @@ class StackAllocator : public Allocator {
   /**
    * Attach an existing allocator from shared memory
    * */
+  HSHM_CROSS_FUN
   void shm_deserialize(char *buffer,
                        size_t buffer_size) override {
     buffer_ = buffer;
@@ -90,6 +96,7 @@ class StackAllocator : public Allocator {
    * Allocate a memory of \a size size. The page allocator cannot allocate
    * memory larger than the page size.
    * */
+  HSHM_CROSS_FUN
   OffsetPointer AllocateOffset(size_t size) override {
     size += sizeof(MpPage);
     OffsetPointer p = heap_->AllocateOffset(size);
@@ -105,6 +112,7 @@ class StackAllocator : public Allocator {
    * Allocate a memory of \a size size, which is aligned to \a
    * alignment.
    * */
+  HSHM_CROSS_FUN
   OffsetPointer AlignedAllocateOffset(size_t size, size_t alignment) override {
     throw ALIGNED_ALLOC_NOT_SUPPORTED.format();
   }
@@ -114,6 +122,7 @@ class StackAllocator : public Allocator {
    *
    * @return whether or not the pointer p was changed
    * */
+  HSHM_CROSS_FUN
   OffsetPointer ReallocateOffsetNoNullCheck(
     OffsetPointer p, size_t new_size) override {
     OffsetPointer new_p;
@@ -129,6 +138,7 @@ class StackAllocator : public Allocator {
   /**
    * Free \a ptr pointer. Null check is performed elsewhere.
    * */
+  HSHM_CROSS_FUN
   void FreeOffsetNoNullCheck(OffsetPointer p) override {
     auto hdr = Convert<MpPage>(p - sizeof(MpPage));
     if (!hdr->IsAllocated()) {
@@ -142,6 +152,7 @@ class StackAllocator : public Allocator {
    * Get the current amount of data allocated. Can be used for leak
    * checking.
    * */
+  HSHM_CROSS_FUN
   size_t GetCurrentlyAllocatedSize() override {
     return header_->total_alloc_;
   }

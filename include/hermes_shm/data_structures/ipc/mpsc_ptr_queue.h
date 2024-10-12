@@ -53,6 +53,7 @@ class mpsc_ptr_queue : public ShmContainer {
    * ===================================*/
 
   /** SHM constructor. Default. */
+  HSHM_CROSS_FUN
   explicit mpsc_ptr_queue(Allocator *alloc,
                           size_t depth = 1024) {
     shm_init_container(alloc);
@@ -66,6 +67,7 @@ class mpsc_ptr_queue : public ShmContainer {
    * ===================================*/
 
   /** SHM copy constructor */
+  HSHM_CROSS_FUN
   explicit mpsc_ptr_queue(Allocator *alloc,
                           const mpsc_ptr_queue &other) {
     shm_init_container(alloc);
@@ -74,6 +76,7 @@ class mpsc_ptr_queue : public ShmContainer {
   }
 
   /** SHM copy assignment operator */
+  HSHM_CROSS_FUN
   mpsc_ptr_queue& operator=(const mpsc_ptr_queue &other) {
     if (this != &other) {
       shm_destroy();
@@ -83,6 +86,7 @@ class mpsc_ptr_queue : public ShmContainer {
   }
 
   /** SHM copy constructor + operator main */
+  HSHM_CROSS_FUN
   void shm_strong_copy_construct_and_op(const mpsc_ptr_queue &other) {
     head_ = other.head_.load();
     tail_ = other.tail_.load();
@@ -94,6 +98,7 @@ class mpsc_ptr_queue : public ShmContainer {
    * ===================================*/
 
   /** SHM move constructor. */
+  HSHM_CROSS_FUN
   mpsc_ptr_queue(Allocator *alloc,
                  mpsc_ptr_queue &&other) noexcept {
     shm_init_container(alloc);
@@ -109,6 +114,7 @@ class mpsc_ptr_queue : public ShmContainer {
   }
 
   /** SHM move assignment operator. */
+  HSHM_CROSS_FUN
   mpsc_ptr_queue& operator=(mpsc_ptr_queue &&other) noexcept {
     if (this != &other) {
       shm_destroy();
@@ -130,16 +136,19 @@ class mpsc_ptr_queue : public ShmContainer {
    * ===================================*/
 
   /** SHM destructor.  */
+  HSHM_CROSS_FUN
   void shm_destroy_main() {
     (*queue_).shm_destroy();
   }
 
   /** Check if the list is empty */
+  HSHM_CROSS_FUN
   bool IsNull() const {
     return (*queue_).IsNull();
   }
 
   /** Sets this list as empty */
+  HSHM_CROSS_FUN
   void SetNull() {
     head_ = 0;
     tail_ = 0;
@@ -151,6 +160,7 @@ class mpsc_ptr_queue : public ShmContainer {
 
   /** Construct an element at \a pos position in the list */
   template<typename ...Args>
+  HSHM_CROSS_FUN
   qtok_t emplace(const T &val) {
     // Allocate a slot in the queue
     // The slot is marked NULL, so pop won't do anything if context switch
@@ -188,6 +198,7 @@ class mpsc_ptr_queue : public ShmContainer {
 
  public:
   /** Consumer pops the head object */
+  HSHM_CROSS_FUN
   qtok_t pop(T &val) {
     // Don't pop if there's no entries
     _qtok_t head = head_.load();

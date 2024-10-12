@@ -33,12 +33,12 @@ union allocator_id_t {
   } bits_;
   uint64_t int_;
 
-  HSHM_ALWAYS_INLINE allocator_id_t() = default;
+  HSHM_INLINE_CROSS_FUN allocator_id_t() = default;
 
   /**
    * Constructor which sets major & minor
    * */
-  HSHM_ALWAYS_INLINE explicit allocator_id_t(uint32_t major, uint32_t minor) {
+  HSHM_INLINE_CROSS_FUN explicit allocator_id_t(uint32_t major, uint32_t minor) {
     bits_.major_ = major;
     bits_.minor_ = minor;
   }
@@ -46,39 +46,38 @@ union allocator_id_t {
   /**
    * Set this allocator to null
    * */
-  HSHM_ALWAYS_INLINE void SetNull() {
+  HSHM_INLINE_CROSS_FUN void SetNull() {
     int_ = 0;
   }
 
   /**
    * Check if this is the null allocator
    * */
-  HSHM_ALWAYS_INLINE bool IsNull() const { return int_ == 0; }
+  HSHM_INLINE_CROSS_FUN bool IsNull() const { return int_ == 0; }
 
   /** Equality check */
-  HSHM_ALWAYS_INLINE bool operator==(const allocator_id_t &other) const {
+  HSHM_INLINE_CROSS_FUN bool operator==(const allocator_id_t &other) const {
     return other.int_ == int_;
   }
 
   /** Inequality check */
-  HSHM_ALWAYS_INLINE bool operator!=(const allocator_id_t &other) const {
+  HSHM_INLINE_CROSS_FUN bool operator!=(const allocator_id_t &other) const {
     return other.int_ != int_;
   }
 
   /** Get the null allocator */
-  HSHM_ALWAYS_INLINE static allocator_id_t GetNull() {
-    static allocator_id_t alloc(0, 0);
-    return alloc;
+  HSHM_INLINE_CROSS_FUN static allocator_id_t GetNull() {
+    return allocator_id_t(0, 0);
   }
 
   /** To index */
-  HSHM_ALWAYS_INLINE uint32_t ToIndex() {
+  HSHM_INLINE_CROSS_FUN uint32_t ToIndex() {
     return bits_.major_ * 4 + bits_.minor_;
   }
 
   /** Serialize an hipc::allocator_id */
   template <typename Ar>
-  HSHM_ALWAYS_INLINE
+  HSHM_INLINE_CROSS_FUN
   void serialize(Ar &ar) {
     ar &int_;
   }
@@ -97,125 +96,125 @@ struct OffsetPointerBase {
   atomic_t off_; /**< Offset within the allocator's slot */
 
   /** Default constructor */
-  HSHM_ALWAYS_INLINE OffsetPointerBase() = default;
+  HSHM_INLINE_CROSS_FUN OffsetPointerBase() = default;
 
   /** Full constructor */
-  HSHM_ALWAYS_INLINE explicit OffsetPointerBase(size_t off) : off_(off) {}
+  HSHM_INLINE_CROSS_FUN explicit OffsetPointerBase(size_t off) : off_(off) {}
 
   /** Full constructor */
-  HSHM_ALWAYS_INLINE explicit OffsetPointerBase(atomic_t off)
+  HSHM_INLINE_CROSS_FUN explicit OffsetPointerBase(atomic_t off)
   : off_(off.load()) {}
 
   /** Pointer constructor */
-  HSHM_ALWAYS_INLINE explicit OffsetPointerBase(allocator_id_t alloc_id,
+  HSHM_INLINE_CROSS_FUN explicit OffsetPointerBase(allocator_id_t alloc_id,
                                                 size_t off)
   : off_(off) {
     (void) alloc_id;
   }
 
   /** Copy constructor */
-  HSHM_ALWAYS_INLINE OffsetPointerBase(const OffsetPointerBase &other)
+  HSHM_INLINE_CROSS_FUN OffsetPointerBase(const OffsetPointerBase &other)
   : off_(other.off_.load()) {}
 
   /** Other copy constructor */
-  HSHM_ALWAYS_INLINE OffsetPointerBase(const OffsetPointerBase<!ATOMIC> &other)
+  HSHM_INLINE_CROSS_FUN OffsetPointerBase(const OffsetPointerBase<!ATOMIC> &other)
   : off_(other.off_.load()) {}
 
   /** Move constructor */
-  HSHM_ALWAYS_INLINE OffsetPointerBase(OffsetPointerBase &&other) noexcept
+  HSHM_INLINE_CROSS_FUN OffsetPointerBase(OffsetPointerBase &&other) noexcept
     : off_(other.off_.load()) {
     other.SetNull();
   }
 
   /** Get the offset pointer */
-  HSHM_ALWAYS_INLINE OffsetPointerBase<false> ToOffsetPointer() {
+  HSHM_INLINE_CROSS_FUN OffsetPointerBase<false> ToOffsetPointer() {
     return OffsetPointerBase<false>(off_.load());
   }
 
   /** Set to null */
-  HSHM_ALWAYS_INLINE void SetNull() {
+  HSHM_INLINE_CROSS_FUN void SetNull() {
     off_ = (size_t)-1;
   }
 
   /** Check if null */
-  HSHM_ALWAYS_INLINE bool IsNull() const {
+  HSHM_INLINE_CROSS_FUN bool IsNull() const {
     return off_.load() == (size_t)-1;
   }
 
   /** Get the null pointer */
-  HSHM_ALWAYS_INLINE static OffsetPointerBase GetNull() {
+  HSHM_INLINE_CROSS_FUN static OffsetPointerBase GetNull() {
     static const OffsetPointerBase p(-1);
     return p;
   }
 
   /** Atomic load wrapper */
-  HSHM_ALWAYS_INLINE size_t load(
+  HSHM_INLINE_CROSS_FUN size_t load(
     std::memory_order order = std::memory_order_seq_cst) const {
     return off_.load(order);
   }
 
   /** Atomic exchange wrapper */
-  HSHM_ALWAYS_INLINE void exchange(
+  HSHM_INLINE_CROSS_FUN void exchange(
     size_t count, std::memory_order order = std::memory_order_seq_cst) {
     off_.exchange(count, order);
   }
 
   /** Atomic compare exchange weak wrapper */
-  HSHM_ALWAYS_INLINE bool compare_exchange_weak(
+  HSHM_INLINE_CROSS_FUN bool compare_exchange_weak(
     size_t& expected, size_t desired,
     std::memory_order order = std::memory_order_seq_cst) {
     return off_.compare_exchange_weak(expected, desired, order);
   }
 
   /** Atomic compare exchange strong wrapper */
-  HSHM_ALWAYS_INLINE bool compare_exchange_strong(
+  HSHM_INLINE_CROSS_FUN bool compare_exchange_strong(
     size_t& expected, size_t desired,
     std::memory_order order = std::memory_order_seq_cst) {
     return off_.compare_exchange_weak(expected, desired, order);
   }
 
   /** Atomic add operator */
-  HSHM_ALWAYS_INLINE OffsetPointerBase operator+(size_t count) const {
+  HSHM_INLINE_CROSS_FUN OffsetPointerBase operator+(size_t count) const {
     return OffsetPointerBase(off_ + count);
   }
 
   /** Atomic subtract operator */
-  HSHM_ALWAYS_INLINE OffsetPointerBase operator-(size_t count) const {
+  HSHM_INLINE_CROSS_FUN OffsetPointerBase operator-(size_t count) const {
     return OffsetPointerBase(off_ - count);
   }
 
   /** Atomic add assign operator */
-  HSHM_ALWAYS_INLINE OffsetPointerBase& operator+=(size_t count) {
+  HSHM_INLINE_CROSS_FUN OffsetPointerBase& operator+=(size_t count) {
     off_ += count;
     return *this;
   }
 
   /** Atomic subtract assign operator */
-  HSHM_ALWAYS_INLINE OffsetPointerBase& operator-=(size_t count) {
+  HSHM_INLINE_CROSS_FUN OffsetPointerBase& operator-=(size_t count) {
     off_ -= count;
     return *this;
   }
 
   /** Atomic assign operator */
-  HSHM_ALWAYS_INLINE OffsetPointerBase& operator=(size_t count) {
+  HSHM_INLINE_CROSS_FUN OffsetPointerBase& operator=(size_t count) {
     off_ = count;
     return *this;
   }
 
   /** Atomic copy assign operator */
-  HSHM_ALWAYS_INLINE OffsetPointerBase& operator=(
+  HSHM_INLINE_CROSS_FUN OffsetPointerBase& operator=(
     const OffsetPointerBase &count) {
     off_ = count.load();
     return *this;
   }
 
   /** Equality check */
-  HSHM_ALWAYS_INLINE bool operator==(const OffsetPointerBase &other) const {
+  HSHM_INLINE_CROSS_FUN bool operator==(const OffsetPointerBase &other) const {
     return off_ == other.off_;
   }
 
   /** Inequality check */
-  HSHM_ALWAYS_INLINE bool operator!=(const OffsetPointerBase &other) const {
+  HSHM_INLINE_CROSS_FUN bool operator!=(const OffsetPointerBase &other) const {
     return off_ != other.off_;
   }
 };
@@ -244,54 +243,54 @@ struct PointerBase {
   OffsetPointerBase<ATOMIC> off_;   /// Offset within the allocator's slot
 
   /** Default constructor */
-  HSHM_ALWAYS_INLINE PointerBase() = default;
+  HSHM_INLINE_CROSS_FUN PointerBase() = default;
 
   /** Full constructor */
-  HSHM_ALWAYS_INLINE explicit PointerBase(allocator_id_t id, size_t off)
+  HSHM_INLINE_CROSS_FUN explicit PointerBase(allocator_id_t id, size_t off)
   : allocator_id_(id), off_(off) {}
 
   /** Full constructor using offset pointer */
-  HSHM_ALWAYS_INLINE explicit PointerBase(allocator_id_t id, OffsetPointer off)
+  HSHM_INLINE_CROSS_FUN explicit PointerBase(allocator_id_t id, OffsetPointer off)
   : allocator_id_(id), off_(off) {}
 
   /** Copy constructor */
-  HSHM_ALWAYS_INLINE PointerBase(const PointerBase &other)
+  HSHM_INLINE_CROSS_FUN PointerBase(const PointerBase &other)
   : allocator_id_(other.allocator_id_), off_(other.off_) {}
 
   /** Other copy constructor */
-  HSHM_ALWAYS_INLINE PointerBase(const PointerBase<!ATOMIC> &other)
+  HSHM_INLINE_CROSS_FUN PointerBase(const PointerBase<!ATOMIC> &other)
   : allocator_id_(other.allocator_id_), off_(other.off_.load()) {}
 
   /** Move constructor */
-  HSHM_ALWAYS_INLINE PointerBase(PointerBase &&other) noexcept
+  HSHM_INLINE_CROSS_FUN PointerBase(PointerBase &&other) noexcept
   : allocator_id_(other.allocator_id_), off_(other.off_) {
     other.SetNull();
   }
 
   /** Get the offset pointer */
-  HSHM_ALWAYS_INLINE OffsetPointerBase<false> ToOffsetPointer() const {
+  HSHM_INLINE_CROSS_FUN OffsetPointerBase<false> ToOffsetPointer() const {
     return OffsetPointerBase<false>(off_.load());
   }
 
   /** Set to null */
-  HSHM_ALWAYS_INLINE void SetNull() {
+  HSHM_INLINE_CROSS_FUN void SetNull() {
     allocator_id_.SetNull();
   }
 
   /** Check if null */
-  HSHM_ALWAYS_INLINE bool IsNull() const {
+  HSHM_INLINE_CROSS_FUN bool IsNull() const {
     return allocator_id_.IsNull();
   }
 
   /** Get the null pointer */
-  HSHM_ALWAYS_INLINE static PointerBase GetNull() {
+  HSHM_INLINE_CROSS_FUN static PointerBase GetNull() {
     static const PointerBase p(allocator_id_t::GetNull(),
                                OffsetPointer::GetNull());
     return p;
   }
 
   /** Copy assignment operator */
-  HSHM_ALWAYS_INLINE PointerBase& operator=(const PointerBase &other) {
+  HSHM_INLINE_CROSS_FUN PointerBase& operator=(const PointerBase &other) {
     if (this != &other) {
       allocator_id_ = other.allocator_id_;
       off_ = other.off_;
@@ -300,7 +299,7 @@ struct PointerBase {
   }
 
   /** Move assignment operator */
-  HSHM_ALWAYS_INLINE PointerBase& operator=(PointerBase &&other) {
+  HSHM_INLINE_CROSS_FUN PointerBase& operator=(PointerBase &&other) {
     if (this != &other) {
       allocator_id_ = other.allocator_id_;
       off_.exchange(other.off_.load());
@@ -310,7 +309,7 @@ struct PointerBase {
   }
 
   /** Addition operator */
-  HSHM_ALWAYS_INLINE PointerBase operator+(size_t size) const {
+  HSHM_INLINE_CROSS_FUN PointerBase operator+(size_t size) const {
     PointerBase p;
     p.allocator_id_ = allocator_id_;
     p.off_ = off_ + size;
@@ -318,7 +317,7 @@ struct PointerBase {
   }
 
   /** Subtraction operator */
-  HSHM_ALWAYS_INLINE PointerBase operator-(size_t size) const {
+  HSHM_INLINE_CROSS_FUN PointerBase operator-(size_t size) const {
     PointerBase p;
     p.allocator_id_ = allocator_id_;
     p.off_ = off_ - size;
@@ -326,24 +325,24 @@ struct PointerBase {
   }
 
   /** Addition assignment operator */
-  HSHM_ALWAYS_INLINE PointerBase& operator+=(size_t size) {
+  HSHM_INLINE_CROSS_FUN PointerBase& operator+=(size_t size) {
     off_ += size;
     return *this;
   }
 
   /** Subtraction assignment operator */
-  HSHM_ALWAYS_INLINE PointerBase& operator-=(size_t size) {
+  HSHM_INLINE_CROSS_FUN PointerBase& operator-=(size_t size) {
     off_ -= size;
     return *this;
   }
 
   /** Equality check */
-  HSHM_ALWAYS_INLINE bool operator==(const PointerBase &other) const {
+  HSHM_INLINE_CROSS_FUN bool operator==(const PointerBase &other) const {
     return (other.allocator_id_ == allocator_id_ && other.off_ == off_);
   }
 
   /** Inequality check */
-  HSHM_ALWAYS_INLINE bool operator!=(const PointerBase &other) const {
+  HSHM_INLINE_CROSS_FUN bool operator!=(const PointerBase &other) const {
     return (other.allocator_id_ != allocator_id_ || other.off_ != off_);
   }
 };
@@ -369,22 +368,22 @@ struct LPointer {
   PointerT shm_;
 
   /** Overload arrow */
-  HSHM_ALWAYS_INLINE T* operator->() const {
+  HSHM_INLINE_CROSS_FUN T* operator->() const {
     return ptr_;
   }
 
   /** Overload dereference */
-  HSHM_ALWAYS_INLINE T& operator*() const {
+  HSHM_INLINE_CROSS_FUN T& operator*() const {
     return *ptr_;
   }
 
   /** Check if null */
-  HSHM_ALWAYS_INLINE bool IsNull() const {
+  HSHM_INLINE_CROSS_FUN bool IsNull() const {
     return ptr_ == nullptr;
   }
 
   /** Set to null */
-  HSHM_ALWAYS_INLINE void SetNull() {
+  HSHM_INLINE_CROSS_FUN void SetNull() {
     ptr_ = nullptr;
   }
 };
@@ -404,12 +403,12 @@ struct LArray {
   T *ptr_;
 
   /** Overload arrow */
-  HSHM_ALWAYS_INLINE T* operator->() const {
+  HSHM_INLINE_CROSS_FUN T* operator->() const {
     return ptr_;
   }
 
   /** Overload dereference */
-  HSHM_ALWAYS_INLINE T& operator*() const {
+  HSHM_INLINE_CROSS_FUN T& operator*() const {
     return *ptr_;
   }
 };
@@ -422,7 +421,7 @@ class MemoryAlignment {
    * @param size the size to make a multiple of alignment (e.g., 4097)
    * @return the new size  (e.g., 8192)
    * */
-  HSHM_ALWAYS_INLINE static size_t AlignTo(size_t alignment,
+  HSHM_INLINE_CROSS_FUN static size_t AlignTo(size_t alignment,
                                            size_t size) {
     auto page_size = HERMES_SYSTEM_INFO->page_size_;
     size_t new_size = size;
@@ -437,7 +436,7 @@ class MemoryAlignment {
    * Round up to the nearest multiple of page size
    * @param size the size to align to the PAGE_SIZE
    * */
-  HSHM_ALWAYS_INLINE static size_t AlignToPageSize(size_t size) {
+  HSHM_INLINE_CROSS_FUN static size_t AlignToPageSize(size_t size) {
     auto page_size = HERMES_SYSTEM_INFO->page_size_;
     size_t new_size = AlignTo(page_size, size);
     return new_size;
@@ -451,7 +450,7 @@ namespace std {
 /** Allocator ID hash */
 template <>
 struct hash<hshm::ipc::allocator_id_t> {
-  HSHM_ALWAYS_INLINE std::size_t operator()(
+  HSHM_INLINE_CROSS_FUN std::size_t operator()(
     const hshm::ipc::allocator_id_t &key) const {
     return std::hash<uint64_t>{}(key.int_);
   }

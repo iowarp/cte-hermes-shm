@@ -26,36 +26,36 @@ class TimepointBase {
   std::chrono::time_point<T> start_;
 
  public:
-  HSHM_ALWAYS_INLINE void Now() {
+  HSHM_INLINE_CROSS_FUN void Now() {
     start_ = T::now();
   }
-  HSHM_ALWAYS_INLINE double GetNsecFromStart(TimepointBase &now) const {
+  HSHM_INLINE_CROSS_FUN double GetNsecFromStart(TimepointBase &now) const {
     double elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(
         now.start_ - start_).count();
     return elapsed;
   }
-  HSHM_ALWAYS_INLINE double GetUsecFromStart(TimepointBase &now) const {
+  HSHM_INLINE_CROSS_FUN double GetUsecFromStart(TimepointBase &now) const {
     return GetNsecFromStart(now)/1000;
   }
-  HSHM_ALWAYS_INLINE double GetMsecFromStart(TimepointBase &now) const {
+  HSHM_INLINE_CROSS_FUN double GetMsecFromStart(TimepointBase &now) const {
     return GetNsecFromStart(now)/1000000;
   }
-  HSHM_ALWAYS_INLINE double GetSecFromStart(TimepointBase &now) const {
+  HSHM_INLINE_CROSS_FUN double GetSecFromStart(TimepointBase &now) const {
     return GetNsecFromStart(now)/1000000000;
   }
-  HSHM_ALWAYS_INLINE double GetNsecFromStart() const {
+  HSHM_INLINE_CROSS_FUN double GetNsecFromStart() const {
     std::chrono::time_point<T> end_ = T::now();
     double elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(
         end_ - start_).count();
     return elapsed;
   }
-  HSHM_ALWAYS_INLINE double GetUsecFromStart() const {
+  HSHM_INLINE_CROSS_FUN double GetUsecFromStart() const {
     return GetNsecFromStart()/1000;
   }
-  HSHM_ALWAYS_INLINE double GetMsecFromStart() const {
+  HSHM_INLINE_CROSS_FUN double GetMsecFromStart() const {
     return GetNsecFromStart()/1000000;
   }
-  HSHM_ALWAYS_INLINE double GetSecFromStart() const {
+  HSHM_INLINE_CROSS_FUN double GetSecFromStart() const {
     return GetNsecFromStart()/1000000000;
   }
 };
@@ -67,19 +67,19 @@ class NsecTimer {
  public:
   NsecTimer() : time_ns_(0) {}
 
-  HSHM_ALWAYS_INLINE double GetNsec() const {
+  HSHM_INLINE_CROSS_FUN double GetNsec() const {
     return time_ns_;
   }
-  HSHM_ALWAYS_INLINE double GetUsec() const {
+  HSHM_INLINE_CROSS_FUN double GetUsec() const {
     return time_ns_/1000;
   }
-  HSHM_ALWAYS_INLINE double GetMsec() const {
+  HSHM_INLINE_CROSS_FUN double GetMsec() const {
     return time_ns_/1000000;
   }
-  HSHM_ALWAYS_INLINE double GetSec() const {
+  HSHM_INLINE_CROSS_FUN double GetSec() const {
     return time_ns_/1000000000;
   }
-  HSHM_ALWAYS_INLINE void Reset() {
+  HSHM_INLINE_CROSS_FUN void Reset() {
     time_ns_ = 0;
   }
 };
@@ -92,14 +92,14 @@ class TimerBase : public TimepointBase<T>, public NsecTimer {
  public:
   TimerBase() = default;
 
-  HSHM_ALWAYS_INLINE void Resume() {
+  HSHM_INLINE_CROSS_FUN void Resume() {
     TimepointBase<T>::Now();
   }
-  HSHM_ALWAYS_INLINE double Pause() {
+  HSHM_INLINE_CROSS_FUN double Pause() {
     time_ns_ += TimepointBase<T>::GetNsecFromStart();
     return time_ns_;
   }
-  HSHM_ALWAYS_INLINE double GetUsFromEpoch() const {
+  HSHM_INLINE_CROSS_FUN double GetUsFromEpoch() const {
     std::chrono::time_point<std::chrono::system_clock> point =
         std::chrono::system_clock::now();
     return std::chrono::duration_cast<std::chrono::microseconds>(

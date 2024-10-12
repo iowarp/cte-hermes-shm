@@ -26,8 +26,10 @@ struct MallocPage {
 struct MallocAllocatorHeader : public AllocatorHeader {
   std::atomic<size_t> total_alloc_size_;
 
+  HSHM_CROSS_FUN
   MallocAllocatorHeader() = default;
 
+  HSHM_CROSS_FUN
   void Configure(allocator_id_t alloc_id,
                  size_t custom_header_size) {
     AllocatorHeader::Configure(alloc_id, AllocatorType::kStackAllocator,
@@ -44,12 +46,14 @@ class MallocAllocator : public Allocator {
   /**
    * Allocator constructor
    * */
+  HSHM_CROSS_FUN
   MallocAllocator()
   : header_(nullptr) {}
 
   /**
    * Get the ID of this allocator from shared memory
    * */
+  HSHM_CROSS_FUN
   allocator_id_t &GetId() override {
     return header_->allocator_id_;
   }
@@ -57,6 +61,7 @@ class MallocAllocator : public Allocator {
   /**
    * Initialize the allocator in shared memory
    * */
+  HSHM_CROSS_FUN
   void shm_init(allocator_id_t id,
                 size_t custom_header_size,
                 size_t buffer_size)  {
@@ -71,6 +76,7 @@ class MallocAllocator : public Allocator {
   /**
    * Attach an existing allocator from shared memory
    * */
+  HSHM_CROSS_FUN
   void shm_deserialize(char *buffer,
                        size_t buffer_size) override  {
     throw NOT_IMPLEMENTED.format("MallocAllocator::shm_deserialize");
@@ -80,6 +86,7 @@ class MallocAllocator : public Allocator {
    * Allocate a memory of \a size size. The page allocator cannot allocate
    * memory larger than the page size.
    * */
+  HSHM_CROSS_FUN
   OffsetPointer AllocateOffset(size_t size) override {
     auto page = reinterpret_cast<MallocPage*>(
         malloc(sizeof(MallocPage) + size));
@@ -92,6 +99,7 @@ class MallocAllocator : public Allocator {
    * Allocate a memory of \a size size, which is aligned to \a
    * alignment.
    * */
+  HSHM_CROSS_FUN
   OffsetPointer AlignedAllocateOffset(size_t size, size_t alignment) override {
     auto page = reinterpret_cast<MallocPage*>(
         aligned_alloc(alignment, sizeof(MallocPage) + size));
@@ -105,6 +113,7 @@ class MallocAllocator : public Allocator {
    *
    * @return whether or not the pointer p was changed
    * */
+  HSHM_CROSS_FUN
   OffsetPointer ReallocateOffsetNoNullCheck(OffsetPointer p,
                                             size_t new_size) override {
     // Get the input page
@@ -124,6 +133,7 @@ class MallocAllocator : public Allocator {
   /**
    * Free \a ptr pointer. Null check is performed elsewhere.
    * */
+  HSHM_CROSS_FUN
   void FreeOffsetNoNullCheck(OffsetPointer p) override {
     auto page = reinterpret_cast<MallocPage*>(
         p.off_.load() - sizeof(MallocPage));
@@ -135,6 +145,7 @@ class MallocAllocator : public Allocator {
    * Get the current amount of data allocated. Can be used for leak
    * checking.
    * */
+  HSHM_CROSS_FUN
   size_t GetCurrentlyAllocatedSize() override {
     return header_->total_alloc_size_;
   }

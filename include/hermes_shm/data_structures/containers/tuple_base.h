@@ -35,25 +35,30 @@ struct TupleBaseRecur {
     recur_; /**< Remaining args */
 
   /** Default constructor */
-  TupleBaseRecur() = default;
+  HSHM_CROSS_FUN TupleBaseRecur() = default;
 
   /** Constructor. Const reference. */
+  HSHM_CROSS_FUN
   explicit TupleBaseRecur(const T &arg, Args&& ...args)
     : arg_(std::forward<T>(arg)), recur_(std::forward<Args>(args)...) {}
 
   /** Constructor. Lvalue reference. */
+  HSHM_CROSS_FUN
   explicit TupleBaseRecur(T& arg, Args&& ...args)
   : arg_(std::forward<T>(arg)), recur_(std::forward<Args>(args)...) {}
 
   /** Constructor. Rvalue reference. */
+  HSHM_CROSS_FUN
   explicit TupleBaseRecur(T&& arg, Args&& ...args)
   : arg_(std::forward<T>(arg)), recur_(std::forward<Args>(args)...) {}
 
   /** Move constructor */
+  HSHM_CROSS_FUN
   TupleBaseRecur(TupleBaseRecur &&other) noexcept
   : arg_(std::move(other.arg_)), recur_(std::move(other.recur_)) {}
 
   /** Move assignment operator */
+  HSHM_CROSS_FUN
   TupleBaseRecur& operator=(TupleBaseRecur &&other) {
     if (this != &other) {
       arg_ = std::move(other.arg_);
@@ -63,10 +68,12 @@ struct TupleBaseRecur {
   }
 
   /** Copy constructor */
+  HSHM_CROSS_FUN
   TupleBaseRecur(const TupleBaseRecur &other)
   : arg_(other.arg_), recur_(other.recur_) {}
 
   /** Copy assignment operator */
+  HSHM_CROSS_FUN
   TupleBaseRecur& operator=(const TupleBaseRecur &other) {
     if (this != &other) {
       arg_ = other.arg_;
@@ -77,12 +84,14 @@ struct TupleBaseRecur {
 
   /** Solidification constructor */
   template<typename ...CArgs>
+  HSHM_CROSS_FUN
   explicit TupleBaseRecur(ArgPack<CArgs...> &&other)
     : arg_(other.template Forward<idx>()),
       recur_(std::forward<ArgPack<CArgs...>>(other)) {}
 
   /** Get reference to internal variable (only if tuple) */
   template<size_t i>
+  HSHM_CROSS_FUN
   constexpr auto& Get() {
     if constexpr(i == idx) {
       return arg_;
@@ -94,6 +103,7 @@ struct TupleBaseRecur {
 
   /** Get reference to internal variable (only if tuple, const) */
   template<size_t i>
+  HSHM_CROSS_FUN
   constexpr auto& Get() const {
     if constexpr(i == idx) {
       return arg_;
@@ -114,16 +124,19 @@ struct TupleBaseRecur<Wrap, idx, EndTemplateRecurrence> {
 
   /** Solidification constructor */
   template<typename ...CArgs>
+  HSHM_CROSS_FUN
   explicit TupleBaseRecur(ArgPack<CArgs...> &&other) {}
 
   /** Getter */
   template<size_t i>
+  HSHM_CROSS_FUN
   void Get() {
     throw std::logic_error("(Get) TupleBase index outside of range");
   }
 
   /** Getter */
   template<size_t i>
+  HSHM_CROSS_FUN
   void Get() const {
     throw std::logic_error("(Get) TupleBase index outside of range");
   }
@@ -139,19 +152,20 @@ struct TupleBase {
   TupleBaseRecur<Wrap, 0, Args...> recur_;
 
   /** Default constructor */
-  TupleBase() = default;
+  HSHM_CROSS_FUN TupleBase() = default;
 
   /** General Constructor. */
   template<typename ...CArgs>
+  HSHM_CROSS_FUN
   explicit TupleBase(Args&& ...args)
   : recur_(std::forward<Args>(args)...) {}
 
   /** Move constructor */
-  TupleBase(TupleBase &&other) noexcept
+  HSHM_CROSS_FUN TupleBase(TupleBase &&other) noexcept
   : recur_(std::move(other.recur_)) {}
 
   /** Move assignment operator */
-  TupleBase& operator=(TupleBase &&other) noexcept {
+  HSHM_CROSS_FUN TupleBase& operator=(TupleBase &&other) noexcept {
     if (this != &other) {
       recur_ = std::move(other.recur_);
     }
@@ -159,11 +173,11 @@ struct TupleBase {
   }
 
   /** Copy constructor */
-  TupleBase(const TupleBase &other)
+  HSHM_CROSS_FUN TupleBase(const TupleBase &other)
   : recur_(other.recur_) {}
 
   /** Copy assignment operator */
-  TupleBase& operator=(const TupleBase &other) {
+  HSHM_CROSS_FUN TupleBase& operator=(const TupleBase &other) {
     if (this != &other) {
       recur_ = other.recur_;
     }
@@ -172,23 +186,24 @@ struct TupleBase {
 
   /** Solidification constructor */
   template<typename ...CArgs>
+  HSHM_CROSS_FUN
   explicit TupleBase(ArgPack<CArgs...> &&other)
   : recur_(std::forward<ArgPack<CArgs...>>(other)) {}
 
   /** Getter */
   template<size_t idx>
-  constexpr auto& Get() {
+  HSHM_CROSS_FUN constexpr auto& Get() {
     return recur_.template Get<idx>();
   }
 
   /** Getter (const) */
   template<size_t idx>
-  constexpr auto& Get() const {
+  HSHM_CROSS_FUN constexpr auto& Get() const {
     return recur_.template Get<idx>();
   }
 
   /** Size */
-  constexpr static size_t Size() {
+  HSHM_CROSS_FUN constexpr static size_t Size() {
     return sizeof...(Args);
   }
 };
@@ -207,6 +222,7 @@ class IterateTuple {
  public:
   /** Apply a function to every element of a tuple */
   template<typename TupleT, typename F>
+  HSHM_CROSS_FUN
   constexpr static void Apply(TupleT &pack, F &&f) {
     _Apply<0, TupleT, F>(pack, std::forward<F>(f));
   }
@@ -214,6 +230,7 @@ class IterateTuple {
  private:
   /** Apply the function recursively */
   template<size_t i, typename TupleT, typename F>
+  HSHM_CROSS_FUN
   constexpr static void _Apply(TupleT &pack, F &&f) {
     if constexpr(i < TupleT::Size()) {
       if constexpr(reverse) {

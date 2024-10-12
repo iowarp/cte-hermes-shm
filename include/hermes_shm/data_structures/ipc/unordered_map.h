@@ -42,21 +42,21 @@ struct unordered_map_iterator {
   typename slist<COLLISION_T>::iterator_t collision_;
 
   /** Default constructor */
-  unordered_map_iterator() = default;
+  HSHM_CROSS_FUN unordered_map_iterator() = default;
 
   /** Construct the iterator  */
-  HSHM_ALWAYS_INLINE explicit unordered_map_iterator(
+  HSHM_INLINE_CROSS_FUN explicit unordered_map_iterator(
     unordered_map<Key, T, Hash> &map)
   : map_(&map) {}
 
   /** Copy constructor  */
-  HSHM_ALWAYS_INLINE unordered_map_iterator(
+  HSHM_INLINE_CROSS_FUN unordered_map_iterator(
     const unordered_map_iterator &other) {
     shm_strong_copy(other);
   }
 
   /** Assign one iterator into another */
-  HSHM_ALWAYS_INLINE unordered_map_iterator&
+  HSHM_INLINE_CROSS_FUN unordered_map_iterator&
   operator=(const unordered_map_iterator &other) {
     if (this != &other) {
       shm_strong_copy(other);
@@ -65,6 +65,7 @@ struct unordered_map_iterator {
   }
 
   /** Copy an iterator */
+  HSHM_CROSS_FUN
   void shm_strong_copy(const unordered_map_iterator &other) {
     map_ = other.map_;
     bucket_ = other.bucket_;
@@ -72,24 +73,24 @@ struct unordered_map_iterator {
   }
 
   /** Get the pointed object */
-  HSHM_ALWAYS_INLINE COLLISION_T& operator*() {
+  HSHM_INLINE_CROSS_FUN COLLISION_T& operator*() {
     return *collision_;
   }
 
   /** Get the pointed object */
-  HSHM_ALWAYS_INLINE const COLLISION_T& operator*() const {
+  HSHM_INLINE_CROSS_FUN const COLLISION_T& operator*() const {
     return *collision_;
   }
 
   /** Go to the next object */
-  HSHM_ALWAYS_INLINE unordered_map_iterator& operator++() {
+  HSHM_INLINE_CROSS_FUN unordered_map_iterator& operator++() {
     ++collision_;
     make_correct();
     return *this;
   }
 
   /** Return the next iterator */
-  HSHM_ALWAYS_INLINE unordered_map_iterator operator++(int) const {
+  HSHM_INLINE_CROSS_FUN unordered_map_iterator operator++(int) const {
     unordered_map_iterator next(*this);
     ++next;
     return next;
@@ -99,7 +100,7 @@ struct unordered_map_iterator {
    * Shifts bucket and collision iterator until there is a valid element.
    * Returns true if such an element is found, and false otherwise.
    * */
-  HSHM_ALWAYS_INLINE bool make_correct() {
+  HSHM_INLINE_CROSS_FUN bool make_correct() {
     do {
       if (bucket_.is_end()) {
         return false;
@@ -118,7 +119,7 @@ struct unordered_map_iterator {
   }
 
   /** Check if two iterators are equal */
-  HSHM_ALWAYS_INLINE friend bool operator==(
+  HSHM_INLINE_CROSS_FUN friend bool operator==(
     const unordered_map_iterator &a, const unordered_map_iterator &b) {
     if (a.is_end() && b.is_end()) {
       return true;
@@ -127,7 +128,7 @@ struct unordered_map_iterator {
   }
 
   /** Check if two iterators are inequal */
-  HSHM_ALWAYS_INLINE friend bool operator!=(
+  HSHM_INLINE_CROSS_FUN friend bool operator!=(
     const unordered_map_iterator &a, const unordered_map_iterator &b) {
     if (a.is_end() && b.is_end()) {
       return false;
@@ -136,12 +137,12 @@ struct unordered_map_iterator {
   }
 
   /** Determine whether this iterator is the end iterator */
-  HSHM_ALWAYS_INLINE bool is_end() const {
+  HSHM_INLINE_CROSS_FUN bool is_end() const {
     return bucket_.is_end();
   }
 
   /** Set this iterator to the end iterator */
-  HSHM_ALWAYS_INLINE void set_end() {
+  HSHM_INLINE_CROSS_FUN void set_end() {
     bucket_.set_end();
   }
 };
@@ -193,6 +194,7 @@ class unordered_map : public ShmContainer {
    * triggered
    * @param growth the multiplier to grow the bucket vector size
    * */
+  HSHM_CROSS_FUN
   explicit unordered_map(Allocator *alloc,
                          int num_buckets = 20,
                          RealNumber max_capacity = RealNumber(4, 5),
@@ -209,6 +211,7 @@ class unordered_map : public ShmContainer {
    * ===================================*/
 
   /** SHM copy constructor */
+  HSHM_CROSS_FUN
   explicit unordered_map(Allocator *alloc,
                          const unordered_map &other) {
     shm_init_container(alloc);
@@ -216,6 +219,7 @@ class unordered_map : public ShmContainer {
   }
 
   /** SHM copy constructor main */
+  HSHM_CROSS_FUN
   void shm_strong_copy_construct(const unordered_map &other) {
     SetNull();
     HSHM_MAKE_AR(buckets_, GetAllocator(), other.GetBuckets())
@@ -223,6 +227,7 @@ class unordered_map : public ShmContainer {
   }
 
   /** SHM copy assignment operator */
+  HSHM_CROSS_FUN
   unordered_map& operator=(const unordered_map &other) {
     if (this != &other) {
       shm_destroy();
@@ -232,6 +237,7 @@ class unordered_map : public ShmContainer {
   }
 
   /** SHM copy assignment main */
+  HSHM_CROSS_FUN
   void shm_strong_copy_op(const unordered_map &other) {
     int num_buckets = other.get_num_buckets();
     GetBuckets().resize(num_buckets);
@@ -239,6 +245,7 @@ class unordered_map : public ShmContainer {
   }
 
   /** Internal copy operation */
+  HSHM_CROSS_FUN
   void shm_strong_copy_construct_and_op(const unordered_map &other) {
     max_capacity_ = other.max_capacity_;
     growth_ = other.growth_;
@@ -253,7 +260,7 @@ class unordered_map : public ShmContainer {
    * ===================================*/
 
   /** SHM move constructor. */
-  HSHM_ALWAYS_INLINE unordered_map(Allocator *alloc,
+  HSHM_INLINE_CROSS_FUN unordered_map(Allocator *alloc,
                                    unordered_map &&other) noexcept {
     shm_init_container(alloc);
     if (GetAllocator() == other.GetAllocator()) {
@@ -267,13 +274,14 @@ class unordered_map : public ShmContainer {
   }
 
   /** Copy */
-  HSHM_ALWAYS_INLINE void strong_copy(const unordered_map &other) {
+  HSHM_INLINE_CROSS_FUN void strong_copy(const unordered_map &other) {
     max_capacity_ = other.max_capacity_;
     growth_ = other.growth_;
     length_ = other.length_.load();
   }
 
   /** SHM move assignment operator. */
+  HSHM_CROSS_FUN
   unordered_map& operator=(unordered_map &&other) noexcept {
     if (this != &other) {
       shm_destroy();
@@ -294,17 +302,17 @@ class unordered_map : public ShmContainer {
    * ===================================*/
 
   /** Check if the pair is empty */
-  HSHM_ALWAYS_INLINE bool IsNull() {
+  HSHM_INLINE_CROSS_FUN bool IsNull() {
     return length_.load() == 0;
   }
 
   /** Sets this pair as empty */
-  HSHM_ALWAYS_INLINE void SetNull() {
+  HSHM_INLINE_CROSS_FUN void SetNull() {
     length_ = 0;
   }
 
   /** Destroy the unordered_map buckets */
-  HSHM_ALWAYS_INLINE void shm_destroy_main() {
+  HSHM_INLINE_CROSS_FUN void shm_destroy_main() {
     vector<BUCKET_T>& buckets = GetBuckets();
     buckets.shm_destroy();
   }
@@ -322,6 +330,7 @@ class unordered_map : public ShmContainer {
    * @return None
    * */
   template<typename ...Args>
+  HSHM_CROSS_FUN
   bool emplace(const Key &key, Args&&... args) {
     return emplace_templ<true, true>(key, std::forward<Args>(args)...);
   }
@@ -335,6 +344,7 @@ class unordered_map : public ShmContainer {
    * @return None
    * */
   template<typename ...Args>
+  HSHM_CROSS_FUN
   bool try_emplace(const Key &key, Args&&... args) {
     return emplace_templ<true, false>(key, std::forward<Args>(args)...);
   }
@@ -349,7 +359,7 @@ class unordered_map : public ShmContainer {
    * @return None
    * */
   template<bool growth, bool modify_existing, typename ...Args>
-  HSHM_ALWAYS_INLINE bool emplace_templ(const Key &key, Args&& ...args) {
+  HSHM_INLINE_CROSS_FUN bool emplace_templ(const Key &key, Args&& ...args) {
     // Hash the key to a bucket
     vector<BUCKET_T>& buckets = GetBuckets();
     size_t bkt_id = Hash{}(key) % buckets.size();
@@ -382,6 +392,7 @@ class unordered_map : public ShmContainer {
   /**
    * Erase an object indexable by \a key key
    * */
+  HSHM_CROSS_FUN
   void erase(const Key &key) {
     // Get the bucket the key belongs to
     vector<BUCKET_T>& buckets = GetBuckets();
@@ -402,6 +413,7 @@ class unordered_map : public ShmContainer {
   /**
    * Erase an object at the iterator
    * */
+  HSHM_CROSS_FUN
   void erase(iterator_t &iter) {
     if (iter == end()) return;
     // Acquire the bucket lock for a write (modifying collisions)
@@ -417,7 +429,7 @@ class unordered_map : public ShmContainer {
   /**
    * Erase the entire map
    * */
-  void clear() {
+  HSHM_CROSS_FUN void clear() {
     vector<BUCKET_T>& buckets = GetBuckets();
     size_t num_buckets = buckets.size();
     buckets.clear();
@@ -435,7 +447,7 @@ class unordered_map : public ShmContainer {
    * @return the object pointed by key
    * @exception UNORDERED_MAP_CANT_FIND the key was not in the map
    * */
-  HSHM_ALWAYS_INLINE T& operator[](const Key &key) {
+  HSHM_INLINE_CROSS_FUN T& operator[](const Key &key) {
     auto iter = find(key);
     if (!iter.is_end()) {
       return (*iter).second_.get_ref();
@@ -463,7 +475,7 @@ class unordered_map : public ShmContainer {
 
   /** Find a key in the collision slist */
   typename BUCKET_T::iterator_t
-  HSHM_ALWAYS_INLINE find_collision(const Key &key, BUCKET_T &bkt) {
+  HSHM_INLINE_CROSS_FUN find_collision(const Key &key, BUCKET_T &bkt) {
     auto iter = bkt.begin();
     auto iter_end = bkt.end();
     for (; iter != iter_end; ++iter) {
@@ -480,12 +492,12 @@ class unordered_map : public ShmContainer {
    * ===================================*/
 
   /** The number of entries in the map */
-  HSHM_ALWAYS_INLINE size_t size() const {
+  HSHM_INLINE_CROSS_FUN size_t size() const {
     return length_.load();
   }
 
   /** The number of buckets in the map */
-  HSHM_ALWAYS_INLINE size_t get_num_buckets() const {
+  HSHM_INLINE_CROSS_FUN size_t get_num_buckets() const {
     vector<BUCKET_T>& buckets = GetBuckets();
     return buckets.size();
   }
@@ -496,7 +508,7 @@ class unordered_map : public ShmContainer {
    * ===================================*/
 
   /** Forward iterator begin */
-  HSHM_ALWAYS_INLINE iterator_t begin() const {
+  HSHM_INLINE_CROSS_FUN iterator_t begin() const {
     iterator_t iter(const_cast<unordered_map&>(*this));
     vector<BUCKET_T>& buckets(GetBuckets());
     if (buckets.size() == 0) {
@@ -510,7 +522,7 @@ class unordered_map : public ShmContainer {
   }
 
   /** Forward iterator end */
-  HSHM_ALWAYS_INLINE iterator_t end() const {
+  HSHM_INLINE_CROSS_FUN iterator_t end() const {
     iterator_t iter(const_cast<unordered_map&>(*this));
     vector<BUCKET_T>& buckets(GetBuckets());
     iter.bucket_ = buckets.cend();
@@ -518,12 +530,12 @@ class unordered_map : public ShmContainer {
   }
 
   /** Get the buckets */
-  HSHM_ALWAYS_INLINE vector<BUCKET_T>& GetBuckets() {
+  HSHM_INLINE_CROSS_FUN vector<BUCKET_T>& GetBuckets() {
     return *buckets_;
   }
 
   /** Get the buckets (const) */
-  HSHM_ALWAYS_INLINE vector<BUCKET_T>& GetBuckets() const {
+  HSHM_INLINE_CROSS_FUN vector<BUCKET_T>& GetBuckets() const {
     return const_cast<vector<BUCKET_T>&>(*buckets_);
   }
 };

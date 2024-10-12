@@ -16,7 +16,7 @@
 namespace hshm {
 
 template<typename T, typename IteratorT>
-IteratorT find(IteratorT start, const IteratorT &end, T &val) {
+HSHM_CROSS_FUN IteratorT find(IteratorT start, const IteratorT &end, T &val) {
   for (; start != end; ++start) {
     T &ref = *start;
     if (ref == val) {

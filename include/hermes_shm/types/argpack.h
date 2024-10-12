@@ -13,10 +13,9 @@
 #ifndef HERMES_INCLUDE_HERMES_TYPES_ARGPACK_H_
 #define HERMES_INCLUDE_HERMES_TYPES_ARGPACK_H_
 
-#include "real_number.h"
 #include "hermes_shm/constants/macros.h"
-#include  <functional>
-#include <stdexcept>
+//#include <functional>
+//#include <stdexcept>
 
 namespace hshm {
 
@@ -84,23 +83,24 @@ struct ArgPack {
   static constexpr const size_t size_ = sizeof...(Args);
 
   /** General Constructor. */
-  HSHM_ALWAYS_INLINE ArgPack(Args&& ...args)  // NOLINT
+  HSHM_INLINE_CROSS_FUN ArgPack(Args&& ...args)  // NOLINT
   : recur_(std::forward<Args>(args)...) {}
 
   /** Get forward reference */
   template<size_t idx>
-  HSHM_ALWAYS_INLINE constexpr decltype(auto) Forward() const {
+  HSHM_INLINE_CROSS_FUN constexpr decltype(auto) Forward() const {
     return recur_.template Forward<idx>();
   }
 
   /** Size */
-  HSHM_ALWAYS_INLINE constexpr static size_t Size() {
+  HSHM_INLINE_CROSS_FUN constexpr static size_t Size() {
     return size_;
   }
 };
 
 /** Make an argpack */
 template<typename ...Args>
+HSHM_CROSS_FUN
 ArgPack<Args&&...> make_argpack(Args&& ...args) {
   return ArgPack<Args&&...>(std::forward<Args>(args)...);
 }

@@ -23,20 +23,23 @@ struct HeapAllocator {
   size_t heap_size_;
 
   /** Default constructor */
+  HSHM_CROSS_FUN
   HeapAllocator() : heap_off_(0), heap_size_(0) {}
 
   /** Emplace constructor */
+  HSHM_CROSS_FUN
   explicit HeapAllocator(size_t heap_off, size_t heap_size)
   : heap_off_(heap_off), heap_size_(heap_size) {}
 
   /** Explicit initialization */
+  HSHM_CROSS_FUN
   void shm_init(size_t heap_off, size_t heap_size) {
     heap_off_ = heap_off;
     heap_size_ = heap_size;
   }
 
   /** Allocate off heap */
-  HSHM_ALWAYS_INLINE OffsetPointer AllocateOffset(size_t size) {
+  HSHM_INLINE_CROSS_FUN OffsetPointer AllocateOffset(size_t size) {
     size_t off = heap_off_.fetch_add(size);
     if (off + size > heap_size_) {
       throw OUT_OF_MEMORY.format(size, heap_size_);

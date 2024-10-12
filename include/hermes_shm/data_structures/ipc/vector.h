@@ -35,23 +35,23 @@ struct vector_iterator_templ {
   off64_t i_;
 
   /** Default constructor */
-  HSHM_ALWAYS_INLINE vector_iterator_templ() = default;
+  HSHM_INLINE_CROSS_FUN vector_iterator_templ() = default;
 
   /** Construct an iterator (called from vector class) */
   template<typename SizeT>
-  HSHM_ALWAYS_INLINE explicit vector_iterator_templ(vector<T> *vec, SizeT i)
+  HSHM_INLINE_CROSS_FUN explicit vector_iterator_templ(vector<T> *vec, SizeT i)
   : vec_(vec), i_(static_cast<off64_t>(i)) {}
 
   /** Construct an iterator (called from iterator) */
-  HSHM_ALWAYS_INLINE explicit vector_iterator_templ(vector<T> *vec, off64_t i)
+  HSHM_INLINE_CROSS_FUN explicit vector_iterator_templ(vector<T> *vec, off64_t i)
   : vec_(vec), i_(i) {}
 
   /** Copy constructor */
-  HSHM_ALWAYS_INLINE vector_iterator_templ(const vector_iterator_templ &other)
+  HSHM_INLINE_CROSS_FUN vector_iterator_templ(const vector_iterator_templ &other)
   : vec_(other.vec_), i_(other.i_) {}
 
   /** Copy assignment operator  */
-  HSHM_ALWAYS_INLINE vector_iterator_templ&
+  HSHM_INLINE_CROSS_FUN vector_iterator_templ&
   operator=(const vector_iterator_templ &other) {
     if (this != &other) {
       vec_ = other.vec_;
@@ -61,14 +61,14 @@ struct vector_iterator_templ {
   }
 
   /** Move constructor */
-  HSHM_ALWAYS_INLINE vector_iterator_templ(
+  HSHM_INLINE_CROSS_FUN vector_iterator_templ(
     vector_iterator_templ &&other) noexcept {
     vec_ = other.vec_;
     i_ = other.i_;
   }
 
   /** Move assignment operator  */
-  HSHM_ALWAYS_INLINE vector_iterator_templ&
+  HSHM_INLINE_CROSS_FUN vector_iterator_templ&
   operator=(vector_iterator_templ &&other) noexcept {
     if (this != &other) {
       vec_ = other.vec_;
@@ -78,17 +78,17 @@ struct vector_iterator_templ {
   }
 
   /** Dereference the iterator */
-  HSHM_ALWAYS_INLINE T& operator*() {
+  HSHM_INLINE_CROSS_FUN T& operator*() {
     return vec_->data_ar()[i_].get_ref();
   }
 
   /** Dereference the iterator */
-  HSHM_ALWAYS_INLINE const T& operator*() const {
+  HSHM_INLINE_CROSS_FUN const T& operator*() const {
     return vec_->data_ar()[i_].get_ref();
   }
 
   /** Increment iterator in-place */
-  HSHM_ALWAYS_INLINE vector_iterator_templ& operator++() {
+  HSHM_INLINE_CROSS_FUN vector_iterator_templ& operator++() {
     if constexpr(FORWARD_ITER) {
       ++i_;
     } else {
@@ -98,7 +98,7 @@ struct vector_iterator_templ {
   }
 
   /** Decrement iterator in-place */
-  HSHM_ALWAYS_INLINE vector_iterator_templ& operator--() {
+  HSHM_INLINE_CROSS_FUN vector_iterator_templ& operator--() {
     if constexpr(FORWARD_ITER) {
       --i_;
     } else {
@@ -108,21 +108,21 @@ struct vector_iterator_templ {
   }
 
   /** Create the next iterator */
-  HSHM_ALWAYS_INLINE vector_iterator_templ operator++(int) const {
+  HSHM_INLINE_CROSS_FUN vector_iterator_templ operator++(int) const {
     vector_iterator_templ next_iter(*this);
     ++next_iter;
     return next_iter;
   }
 
   /** Create the prior iterator */
-  HSHM_ALWAYS_INLINE vector_iterator_templ operator--(int) const {
+  HSHM_INLINE_CROSS_FUN vector_iterator_templ operator--(int) const {
     vector_iterator_templ prior_iter(*this);
     --prior_iter;
     return prior_iter;
   }
 
   /** Increment iterator by \a count and return */
-  HSHM_ALWAYS_INLINE vector_iterator_templ operator+(size_t count) const {
+  HSHM_INLINE_CROSS_FUN vector_iterator_templ operator+(size_t count) const {
     if constexpr(FORWARD_ITER) {
       return vector_iterator_templ(vec_, i_ + count);
     } else {
@@ -131,7 +131,7 @@ struct vector_iterator_templ {
   }
 
   /** Decrement iterator by \a count and return */
-  HSHM_ALWAYS_INLINE vector_iterator_templ operator-(size_t count) const {
+  HSHM_INLINE_CROSS_FUN vector_iterator_templ operator-(size_t count) const {
     if constexpr(FORWARD_ITER) {
       return vector_iterator_templ(vec_, i_ - count);
     } else {
@@ -140,7 +140,7 @@ struct vector_iterator_templ {
   }
 
   /** Increment iterator by \a count in-place */
-  HSHM_ALWAYS_INLINE void operator+=(size_t count) {
+  HSHM_INLINE_CROSS_FUN void operator+=(size_t count) {
     if constexpr(FORWARD_ITER) {
       i_ += count;
     } else {
@@ -149,7 +149,7 @@ struct vector_iterator_templ {
   }
 
   /** Decrement iterator by \a count in-place */
-  HSHM_ALWAYS_INLINE void operator-=(size_t count) {
+  HSHM_INLINE_CROSS_FUN void operator-=(size_t count) {
     if constexpr(FORWARD_ITER) {
       i_ -= count;
     } else {
@@ -158,19 +158,19 @@ struct vector_iterator_templ {
   }
 
   /** Check if two iterators are equal */
-  HSHM_ALWAYS_INLINE friend bool operator==(const vector_iterator_templ &a,
+  HSHM_INLINE_CROSS_FUN friend bool operator==(const vector_iterator_templ &a,
                          const vector_iterator_templ &b) {
     return (a.i_ == b.i_);
   }
 
   /** Check if two iterators are inequal */
-  HSHM_ALWAYS_INLINE friend bool operator!=(const vector_iterator_templ &a,
+  HSHM_INLINE_CROSS_FUN friend bool operator!=(const vector_iterator_templ &a,
                          const vector_iterator_templ &b) {
     return (a.i_ != b.i_);
   }
 
   /** Set this iterator to end */
-  HSHM_ALWAYS_INLINE void set_end() {
+  HSHM_INLINE_CROSS_FUN void set_end() {
     if constexpr(FORWARD_ITER) {
       i_ = vec_->size();
     } else {
@@ -179,7 +179,7 @@ struct vector_iterator_templ {
   }
 
   /** Set this iterator to begin */
-  HSHM_ALWAYS_INLINE void set_begin() {
+  HSHM_INLINE_CROSS_FUN void set_begin() {
     if constexpr(FORWARD_ITER) {
       i_ = 0;
     } else {
@@ -188,7 +188,7 @@ struct vector_iterator_templ {
   }
 
   /** Determine whether this iterator is the begin iterator */
-  HSHM_ALWAYS_INLINE bool is_begin() const {
+  HSHM_INLINE_CROSS_FUN bool is_begin() const {
     if constexpr(FORWARD_ITER) {
       return (i_ == 0);
     } else {
@@ -197,7 +197,7 @@ struct vector_iterator_templ {
   }
 
   /** Determine whether this iterator is the end iterator */
-  HSHM_ALWAYS_INLINE bool is_end() const {
+  HSHM_INLINE_CROSS_FUN bool is_end() const {
     if constexpr(FORWARD_ITER) {
       return i_ >= vec_->template size<off64_t>();
     } else {
@@ -249,6 +249,7 @@ class vector : public ShmContainer {
    * ===================================*/
 
   /** SHM constructor. Default. */
+  HSHM_CROSS_FUN
   explicit vector(Allocator *alloc) {
     shm_init_container(alloc);
     SetNull();
@@ -256,6 +257,7 @@ class vector : public ShmContainer {
 
   /** SHM constructor. Resize + construct. */
   template<typename ...Args>
+  HSHM_CROSS_FUN
   explicit vector(Allocator *alloc, size_t length, Args&& ...args) {
     shm_init_container(alloc);
     SetNull();
@@ -267,6 +269,7 @@ class vector : public ShmContainer {
    * ===================================*/
 
   /** SHM copy constructor. From vector. */
+  HSHM_CROSS_FUN
   explicit vector(Allocator *alloc, const vector &other) {
     shm_init_container(alloc);
     SetNull();
@@ -274,6 +277,7 @@ class vector : public ShmContainer {
   }
 
   /** SHM copy assignment operator. From vector. */
+  HSHM_CROSS_FUN
   vector& operator=(const vector &other) {
     if (this != &other) {
       shm_destroy();
@@ -283,6 +287,7 @@ class vector : public ShmContainer {
   }
 
   /** SHM copy constructor. From std::vector */
+  HSHM_CROSS_FUN
   explicit vector(Allocator *alloc, const std::vector<T> &other) {
     shm_init_container(alloc);
     SetNull();
@@ -290,6 +295,7 @@ class vector : public ShmContainer {
   }
 
   /** SHM copy assignment operator. From std::vector */
+  HSHM_CROSS_FUN
   vector& operator=(const std::vector<T> &other) {
     shm_destroy();
     shm_strong_copy_main<std::vector<T>>(other);
@@ -298,6 +304,7 @@ class vector : public ShmContainer {
 
   /** The main copy operation  */
   template<typename VectorT>
+  HSHM_CROSS_FUN
   void shm_strong_copy_main(const VectorT &other) {
     reserve(other.size());
     if constexpr(std::is_pod<T>() && !IS_SHM_ARCHIVEABLE(T)) {
@@ -319,6 +326,7 @@ class vector : public ShmContainer {
    * ===================================*/
 
   /** SHM move constructor. */
+  HSHM_CROSS_FUN
   vector(Allocator *alloc, vector &&other) {
     shm_init_container(alloc);
     if (GetAllocator() == other.GetAllocator()) {
@@ -331,6 +339,7 @@ class vector : public ShmContainer {
   }
 
   /** SHM move assignment operator. */
+  HSHM_CROSS_FUN
   vector& operator=(vector &&other) noexcept {
     if (this != &other) {
       shm_destroy();
@@ -350,19 +359,19 @@ class vector : public ShmContainer {
    * ===================================*/
 
   /** Check if null */
-  HSHM_ALWAYS_INLINE bool IsNull() const {
+  HSHM_INLINE_CROSS_FUN bool IsNull() const {
     return vec_ptr_.IsNull();
   }
 
   /** Make null */
-  HSHM_ALWAYS_INLINE void SetNull() {
+  HSHM_INLINE_CROSS_FUN void SetNull() {
     length_ = 0;
     max_length_ = 0;
     vec_ptr_.SetNull();
   }
 
   /** Destroy all shared memory allocated by the vector */
-  HSHM_ALWAYS_INLINE void shm_destroy_main() {
+  HSHM_INLINE_CROSS_FUN void shm_destroy_main() {
     erase(begin(), end());
     GetAllocator()->Free(vec_ptr_);
   }
@@ -374,7 +383,7 @@ class vector : public ShmContainer {
   /**
    * Convert to std::vector
    * */
-  HSHM_ALWAYS_INLINE std::vector<T> vec() {
+  HSHM_INLINE_CROSS_FUN std::vector<T> vec() {
     std::vector<T> v;
     v.reserve(size());
     for (T& entry : *this) {
@@ -391,7 +400,7 @@ class vector : public ShmContainer {
    * @param args the arguments to construct
    * */
   template<typename ...Args>
-  HSHM_ALWAYS_INLINE void reserve(size_t length, Args&& ...args) {
+  HSHM_INLINE_CROSS_FUN void reserve(size_t length, Args&& ...args) {
     if (length == 0) { return; }
     grow_vector(data_ar(), length, false, std::forward<Args>(args)...);
   }
@@ -404,6 +413,7 @@ class vector : public ShmContainer {
    * @param args the arguments used to construct the vector elements
    * */
   template<typename ...Args>
+  HSHM_CROSS_FUN
   void resize(size_t length, Args&& ...args) {
     if (length == 0) {
       length_ = 0;
@@ -415,27 +425,28 @@ class vector : public ShmContainer {
   }
 
   /** Index the vector at position i */
-  HSHM_ALWAYS_INLINE T& operator[](const size_t i) {
+  HSHM_INLINE_CROSS_FUN T& operator[](const size_t i) {
       return data_ar()[i].get_ref();
   }
 
   /** Index the vector at position i */
-  HSHM_ALWAYS_INLINE const T& operator[](const size_t i) const {
+  HSHM_INLINE_CROSS_FUN const T& operator[](const size_t i) const {
     return data_ar()[i].get_ref();
   }
 
   /** Get first element of vector */
-  HSHM_ALWAYS_INLINE T& front() {
+  HSHM_INLINE_CROSS_FUN T& front() {
     return (*this)[0];
   }
 
   /** Get last element of vector */
-  HSHM_ALWAYS_INLINE T& back() {
+  HSHM_INLINE_CROSS_FUN T& back() {
     return (*this)[size() - 1];
   }
 
   /** Construct an element at the back of the vector */
   template<typename... Args>
+  HSHM_CROSS_FUN
   void emplace_back(Args&& ...args) {
     ShmArchive<T> *vec = data_ar();
     if (length_ == max_length_) {
@@ -448,12 +459,13 @@ class vector : public ShmContainer {
 
   /** Construct an element in the front of the vector */
   template<typename ...Args>
-  HSHM_ALWAYS_INLINE void emplace_front(Args&& ...args) {
+  HSHM_INLINE_CROSS_FUN void emplace_front(Args&& ...args) {
     emplace(begin(), std::forward<Args>(args)...);
   }
 
   /** Construct an element at an arbitrary position in the vector */
   template<typename ...Args>
+  HSHM_CROSS_FUN
   void emplace(iterator_t pos, Args&&... args) {
     if (pos.is_end()) {
       emplace_back(std::forward<Args>(args)...);
@@ -471,7 +483,7 @@ class vector : public ShmContainer {
 
   /** Replace an element at a position */
   template<typename ...Args>
-  HSHM_ALWAYS_INLINE void replace(iterator_t pos, Args&&... args) {
+  HSHM_INLINE_CROSS_FUN void replace(iterator_t pos, Args&&... args) {
     if (pos.is_end()) {
       return;
     }
@@ -482,14 +494,14 @@ class vector : public ShmContainer {
   }
 
   /** Delete the element at \a pos position */
-  HSHM_ALWAYS_INLINE void erase(iterator_t pos) {
+  HSHM_INLINE_CROSS_FUN void erase(iterator_t pos) {
     if (pos.is_end()) return;
     shift_left(pos, 1);
     length_ -= 1;
   }
 
   /** Delete elements between first and last  */
-  HSHM_ALWAYS_INLINE void erase(iterator_t first, iterator_t last) {
+  HSHM_INLINE_CROSS_FUN void erase(iterator_t first, iterator_t last) {
     size_t last_i;
     if (first.is_end()) return;
     if (last.is_end()) {
@@ -504,33 +516,33 @@ class vector : public ShmContainer {
   }
 
   /** Delete all elements from the vector */
-  HSHM_ALWAYS_INLINE void clear() {
+  HSHM_INLINE_CROSS_FUN void clear() {
     erase(begin(), end());
   }
 
   /** Get the size of the vector */
   template<typename SizeT = size_t>
-  HSHM_ALWAYS_INLINE SizeT size() const {
+  HSHM_INLINE_CROSS_FUN SizeT size() const {
     return static_cast<SizeT>(length_);
   }
 
   /** Get the data in the vector */
-  HSHM_ALWAYS_INLINE void* data() {
+  HSHM_INLINE_CROSS_FUN void* data() {
     return reinterpret_cast<void*>(data_ar());
   }
 
   /** Get constant pointer to the data */
-  HSHM_ALWAYS_INLINE void* data() const {
+  HSHM_INLINE_CROSS_FUN void* data() const {
     return reinterpret_cast<void*>(data_ar());
   }
 
   /** Retreives a pointer to the internal array */
-  HSHM_ALWAYS_INLINE ShmArchive<T>* data_ar() {
+  HSHM_INLINE_CROSS_FUN ShmArchive<T>* data_ar() {
     return GetAllocator()->template Convert<ShmArchive<T>>(vec_ptr_);
   }
 
   /** Retreives a pointer to the array */
-  HSHM_ALWAYS_INLINE ShmArchive<T>* data_ar() const {
+  HSHM_INLINE_CROSS_FUN ShmArchive<T>* data_ar() const {
     return GetAllocator()->template Convert<ShmArchive<T>>(vec_ptr_);
   }
 
@@ -547,6 +559,7 @@ class vector : public ShmContainer {
    * @param args the arguments used to construct the elements of the vector
    * */
   template<typename ...Args>
+  HSHM_CROSS_FUN
   ShmArchive<T>* grow_vector(ShmArchive<T> *vec, size_t max_length,
                              bool resize, Args&& ...args) {
     // Grow vector by 25%
@@ -605,7 +618,7 @@ class vector : public ShmContainer {
    * @param pos the starting position
    * @param count the amount to shift left by
    * */
-  HSHM_ALWAYS_INLINE void shift_left(const iterator_t pos, size_t count = 1) {
+  HSHM_INLINE_CROSS_FUN void shift_left(const iterator_t pos, size_t count = 1) {
     ShmArchive<T> *vec = data_ar();
     for (size_t i = 0; i < count; ++i) {
       HSHM_DESTROY_AR(vec[pos.i_ + i])
@@ -626,7 +639,7 @@ class vector : public ShmContainer {
    * @param pos the starting position
    * @param count the amount to shift right by
    * */
-  HSHM_ALWAYS_INLINE void shift_right(const iterator_t pos, size_t count = 1) {
+  HSHM_INLINE_CROSS_FUN void shift_right(const iterator_t pos, size_t count = 1) {
     auto src = data_ar() + size() - 1;
     auto dst = src + count;
     auto sz = static_cast<off64_t>(size());
@@ -641,53 +654,55 @@ class vector : public ShmContainer {
    * ===================================*/
  public:
   /** Beginning of the forward iterator */
-  HSHM_ALWAYS_INLINE iterator_t begin() {
+  HSHM_INLINE_CROSS_FUN iterator_t begin() {
     return iterator_t(this, 0);
   }
 
   /** End of the forward iterator */
-  HSHM_ALWAYS_INLINE iterator_t end() {
+  HSHM_INLINE_CROSS_FUN iterator_t end() {
     return iterator_t(this, size());
   }
 
   /** Beginning of the constant forward iterator */
-  HSHM_ALWAYS_INLINE citerator_t cbegin() const {
+  HSHM_INLINE_CROSS_FUN citerator_t cbegin() const {
     return citerator_t(const_cast<vector*>(this), 0);
   }
 
   /** End of the forward iterator */
-  HSHM_ALWAYS_INLINE citerator_t cend() const {
+  HSHM_INLINE_CROSS_FUN citerator_t cend() const {
     return citerator_t(const_cast<vector*>(this), size<off64_t>());
   }
 
   /** Beginning of the reverse iterator */
-  HSHM_ALWAYS_INLINE riterator_t rbegin() {
+  HSHM_INLINE_CROSS_FUN riterator_t rbegin() {
     return riterator_t(this, size<off64_t>() - 1);
   }
 
   /** End of the reverse iterator */
-  HSHM_ALWAYS_INLINE riterator_t rend() {
+  HSHM_INLINE_CROSS_FUN riterator_t rend() {
     return citerator_t(this, (off64_t)-1);
   }
 
   /** Beginning of the constant reverse iterator */
-  HSHM_ALWAYS_INLINE criterator_t crbegin() const {
+  HSHM_INLINE_CROSS_FUN criterator_t crbegin() const {
     return criterator_t(const_cast<vector*>(this), size<off64_t>() - 1);
   }
 
   /** End of the constant reverse iterator */
-  HSHM_ALWAYS_INLINE criterator_t crend() const {
+  HSHM_INLINE_CROSS_FUN criterator_t crend() const {
     return criterator_t(const_cast<vector*>(this), (off64_t)-1);
   }
 
   /** Lets Thallium know how to serialize an hipc::vector. */
   template <typename Ar>
+  HSHM_CROSS_FUN
   void save(Ar &ar) const {
     save_vec<Ar, hipc::vector<T>, T>(ar, *this);
   }
 
   /** Lets Thallium know how to deserialize an hipc::vector. */
   template <typename Ar>
+  HSHM_CROSS_FUN
   void load(Ar &ar) {
     load_vec<Ar, hipc::vector<T>, T>(ar, *this);
   }

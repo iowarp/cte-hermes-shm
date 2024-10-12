@@ -23,15 +23,15 @@ struct MpPage {
   uint32_t off_;
   size_t page_size_;    /**< The total size of the page allocated */
 
-  HSHM_ALWAYS_INLINE void SetAllocated() {
+  HSHM_INLINE_CROSS_FUN void SetAllocated() {
     flags_.SetBits(0x1);
   }
 
-  HSHM_ALWAYS_INLINE void UnsetAllocated() {
+  HSHM_INLINE_CROSS_FUN void UnsetAllocated() {
     flags_.Clear();
   }
 
-  HSHM_ALWAYS_INLINE bool IsAllocated() const {
+  HSHM_INLINE_CROSS_FUN bool IsAllocated() const {
     return flags_.All(0x1);
   }
 };

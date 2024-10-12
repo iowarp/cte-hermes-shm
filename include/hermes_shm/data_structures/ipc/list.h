@@ -48,15 +48,18 @@ struct list_iterator_templ {
   OffsetPointer entry_ptr_;
 
   /** Default constructor */
+  HSHM_CROSS_FUN
   list_iterator_templ() = default;
 
   /** Construct an iterator  */
+  HSHM_CROSS_FUN
   explicit list_iterator_templ(list<T> &list,
                                list_entry<T> *entry,
                                OffsetPointer entry_ptr)
     : list_(&list), entry_(entry), entry_ptr_(entry_ptr) {}
 
   /** Copy constructor */
+  HSHM_CROSS_FUN
   list_iterator_templ(const list_iterator_templ &other) {
     list_ = other.list_;
     entry_ = other.entry_;
@@ -64,6 +67,7 @@ struct list_iterator_templ {
   }
 
   /** Assign this iterator from another iterator */
+  HSHM_CROSS_FUN
   list_iterator_templ& operator=(const list_iterator_templ &other) {
     if (this != &other) {
       list_ = other.list_;
@@ -74,16 +78,19 @@ struct list_iterator_templ {
   }
 
   /** Get the object the iterator points to */
+  HSHM_CROSS_FUN
   T& operator*() {
     return entry_->data_.get_ref();
   }
 
   /** Get the object the iterator points to */
+  HSHM_CROSS_FUN
   const T& operator*() const {
     return entry_->data_.get_ref();
   }
 
   /** Get the next iterator (in place) */
+  HSHM_CROSS_FUN
   list_iterator_templ& operator++() {
     if (is_end()) { return *this; }
     entry_ptr_ = entry_->next_ptr_;
@@ -93,6 +100,7 @@ struct list_iterator_templ {
   }
 
   /** Get the prior iterator (in place) */
+  HSHM_CROSS_FUN
   list_iterator_templ& operator--() {
     if (is_end() || is_begin()) { return *this; }
     entry_ptr_ = entry_->prior_ptr_;
@@ -102,6 +110,7 @@ struct list_iterator_templ {
   }
 
   /** Return the next iterator */
+  HSHM_CROSS_FUN
   list_iterator_templ operator++(int) const {
     list_iterator_templ next_iter(*this);
     ++next_iter;
@@ -109,6 +118,7 @@ struct list_iterator_templ {
   }
 
   /** Return the prior iterator */
+  HSHM_CROSS_FUN
   list_iterator_templ operator--(int) const {
     list_iterator_templ prior_iter(*this);
     --prior_iter;
@@ -116,6 +126,7 @@ struct list_iterator_templ {
   }
 
   /** Return the iterator at count after this one */
+  HSHM_CROSS_FUN
   list_iterator_templ operator+(size_t count) const {
     list_iterator_templ pos(*this);
     for (size_t i = 0; i < count; ++i) {
@@ -125,6 +136,7 @@ struct list_iterator_templ {
   }
 
   /** Return the iterator at count before this one */
+  HSHM_CROSS_FUN
   list_iterator_templ operator-(size_t count) const {
     list_iterator_templ pos(*this);
     for (size_t i = 0; i < count; ++i) {
@@ -134,6 +146,7 @@ struct list_iterator_templ {
   }
 
   /** Get the iterator at count after this one (in-place) */
+  HSHM_CROSS_FUN
   void operator+=(size_t count) {
     list_iterator_templ pos = (*this) + count;
     entry_ = pos.entry_;
@@ -141,6 +154,7 @@ struct list_iterator_templ {
   }
 
   /** Get the iterator at count before this one (in-place) */
+  HSHM_CROSS_FUN
   void operator-=(size_t count) {
     list_iterator_templ pos = (*this) - count;
     entry_ = pos.entry_;
@@ -148,23 +162,27 @@ struct list_iterator_templ {
   }
 
   /** Determine if two iterators are equal */
+  HSHM_CROSS_FUN
   friend bool operator==(const list_iterator_templ &a,
                          const list_iterator_templ &b) {
     return (a.is_end() && b.is_end()) || (a.entry_ == b.entry_);
   }
 
   /** Determine if two iterators are inequal */
+  HSHM_CROSS_FUN
   friend bool operator!=(const list_iterator_templ &a,
                          const list_iterator_templ &b) {
     return !(a.is_end() && b.is_end()) && (a.entry_ != b.entry_);
   }
 
   /** Determine whether this iterator is the end iterator */
+  HSHM_CROSS_FUN
   bool is_end() const {
     return entry_ == nullptr;
   }
 
   /** Determine whether this iterator is the begin iterator */
+  HSHM_CROSS_FUN
   bool is_begin() const {
     if (entry_) {
       return entry_->prior_ptr_.IsNull();
@@ -208,6 +226,7 @@ class list : public ShmContainer {
    * ===================================*/
 
   /** SHM constructor. Default. */
+  HSHM_CROSS_FUN
   explicit list(Allocator *alloc) {
     shm_init_container(alloc);
     SetNull();
@@ -218,6 +237,7 @@ class list : public ShmContainer {
    * ===================================*/
 
   /** SHM copy constructor */
+  HSHM_CROSS_FUN
   explicit list(Allocator *alloc,
                 const list &other) {
     shm_init_container(alloc);
@@ -226,6 +246,7 @@ class list : public ShmContainer {
   }
 
   /** SHM copy assignment operator */
+  HSHM_CROSS_FUN
   list& operator=(const list &other) {
     if (this != &other) {
       shm_destroy();
@@ -235,6 +256,7 @@ class list : public ShmContainer {
   }
 
   /** SHM copy constructor. From std::list */
+  HSHM_CROSS_FUN
   explicit list(Allocator *alloc,
                 std::list<T> &other) {
     shm_init_container(alloc);
@@ -243,6 +265,7 @@ class list : public ShmContainer {
   }
 
   /** SHM copy assignment operator. From std::list. */
+  HSHM_CROSS_FUN
   list& operator=(const std::list<T> &other) {
     if (this != &other) {
       shm_destroy();
@@ -253,6 +276,7 @@ class list : public ShmContainer {
 
   /** SHM copy constructor + operator main */
   template<typename ListT>
+  HSHM_CROSS_FUN
   void shm_strong_copy_construct_and_op(const ListT &other) {
     for (auto iter = other.cbegin(); iter != other.cend(); ++iter) {
       emplace_back(*iter);
@@ -264,6 +288,7 @@ class list : public ShmContainer {
    * ===================================*/
 
   /** SHM move constructor. */
+  HSHM_CROSS_FUN
   list(Allocator *alloc, list &&other) noexcept {
     shm_init_container(alloc);
     if (GetAllocator() == other.GetAllocator()) {
@@ -276,6 +301,7 @@ class list : public ShmContainer {
   }
 
   /** SHM move assignment operator. */
+  HSHM_CROSS_FUN
   list& operator=(list &&other) noexcept {
     if (this != &other) {
       shm_destroy();
@@ -295,16 +321,19 @@ class list : public ShmContainer {
    * ===================================*/
 
   /** SHM destructor.  */
+  HSHM_CROSS_FUN
   void shm_destroy_main() {
     clear();
   }
 
   /** Check if the list is empty */
+  HSHM_CROSS_FUN
   bool IsNull() const {
     return length_ == 0;
   }
 
   /** Sets this list as empty */
+  HSHM_CROSS_FUN
   void SetNull() {
     length_ = 0;
     head_ptr_.SetNull();
@@ -317,18 +346,21 @@ class list : public ShmContainer {
 
   /** Construct an element at the back of the list */
   template<typename... Args>
+  HSHM_CROSS_FUN
   void emplace_back(Args&&... args) {
     emplace(end(), std::forward<Args>(args)...);
   }
 
   /** Construct an element at the beginning of the list */
   template<typename... Args>
+  HSHM_CROSS_FUN
   void emplace_front(Args&&... args) {
     emplace(begin(), std::forward<Args>(args)...);
   }
 
   /** Construct an element at \a pos position in the list */
   template<typename ...Args>
+  HSHM_CROSS_FUN
   void emplace(iterator_t pos, Args&&... args) {
     OffsetPointer entry_ptr;
     auto entry = _create_entry(entry_ptr, std::forward<Args>(args)...);
@@ -365,17 +397,20 @@ class list : public ShmContainer {
   }
 
   /** Erase element with ID */
+  HSHM_CROSS_FUN
   void erase(const T &entry) {
     auto iter = find(entry);
     erase(iter);
   }
 
   /** Erase the element at pos */
+  HSHM_CROSS_FUN
   void erase(iterator_t pos) {
     erase(pos, pos+1);
   }
 
   /** Erase all elements between first and last */
+  HSHM_CROSS_FUN
   void erase(iterator_t first,
              iterator_t last) {
     if (first.is_end()) { return; }
@@ -405,26 +440,31 @@ class list : public ShmContainer {
   }
 
   /** Destroy all elements in the list */
+  HSHM_CROSS_FUN
   void clear() {
     erase(begin(), end());
   }
 
   /** Get the object at the front of the list */
+  HSHM_CROSS_FUN
   T& front() {
     return *begin();
   }
 
   /** Get the object at the back of the list */
+  HSHM_CROSS_FUN
   T& back() {
     return *last();
   }
 
   /** Get the number of elements in the list */
+  HSHM_CROSS_FUN
   size_t size() const {
     return length_;
   }
 
   /** Find an element in this list */
+  HSHM_CROSS_FUN
   iterator_t find(const T &entry) {
     return hshm::find(begin(), end(), entry);
   }
@@ -434,6 +474,7 @@ class list : public ShmContainer {
    * ===================================*/
 
   /** Forward iterator begin */
+  HSHM_CROSS_FUN
   iterator_t begin() {
     if (size() == 0) { return end(); }
     auto head = GetAllocator()->template
@@ -443,6 +484,7 @@ class list : public ShmContainer {
   }
 
   /** Last iterator begin */
+  HSHM_CROSS_FUN
   iterator_t last() {
     if (size() == 0) { return end(); }
     auto tail = GetAllocator()->template
@@ -451,11 +493,13 @@ class list : public ShmContainer {
   }
 
   /** Forward iterator end */
+  HSHM_CROSS_FUN
   iterator_t end() {
     return iterator_t(*this, nullptr, OffsetPointer::GetNull());
   }
 
   /** Constant forward iterator begin */
+  HSHM_CROSS_FUN
   citerator_t cbegin() const {
     if (size() == 0) { return cend(); }
     auto head = GetAllocator()->template
@@ -465,6 +509,7 @@ class list : public ShmContainer {
   }
 
   /** Constant forward iterator end */
+  HSHM_CROSS_FUN
   citerator_t cend() const {
     return iterator_t(const_cast<list&>(*this),
                       nullptr, OffsetPointer::GetNull());
@@ -476,19 +521,21 @@ class list : public ShmContainer {
 
   /** Serialize */
   template <typename Ar>
+  HSHM_CROSS_FUN
   void save(Ar &ar) const {
     save_list<Ar, hipc::list<T>, T>(ar, *this);
   }
 
   /** Deserialize */
   template <typename Ar>
+  HSHM_CROSS_FUN
   void load(Ar &ar) {
     load_list<Ar, hipc::list<T>, T>(ar, *this);
   }
 
  private:
   template<typename ...Args>
-  HSHM_ALWAYS_INLINE list_entry<T>* _create_entry(
+  HSHM_INLINE_CROSS_FUN list_entry<T>* _create_entry(
     OffsetPointer &p, Args&& ...args) {
     auto entry = GetAllocator()->template
       AllocateObjs<list_entry<T>>(1, p);

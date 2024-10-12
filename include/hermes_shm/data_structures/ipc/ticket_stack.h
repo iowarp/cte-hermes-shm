@@ -50,6 +50,7 @@ class ticket_stack : public ShmContainer {
    * ===================================*/
 
   /** SHM constructor. Default. */
+  HSHM_CROSS_FUN
   explicit ticket_stack(Allocator *alloc,
                         size_t depth = 1024) {
     shm_init_container(alloc);
@@ -63,6 +64,7 @@ class ticket_stack : public ShmContainer {
    * ===================================*/
 
   /** SHM copy constructor */
+  HSHM_CROSS_FUN
   explicit ticket_stack(Allocator *alloc,
                         const ticket_stack &other) {
     shm_init_container(alloc);
@@ -71,6 +73,7 @@ class ticket_stack : public ShmContainer {
   }
 
   /** SHM copy assignment operator */
+  HSHM_CROSS_FUN
   ticket_stack& operator=(const ticket_stack &other) {
     if (this != &other) {
       shm_destroy();
@@ -80,6 +83,7 @@ class ticket_stack : public ShmContainer {
   }
 
   /** SHM copy constructor + operator main */
+  HSHM_CROSS_FUN
   void shm_strong_copy_construct_and_op(const ticket_stack &other) {
     (*queue_) = (*other.queue_);
   }
@@ -89,6 +93,7 @@ class ticket_stack : public ShmContainer {
    * ===================================*/
 
   /** SHM move constructor. */
+  HSHM_CROSS_FUN
   ticket_stack(Allocator *alloc,
                ticket_stack &&other) noexcept {
     shm_init_container(alloc);
@@ -102,6 +107,7 @@ class ticket_stack : public ShmContainer {
   }
 
   /** SHM move assignment operator. */
+  HSHM_CROSS_FUN
   ticket_stack& operator=(ticket_stack &&other) noexcept {
     if (this != &other) {
       shm_destroy();
@@ -121,16 +127,19 @@ class ticket_stack : public ShmContainer {
    * ===================================*/
 
   /** SHM destructor.  */
+  HSHM_CROSS_FUN
   void shm_destroy_main() {
     (*queue_).shm_destroy();
   }
 
   /** Check if the list is empty */
+  HSHM_CROSS_FUN
   bool IsNull() const {
     return (*queue_).IsNull();
   }
 
   /** Sets this list as empty */
+  HSHM_CROSS_FUN
   void SetNull() {
   }
 
@@ -140,7 +149,7 @@ class ticket_stack : public ShmContainer {
 
   /** Construct an element at \a pos position in the queue */
   template<typename ...Args>
-  HSHM_ALWAYS_INLINE qtok_t emplace(T &tkt) {
+  HSHM_INLINE_CROSS_FUN qtok_t emplace(T &tkt) {
     lock_.Lock(0);
     auto qtok = queue_->emplace(tkt);
     lock_.Unlock();
@@ -149,7 +158,7 @@ class ticket_stack : public ShmContainer {
 
  public:
   /** Pop an element from the queue */
-  HSHM_ALWAYS_INLINE qtok_t pop(T &tkt) {
+  HSHM_INLINE_CROSS_FUN qtok_t pop(T &tkt) {
     lock_.Lock(0);
     auto qtok = queue_->pop(tkt);
     lock_.Unlock();

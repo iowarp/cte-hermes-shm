@@ -36,6 +36,7 @@ class split_ticket_queue {
    * ===================================*/
 
   /** Default constructor */
+  HSHM_CROSS_FUN
   explicit split_ticket_queue(size_t depth_per_split = 1024,
                               size_t split = 0) {
     if (split == 0) {
@@ -48,6 +49,7 @@ class split_ticket_queue {
   }
 
   /** Copy constructor */
+  HSHM_CROSS_FUN
   split_ticket_queue(const split_ticket_queue<T> &other) {
     splits_ = other.splits_;
     rr_tail_ = other.rr_tail_.load();
@@ -55,6 +57,7 @@ class split_ticket_queue {
   }
 
   /** Copy assignment operator */
+  HSHM_CROSS_FUN
   split_ticket_queue &operator=(const split_ticket_queue<T> &other) {
     splits_ = other.splits_;
     rr_tail_ = other.rr_tail_.load();
@@ -63,6 +66,7 @@ class split_ticket_queue {
   }
 
   /** Move constructor */
+  HSHM_CROSS_FUN
   split_ticket_queue(split_ticket_queue<T> &&other) {
     splits_ = std::move(other.splits_);
     rr_tail_ = other.rr_tail_.load();
@@ -70,6 +74,7 @@ class split_ticket_queue {
   }
 
   /** Move assignment operator */
+  HSHM_CROSS_FUN
   split_ticket_queue &operator=(split_ticket_queue<T> &&other) {
     splits_ = std::move(other.splits_);
     rr_tail_ = other.rr_tail_.load();
@@ -83,7 +88,7 @@ class split_ticket_queue {
 
   /** Construct an element at \a pos position in the queue */
   template<typename ...Args>
-  qtok_t emplace(T &tkt) {
+  HSHM_CROSS_FUN qtok_t emplace(T &tkt) {
     uint16_t rr = rr_tail_.fetch_add(1);
     size_t num_splits = splits_.size();
     uint16_t qid_start = rr % num_splits;
@@ -100,7 +105,7 @@ class split_ticket_queue {
 
  public:
   /** Pop an element from the queue */
-  qtok_t pop(T &tkt) {
+  HSHM_CROSS_FUN qtok_t pop(T &tkt) {
     uint16_t rr = rr_head_.fetch_add(1);
     size_t num_splits = splits_.size();
     uint16_t qid_start = rr % num_splits;

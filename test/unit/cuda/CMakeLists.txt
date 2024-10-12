@@ -11,6 +11,10 @@ set(CMAKE_CXX_STANDARD 17)
 #------------------------------------------------------------------------------
 add_executable(test_memory_cuda_exec
         backend_cuda.cc)
+#add_dependencies(test_memory_cuda_exec
+#        hermes_shm_data_structures)
+#target_link_libraries(test_memory_cuda_exec
+#        hermes_shm_data_structures)
 set_source_files_properties(backend_cuda.cc PROPERTIES LANGUAGE CUDA)
 set_target_properties(test_memory_cuda_exec PROPERTIES
         CUDA_SEPARABLE_COMPILATION ON)

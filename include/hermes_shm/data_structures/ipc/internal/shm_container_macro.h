@@ -1,5 +1,6 @@
 #ifndef HERMES_DATA_STRUCTURES_INTERNAL_SHM_CONTAINER_MACRO_H_
 #define HERMES_DATA_STRUCTURES_INTERNAL_SHM_CONTAINER_MACRO_H_
+#include "hermes_shm/constants/macros.h"
 #define SHM_CONTAINER_TEMPLATE(CLASS_NAME,TYPED_CLASS)\
 public:\
 /**====================================\
@@ -21,7 +22,7 @@ TYPE_UNWRAP(CLASS_NAME)(TYPE_UNWRAP(CLASS_NAME) &&other) = delete;\
 TYPE_UNWRAP(CLASS_NAME)(const TYPE_UNWRAP(CLASS_NAME) &other) = delete;\
 \
 /** Initialize container */\
-void shm_init_container(hipc::Allocator *alloc) {\
+HSHM_CROSS_FUN void shm_init_container(hipc::Allocator *alloc) {\
   alloc_id_ = alloc->GetId();\
 }\
 \
@@ -30,10 +31,10 @@ void shm_init_container(hipc::Allocator *alloc) {\
  * ===================================*/\
 \
 /** Destructor. */\
-HSHM_ALWAYS_INLINE ~TYPE_UNWRAP(CLASS_NAME)() = default;\
+HSHM_INLINE_CROSS_FUN ~TYPE_UNWRAP(CLASS_NAME)() = default;\
 \
 /** Destruction operation */\
-HSHM_ALWAYS_INLINE void shm_destroy() {\
+HSHM_INLINE_CROSS_FUN void shm_destroy() {\
   if (IsNull()) { return; }\
   shm_destroy_main();\
   SetNull();\
@@ -45,7 +46,7 @@ HSHM_ALWAYS_INLINE void shm_destroy() {\
 \
 /** Get a typed pointer to the object */\
 template<typename POINTER_T>\
-HSHM_ALWAYS_INLINE POINTER_T GetShmPointer() const {\
+HSHM_INLINE_CROSS_FUN POINTER_T GetShmPointer() const {\
   return GetAllocator()->template Convert<TYPE_UNWRAP(TYPED_CLASS), POINTER_T>(this);\
 }\
 \
@@ -54,12 +55,12 @@ HSHM_ALWAYS_INLINE POINTER_T GetShmPointer() const {\
  * ===================================*/\
 \
 /** Get the allocator for this container */\
-HSHM_ALWAYS_INLINE hipc::Allocator* GetAllocator() const {\
+HSHM_INLINE_CROSS_FUN hipc::Allocator* GetAllocator() const {\
   return HERMES_MEMORY_REGISTRY_REF.GetAllocator(alloc_id_);\
 }\
 \
 /** Get the shared-memory allocator id */\
-HSHM_ALWAYS_INLINE hipc::allocator_id_t& GetAllocatorId() const {\
+HSHM_INLINE_CROSS_FUN hipc::allocator_id_t& GetAllocatorId() const {\
   return GetAllocator()->GetId();\
 }\
 

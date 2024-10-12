@@ -28,20 +28,20 @@ class GlobalSingleton {
   static T *obj_;
 
  public:
-  GlobalSingleton() = default;
+  HSHM_INLINE_CROSS_FUN GlobalSingleton() = default;
 
   /** Get instance of type T */
-  HSHM_ALWAYS_INLINE static T* GetInstance() {
+  HSHM_INLINE_CROSS_FUN static T* GetInstance() {
     return obj_;
   }
 
   /** Get ref of type T */
-  HSHM_ALWAYS_INLINE static T& GetRef() {
+  HSHM_INLINE_CROSS_FUN static T& GetRef() {
     return *obj_;
   }
 
   /** Static initialization method for obj */
-  static T& _GetObj();
+  HSHM_CROSS_FUN static T& _GetObj();
 };
 template<typename T>
 T* GlobalSingleton<T>::obj_ = &GlobalSingleton<T>::_GetObj();

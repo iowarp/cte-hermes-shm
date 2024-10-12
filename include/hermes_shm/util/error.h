@@ -38,6 +38,7 @@ class Error : std::exception {
   std::string msg_;
  public:
   Error() : fmt_() {}
+
   explicit Error(std::string fmt) : fmt_(std::move(fmt)) {}
   ~Error() override = default;
 

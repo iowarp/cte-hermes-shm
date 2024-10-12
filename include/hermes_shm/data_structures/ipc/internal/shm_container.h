@@ -30,15 +30,15 @@ struct ShmHeader;
 /** The ShmHeader used for base containers */
 #define SHM_CONTAINER_HEADER_TEMPLATE(HEADER_NAME)\
   /** Default constructor */\
-  TYPE_UNWRAP(HEADER_NAME)() = default;\
+  HSHM_CROSS_FUN TYPE_UNWRAP(HEADER_NAME)() = default;\
   \
   /** Copy constructor */\
-  TYPE_UNWRAP(HEADER_NAME)(const TYPE_UNWRAP(HEADER_NAME) &other) {\
+  HSHM_CROSS_FUN TYPE_UNWRAP(HEADER_NAME)(const TYPE_UNWRAP(HEADER_NAME) &other) {\
     strong_copy(other);\
   }\
   \
   /** Copy assignment operator */\
-  TYPE_UNWRAP(HEADER_NAME)& operator=(const TYPE_UNWRAP(HEADER_NAME) &other) {\
+  HSHM_CROSS_FUN TYPE_UNWRAP(HEADER_NAME)& operator=(const TYPE_UNWRAP(HEADER_NAME) &other) {\
     if (this != &other) {\
       strong_copy(other);\
     }\
@@ -46,12 +46,12 @@ struct ShmHeader;
   }\
 \
   /** Move constructor */\
-  TYPE_UNWRAP(HEADER_NAME)(TYPE_UNWRAP(HEADER_NAME) &&other) {\
+  HSHM_CROSS_FUN TYPE_UNWRAP(HEADER_NAME)(TYPE_UNWRAP(HEADER_NAME) &&other) {\
     strong_copy(other);\
   }\
   \
   /** Move operator */\
-  TYPE_UNWRAP(HEADER_NAME)& operator=(TYPE_UNWRAP(HEADER_NAME) &&other) {\
+  HSHM_CROSS_FUN TYPE_UNWRAP(HEADER_NAME)& operator=(TYPE_UNWRAP(HEADER_NAME) &&other) {\
     if (this != &other) {\
       strong_copy(other);\
     }\
@@ -69,7 +69,7 @@ class ShmContainer {};
 
 /** Typed nullptr */
 template<typename T>
-HSHM_ALWAYS_INLINE static T* typed_nullptr() {
+HSHM_INLINE_CROSS_FUN static T* typed_nullptr() {
   return reinterpret_cast<T*>(NULL);
 }
 

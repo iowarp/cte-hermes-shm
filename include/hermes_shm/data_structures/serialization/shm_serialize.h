@@ -25,6 +25,7 @@ class ShmSerializer {
 
   /** Default constructor */
   template<typename ...Args>
+  HSHM_CROSS_FUN
   ShmSerializer(Allocator *alloc, Args&& ...args) : off_(0) {
     size_t buf_size = sizeof(allocator_id_t) + shm_buf_size(
         std::forward<Args>(args)...);
@@ -47,7 +48,8 @@ class ShmSerializer {
 
   /** Get the SHM serialized size of an argument pack */
   template<typename ...Args>
-  HSHM_ALWAYS_INLINE static size_t shm_buf_size(Args&& ...args) {
+  HSHM_INLINE_CROSS_FUN
+  static size_t shm_buf_size(Args&& ...args) {
     size_t size = 0;
     auto lambda = [&size](auto i, auto &&arg) {
       if constexpr(IS_SHM_ARCHIVEABLE(NOREF)) {
@@ -74,7 +76,7 @@ class ShmDeserializer {
 
   /** Deserialize an argument from the SHM buffer */
   template<typename T, typename ...Args>
-  HSHM_ALWAYS_INLINE T deserialize(Allocator *alloc, char *buf) {
+  HSHM_INLINE_CROSS_FUN T deserialize(Allocator *alloc, char *buf) {
     if constexpr(std::is_pod<T>()) {
       T arg;
       memcpy(&arg, buf + off_, sizeof(arg));
@@ -87,7 +89,7 @@ class ShmDeserializer {
 
   /** Deserialize an argument from the SHM buffer */
   template<typename T, typename ...Args>
-  HSHM_ALWAYS_INLINE void deserialize(Allocator *alloc,
+  HSHM_INLINE_CROSS_FUN void deserialize(Allocator *alloc,
                                       char *buf, hipc::mptr<T> &arg) {
     if constexpr(IS_SHM_ARCHIVEABLE(T)) {
       OffsetPointer p;

@@ -44,11 +44,13 @@ struct iqueue_iterator_templ {
   iqueue_iterator_templ() = default;
 
   /** Construct begin iterator  */
+  HSHM_CROSS_FUN
   explicit iqueue_iterator_templ(iqueue<T> &iqueue,
                                  iqueue_entry *entry)
     : iqueue_(&iqueue), entry_(entry), prior_entry_(nullptr) {}
 
   /** Copy constructor */
+  HSHM_CROSS_FUN
   iqueue_iterator_templ(const iqueue_iterator_templ &other)
   : iqueue_(other.iqueue_) {
     iqueue_ = other.iqueue_;
@@ -57,6 +59,7 @@ struct iqueue_iterator_templ {
   }
 
   /** Assign this iterator from another iterator */
+  HSHM_CROSS_FUN
   iqueue_iterator_templ& operator=(const iqueue_iterator_templ &other) {
     if (this != &other) {
       iqueue_ = other.iqueue_;
@@ -67,16 +70,19 @@ struct iqueue_iterator_templ {
   }
 
   /** Get the object the iterator points to */
+  HSHM_CROSS_FUN
   T* operator*() {
     return reinterpret_cast<T*>(entry_);
   }
 
   /** Get the object the iterator points to */
+  HSHM_CROSS_FUN
   T* operator*() const {
     return reinterpret_cast<T*>(entry_);
   }
 
   /** Get the next iterator (in place) */
+  HSHM_CROSS_FUN
   iqueue_iterator_templ& operator++() {
     if (is_end()) { return *this; }
     prior_entry_ = entry_;
@@ -86,6 +92,7 @@ struct iqueue_iterator_templ {
   }
 
   /** Return the next iterator */
+  HSHM_CROSS_FUN
   iqueue_iterator_templ operator++(int) const {
     iqueue_iterator_templ next_iter(*this);
     ++next_iter;
@@ -93,6 +100,7 @@ struct iqueue_iterator_templ {
   }
 
   /** Return the iterator at count after this one */
+  HSHM_CROSS_FUN
   iqueue_iterator_templ operator+(size_t count) const {
     iqueue_iterator_templ pos(*this);
     for (size_t i = 0; i < count; ++i) {
@@ -102,6 +110,7 @@ struct iqueue_iterator_templ {
   }
 
   /** Get the iterator at count after this one (in-place) */
+  HSHM_CROSS_FUN
   void operator+=(size_t count) {
     iqueue_iterator_templ pos = (*this) + count;
     entry_ = pos.entry_;
@@ -109,23 +118,27 @@ struct iqueue_iterator_templ {
   }
 
   /** Determine if two iterators are equal */
+  HSHM_CROSS_FUN
   friend bool operator==(const iqueue_iterator_templ &a,
                          const iqueue_iterator_templ &b) {
     return (a.is_end() && b.is_end()) || (a.entry_ == b.entry_);
   }
 
   /** Determine if two iterators are inequal */
+  HSHM_CROSS_FUN
   friend bool operator!=(const iqueue_iterator_templ &a,
                          const iqueue_iterator_templ &b) {
     return !(a.is_end() && b.is_end()) && (a.entry_ != b.entry_);
   }
 
   /** Determine whether this iterator is the end iterator */
+  HSHM_CROSS_FUN
   bool is_end() const {
     return entry_ == nullptr;
   }
 
   /** Determine whether this iterator is the begin iterator */
+  HSHM_CROSS_FUN
   bool is_begin() const {
     if (entry_) {
       return prior_entry_ == nullptr;
@@ -168,6 +181,7 @@ class iqueue : public ShmContainer {
    * ===================================*/
 
   /** SHM constructor. Default. */
+  HSHM_CROSS_FUN
   explicit iqueue(Allocator *alloc) {
     shm_init_container(alloc);
     length_ = 0;
@@ -179,6 +193,7 @@ class iqueue : public ShmContainer {
    * ===================================*/
 
   /** SHM copy constructor */
+  HSHM_CROSS_FUN
   explicit iqueue(Allocator *alloc,
                   const iqueue &other) {
     shm_init_container(alloc);
@@ -186,6 +201,7 @@ class iqueue : public ShmContainer {
   }
 
   /** SHM copy assignment operator */
+  HSHM_CROSS_FUN
   iqueue& operator=(const iqueue &other) {
     if (this != &other) {
       shm_destroy();
@@ -195,6 +211,7 @@ class iqueue : public ShmContainer {
   }
 
   /** SHM copy constructor + operator */
+  HSHM_CROSS_FUN
   void shm_strong_copy_construct_and_op(const iqueue &other) {
     memcpy((void*)this, (void*)&other, sizeof(*this));
   }
@@ -204,6 +221,7 @@ class iqueue : public ShmContainer {
    * ===================================*/
 
   /** SHM move constructor. */
+  HSHM_CROSS_FUN
   iqueue(Allocator *alloc, iqueue &&other) noexcept {
     shm_init_container(alloc);
     if (GetAllocator() == other.GetAllocator()) {
@@ -216,6 +234,7 @@ class iqueue : public ShmContainer {
   }
 
   /** SHM move assignment operator. */
+  HSHM_CROSS_FUN
   iqueue& operator=(iqueue &&other) noexcept {
     if (this != &other) {
       shm_destroy();
@@ -235,16 +254,19 @@ class iqueue : public ShmContainer {
    * ===================================*/
 
   /** Check if the iqueue is null */
+  HSHM_CROSS_FUN
   bool IsNull() {
     return length_ == 0;
   }
 
   /** Set the iqueue to null */
+  HSHM_CROSS_FUN
   void SetNull() {
     length_ = 0;
   }
 
   /** SHM destructor. */
+  HSHM_CROSS_FUN
   void shm_destroy_main() {
     clear();
   }
@@ -254,13 +276,14 @@ class iqueue : public ShmContainer {
    * ===================================*/
 
   /** Load from shared memory */
-  void shm_deserialize_main() {}
+  HSHM_CROSS_FUN void shm_deserialize_main() {}
 
   /**====================================
    * iqueue Methods
    * ===================================*/
 
   /** Construct an element at \a pos position in the iqueue */
+  HSHM_CROSS_FUN
   void enqueue(T *entry) {
     OffsetPointer entry_ptr = GetAllocator()->
       template Convert<T, OffsetPointer>(entry);
@@ -270,6 +293,7 @@ class iqueue : public ShmContainer {
   }
 
   /** Dequeue the first element */
+  HSHM_CROSS_FUN
   T* dequeue() {
     if (size() == 0) { return nullptr; }
     auto entry = GetAllocator()->
@@ -280,6 +304,7 @@ class iqueue : public ShmContainer {
   }
 
   /** Dequeue the element at the iterator position */
+  HSHM_CROSS_FUN
   T* dequeue(iqueue_iterator_templ<T> pos) {
     if (pos.prior_entry_ == nullptr) {
       return dequeue();
@@ -293,6 +318,7 @@ class iqueue : public ShmContainer {
   }
 
   /** Peek the first element of the queue */
+  HSHM_CROSS_FUN
   T* peek() {
     if (size() == 0) { return nullptr; }
     auto entry = GetAllocator()->
@@ -301,6 +327,7 @@ class iqueue : public ShmContainer {
   }
 
   /** Destroy all elements in the iqueue */
+  HSHM_CROSS_FUN
   void clear() {
     while (size()) {
       dequeue();
@@ -308,6 +335,7 @@ class iqueue : public ShmContainer {
   }
 
   /** Get the number of elements in the iqueue */
+  HSHM_CROSS_FUN
   size_t size() const {
     return length_;
   }
@@ -317,6 +345,7 @@ class iqueue : public ShmContainer {
   * ===================================*/
 
   /** Forward iterator begin */
+  HSHM_CROSS_FUN
   iterator_t begin() {
     if (size() == 0) { return end(); }
     auto head = GetAllocator()->template
@@ -325,11 +354,13 @@ class iqueue : public ShmContainer {
   }
 
   /** Forward iterator end */
+  HSHM_CROSS_FUN
   iterator_t const end() {
     return iterator_t(*this, nullptr);
   }
 
   /** Constant forward iterator begin */
+  HSHM_CROSS_FUN
   citerator_t cbegin() const {
     if (size() == 0) { return cend(); }
     auto head = GetAllocator()->template
@@ -338,6 +369,7 @@ class iqueue : public ShmContainer {
   }
 
   /** Constant forward iterator end */
+  HSHM_CROSS_FUN
   citerator_t const cend() const {
     return citerator_t(const_cast<iqueue&>(*this), nullptr);
   }

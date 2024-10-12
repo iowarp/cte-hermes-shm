@@ -23,16 +23,16 @@ struct qtok_t {
   _qtok_t id_;
 
   /** Default constructor */
-  HSHM_ALWAYS_INLINE qtok_t() = default;
+  HSHM_INLINE_CROSS_FUN qtok_t() = default;
 
   /** Emplace constructor */
-  HSHM_ALWAYS_INLINE explicit qtok_t(_qtok_t id) : id_(id) {}
+  HSHM_INLINE_CROSS_FUN explicit qtok_t(_qtok_t id) : id_(id) {}
 
   /** Copy constructor */
-  HSHM_ALWAYS_INLINE qtok_t(const qtok_t &other) : id_(other.id_) {}
+  HSHM_INLINE_CROSS_FUN qtok_t(const qtok_t &other) : id_(other.id_) {}
 
   /** Copy assign */
-  HSHM_ALWAYS_INLINE qtok_t& operator=(const qtok_t &other) {
+  HSHM_INLINE_CROSS_FUN qtok_t& operator=(const qtok_t &other) {
     if (this != &other) {
       id_ = other.id_;
     }
@@ -40,12 +40,12 @@ struct qtok_t {
   }
 
   /** Move constructor */
-  HSHM_ALWAYS_INLINE qtok_t(qtok_t &&other) : id_(other.id_) {
+  HSHM_INLINE_CROSS_FUN qtok_t(qtok_t &&other) : id_(other.id_) {
     other.SetNull();
   }
 
   /** Move assign */
-  HSHM_ALWAYS_INLINE qtok_t& operator=(qtok_t &&other) {
+  HSHM_INLINE_CROSS_FUN qtok_t& operator=(qtok_t &&other) {
     if (this != &other) {
       id_ = other.id_;
       other.SetNull();
@@ -54,18 +54,18 @@ struct qtok_t {
   }
 
   /** Set to the null qtok */
-  HSHM_ALWAYS_INLINE void SetNull() {
+  HSHM_INLINE_CROSS_FUN void SetNull() {
     id_ = qtok_t::GetNull().id_;
   }
 
   /** Get the null qtok */
-  HSHM_ALWAYS_INLINE static qtok_t GetNull() {
+  HSHM_INLINE_CROSS_FUN static qtok_t GetNull() {
     static qtok_t other(std::numeric_limits<_qtok_t>::max());
     return other;
   }
 
   /** Check if null */
-  HSHM_ALWAYS_INLINE bool IsNull() const {
+  HSHM_INLINE_CROSS_FUN bool IsNull() const {
     return id_ == GetNull().id_;
   }
 };

@@ -49,6 +49,7 @@ class split_ticket_queue : public ShmContainer {
    * ===================================*/
 
   /** SHM constructor. Default. */
+  HSHM_CROSS_FUN
   explicit split_ticket_queue(Allocator *alloc,
                               size_t depth_per_split = 1024,
                               size_t split = 0) {
@@ -65,6 +66,7 @@ class split_ticket_queue : public ShmContainer {
    * ===================================*/
 
   /** SHM copy constructor */
+  HSHM_CROSS_FUN
   explicit split_ticket_queue(Allocator *alloc,
                               const split_ticket_queue &other) {
     shm_init_container(alloc);
@@ -73,6 +75,7 @@ class split_ticket_queue : public ShmContainer {
   }
 
   /** SHM copy assignment operator */
+  HSHM_CROSS_FUN
   split_ticket_queue& operator=(const split_ticket_queue &other) {
     if (this != &other) {
       shm_destroy();
@@ -82,6 +85,7 @@ class split_ticket_queue : public ShmContainer {
   }
 
   /** SHM copy constructor + operator main */
+  HSHM_CROSS_FUN
   void shm_strong_copy_construct_and_op(const split_ticket_queue &other) {
     (*splits_) = (*other.splits_);
   }
@@ -91,6 +95,7 @@ class split_ticket_queue : public ShmContainer {
    * ===================================*/
 
   /** SHM move constructor. */
+  HSHM_CROSS_FUN
   split_ticket_queue(Allocator *alloc,
                      split_ticket_queue &&other) noexcept {
     shm_init_container(alloc);
@@ -104,6 +109,7 @@ class split_ticket_queue : public ShmContainer {
   }
 
   /** SHM move assignment operator. */
+  HSHM_CROSS_FUN
   split_ticket_queue& operator=(split_ticket_queue &&other) noexcept {
     if (this != &other) {
       shm_destroy();
@@ -123,16 +129,19 @@ class split_ticket_queue : public ShmContainer {
    * ===================================*/
 
   /** SHM destructor.  */
+  HSHM_CROSS_FUN
   void shm_destroy_main() {
     (*splits_).shm_destroy();
   }
 
   /** Check if the list is empty */
+  HSHM_CROSS_FUN
   bool IsNull() const {
     return (*splits_).IsNull();
   }
 
   /** Sets this list as empty */
+  HSHM_CROSS_FUN
   void SetNull() {
     rr_tail_ = 0;
     rr_head_ = 0;
@@ -144,6 +153,7 @@ class split_ticket_queue : public ShmContainer {
 
   /** Construct an element at \a pos position in the queue */
   template<typename ...Args>
+  HSHM_CROSS_FUN
   qtok_t emplace(T &tkt) {
     uint16_t rr = rr_tail_.fetch_add(1);
     auto &splits = (*splits_);
@@ -162,6 +172,7 @@ class split_ticket_queue : public ShmContainer {
 
  public:
   /** Pop an element from the queue */
+  HSHM_CROSS_FUN
   qtok_t pop(T &tkt) {
     uint16_t rr = rr_head_.fetch_add(1);
     auto &splits = (*splits_);

@@ -42,6 +42,7 @@ struct ShmHeader<string_templ<SSO>> {
   Pointer text_;
 
   /** Strong copy operation */
+  HSHM_CROSS_FUN
   void strong_copy(const ShmHeader &other) {
     length_ = other.length_;
     text_ = other.text_;
@@ -70,6 +71,7 @@ class string_templ : public ShmContainer {
    * ===================================*/
 
   /** SHM Constructor. Default. */
+  HSHM_CROSS_FUN
   explicit string_templ(Allocator *alloc) {
     shm_init_container(alloc);
     SetNull();
@@ -80,6 +82,7 @@ class string_templ : public ShmContainer {
    * ===================================*/
 
   /** SHM Constructor. Just allocate space. */
+  HSHM_CROSS_FUN
   explicit string_templ(Allocator *alloc,
                         size_t length) {
     shm_init_container(alloc);
@@ -91,6 +94,7 @@ class string_templ : public ShmContainer {
    * ===================================*/
 
   /** SHM Constructor. From const char* */
+  HSHM_CROSS_FUN
   explicit string_templ(Allocator *alloc,
                         const char *text) {
     shm_init_container(alloc);
@@ -99,6 +103,7 @@ class string_templ : public ShmContainer {
   }
 
   /** SHM Constructor. From const char* and size */
+  HSHM_CROSS_FUN
   explicit string_templ(Allocator *alloc,
                         const char *text, size_t length) {
     shm_init_container(alloc);
@@ -106,6 +111,7 @@ class string_templ : public ShmContainer {
   }
 
   /** SHM Constructor. From std::string */
+  HSHM_CROSS_FUN
   explicit string_templ(Allocator *alloc,
                         const std::string &text) {
     shm_init_container(alloc);
@@ -113,6 +119,7 @@ class string_templ : public ShmContainer {
   }
 
   /** SHM copy assignment operator. From std::string. */
+  HSHM_CROSS_FUN
   string_templ& operator=(const std::string &other) {
     shm_destroy();
     _create_str(other.data(), other.size());
@@ -120,6 +127,7 @@ class string_templ : public ShmContainer {
   }
 
   /** SHM Constructor. From std::string */
+  HSHM_CROSS_FUN
   explicit string_templ(Allocator *alloc,
                         const hshm::charbuf &text) {
     shm_init_container(alloc);
@@ -127,6 +135,7 @@ class string_templ : public ShmContainer {
   }
 
   /** SHM copy assignment operator. From std::string. */
+  HSHM_CROSS_FUN
   string_templ& operator=(const hshm::charbuf &other) {
     shm_destroy();
     _create_str(other.data(), other.size());
@@ -134,6 +143,7 @@ class string_templ : public ShmContainer {
   }
 
   /** SHM copy constructor. From string. */
+  HSHM_CROSS_FUN
   explicit string_templ(Allocator *alloc,
                         const string_templ &other) {
     shm_init_container(alloc);
@@ -141,6 +151,7 @@ class string_templ : public ShmContainer {
   }
 
   /** SHM copy assignment operator. From string. */
+  HSHM_CROSS_FUN
   string_templ& operator=(const string_templ &other) {
     if (this != &other) {
       shm_destroy();
@@ -154,7 +165,8 @@ class string_templ : public ShmContainer {
    * ===================================*/
 
   /** Strong copy operation */
-  HSHM_ALWAYS_INLINE void strong_copy(const string_templ &other) {
+  HSHM_INLINE_CROSS_FUN
+  void strong_copy(const string_templ &other) {
     length_ = other.length_;
     text_ = other.text_;
     if (length_ < SSO) {
@@ -163,6 +175,7 @@ class string_templ : public ShmContainer {
   }
 
   /** SHM move constructor. */
+  HSHM_CROSS_FUN
   string_templ(Allocator *alloc, string_templ &&other) {
     shm_init_container(alloc);
     if (GetAllocator() == other.GetAllocator()) {
@@ -175,6 +188,7 @@ class string_templ : public ShmContainer {
   }
 
   /** SHM move assignment operator. */
+  HSHM_CROSS_FUN
   string_templ& operator=(string_templ &&other) noexcept {
     if (this != &other) {
       shm_destroy();
@@ -194,18 +208,18 @@ class string_templ : public ShmContainer {
    * ===================================*/
 
   /** Check if this string is NULL */
-  HSHM_ALWAYS_INLINE bool IsNull() const {
+  HSHM_INLINE_CROSS_FUN bool IsNull() const {
     return length_ == 0;
   }
 
   /** Set this string to NULL */
-  HSHM_ALWAYS_INLINE void SetNull() {
+  HSHM_INLINE_CROSS_FUN void SetNull() {
     text_.SetNull();
     length_ = 0;
   }
 
   /** Destroy the shared-memory data. */
-  HSHM_ALWAYS_INLINE void shm_destroy_main() {
+  HSHM_INLINE_CROSS_FUN void shm_destroy_main() {
     if (size() >= SSO) {
       GetAllocator()->Free(text_);
     }
@@ -216,32 +230,32 @@ class string_templ : public ShmContainer {
    * ===================================*/
 
   /** Get character at index i in the string */
-  HSHM_ALWAYS_INLINE char& operator[](size_t i) {
+  HSHM_INLINE_CROSS_FUN char& operator[](size_t i) {
     return data()[i];
   }
 
   /** Get character at index i in the string */
-  HSHM_ALWAYS_INLINE const char& operator[](size_t i) const {
+  HSHM_INLINE_CROSS_FUN const char& operator[](size_t i) const {
     return data()[i];
   }
 
   /** Convert into a std::string */
-  HSHM_ALWAYS_INLINE std::string str() const {
+  HSHM_INLINE_CROSS_FUN std::string str() const {
     return {c_str(), length_};
   }
 
   /** Get the size of the current string */
-  HSHM_ALWAYS_INLINE size_t size() const {
+  HSHM_INLINE_CROSS_FUN size_t size() const {
     return length_;
   }
 
   /** Get a constant reference to the C-style string */
-  HSHM_ALWAYS_INLINE const char* c_str() const {
+  HSHM_INLINE_CROSS_FUN const char* c_str() const {
     return data();
   }
 
   /** Get a constant reference to the C-style string */
-  HSHM_ALWAYS_INLINE const char* data() const {
+  HSHM_INLINE_CROSS_FUN const char* data() const {
     if (length_ < SSO) {
       return sso_;
     } else {
@@ -250,7 +264,7 @@ class string_templ : public ShmContainer {
   }
 
   /** Get a mutable reference to the C-style string */
-  HSHM_ALWAYS_INLINE char* data() {
+  HSHM_INLINE_CROSS_FUN char* data() {
     if (length_ < SSO) {
       return sso_;
     } else {
@@ -259,6 +273,7 @@ class string_templ : public ShmContainer {
   }
 
   /** Resize this string */
+  HSHM_CROSS_FUN
   void resize(size_t new_size) {
     if (IsNull()) {
       _create_str(new_size);
@@ -276,12 +291,14 @@ class string_templ : public ShmContainer {
 
   /** Serialize */
   template <typename Ar>
+  HSHM_CROSS_FUN
   void save(Ar &ar) const {
     save_string<Ar, string_templ>(ar, *this);
   }
 
   /** Deserialize */
   template <typename A>
+  HSHM_CROSS_FUN
   void load(A &ar) {
     load_string<A, string_templ>(ar, *this);
   }
@@ -290,6 +307,7 @@ class string_templ : public ShmContainer {
    * Comparison Operations
    * ===================================*/
 
+  HSHM_CROSS_FUN
   int _strncmp(const char *a, size_t len_a,
                const char *b, size_t len_b) const {
     if (len_a != len_b) {
@@ -304,13 +322,13 @@ class string_templ : public ShmContainer {
   }
 
 #define HERMES_STR_CMP_OPERATOR(op) \
-  bool operator op(const char *other) const { \
+  HSHM_CROSS_FUN bool operator op(const char *other) const { \
     return _strncmp(data(), size(), other, strlen(other)) op 0; \
   } \
-  bool operator op(const std::string &other) const { \
+  HSHM_CROSS_FUN bool operator op(const std::string &other) const { \
     return _strncmp(data(), size(), other.data(), other.size()) op 0; \
   } \
-  bool operator op(const string_templ &other) const { \
+  HSHM_CROSS_FUN bool operator op(const string_templ &other) const { \
     return _strncmp(data(), size(), other.data(), other.size()) op 0; \
   }
 
@@ -324,7 +342,7 @@ class string_templ : public ShmContainer {
 #undef HERMES_STR_CMP_OPERATOR
 
  private:
-  HSHM_ALWAYS_INLINE void _create_str(size_t length) {
+  HSHM_INLINE_CROSS_FUN void _create_str(size_t length) {
     if (length < SSO) {
       // NOTE(llogan): less than and not equal because length doesn't
       // account for trailing 0.
@@ -333,7 +351,7 @@ class string_templ : public ShmContainer {
     }
     length_ = length;
   }
-  HSHM_ALWAYS_INLINE void _create_str(const char *text, size_t length) {
+  HSHM_INLINE_CROSS_FUN void _create_str(const char *text, size_t length) {
     _create_str(length);
     char *str = data();
     memcpy(str, text, length);
@@ -354,6 +372,7 @@ namespace std {
 /** Hash function for string */
 template<size_t SSO>
 struct hash<hshm::ipc::string_templ<SSO>> {
+  HSHM_CROSS_FUN
   size_t operator()(const hshm::ipc::string_templ<SSO> &text) const {
     size_t sum = 0;
     for (size_t i = 0; i < text.size(); ++i) {

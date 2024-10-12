@@ -51,10 +51,11 @@ class smart_ptr_base {
   * ===================================*/
 
   /** Default constructor. */
-  HSHM_ALWAYS_INLINE smart_ptr_base() = default;
+  HSHM_INLINE_CROSS_FUN smart_ptr_base() = default;
 
   /** Create the mptr contents */
   template<typename ...Args>
+  HSHM_CROSS_FUN
   void shm_init(Allocator *alloc, Args&& ...args) {
     alloc_ = alloc;
     OffsetPointer p;
@@ -71,7 +72,7 @@ class smart_ptr_base {
   }
 
   /** Destructor. Does not free data. */
-  HSHM_ALWAYS_INLINE ~smart_ptr_base() {
+  HSHM_INLINE_CROSS_FUN ~smart_ptr_base() {
     if constexpr(unique) {
       if (flags_.Any(POINTER_IS_OWNED)) {
         shm_destroy();
@@ -80,7 +81,7 @@ class smart_ptr_base {
   }
 
   /** Explicit destructor */
-  HSHM_ALWAYS_INLINE void shm_destroy() {
+  HSHM_INLINE_CROSS_FUN void shm_destroy() {
     if constexpr(IS_SHM_ARCHIVEABLE(T)) {
       obj_->shm_destroy();
     }
@@ -92,32 +93,32 @@ class smart_ptr_base {
   * ===================================*/
 
   /** Gets a pointer to the internal object */
-  HSHM_ALWAYS_INLINE T* get() {
+  HSHM_INLINE_CROSS_FUN T* get() {
     return obj_;
   }
 
   /** Gets a pointer to the internal object */
-  HSHM_ALWAYS_INLINE const T* get() const {
+  HSHM_INLINE_CROSS_FUN const T* get() const {
     return obj_;
   }
 
   /** Dereference operator */
-  HSHM_ALWAYS_INLINE T& operator*() {
+  HSHM_INLINE_CROSS_FUN T& operator*() {
     return *get();
   }
 
   /** Constant Dereference operator */
-  HSHM_ALWAYS_INLINE const T& operator*() const {
+  HSHM_INLINE_CROSS_FUN const T& operator*() const {
     return *get();
   }
 
   /** Pointer operator */
-  HSHM_ALWAYS_INLINE T* operator->() {
+  HSHM_INLINE_CROSS_FUN T* operator->() {
     return get();
   }
 
   /** Constant pointer operator */
-  HSHM_ALWAYS_INLINE const T* operator->() const {
+  HSHM_INLINE_CROSS_FUN const T* operator->() const {
     return get();
   }
 
@@ -126,7 +127,7 @@ class smart_ptr_base {
   * ===================================*/
 
   /** Copy constructor (equivalent to move) */
-  HSHM_ALWAYS_INLINE smart_ptr_base(const smart_ptr_base &other) {
+  HSHM_INLINE_CROSS_FUN smart_ptr_base(const smart_ptr_base &other) {
     shm_strong_copy(other);
     if constexpr(unique) {
       flags_.UnsetBits(POINTER_IS_OWNED);
@@ -134,7 +135,7 @@ class smart_ptr_base {
   }
 
   /** Copy assignment operator (equivalent to move) */
-  HSHM_ALWAYS_INLINE smart_ptr_base& operator=(const smart_ptr_base &other) {
+  HSHM_INLINE_CROSS_FUN smart_ptr_base& operator=(const smart_ptr_base &other) {
     if (this != &other) {
       shm_strong_copy(other);
       if constexpr(unique) {
@@ -145,12 +146,12 @@ class smart_ptr_base {
   }
 
   /** Move constructor */
-  HSHM_ALWAYS_INLINE smart_ptr_base(smart_ptr_base&& other) noexcept {
+  HSHM_INLINE_CROSS_FUN smart_ptr_base(smart_ptr_base&& other) noexcept {
     shm_strong_move(std::forward<smart_ptr_base>(other));
   }
 
   /** Move assignment operator */
-  HSHM_ALWAYS_INLINE smart_ptr_base&
+  HSHM_INLINE_CROSS_FUN smart_ptr_base&
   operator=(smart_ptr_base&& other) noexcept {
     if (this != &other) {
       shm_strong_move(std::forward<smart_ptr_base>(other));
@@ -159,14 +160,14 @@ class smart_ptr_base {
   }
 
   /** Internal copy operation */
-  HSHM_ALWAYS_INLINE void shm_strong_copy(const smart_ptr_base &other) {
+  HSHM_INLINE_CROSS_FUN void shm_strong_copy(const smart_ptr_base &other) {
     obj_ = other.obj_;
     alloc_ = other.alloc_;
     flags_ = other.flags_;
   }
 
   /** Internal move operation */
-  HSHM_ALWAYS_INLINE void shm_strong_move(smart_ptr_base &&other) {
+  HSHM_INLINE_CROSS_FUN void shm_strong_move(smart_ptr_base &&other) {
     shm_strong_copy(other);
     if constexpr(unique) {
       flags_ = other.flags_;
@@ -179,18 +180,18 @@ class smart_ptr_base {
   * ===================================*/
 
   /** Constructor. Deserialize from a TypedPointer<T> */
-  HSHM_ALWAYS_INLINE explicit smart_ptr_base(const TypedPointer<T> &ar) {
+  HSHM_INLINE_CROSS_FUN explicit smart_ptr_base(const TypedPointer<T> &ar) {
     shm_deserialize(ar);
   }
 
   /** Constructor. Deserialize from a TypedAtomicPointer<T> */
-  HSHM_ALWAYS_INLINE explicit smart_ptr_base(const TypedAtomicPointer<T> &ar) {
+  HSHM_INLINE_CROSS_FUN explicit smart_ptr_base(const TypedAtomicPointer<T> &ar) {
     shm_deserialize(ar);
   }
 
   /** Deserialize from a process-independent pointer */
   template<typename PointerT>
-  HSHM_ALWAYS_INLINE void shm_deserialize(const PointerT &ar) {
+  HSHM_INLINE_CROSS_FUN void shm_deserialize(const PointerT &ar) {
     auto alloc = HERMES_MEMORY_REGISTRY_REF.GetAllocator(ar.allocator_id_);
     obj_ = alloc->template Convert<T, PointerT>(ar);
     if constexpr(unique) {
@@ -199,7 +200,7 @@ class smart_ptr_base {
   }
 
   /** Deserialize from an offset pointer */
-  HSHM_ALWAYS_INLINE void shm_deserialize(Allocator *alloc,
+  HSHM_INLINE_CROSS_FUN void shm_deserialize(Allocator *alloc,
                                           const OffsetPointer &ar) {
     obj_ = alloc->template Convert<T, OffsetPointer>(ar);
     if constexpr(unique) {
@@ -213,7 +214,7 @@ class smart_ptr_base {
 
   /** Serialize to a process-independent pointer */
   template<typename PointerT>
-  HSHM_ALWAYS_INLINE void shm_serialize(PointerT &ar) const {
+  HSHM_INLINE_CROSS_FUN void shm_serialize(PointerT &ar) const {
     ar = alloc_->template Convert(obj_);
   }
 
@@ -225,7 +226,7 @@ class smart_ptr_base {
   /**====================================
   * Hash function
   * ===================================*/
-  HSHM_ALWAYS_INLINE size_t hash() const {
+  HSHM_INLINE_CROSS_FUN size_t hash() const {
     return std::hash<T>{}(*obj_);
   }
 };
@@ -244,6 +245,7 @@ using uptr = smart_ptr_base<T, true>;
 
 /** Construct an mptr with default allocator */
 template<typename PointerT, typename ...Args>
+HSHM_CROSS_FUN
 static PointerT make_ptr_base(Args&& ...args) {
   PointerT ptr;
   ptr.shm_init(std::forward<Args>(args)...);
@@ -252,6 +254,7 @@ static PointerT make_ptr_base(Args&& ...args) {
 
 /** Create a manual pointer with default allocator */
 template<typename T, typename ...Args>
+HSHM_CROSS_FUN
 mptr<T> make_mptr(Args&& ...args) {
   auto alloc = HERMES_MEMORY_REGISTRY->GetDefaultAllocator();
   return make_ptr_base<mptr<T>>(alloc, std::forward<Args>(args)...);
@@ -259,12 +262,14 @@ mptr<T> make_mptr(Args&& ...args) {
 
 /** Create a manual pointer with non-default allocator */
 template<typename T, typename ...Args>
+HSHM_CROSS_FUN
 mptr<T> make_mptr(Allocator *alloc, Args&& ...args) {
   return make_ptr_base<mptr<T>>(alloc, std::forward<Args>(args)...);
 }
 
 /** Create a unique pointer with default allocator */
 template<typename T, typename ...Args>
+HSHM_CROSS_FUN
 uptr<T> make_uptr(Args&& ...args) {
   auto alloc = HERMES_MEMORY_REGISTRY->GetDefaultAllocator();
   return make_ptr_base<uptr<T>>(alloc, std::forward<Args>(args)...);
@@ -272,18 +277,21 @@ uptr<T> make_uptr(Args&& ...args) {
 
 /** Create a unique pointer with non-default allocator */
 template<typename T, typename ...Args>
+HSHM_CROSS_FUN
 uptr<T> make_uptr(Allocator *alloc, Args&& ...args) {
   return make_ptr_base<uptr<T>>(alloc, std::forward<Args>(args)...);
 }
 
 /** Serialize uptr */
 template<typename Ar, typename T, bool UNIQUE>
+HSHM_CROSS_FUN
 void save(Ar &ar, const smart_ptr_base<T, UNIQUE> &ptr) {
   ar(*ptr);
 }
 
 /** Deserialize uptr */
 template<typename Ar, typename T, bool UNIQUE>
+HSHM_CROSS_FUN
 void load(Ar &ar, smart_ptr_base<T, UNIQUE> &ptr) {
   ptr = hipc::make_uptr<T>();
   ar(*ptr);
@@ -302,6 +310,7 @@ namespace std {
 /** Hash function for mptr */
 template<typename T>
 struct hash<hshm::ipc::mptr<T>> {
+  HSHM_CROSS_FUN
   size_t operator()(const hshm::ipc::mptr<T> &obj) const {
     return obj.hash();
   }
@@ -310,6 +319,7 @@ struct hash<hshm::ipc::mptr<T>> {
 /** Hash function for uptr */
 template<typename T>
 struct hash<hshm::ipc::uptr<T>> {
+  HSHM_CROSS_FUN
   size_t operator()(const hshm::ipc::uptr<T> &obj) const {
     return obj.hash();
   }

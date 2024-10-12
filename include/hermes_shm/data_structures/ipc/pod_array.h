@@ -31,11 +31,12 @@ struct pod_array {
   };
 
   /** Default constructor */
-  HSHM_ALWAYS_INLINE
+  HSHM_INLINE_CROSS_FUN
   pod_array() : size_(0) {}
 
   /** Serialize */
   template<typename Ar>
+  HSHM_CROSS_FUN
   void serialize(Ar &ar) {
     ar &size_;
     resize(size_);
@@ -49,7 +50,7 @@ struct pod_array {
   }
 
   /** Construct */
-  HSHM_ALWAYS_INLINE
+  HSHM_INLINE_CROSS_FUN
   void construct(Allocator *alloc, int size = 0) {
     HSHM_MAKE_AR0(vec_, alloc);
     if (size) {
@@ -58,7 +59,7 @@ struct pod_array {
   }
 
   /** Reserve */
-  HSHM_ALWAYS_INLINE
+  HSHM_INLINE_CROSS_FUN
   void resize(int size) {
     if (size > SO) {
       vec_.get_ref().resize(size);
@@ -67,13 +68,13 @@ struct pod_array {
   }
 
   /** Destroy */
-  HSHM_ALWAYS_INLINE
+  HSHM_INLINE_CROSS_FUN
   void destroy() {
     HSHM_DESTROY_AR(vec_);
   }
 
   /** Get */
-  HSHM_ALWAYS_INLINE
+  HSHM_INLINE_CROSS_FUN
   ShmArchive<T>* get() {
     if (size_ > SO) {
       return vec_.get_ref().data_ar();
@@ -82,7 +83,7 @@ struct pod_array {
   }
 
   /** Get (const) */
-  HSHM_ALWAYS_INLINE
+  HSHM_INLINE_CROSS_FUN
   const ShmArchive<T>* get() const {
     if (size_ > SO) {
       return vec_.get_ref().data_ar();
@@ -92,14 +93,14 @@ struct pod_array {
 
   /** Index operator */
   template<typename IdxType>
-  HSHM_ALWAYS_INLINE
+  HSHM_INLINE_CROSS_FUN
   T& operator[](IdxType i) {
     return *(get()[i]);
   }
 
   /** Index operator (const) */
   template<typename IdxType>
-  HSHM_ALWAYS_INLINE
+  HSHM_INLINE_CROSS_FUN
   const T& operator[](IdxType i) const {
     return *(get()[i]);
   }

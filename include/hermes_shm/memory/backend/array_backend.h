@@ -33,10 +33,13 @@ namespace hshm::ipc {
 
 class ArrayBackend : public MemoryBackend {
  public:
+  HSHM_CROSS_FUN
   ArrayBackend() = default;
 
+  HSHM_CROSS_FUN
   ~ArrayBackend() override {}
 
+  HSHM_CROSS_FUN
   bool shm_init(size_t size, char *region) {
     if (size < sizeof(MemoryBackendHeader)) {
       throw SHMEM_CREATE_FAILED.format();
@@ -50,13 +53,16 @@ class ArrayBackend : public MemoryBackend {
     return true;
   }
 
+  HSHM_CROSS_FUN
   bool shm_deserialize(std::string url) override {
     (void) url;
     throw SHMEM_NOT_SUPPORTED.format();
   }
 
+  HSHM_CROSS_FUN
   void shm_detach() override {}
 
+  HSHM_CROSS_FUN
   void shm_destroy() override {}
 };
 

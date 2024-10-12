@@ -66,7 +66,7 @@ class ticket_queue {
 
   /** Construct an element at \a pos position in the queue */
   template<typename ...Args>
-  HSHM_ALWAYS_INLINE qtok_t emplace(T &tkt) {
+  HSHM_INLINE_CROSS_FUN qtok_t emplace(T &tkt) {
     lock_.Lock(0);
     auto qtok = queue_.emplace(tkt);
     lock_.Unlock();
@@ -75,7 +75,7 @@ class ticket_queue {
 
  public:
   /** Pop an element from the queue */
-  HSHM_ALWAYS_INLINE qtok_t pop(T &tkt) {
+  HSHM_INLINE_CROSS_FUN qtok_t pop(T &tkt) {
     lock_.Lock(0);
     auto qtok = queue_.pop(tkt);
     lock_.Unlock();

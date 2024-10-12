@@ -11,7 +11,8 @@ add_library(hermes_shm_data_structures
         memory/memory_manager.cc
         thread_model_manager.cc
         thread_factory.cc
-        data_structure_singleton.cc)
+        data_structure_singleton.cc
+)
 target_link_libraries(hermes_shm_data_structures
         -lrt -ldl
         cereal::cereal

@@ -37,7 +37,7 @@ struct charbuf {
    * ===================================*/
 
   /** Default constructor */
-  HSHM_ALWAYS_INLINE charbuf()
+  HSHM_INLINE_CROSS_FUN charbuf()
   : alloc_(nullptr), data_(nullptr), size_(0),
     total_size_(0), destructable_(false) {}
 
@@ -46,19 +46,19 @@ struct charbuf {
    * ===================================*/
 
   /** Destructor */
-  HSHM_ALWAYS_INLINE ~charbuf() { Free(); }
+  HSHM_INLINE_CROSS_FUN ~charbuf() { Free(); }
 
   /**====================================
    * Emplace Constructors
    * ===================================*/
 
   /** Size-based constructor */
-  HSHM_ALWAYS_INLINE explicit charbuf(size_t size) {
+  HSHM_INLINE_CROSS_FUN explicit charbuf(size_t size) {
     Allocate(HERMES_MEMORY_REGISTRY->GetDefaultAllocator(), size);
   }
 
   /** Allocator + Size-based constructor */
-  HSHM_ALWAYS_INLINE explicit charbuf(hipc::Allocator *alloc, size_t size) {
+  HSHM_INLINE_CROSS_FUN explicit charbuf(hipc::Allocator *alloc, size_t size) {
     Allocate(alloc, size);
   }
 
@@ -67,7 +67,7 @@ struct charbuf {
   * ===================================*/
 
   /** Reference constructor. From char* + size */
-  HSHM_ALWAYS_INLINE explicit charbuf(char *data, size_t size)
+  HSHM_INLINE_CROSS_FUN explicit charbuf(char *data, size_t size)
   : alloc_(nullptr), data_(data), size_(size),
     total_size_(size), destructable_(false) {}
 
@@ -76,7 +76,7 @@ struct charbuf {
    * We assume that the data will not be modified by the user, but
    * we must cast away the const anyway.
    * */
-  HSHM_ALWAYS_INLINE explicit charbuf(const char *data, size_t size)
+  HSHM_INLINE_CROSS_FUN explicit charbuf(const char *data, size_t size)
   : alloc_(nullptr), data_(const_cast<char*>(data)),
     size_(size), total_size_(size), destructable_(false) {}
 
@@ -85,13 +85,13 @@ struct charbuf {
    * ===================================*/
 
   /** Copy constructor. From std::string. */
-  HSHM_ALWAYS_INLINE explicit charbuf(const std::string &data) {
+  HSHM_INLINE_CROSS_FUN explicit charbuf(const std::string &data) {
     Allocate(HERMES_MEMORY_REGISTRY->GetDefaultAllocator(), data.size());
     memcpy(data_, data.data(), data.size());
   }
 
   /** Copy constructor. From charbuf. */
-  HSHM_ALWAYS_INLINE charbuf(const charbuf &other) {
+  HSHM_INLINE_CROSS_FUN charbuf(const charbuf &other) {
     if (!Allocate(HERMES_MEMORY_REGISTRY->GetDefaultAllocator(),
                   other.size())) {
       return;
@@ -100,7 +100,7 @@ struct charbuf {
   }
 
   /** Copy assignment operator */
-  HSHM_ALWAYS_INLINE charbuf& operator=(const charbuf &other) {
+  HSHM_INLINE_CROSS_FUN charbuf& operator=(const charbuf &other) {
     if (this != &other) {
       Free();
       if (!Allocate(HERMES_MEMORY_REGISTRY->GetDefaultAllocator(),
@@ -117,7 +117,7 @@ struct charbuf {
    * ===================================*/
 
   /** Move constructor */
-  charbuf(charbuf &&other) {
+  HSHM_CROSS_FUN charbuf(charbuf &&other) {
     alloc_ = other.alloc_;
     data_ = other.data_;
     size_ = other.size_;
@@ -129,7 +129,7 @@ struct charbuf {
   }
 
   /** Move assignment operator */
-  charbuf& operator=(charbuf &&other) noexcept {
+  HSHM_CROSS_FUN charbuf& operator=(charbuf &&other) noexcept {
     if (this != &other) {
       Free();
       alloc_ = other.alloc_;
@@ -149,7 +149,7 @@ struct charbuf {
    * ===================================*/
 
   /** Destroy and resize */
-  void resize(size_t new_size) {
+  HSHM_CROSS_FUN void resize(size_t new_size) {
     if (new_size <= total_size_) {
       size_ = new_size;
       return;
@@ -168,27 +168,27 @@ struct charbuf {
   }
 
   /** Reference data */
-  HSHM_ALWAYS_INLINE char* data() {
+  HSHM_INLINE_CROSS_FUN char* data() {
     return data_;
   }
 
   /** Reference data */
-  HSHM_ALWAYS_INLINE char* data() const {
+  HSHM_INLINE_CROSS_FUN char* data() const {
     return data_;
   }
 
   /** Reference size */
-  HSHM_ALWAYS_INLINE size_t size() const {
+  HSHM_INLINE_CROSS_FUN size_t size() const {
     return size_;
   }
 
   /** Get allocator */
-  HSHM_ALWAYS_INLINE hipc::Allocator* GetAllocator() {
+  HSHM_INLINE_CROSS_FUN hipc::Allocator* GetAllocator() {
     return alloc_;
   }
 
   /** Convert to std::string */
-  HSHM_ALWAYS_INLINE const std::string str() const {
+  HSHM_INLINE_CROSS_FUN const std::string str() const {
     return std::string(data(), size());
   }
 
@@ -197,12 +197,12 @@ struct charbuf {
    * ===================================*/
 
   /** Index operator */
-  HSHM_ALWAYS_INLINE char& operator[](size_t idx) {
+  HSHM_INLINE_CROSS_FUN char& operator[](size_t idx) {
       return data_[idx];
   }
 
   /** Const index operator */
-  HSHM_ALWAYS_INLINE const char& operator[](size_t idx) const {
+  HSHM_INLINE_CROSS_FUN const char& operator[](size_t idx) const {
     return data_[idx];
   }
 
@@ -212,13 +212,13 @@ struct charbuf {
 
   /** Serialize */
   template <typename Ar>
-  void save(Ar &ar) const {
+  HSHM_CROSS_FUN void save(Ar &ar) const {
     save_string<Ar, charbuf>(ar, *this);
   }
 
   /** Deserialize */
   template <typename Ar>
-  void load(Ar &ar) {
+  HSHM_CROSS_FUN void load(Ar &ar) {
     load_string<Ar, charbuf>(ar, *this);
   }
 
@@ -226,7 +226,7 @@ struct charbuf {
    * Comparison Operators
    * ===================================*/
 
-  HSHM_ALWAYS_INLINE int _strncmp(const char *a, size_t len_a,
+  HSHM_INLINE_CROSS_FUN int _strncmp(const char *a, size_t len_a,
                                   const char *b, size_t len_b) const {
     if (len_a != len_b) {
       return int((int64_t)len_a - (int64_t)len_b);
@@ -265,7 +265,7 @@ struct charbuf {
    * ===================================*/
 
   /** Allocate charbuf */
-  bool Allocate(hipc::Allocator *alloc, size_t size) {
+  HSHM_CROSS_FUN bool Allocate(hipc::Allocator *alloc, size_t size) {
     hipc::OffsetPointer p;
     if (size == 0) {
       alloc_ = nullptr;
@@ -284,7 +284,7 @@ struct charbuf {
   }
 
   /** Explicitly free the charbuf */
-  void Free() {
+  HSHM_CROSS_FUN void Free() {
     if (destructable_ && data_ && total_size_) {
       alloc_->FreePtr<char>(data_);
     }
@@ -300,7 +300,7 @@ namespace std {
 /** Hash function for string */
 template<>
 struct hash<hshm::charbuf> {
-  size_t operator()(const hshm::charbuf &text) const {
+  HSHM_CROSS_FUN size_t operator()(const hshm::charbuf &text) const {
     size_t sum = 0;
     for (size_t i = 0; i < text.size(); ++i) {
       auto shift = static_cast<size_t>(i % sizeof(size_t));

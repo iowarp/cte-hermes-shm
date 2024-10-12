@@ -46,7 +46,7 @@ std::list<T> to_stl_list(const SharedT &other) {
 
 /** Convert a string to an hshm::charbuf */
 template<typename StringT>
-hshm::charbuf to_charbuf(StringT &other) {
+HSHM_CROSS_FUN hshm::charbuf to_charbuf(StringT &other) {
   hshm::charbuf text(other.size());
   memcpy(text.data(), other.data(), other.size());
   return text;

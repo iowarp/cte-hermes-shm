@@ -32,6 +32,7 @@ struct FreeListSetIpc : public ShmContainer {
   std::atomic<uint16_t> rr_alloc_;
 
   /** SHM constructor. Default. */
+  HSHM_CROSS_FUN
   explicit FreeListSetIpc(Allocator *alloc) {
     shm_init_container(alloc);
     HSHM_MAKE_AR0(lists_, alloc)
@@ -39,6 +40,7 @@ struct FreeListSetIpc : public ShmContainer {
   }
 
   /** SHM emplace constructor */
+  HSHM_CROSS_FUN
   explicit FreeListSetIpc(Allocator *alloc, size_t conc) {
     shm_init_container(alloc);
     HSHM_MAKE_AR(lists_, alloc, conc)
@@ -46,12 +48,14 @@ struct FreeListSetIpc : public ShmContainer {
   }
 
   /** SHM copy constructor. */
+  HSHM_CROSS_FUN
   explicit FreeListSetIpc(Allocator *alloc, const FreeListSetIpc &other) {
     shm_init_container(alloc);
     SetNull();
   }
 
   /** SHM copy assignment operator */
+  HSHM_CROSS_FUN
   FreeListSetIpc& operator=(const FreeListSetIpc &other) {
     if (this != &other) {
       shm_destroy();
@@ -61,17 +65,18 @@ struct FreeListSetIpc : public ShmContainer {
   }
 
   /** Destructor. */
+  HSHM_CROSS_FUN
   void shm_destroy_main() {
     lists_->shm_destroy();
   }
 
   /** Check if Null */
-  HSHM_ALWAYS_INLINE bool IsNull() {
+  HSHM_INLINE_CROSS_FUN bool IsNull() {
     return false;
   }
 
   /** Set to null */
-  HSHM_ALWAYS_INLINE void SetNull() {
+  HSHM_INLINE_CROSS_FUN void SetNull() {
     rr_free_ = 0;
     rr_alloc_ = 0;
   }
@@ -89,8 +94,10 @@ struct ScalablePageAllocatorHeader : public AllocatorHeader {
   size_t coalesce_trigger_;
   size_t coalesce_window_;
 
+  HSHM_CROSS_FUN
   ScalablePageAllocatorHeader() = default;
 
+  HSHM_CROSS_FUN
   void Configure(allocator_id_t alloc_id,
                  size_t custom_header_size,
                  Allocator *alloc,
@@ -132,12 +139,14 @@ class ScalablePageAllocator : public Allocator {
   /**
    * Allocator constructor
    * */
+  HSHM_CROSS_FUN
   ScalablePageAllocator()
     : header_(nullptr) {}
 
   /**
    * Get the ID of this allocator from shared memory
    * */
+  HSHM_CROSS_FUN
   allocator_id_t &GetId() override {
     return header_->allocator_id_;
   }
@@ -145,6 +154,7 @@ class ScalablePageAllocator : public Allocator {
   /**
    * Initialize the allocator in shared memory
    * */
+  HSHM_CROSS_FUN
   void shm_init(allocator_id_t id,
                 size_t custom_header_size,
                 char *buffer,
@@ -171,6 +181,7 @@ class ScalablePageAllocator : public Allocator {
   /**
    * Attach an existing allocator from shared memory
    * */
+  HSHM_CROSS_FUN
   void shm_deserialize(char *buffer,
                        size_t buffer_size) override {
     buffer_ = buffer;
@@ -187,7 +198,7 @@ class ScalablePageAllocator : public Allocator {
   /**
    * Cache the free lists
    * */
-  HSHM_ALWAYS_INLINE void CacheFreeLists() {
+  HSHM_INLINE_CROSS_FUN void CacheFreeLists() {
     vector<FreeListSetIpc> *free_lists = header_->free_lists_.get();
     free_lists_.reserve(free_lists->size());
     // Iterate over page cache sets
@@ -214,6 +225,7 @@ class ScalablePageAllocator : public Allocator {
    * Allocate a memory of \a size size. The page allocator cannot allocate
    * memory larger than the page size.
    * */
+  HSHM_CROSS_FUN
   OffsetPointer AllocateOffset(size_t size) override {
     MpPage *page = nullptr;
     size_t exp;
@@ -248,7 +260,7 @@ class ScalablePageAllocator : public Allocator {
 
  private:
   /** Check if a cached page on this core can be re-used */
-  HSHM_ALWAYS_INLINE MpPage* CheckLocalCaches(size_t size_mp, size_t exp) {
+  HSHM_INLINE_CROSS_FUN MpPage* CheckLocalCaches(size_t size_mp, size_t exp) {
     MpPage *page;
 
     // Check the small buffer caches
@@ -289,7 +301,7 @@ class ScalablePageAllocator : public Allocator {
   }
 
   /** Find the first fit of an element in a free list */
-  HSHM_ALWAYS_INLINE MpPage* FindFirstFit(size_t size_mp,
+  HSHM_INLINE_CROSS_FUN MpPage* FindFirstFit(size_t size_mp,
                                           iqueue<MpPage> &free_list) {
     for (auto iter = free_list.begin(); iter != free_list.end(); ++iter) {
       MpPage *fit_page = *iter;
@@ -309,6 +321,7 @@ class ScalablePageAllocator : public Allocator {
   /**
    * Divide a page into smaller pages and cache them
    * */
+  HSHM_CROSS_FUN
   void DividePage(iqueue<MpPage> &free_list,
                   MpPage *fit_page,
                   MpPage *&rem_page,
@@ -356,6 +369,7 @@ class ScalablePageAllocator : public Allocator {
    * Allocate a memory of \a size size, which is aligned to \a
    * alignment.
    * */
+  HSHM_CROSS_FUN
   OffsetPointer AlignedAllocateOffset(size_t size, size_t alignment) override {
     throw ALIGNED_ALLOC_NOT_SUPPORTED.format();
   }
@@ -365,6 +379,7 @@ class ScalablePageAllocator : public Allocator {
    *
    * @return whether or not the pointer p was changed
    * */
+  HSHM_CROSS_FUN
   OffsetPointer ReallocateOffsetNoNullCheck(
     OffsetPointer p, size_t new_size) override {
     OffsetPointer new_p;
@@ -379,6 +394,7 @@ class ScalablePageAllocator : public Allocator {
   /**
    * Free \a ptr pointer. Null check is performed elsewhere.
    * */
+  HSHM_CROSS_FUN
   void FreeOffsetNoNullCheck(OffsetPointer p) override {
     // Mark as free
     auto hdr_offset = p - sizeof(MpPage);
@@ -421,13 +437,14 @@ class ScalablePageAllocator : public Allocator {
    * Get the current amount of data allocated. Can be used for leak
    * checking.
    * */
+  HSHM_CROSS_FUN
   size_t GetCurrentlyAllocatedSize() override {
     return header_->total_alloc_;
   }
 
  private:
   /** Round a number up to the nearest page size. */
-  HSHM_ALWAYS_INLINE size_t RoundUp(size_t num, size_t &exp) {
+  HSHM_INLINE_CROSS_FUN size_t RoundUp(size_t num, size_t &exp) {
     size_t round;
     for (exp = 0; exp < num_caches_; ++exp) {
       round = 1 << (exp + min_cached_size_exp_);

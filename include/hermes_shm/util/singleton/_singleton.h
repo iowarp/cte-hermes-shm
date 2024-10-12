@@ -31,9 +31,10 @@ class Singleton {
   static hshm::Mutex *lock_;
 
  public:
-  Singleton() = default;
+  HSHM_CROSS_FUN Singleton() = default;
 
   /** Get or create an instance of type T */
+  HSHM_CROSS_FUN
   inline static T *GetInstance() {
     if (!obj_) {
       hshm::ScopedMutex lock(*lock_, 0);
@@ -45,9 +46,11 @@ class Singleton {
   }
 
   /** Static initialization method for obj */
+  HSHM_CROSS_FUN
   static T *_GetObj();
 
   /** Static initialization method for lock */
+  HSHM_CROSS_FUN
   static hshm::Mutex *_GetLock();
 };
 
@@ -56,10 +59,10 @@ T* Singleton<T>::obj_ = Singleton<T>::_GetObj();
 template<typename T>
 hshm::Mutex* Singleton<T>::lock_ = Singleton<T>::_GetLock();
 #define DEFINE_SINGLETON_CC(T)\
-  template<> T* hshm::Singleton<T>::_GetObj() {\
+  HSHM_CROSS_FUN template<> T* hshm::Singleton<T>::_GetObj() {\
     return nullptr;\
   }\
-  template<> hshm::Mutex* hshm::Singleton<T>::_GetLock() {\
+  HSHM_CROSS_FUN template<> hshm::Mutex* hshm::Singleton<T>::_GetLock() {\
     static hshm::Mutex lock;\
     return &lock;\
   }

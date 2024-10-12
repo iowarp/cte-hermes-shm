@@ -27,10 +27,10 @@ class ShmSmartPointer {};
  * Enables a specific TypedPointer type to be serialized
  * */
 #define SHM_SERIALIZE_OPS(TYPED_CLASS)\
-  void operator>>(hipc::TypedPointer<TYPE_UNWRAP(TYPED_CLASS)> &ar) const {\
+  HSHM_CROSS_FUN void operator>>(hipc::TypedPointer<TYPE_UNWRAP(TYPED_CLASS)> &ar) const {\
     shm_serialize(ar);\
   }\
-  void operator>>(\
+  HSHM_CROSS_FUN void operator>>(\
       hipc::TypedAtomicPointer<TYPE_UNWRAP(TYPED_CLASS)> &ar) const {\
     shm_serialize(ar);\
   }
@@ -39,10 +39,10 @@ class ShmSmartPointer {};
  * Enables a specific TypedPointer type to be deserialized
  * */
 #define SHM_DESERIALIZE_OPS(TYPED_CLASS)\
-  void operator<<(const hipc::TypedPointer<TYPE_UNWRAP(TYPED_CLASS)> &ar) {\
+  HSHM_CROSS_FUN void operator<<(const hipc::TypedPointer<TYPE_UNWRAP(TYPED_CLASS)> &ar) {\
     shm_deserialize(ar);\
   }\
-  void operator<<(\
+  HSHM_CROSS_FUN void operator<<(\
     const hipc::TypedAtomicPointer<TYPE_UNWRAP(TYPED_CLASS)> &ar) {\
     shm_deserialize(ar);\
   }

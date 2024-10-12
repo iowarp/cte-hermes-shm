@@ -52,6 +52,7 @@ class spsc_queue_templ : public ShmContainer {
    * ===================================*/
 
   /** SHM constructor. Default. */
+  HSHM_CROSS_FUN
   explicit spsc_queue_templ(Allocator *alloc,
                             size_t depth = 1024) {
     shm_init_container(alloc);
@@ -64,6 +65,7 @@ class spsc_queue_templ : public ShmContainer {
    * ===================================*/
 
   /** SHM copy constructor */
+  HSHM_CROSS_FUN
   explicit spsc_queue_templ(Allocator *alloc,
                             const spsc_queue_templ &other) {
     shm_init_container(alloc);
@@ -72,6 +74,7 @@ class spsc_queue_templ : public ShmContainer {
   }
 
   /** SHM copy assignment operator */
+  HSHM_CROSS_FUN
   spsc_queue_templ& operator=(const spsc_queue_templ &other) {
     if (this != &other) {
       shm_destroy();
@@ -81,6 +84,7 @@ class spsc_queue_templ : public ShmContainer {
   }
 
   /** SHM copy constructor + operator main */
+  HSHM_CROSS_FUN
   void shm_strong_copy_construct_and_op(const spsc_queue_templ &other) {
     head_ = other.head_;
     tail_ = other.tail_;
@@ -92,6 +96,7 @@ class spsc_queue_templ : public ShmContainer {
    * ===================================*/
 
   /** SHM move constructor. */
+  HSHM_CROSS_FUN
   spsc_queue_templ(Allocator *alloc,
                    spsc_queue_templ &&other) noexcept {
     shm_init_container(alloc);
@@ -107,6 +112,7 @@ class spsc_queue_templ : public ShmContainer {
   }
 
   /** SHM move assignment operator. */
+  HSHM_CROSS_FUN
   spsc_queue_templ& operator=(spsc_queue_templ &&other) noexcept {
     if (this != &other) {
       shm_destroy();
@@ -128,16 +134,19 @@ class spsc_queue_templ : public ShmContainer {
    * ===================================*/
 
   /** SHM destructor.  */
+  HSHM_CROSS_FUN
   void shm_destroy_main() {
     (*queue_).shm_destroy();
   }
 
   /** Check if the list is empty */
+  HSHM_CROSS_FUN
   bool IsNull() const {
     return (*queue_).IsNull();
   }
 
   /** Sets this list as empty */
+  HSHM_CROSS_FUN
   void SetNull() {
     head_ = 0;
     tail_ = 0;
@@ -149,6 +158,7 @@ class spsc_queue_templ : public ShmContainer {
 
   /** Construct an element at \a pos position in the list */
   template<typename ...Args>
+  HSHM_CROSS_FUN
   qtok_t emplace(Args&&... args) {
     // Don't emplace if there is no space
     _qtok_t entry_tok = tail_;
@@ -168,6 +178,7 @@ class spsc_queue_templ : public ShmContainer {
 
  public:
   /** Consumer pops the head object */
+  HSHM_CROSS_FUN
   qtok_t pop(T &val) {
     // Don't pop if there's no entries
     _qtok_t head = head_;

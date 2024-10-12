@@ -2,22 +2,27 @@
 // Created by llogan on 10/9/24.
 //
 
-#include <device_launch_parameters.h>
-#include "hermes_shm/memory/backend/cuda_shm_mmap.h"
+#include <stdio.h>
+// #include "hermes_shm/memory/backend/cuda_shm_mmap.h"
+#include "hermes_shm/constants/macros.h"
+#include "hermes_shm/types/argpack.h"
 
 struct MyStruct {
   int x;
   float y;
 };
 
-
 __global__ void my_kernel(MyStruct* ptr) {
   int idx = blockIdx.x * blockDim.x + threadIdx.x;
-  if (idx < 1) { // Only process the first block
-    ptr->x = 100;
-    ptr->y = 100;
-    printf("Kernel: x=%d, y=%f\n", ptr->x, ptr->y);
-  }
+  char buf[16];
+//  hshm::ForwardIterateArgpack::Apply(hshm::make_argpack(1, 2, 3), [](auto i, auto &&arg) {
+//    printf("i=%d\n", i);
+//  });
+//  if (idx < 1) {
+//    ptr->x = 100;
+//    ptr->y = 100;
+//    printf("Kernel: x=%d, y=%f\n", ptr->x, ptr->y);
+//  }
 }
 
 int main() {
@@ -29,10 +34,11 @@ int main() {
   my_struct.x = 10;
   my_struct.y = 3.14f;
 
-  hshm::ipc::CudaShmMmap shm;
-  shm.shm_init(size, "shmem_test", 0);
-  memcpy(shm.data_, &my_struct, size);
-  MyStruct* shm_struct = (MyStruct*)shm.data_;
+//  hshm::ipc::CudaShmMmap shm;
+//  shm.shm_init(size, "shmem_test", 0);
+//  memcpy(shm.data_, &my_struct, size);
+//  MyStruct* shm_struct = (MyStruct*)shm.data_;
+  MyStruct *shm_struct = &my_struct;
 
   // Launch a CUDA kernel that accesses the shared memory
   int blockSize = 256;
@@ -45,5 +51,5 @@ int main() {
   // MyStruct new_struct = *shm_struct;
 
   // Free memory
-  shm.shm_destroy();
+  // shm.shm_destroy();
 }

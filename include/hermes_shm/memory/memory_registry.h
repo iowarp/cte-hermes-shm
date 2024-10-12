@@ -18,6 +18,8 @@
 #include "hermes_shm/memory/backend/posix_mmap.h"
 #include "hermes_shm/util/errors.h"
 #include "hermes_shm/util/logging.h"
+#include <unordered_map>
+#include <string>
 
 namespace hipc = hshm::ipc;
 
@@ -41,6 +43,7 @@ class MemoryRegistry {
    * until the user specifies a new default. The root allocator stores
    * only private memory.
    * */
+  HSHM_CROSS_FUN
   MemoryRegistry();
 
   /**
@@ -51,7 +54,7 @@ class MemoryRegistry {
    * @param url the backend's unique identifier
    * @param backend the backend to register
    * */
-  HSHM_ALWAYS_INLINE MemoryBackend* RegisterBackend(
+  HSHM_INLINE_CROSS_FUN MemoryBackend* RegisterBackend(
       const std::string &url,
       std::unique_ptr<MemoryBackend> &backend) {
     auto ptr = backend.get();
@@ -63,14 +66,14 @@ class MemoryRegistry {
   }
 
   /** Unregister memory backend */
-  HSHM_ALWAYS_INLINE void UnregisterBackend(const std::string &url) {
+  HSHM_INLINE_CROSS_FUN void UnregisterBackend(const std::string &url) {
     backends_.erase(url);
   }
 
   /**
    * Returns a pointer to a backend that has already been attached.
    * */
-  HSHM_ALWAYS_INLINE MemoryBackend* GetBackend(const std::string &url) {
+  HSHM_INLINE_CROSS_FUN MemoryBackend* GetBackend(const std::string &url) {
     auto iter = backends_.find(url);
     if (iter == backends_.end()) {
       return nullptr;
@@ -79,7 +82,7 @@ class MemoryRegistry {
   }
 
   /** Registers an allocator. */
-  HSHM_ALWAYS_INLINE Allocator* RegisterAllocator(
+  HSHM_INLINE_CROSS_FUN Allocator* RegisterAllocator(
       std::unique_ptr<Allocator> &alloc) {
     if (default_allocator_ == nullptr ||
       default_allocator_ == root_allocator_ ||
@@ -94,7 +97,7 @@ class MemoryRegistry {
   }
 
   /** Registers an allocator. */
-  HSHM_ALWAYS_INLINE void RegisterAllocator(Allocator *alloc) {
+  HSHM_INLINE_CROSS_FUN void RegisterAllocator(Allocator *alloc) {
     uint32_t idx = alloc->GetId().ToIndex();
     if (idx > MAX_ALLOCATORS) {
       HILOG(kError, "Allocator index out of range: {}", idx)
@@ -104,7 +107,7 @@ class MemoryRegistry {
   }
 
   /** Unregisters an allocator */
-  HSHM_ALWAYS_INLINE void UnregisterAllocator(allocator_id_t alloc_id) {
+  HSHM_INLINE_CROSS_FUN void UnregisterAllocator(allocator_id_t alloc_id) {
     if (alloc_id == default_allocator_->GetId()) {
       default_allocator_ = root_allocator_;
     }
@@ -115,20 +118,21 @@ class MemoryRegistry {
   /**
    * Locates an allocator of a particular id
    * */
-  HSHM_ALWAYS_INLINE Allocator* GetAllocator(allocator_id_t alloc_id) {
+  HSHM_INLINE_CROSS_FUN Allocator* GetAllocator(allocator_id_t alloc_id) {
     return allocators_[alloc_id.ToIndex()];
   }
 
   /**
    * Gets the allocator used for initializing other allocators.
    * */
+  HSHM_CROSS_FUN
   Allocator* GetRootAllocator();
 
   /**
    * Gets the allocator used by default when no allocator is
    * used to construct an object.
    * */
-  HSHM_ALWAYS_INLINE Allocator* GetDefaultAllocator() {
+  HSHM_INLINE_CROSS_FUN Allocator* GetDefaultAllocator() {
     return reinterpret_cast<Allocator*>(default_allocator_);
   }
 
@@ -136,7 +140,7 @@ class MemoryRegistry {
    * Sets the allocator used by default when no allocator is
    * used to construct an object.
    * */
-  HSHM_ALWAYS_INLINE void SetDefaultAllocator(Allocator *alloc) {
+  HSHM_INLINE_CROSS_FUN void SetDefaultAllocator(Allocator *alloc) {
     default_allocator_ = alloc;
   }
 };

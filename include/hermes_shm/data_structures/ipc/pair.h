@@ -49,6 +49,7 @@ class pair : public ShmContainer {
    * ===================================*/
 
   /** SHM constructor. Default. */
+  HSHM_CROSS_FUN
   explicit pair(Allocator *alloc) {
     shm_init_container(alloc);
     HSHM_MAKE_AR0(first_, GetAllocator())
@@ -60,6 +61,7 @@ class pair : public ShmContainer {
    * ===================================*/
 
   /** SHM constructor. Move parameters. */
+  HSHM_CROSS_FUN
   explicit pair(Allocator *alloc,
                 FirstT &&first, SecondT &&second) {
     shm_init_container(alloc);
@@ -70,6 +72,7 @@ class pair : public ShmContainer {
   }
 
   /** SHM constructor. Copy parameters. */
+  HSHM_CROSS_FUN
   explicit pair(Allocator *alloc,
                 const FirstT &first, const SecondT &second) {
     shm_init_container(alloc);
@@ -79,6 +82,7 @@ class pair : public ShmContainer {
 
   /** SHM constructor. Piecewise emplace. */
   template<typename FirstArgPackT, typename SecondArgPackT>
+  HSHM_CROSS_FUN
   explicit pair(Allocator *alloc,
                 PiecewiseConstruct &&hint,
                 FirstArgPackT &&first,
@@ -95,18 +99,21 @@ class pair : public ShmContainer {
    * ===================================*/
 
   /** SHM copy constructor. From pair. */
+  HSHM_CROSS_FUN
   explicit pair(Allocator *alloc, const pair &other) {
     shm_init_container(alloc);
     shm_strong_copy_construct(other);
   }
 
   /** SHM copy constructor main */
+  HSHM_CROSS_FUN
   void shm_strong_copy_construct(const pair &other) {
     HSHM_MAKE_AR(first_, GetAllocator(), *other.first_)
     HSHM_MAKE_AR(second_, GetAllocator(), *other.second_)
   }
 
   /** SHM copy assignment operator. From pair. */
+  HSHM_CROSS_FUN
   pair& operator=(const pair &other) {
     if (this != &other) {
       shm_destroy();
@@ -116,6 +123,7 @@ class pair : public ShmContainer {
   }
 
   /** SHM copy assignment operator main */
+  HSHM_CROSS_FUN
   void shm_strong_copy_assign_op(const pair &other) {
     (first_.get_ref()) = (*other.first_);
     (second_.get_ref()) = (*other.second_);
@@ -126,6 +134,7 @@ class pair : public ShmContainer {
    * ===================================*/
 
   /** SHM move constructor. From pair. */
+  HSHM_CROSS_FUN
   explicit pair(Allocator *alloc, pair &&other) {
     shm_init_container(alloc);
     if (GetAllocator() == other.GetAllocator()) {
@@ -140,6 +149,7 @@ class pair : public ShmContainer {
   }
 
   /** SHM move assignment operator. From pair. */
+  HSHM_CROSS_FUN
   pair& operator=(pair &&other) noexcept {
     if (this != &other) {
       shm_destroy();
@@ -160,15 +170,15 @@ class pair : public ShmContainer {
    * ===================================*/
 
   /** Check if the pair is empty */
-  HSHM_ALWAYS_INLINE bool IsNull() const {
+  HSHM_INLINE_CROSS_FUN bool IsNull() const {
     return false;
   }
 
   /** Sets this pair as empty */
-  HSHM_ALWAYS_INLINE void SetNull() {}
+  HSHM_INLINE_CROSS_FUN void SetNull() {}
 
   /** Destroy the shared-memory data */
-  HSHM_ALWAYS_INLINE void shm_destroy_main() {
+  HSHM_INLINE_CROSS_FUN void shm_destroy_main() {
     HSHM_DESTROY_AR(first_)
     HSHM_DESTROY_AR(second_)
   }
@@ -178,28 +188,28 @@ class pair : public ShmContainer {
    * ===================================*/
 
   /** Get the first object */
-  HSHM_ALWAYS_INLINE FirstT& GetFirst() { return first_.get_ref(); }
+  HSHM_INLINE_CROSS_FUN FirstT& GetFirst() { return first_.get_ref(); }
 
   /** Get the first object (const) */
-  HSHM_ALWAYS_INLINE FirstT& GetFirst() const { return first_.get_ref(); }
+  HSHM_INLINE_CROSS_FUN FirstT& GetFirst() const { return first_.get_ref(); }
 
   /** Get the second object */
-  HSHM_ALWAYS_INLINE SecondT& GetSecond() { return second_.get_ref(); }
+  HSHM_INLINE_CROSS_FUN SecondT& GetSecond() { return second_.get_ref(); }
 
   /** Get the second object (const) */
-  HSHM_ALWAYS_INLINE SecondT& GetSecond() const { return second_.get_ref(); }
+  HSHM_INLINE_CROSS_FUN SecondT& GetSecond() const { return second_.get_ref(); }
 
   /** Get the first object (treated as key) */
-  HSHM_ALWAYS_INLINE FirstT& GetKey() { return first_.get_ref(); }
+  HSHM_INLINE_CROSS_FUN FirstT& GetKey() { return first_.get_ref(); }
 
   /** Get the first object (treated as key) (const) */
-  HSHM_ALWAYS_INLINE FirstT& GetKey() const { return first_.get_ref(); }
+  HSHM_INLINE_CROSS_FUN FirstT& GetKey() const { return first_.get_ref(); }
 
   /** Get the second object (treated as value) */
-  HSHM_ALWAYS_INLINE SecondT& GetVal() { return second_.get_ref(); }
+  HSHM_INLINE_CROSS_FUN SecondT& GetVal() { return second_.get_ref(); }
 
   /** Get the second object (treated as value) (const) */
-  HSHM_ALWAYS_INLINE SecondT& GetVal() const { return second_.get_ref(); }
+  HSHM_INLINE_CROSS_FUN SecondT& GetVal() const { return second_.get_ref(); }
 };
 
 #undef CLASS_NAME

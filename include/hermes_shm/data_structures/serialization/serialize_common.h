@@ -17,16 +17,19 @@
 #include <cereal/archives/binary.hpp>
 
 template<typename Ar, typename T>
+HSHM_CROSS_FUN
 void write_binary(Ar &ar, const T *data, size_t size) {
   ar(cereal::binary_data(data, size));
 }
 template<typename Ar, typename T>
+HSHM_CROSS_FUN
 void read_binary(Ar &ar, T *data, size_t size) {
   ar(cereal::binary_data(data, size));
 }
 
 /** Serialize a generic string. */
 template <typename Ar, typename StringT>
+HSHM_CROSS_FUN
 void save_string(Ar &ar, const StringT &text) {
   ar << text.size();
   // ar.write(text.data(), text.size());
@@ -34,6 +37,7 @@ void save_string(Ar &ar, const StringT &text) {
 }
 /** Deserialize a generic string. */
 template <typename Ar, typename StringT>
+HSHM_CROSS_FUN
 void load_string(Ar &ar, StringT &text) {
   size_t size;
   ar >> size;
@@ -43,6 +47,7 @@ void load_string(Ar &ar, StringT &text) {
 
 /** Serialize a generic vector */
 template <typename Ar, typename ContainerT, typename T>
+HSHM_CROSS_FUN
 void save_vec(Ar &ar, const ContainerT &obj) {
   ar << obj.size();
   if constexpr(std::is_same_v<char, T>) {
@@ -55,6 +60,7 @@ void save_vec(Ar &ar, const ContainerT &obj) {
 }
 /** Deserialize a generic vector */
 template <typename Ar, typename ContainerT, typename T>
+HSHM_CROSS_FUN
 void load_vec(Ar &ar, ContainerT &obj) {
   size_t size;
   ar >> size;
@@ -70,6 +76,7 @@ void load_vec(Ar &ar, ContainerT &obj) {
 
 /** Serialize a generic list */
 template <typename Ar, typename ContainerT, typename T>
+HSHM_CROSS_FUN
 void save_list(Ar &ar, const ContainerT &obj) {
   ar << obj.size();
   for (auto iter = obj.cbegin(); iter != obj.cend(); ++iter) {
@@ -78,6 +85,7 @@ void save_list(Ar &ar, const ContainerT &obj) {
 }
 /** Deserialize a generic list */
 template <typename Ar, typename ContainerT, typename T>
+HSHM_CROSS_FUN
 void load_list(Ar &ar, ContainerT &obj) {
   size_t size;
   ar >> size;

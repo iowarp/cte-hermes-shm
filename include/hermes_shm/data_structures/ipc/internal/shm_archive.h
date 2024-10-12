@@ -46,72 +46,72 @@ class ShmArchive {
   char obj_[sizeof(T)];
 
   /** Default constructor */
-  ShmArchive() = default;
+  HSHM_CROSS_FUN ShmArchive() = default;
 
   /** Destructor */
-  ~ShmArchive() = default;
+  HSHM_CROSS_FUN ~ShmArchive() = default;
 
   /** Pointer to internal object */
-  HSHM_ALWAYS_INLINE T* get() {
+  HSHM_INLINE_CROSS_FUN T* get() {
     return reinterpret_cast<T*>(obj_);
   }
 
   /** Pointer to internal object (const) */
-  HSHM_ALWAYS_INLINE const T* get() const {
+  HSHM_INLINE_CROSS_FUN const T* get() const {
     return reinterpret_cast<T*>(obj_);
   }
 
   /** Reference to internal object */
-  HSHM_ALWAYS_INLINE T& get_ref() {
+  HSHM_INLINE_CROSS_FUN T& get_ref() {
     return reinterpret_cast<T&>(obj_);
   }
 
   /** Reference to internal object (const) */
-  HSHM_ALWAYS_INLINE const T& get_ref() const {
+  HSHM_INLINE_CROSS_FUN const T& get_ref() const {
     return reinterpret_cast<const T&>(obj_);
   }
 
   /** Dereference operator */
-  HSHM_ALWAYS_INLINE T& operator*() {
+  HSHM_INLINE_CROSS_FUN T& operator*() {
     return get_ref();
   }
 
   /** Dereference operator */
-  HSHM_ALWAYS_INLINE const T& operator*() const {
+  HSHM_INLINE_CROSS_FUN const T& operator*() const {
     return get_ref();
   }
 
   /** Arrow operator */
-  HSHM_ALWAYS_INLINE T* operator->() {
+  HSHM_INLINE_CROSS_FUN T* operator->() {
     return get();
   }
 
   /** Arrow operator */
-  HSHM_ALWAYS_INLINE const T* operator->() const {
+  HSHM_INLINE_CROSS_FUN const T* operator->() const {
     return get();
   }
 
   /** Copy constructor */
-  ShmArchive(const ShmArchive &other) = delete;
+  HSHM_CROSS_FUN ShmArchive(const ShmArchive &other) = delete;
 
   /** Copy assignment operator */
-  ShmArchive& operator=(const ShmArchive &other) = delete;
+  HSHM_CROSS_FUN ShmArchive& operator=(const ShmArchive &other) = delete;
 
   /** Move constructor */
-  ShmArchive(ShmArchive &&other) = delete;
+  HSHM_CROSS_FUN ShmArchive(ShmArchive &&other) = delete;
 
   /** Move assignment operator */
-  ShmArchive& operator=(ShmArchive &&other) = delete;
+  HSHM_CROSS_FUN ShmArchive& operator=(ShmArchive &&other) = delete;
 
   /** Initialize */
   template<typename ...Args>
-  HSHM_ALWAYS_INLINE void shm_init(Args&& ...args) {
+  HSHM_INLINE_CROSS_FUN void shm_init(Args&& ...args) {
     Allocator::ConstructObj<T>(get_ref(), std::forward<Args>(args)...);
   }
 
   /** Initialize piecewise */
   template<typename ArgPackT_1, typename ArgPackT_2>
-  HSHM_ALWAYS_INLINE void shm_init_piecewise(ArgPackT_1 &&args1,
+  HSHM_INLINE_CROSS_FUN void shm_init_piecewise(ArgPackT_1 &&args1,
                                              ArgPackT_2 &&args2) {
     return hshm::PassArgPack::Call(
       MergeArgPacks::Merge(
@@ -124,8 +124,8 @@ class ShmArchive {
   }
 
   /** Destroy */
-  HSHM_ALWAYS_INLINE
-  void shm_destroy() {
+  HSHM_INLINE_CROSS_FUN
+  void HSHM_CROSS_FUN shm_destroy() {
     if constexpr(IS_SHM_ARCHIVEABLE(T)) {
       ShmArchiveShm<T>::shm_destroy(get_ref());
     } else {
@@ -178,12 +178,12 @@ class ShmArchive {
   (AR).shm_destroy();
 
 template<typename Ar, typename T>
-void save(Ar &ar, const ShmArchive<T> &obj) {
+void HSHM_CROSS_FUN save(Ar &ar, const ShmArchive<T> &obj) {
   ar & obj.get_ref();
 }
 
 template<typename Ar, typename T>
-void load(Ar &ar, ShmArchive<T> &obj) {
+void HSHM_CROSS_FUN load(Ar &ar, ShmArchive<T> &obj) {
   HSHM_MAKE_AR0(obj, HERMES_MEMORY_REGISTRY->GetDefaultAllocator());
   ar & obj.get_ref();
 }

@@ -30,35 +30,35 @@ class ShmContainerExample : public hipc::ShmContainer {
    * ===================================*/
 
   /** Constructor. Empty. */
-  explicit CLASS_NAME(hipc::Allocator *alloc) {
+  HSHM_CROSS_FUN explicit CLASS_NAME(hipc::Allocator *alloc) {
     alloc_id_ = alloc->GetId();
   }
 
   /** Default initialization */
-  void shm_init() {
+  HSHM_CROSS_FUN void shm_init() {
     SetNull();
   }
 
   /** Load from shared memory */
-  void shm_deserialize_main() {}
+  HSHM_CROSS_FUN void shm_deserialize_main() {}
 
   /** Destroy object */
-  void shm_destroy_main() {}
+  HSHM_CROSS_FUN void shm_destroy_main() {}
 
   /** Internal copy operation */
-  void shm_strong_copy_main(const CLASS_NAME &other) {
+  HSHM_CROSS_FUN void shm_strong_copy_main(const CLASS_NAME &other) {
   }
 
   /** Internal move operation */
-  void shm_strong_move_main(CLASS_NAME &&other) {
+  HSHM_CROSS_FUN void shm_strong_move_main(CLASS_NAME &&other) {
   }
 
   /** Check if header is NULL */
-  bool IsNull() {
+  HSHM_CROSS_FUN bool IsNull() {
   }
 
   /** Nullify object header */
-  void SetNull() {
+  HSHM_CROSS_FUN void SetNull() {
   }
 
  public:
@@ -72,16 +72,16 @@ class ShmContainerExample : public hipc::ShmContainer {
    * ===================================*/
 
   /** Default constructor. Deleted. */
-  CLASS_NAME() = delete;
+  HSHM_CROSS_FUN CLASS_NAME() = delete;
 
   /** Move constructor. Deleted. */
-  CLASS_NAME(CLASS_NAME &&other) = delete;
+  HSHM_CROSS_FUN CLASS_NAME(CLASS_NAME &&other) = delete;
 
   /** Copy constructor. Deleted. */
-  CLASS_NAME(const CLASS_NAME &other) = delete;
+  HSHM_CROSS_FUN CLASS_NAME(const CLASS_NAME &other) = delete;
 
   /** Initialize container */
-  void shm_init_container(hipc::Allocator *alloc) {
+  HSHM_CROSS_FUN void shm_init_container(hipc::Allocator *alloc) {
     alloc_id_ = alloc->GetId();
   }
 
@@ -90,10 +90,10 @@ class ShmContainerExample : public hipc::ShmContainer {
    * ===================================*/
 
   /** Destructor. */
-  HSHM_ALWAYS_INLINE ~CLASS_NAME() = default;
+  HSHM_INLINE_CROSS_FUN ~CLASS_NAME() = default;
 
   /** Destruction operation */
-  HSHM_ALWAYS_INLINE void shm_destroy() {
+  HSHM_INLINE_CROSS_FUN void shm_destroy() {
     if (IsNull()) { return; }
     shm_destroy_main();
     SetNull();
@@ -105,7 +105,7 @@ class ShmContainerExample : public hipc::ShmContainer {
 
   /** Get a typed pointer to the object */
   template<typename POINTER_T>
-  HSHM_ALWAYS_INLINE POINTER_T GetShmPointer() const {
+  HSHM_INLINE_CROSS_FUN POINTER_T GetShmPointer() const {
     return GetAllocator()->template Convert<TYPED_CLASS, POINTER_T>(this);
   }
 
@@ -114,12 +114,12 @@ class ShmContainerExample : public hipc::ShmContainer {
    * ===================================*/
 
   /** Get the allocator for this container */
-  HSHM_ALWAYS_INLINE hipc::Allocator* GetAllocator() const {
+  HSHM_INLINE_CROSS_FUN hipc::Allocator* GetAllocator() const {
     return HERMES_MEMORY_REGISTRY_REF.GetAllocator(alloc_id_);
   }
 
   /** Get the shared-memory allocator id */
-  HSHM_ALWAYS_INLINE hipc::allocator_id_t& GetAllocatorId() const {
+  HSHM_INLINE_CROSS_FUN hipc::allocator_id_t& GetAllocatorId() const {
     return GetAllocator()->GetId();
   }
 };
