@@ -36,6 +36,7 @@ MemoryManager::MemoryManager() {
   RegisterAllocator(root_allocator_);
 }
 
+/** Get the root allocator */
 HSHM_CROSS_FUN
 Allocator *MemoryManager::GetRootAllocator() {
   static StackAllocator root_allocator;
