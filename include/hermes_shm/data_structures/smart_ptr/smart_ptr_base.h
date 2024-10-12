@@ -17,7 +17,7 @@
 #include "hermes_shm/constants/macros.h"
 #include "hermes_shm/memory/memory.h"
 #include "hermes_shm/memory/allocator/allocator.h"
-#include "hermes_shm/memory/memory_registry.h"
+#include "hermes_shm/memory/memory_manager_.h"
 #include "hermes_shm/data_structures/ipc/internal/shm_internal.h"
 #include "hermes_shm/data_structures/ipc/internal/shm_smart_ptr.h"
 
@@ -192,7 +192,7 @@ class smart_ptr_base {
   /** Deserialize from a process-independent pointer */
   template<typename PointerT>
   HSHM_INLINE_CROSS_FUN void shm_deserialize(const PointerT &ar) {
-    auto alloc = HERMES_MEMORY_REGISTRY_REF.GetAllocator(ar.allocator_id_);
+    auto alloc = HERMES_MEMORY_MANAGER->GetAllocator(ar.allocator_id_);
     obj_ = alloc->template Convert<T, PointerT>(ar);
     if constexpr(unique) {
       flags_.UnsetBits(POINTER_IS_OWNED);
@@ -256,7 +256,7 @@ static PointerT make_ptr_base(Args&& ...args) {
 template<typename T, typename ...Args>
 HSHM_CROSS_FUN
 mptr<T> make_mptr(Args&& ...args) {
-  auto alloc = HERMES_MEMORY_REGISTRY->GetDefaultAllocator();
+  auto alloc = HERMES_MEMORY_MANAGER->GetDefaultAllocator();
   return make_ptr_base<mptr<T>>(alloc, std::forward<Args>(args)...);
 }
 
@@ -271,7 +271,7 @@ mptr<T> make_mptr(Allocator *alloc, Args&& ...args) {
 template<typename T, typename ...Args>
 HSHM_CROSS_FUN
 uptr<T> make_uptr(Args&& ...args) {
-  auto alloc = HERMES_MEMORY_REGISTRY->GetDefaultAllocator();
+  auto alloc = HERMES_MEMORY_MANAGER->GetDefaultAllocator();
   return make_ptr_base<uptr<T>>(alloc, std::forward<Args>(args)...);
 }
 

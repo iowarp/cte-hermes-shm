@@ -14,7 +14,7 @@
 #ifndef HERMES_SHM_CONTAINER_H_
 #define HERMES_SHM_CONTAINER_H_
 
-#include "hermes_shm/memory/memory_registry.h"
+#include "hermes_shm/memory/memory_manager_.h"
 #include "hermes_shm/constants/macros.h"
 #include "shm_container_macro.h"
 #include "shm_macros.h"

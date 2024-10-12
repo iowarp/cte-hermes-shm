@@ -184,7 +184,7 @@ void HSHM_CROSS_FUN save(Ar &ar, const ShmArchive<T> &obj) {
 
 template<typename Ar, typename T>
 void HSHM_CROSS_FUN load(Ar &ar, ShmArchive<T> &obj) {
-  HSHM_MAKE_AR0(obj, HERMES_MEMORY_REGISTRY->GetDefaultAllocator());
+  HSHM_MAKE_AR0(obj, HERMES_MEMORY_MANAGER->GetDefaultAllocator());
   ar & obj.get_ref();
 }
 

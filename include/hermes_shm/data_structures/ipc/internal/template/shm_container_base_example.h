@@ -115,7 +115,7 @@ class ShmContainerExample : public hipc::ShmContainer {
 
   /** Get the allocator for this container */
   HSHM_INLINE_CROSS_FUN hipc::Allocator* GetAllocator() const {
-    return HERMES_MEMORY_REGISTRY_REF.GetAllocator(alloc_id_);
+    return HERMES_MEMORY_MANAGER->GetAllocator(alloc_id_);
   }
 
   /** Get the shared-memory allocator id */

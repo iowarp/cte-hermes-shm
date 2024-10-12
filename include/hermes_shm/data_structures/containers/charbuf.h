@@ -14,7 +14,7 @@
 #define HERMES_INCLUDE_HERMES_TYPES_CHARBUF_H_
 
 #include "hermes_shm/types/real_number.h"
-#include "hermes_shm/memory/memory_registry.h"
+#include "hermes_shm/memory/memory_manager_.h"
 #include "hermes_shm/data_structures/serialization/serialize_common.h"
 #include <string>
 
@@ -54,7 +54,7 @@ struct charbuf {
 
   /** Size-based constructor */
   HSHM_INLINE_CROSS_FUN explicit charbuf(size_t size) {
-    Allocate(HERMES_MEMORY_REGISTRY->GetDefaultAllocator(), size);
+    Allocate(HERMES_MEMORY_MANAGER->GetDefaultAllocator(), size);
   }
 
   /** Allocator + Size-based constructor */
@@ -86,13 +86,13 @@ struct charbuf {
 
   /** Copy constructor. From std::string. */
   HSHM_INLINE_CROSS_FUN explicit charbuf(const std::string &data) {
-    Allocate(HERMES_MEMORY_REGISTRY->GetDefaultAllocator(), data.size());
+    Allocate(HERMES_MEMORY_MANAGER->GetDefaultAllocator(), data.size());
     memcpy(data_, data.data(), data.size());
   }
 
   /** Copy constructor. From charbuf. */
   HSHM_INLINE_CROSS_FUN charbuf(const charbuf &other) {
-    if (!Allocate(HERMES_MEMORY_REGISTRY->GetDefaultAllocator(),
+    if (!Allocate(HERMES_MEMORY_MANAGER->GetDefaultAllocator(),
                   other.size())) {
       return;
     }
@@ -103,7 +103,7 @@ struct charbuf {
   HSHM_INLINE_CROSS_FUN charbuf& operator=(const charbuf &other) {
     if (this != &other) {
       Free();
-      if (!Allocate(HERMES_MEMORY_REGISTRY->GetDefaultAllocator(),
+      if (!Allocate(HERMES_MEMORY_MANAGER->GetDefaultAllocator(),
                     other.size())) {
         return *this;
       }
@@ -155,7 +155,7 @@ struct charbuf {
       return;
     }
     if (alloc_ == nullptr) {
-      alloc_ = HERMES_MEMORY_REGISTRY->GetDefaultAllocator();
+      alloc_ = HERMES_MEMORY_MANAGER->GetDefaultAllocator();
     }
     if (destructable_) {
       data_ = alloc_->ReallocatePtr<char>(data_, new_size);

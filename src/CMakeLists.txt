@@ -7,11 +7,11 @@ set(CMAKE_CXX_STANDARD 17)
 # Build HSHM
 #-----------------------------------------------------------------------------
 add_library(hermes_shm_data_structures
-        memory/memory_registry.cc
         memory/memory_manager.cc
         thread_model_manager.cc
         thread_factory.cc
         data_structure_singleton.cc
+        ../include/hermes_shm/memory/memory_manager_.h
 )
 target_link_libraries(hermes_shm_data_structures
         -lrt -ldl
