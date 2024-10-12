@@ -15,7 +15,6 @@
 
 #include "hermes_shm/constants/macros.h"
 #include <functional>
-#include <stdexcept>
 
 namespace hshm {
 
@@ -70,7 +69,7 @@ struct ArgPackRecur<idx, EndTemplateRecurrence> {
   /** Forward an rvalue reference (only if argpack) */
   template<size_t i>
   HSHM_ALWAYS_INLINE constexpr void Forward() const {
-    throw std::logic_error("(Forward) ArgPack index outside of range");
+    static_assert("(Forward) ArgPack index outside of range");
   }
 };
 

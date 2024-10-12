@@ -30,16 +30,19 @@
 #define HERMES_ERROR_HANDLE_CATCH catch(HERMES_ERROR_TYPE &HERMES_ERROR_PTR)
 #define HERMES_ERROR_IS(err, check) (err->get_code() == check.get_code())
 
+#define HERMES_THROW_ERROR(CODE, ...) \
+  throw CODE.format(__VA_ARGS__)
+
 namespace hshm {
 
 class Error : std::exception {
  private:
-  std::string fmt_;
+  const char* fmt_;
   std::string msg_;
  public:
   Error() : fmt_() {}
 
-  explicit Error(std::string fmt) : fmt_(std::move(fmt)) {}
+  explicit Error(const char *fmt) : fmt_(fmt) {}
   ~Error() override = default;
 
   template<typename ...Args>

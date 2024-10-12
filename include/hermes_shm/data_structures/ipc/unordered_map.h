@@ -452,7 +452,7 @@ class unordered_map : public ShmContainer {
     if (!iter.is_end()) {
       return (*iter).second_.get_ref();
     }
-    throw UNORDERED_MAP_CANT_FIND.format();
+    HERMES_THROW_ERROR(UNORDERED_MAP_CANT_FIND);
   }
 
   /** Find an object in the unordered_map */

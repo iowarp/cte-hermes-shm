@@ -55,7 +55,7 @@ class NullBackend : public MemoryBackend {
 
   bool shm_deserialize(std::string url) override {
     (void) url;
-    throw SHMEM_NOT_SUPPORTED.format();
+    HERMES_THROW_ERROR(SHMEM_NOT_SUPPORTED);
   }
 
   void shm_detach() override {

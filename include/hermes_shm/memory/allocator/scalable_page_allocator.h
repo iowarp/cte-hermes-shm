@@ -247,7 +247,8 @@ class ScalablePageAllocator : public Allocator {
 
     // Case 4: Completely out of memory
     if (page == nullptr) {
-      throw OUT_OF_MEMORY;
+      HERMES_THROW_ERROR(OUT_OF_MEMORY, size,
+                         GetCurrentlyAllocatedSize());
     }
 
     // Mark as allocated
@@ -371,7 +372,7 @@ class ScalablePageAllocator : public Allocator {
    * */
   HSHM_CROSS_FUN
   OffsetPointer AlignedAllocateOffset(size_t size, size_t alignment) override {
-    throw ALIGNED_ALLOC_NOT_SUPPORTED.format();
+    HERMES_THROW_ERROR(NOT_IMPLEMENTED, "AlignedAllocateOffset");
   }
 
   /**
@@ -400,7 +401,7 @@ class ScalablePageAllocator : public Allocator {
     auto hdr_offset = p - sizeof(MpPage);
     auto hdr = Convert<MpPage>(hdr_offset);
     if (!hdr->IsAllocated()) {
-      throw DOUBLE_FREE.format();
+      HERMES_THROW_ERROR(DOUBLE_FREE);
     }
     hdr->UnsetAllocated();
     header_->total_alloc_.fetch_sub(hdr->page_size_);

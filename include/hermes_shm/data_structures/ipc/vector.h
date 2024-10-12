@@ -596,9 +596,9 @@ class vector : public ShmContainer {
       vec_ptr_ = new_p;
     }
     if (new_vec == nullptr) {
-      throw OUT_OF_MEMORY.format("vector::emplace_back",
-                                 max_length * sizeof(ShmArchive<T>),
-                                 "unkown");
+      HERMES_THROW_ERROR(OUT_OF_MEMORY,
+                         max_length * sizeof(ShmArchive<T>),
+                         GetAllocator()->GetCurrentlyAllocatedSize());
     }
     if (resize) {
       for (size_t i = length_; i < max_length; ++i) {

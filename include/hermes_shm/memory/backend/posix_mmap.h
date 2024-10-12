@@ -64,7 +64,7 @@ class PosixMmap : public MemoryBackend {
   /** Deserialize the backend */
   bool shm_deserialize(std::string url) override {
     (void) url;
-    throw SHMEM_NOT_SUPPORTED.format();
+    HERMES_THROW_ERROR(SHMEM_NOT_SUPPORTED);
   }
 
   /** Detach the mapped memory */
@@ -87,7 +87,7 @@ class PosixMmap : public MemoryBackend {
              MAP_PRIVATE | MAP_ANONYMOUS, -1, 0));
     if (ptr == MAP_FAILED) {
       perror("map failed");
-      throw SHMEM_CREATE_FAILED.format();
+      HERMES_THROW_ERROR(SHMEM_CREATE_FAILED);
     }
     return ptr;
   }

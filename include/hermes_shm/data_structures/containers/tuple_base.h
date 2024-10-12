@@ -131,14 +131,14 @@ struct TupleBaseRecur<Wrap, idx, EndTemplateRecurrence> {
   template<size_t i>
   HSHM_CROSS_FUN
   void Get() {
-    throw std::logic_error("(Get) TupleBase index outside of range");
+    static_assert("(Get) TupleBase index outside of range");
   }
 
   /** Getter */
   template<size_t i>
   HSHM_CROSS_FUN
   void Get() const {
-    throw std::logic_error("(Get) TupleBase index outside of range");
+    static_assert("(Get) TupleBase index outside of range");
   }
 };
 

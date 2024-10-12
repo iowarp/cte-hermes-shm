@@ -60,7 +60,7 @@ class AllocatorFactory {
       return alloc;
     } else {
       // Default
-      throw std::logic_error("Not a valid allocator");
+      static_assert("Not a valid allocator");
     }
   }
 

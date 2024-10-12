@@ -100,7 +100,7 @@ class PosixShmMmap : public MemoryBackend {
   void _Reserve(size_t size) {
     int ret = ftruncate64(fd_, static_cast<off64_t>(size));
     if (ret < 0) {
-      throw SHMEM_RESERVE_FAILED.format();
+      HERMES_THROW_ERROR(SHMEM_RESERVE_FAILED);
     }
   }
 
@@ -115,7 +115,7 @@ class PosixShmMmap : public MemoryBackend {
         mmap64(nullptr, size, PROT_READ | PROT_WRITE,
                MAP_SHARED, fd_, off));
     if (ptr == MAP_FAILED) {
-      throw SHMEM_CREATE_FAILED.format();
+      HERMES_THROW_ERROR(SHMEM_CREATE_FAILED);
     }
     return ptr;
   }

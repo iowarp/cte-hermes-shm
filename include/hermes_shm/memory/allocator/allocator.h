@@ -168,7 +168,7 @@ class Allocator {
   template<typename PointerT = Pointer>
   HSHM_INLINE_CROSS_FUN void Free(PointerT &p) {
     if (p.IsNull()) {
-      throw INVALID_FREE.format();
+      HERMES_THROW_ERROR(INVALID_FREE);
     }
     FreeOffsetNoNullCheck(OffsetPointer(p.off_.load()));
   }
@@ -416,7 +416,7 @@ class Allocator {
   template<typename T = void>
   HSHM_INLINE_CROSS_FUN void FreePtr(T *ptr) {
     if (ptr == nullptr) {
-      throw INVALID_FREE.format();
+      HERMES_THROW_ERROR(INVALID_FREE);
     }
     FreeOffsetNoNullCheck(Convert<T, OffsetPointer>(ptr));
   }
@@ -427,7 +427,7 @@ class Allocator {
   template<typename T = void, typename PointerT = Pointer>
   HSHM_INLINE_CROSS_FUN void FreeLocalPtr(LPointer<T, PointerT> &ptr) {
     if (ptr.ptr_ == nullptr) {
-      throw INVALID_FREE.format();
+      HERMES_THROW_ERROR(INVALID_FREE);
     }
     FreeOffsetNoNullCheck(ptr.shm_.ToOffsetPointer());
   }
@@ -438,7 +438,7 @@ class Allocator {
   template<typename T = void, typename PointerT = Pointer>
   HSHM_INLINE_CROSS_FUN void FreeArray(Array<PointerT> &ptr) {
     if (ptr.shm_.IsNull()) {
-      throw INVALID_FREE.format();
+      HERMES_THROW_ERROR(INVALID_FREE);
     }
     FreeOffsetNoNullCheck(ptr.shm_.ToOffsetPointer());
   }
@@ -449,7 +449,7 @@ class Allocator {
   template<typename T = void, typename PointerT = Pointer>
   HSHM_INLINE_CROSS_FUN void FreeLocalArray(LArray<T, PointerT> &ptr) {
     if (ptr.ptr_ == nullptr) {
-      throw INVALID_FREE.format();
+      HERMES_THROW_ERROR(INVALID_FREE);
     }
     FreeOffsetNoNullCheck(ptr.shm_.ToOffsetPointer());
   }

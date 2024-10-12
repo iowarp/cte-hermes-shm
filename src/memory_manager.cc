@@ -87,7 +87,7 @@ MemoryBackend* MemoryManager::RegisterBackend(
     MemoryBackend *backend) {
   BACKEND_MAP_T &backends = *(BACKEND_MAP_T*)backends_;
   if (GetBackend(url)) {
-    throw MEMORY_BACKEND_REPEATED.format();
+    HERMES_THROW_ERROR(MEMORY_BACKEND_REPEATED);
   }
   backends.emplace(url, backend);
   return backend;
@@ -152,7 +152,7 @@ Allocator* MemoryManager::RegisterAllocator(Allocator *alloc) {
   uint32_t idx = alloc->GetId().ToIndex();
   if (idx > MAX_ALLOCATORS) {
     HILOG(kError, "Allocator index out of range: {}", idx)
-    throw std::runtime_error("Too many allocators");
+    HERMES_THROW_ERROR(TOO_MANY_ALLOCATORS);
   }
   allocators_[idx] = alloc;
   return alloc;

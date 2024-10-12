@@ -39,7 +39,7 @@ class ShmSerializer {
         memcpy(this->buf_ + this->off_, &arg, sizeof(arg));
         this->off_ += sizeof(arg);
       } else {
-        throw IPC_ARGS_NOT_SHM_COMPATIBLE.format();
+        HERMES_THROW_ERROR(IPC_ARGS_NOT_SHM_COMPATIBLE);
       }
     };
     ForwardIterateArgpack::Apply(make_argpack(
@@ -57,7 +57,7 @@ class ShmSerializer {
       } else if constexpr(std::is_pod<NOREF>()) {
         size += sizeof(arg);
       } else {
-        throw IPC_ARGS_NOT_SHM_COMPATIBLE.format();
+        HERMES_THROW_ERROR(IPC_ARGS_NOT_SHM_COMPATIBLE);
       }
     };
     ForwardIterateArgpack::Apply(make_argpack(
@@ -83,7 +83,7 @@ class ShmDeserializer {
       off_ += sizeof(arg);
       return arg;
     } else {
-      throw IPC_ARGS_NOT_SHM_COMPATIBLE.format();
+      HERMES_THROW_ERROR(IPC_ARGS_NOT_SHM_COMPATIBLE);
     }
   }
 
@@ -97,7 +97,7 @@ class ShmDeserializer {
       arg.shm_deserialize(alloc, p);
       off_ += sizeof(p);
     } else {
-      throw IPC_ARGS_NOT_SHM_COMPATIBLE.format();
+      HERMES_THROW_ERROR(IPC_ARGS_NOT_SHM_COMPATIBLE);
     }
   }
 };

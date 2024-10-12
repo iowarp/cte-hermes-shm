@@ -79,7 +79,7 @@ class MallocAllocator : public Allocator {
   HSHM_CROSS_FUN
   void shm_deserialize(char *buffer,
                        size_t buffer_size) override  {
-    throw NOT_IMPLEMENTED.format("MallocAllocator::shm_deserialize");
+    HERMES_THROW_ERROR(NOT_IMPLEMENTED, "MallocAllocator::shm_deserialize");
   }
 
   /**

@@ -42,7 +42,7 @@ struct HeapAllocator {
   HSHM_INLINE_CROSS_FUN OffsetPointer AllocateOffset(size_t size) {
     size_t off = heap_off_.fetch_add(size);
     if (off + size > heap_size_) {
-      throw OUT_OF_MEMORY.format(size, heap_size_);
+      HERMES_THROW_ERROR(OUT_OF_MEMORY, size, heap_size_);
     }
     return OffsetPointer(off);
   }

@@ -33,32 +33,32 @@ class MemoryBackendFactory {
       // PosixShmMmap
       auto backend = HERMES_MEMORY_MANAGER->GetDefaultAllocator()->NewObj<PosixShmMmap>();
       if (!backend->shm_init(size, url, std::forward<args>(args)...)) {
-        throw MEMORY_BACKEND_CREATE_FAILED.format();
+        HERMES_THROW_ERROR(MEMORY_BACKEND_CREATE_FAILED);
       }
       return backend;
     } else if constexpr(std::is_same_v<PosixMmap, BackendT>) {
       // PosixMmap
       auto backend = HERMES_MEMORY_MANAGER->GetDefaultAllocator()->NewObj<PosixMmap>();
       if (!backend->shm_init(size, std::forward<args>(args)...)) {
-        throw MEMORY_BACKEND_CREATE_FAILED.format();
+        HERMES_THROW_ERROR(MEMORY_BACKEND_CREATE_FAILED);
       }
       return backend;
     } else if constexpr(std::is_same_v<NullBackend, BackendT>) {
       // NullBackend
       auto backend = HERMES_MEMORY_MANAGER->GetDefaultAllocator()->NewObj<NullBackend>();
       if (!backend->shm_init(size, url, std::forward<args>(args)...)) {
-        throw MEMORY_BACKEND_CREATE_FAILED.format();
+        HERMES_THROW_ERROR(MEMORY_BACKEND_CREATE_FAILED);
       }
       return backend;
     } else if constexpr(std::is_same_v<ArrayBackend, BackendT>) {
       // ArrayBackend
       auto backend = HERMES_MEMORY_MANAGER->GetDefaultAllocator()->NewObj<ArrayBackend>();
       if (!backend->shm_init(size, url, std::forward<args>(args)...)) {
-        throw MEMORY_BACKEND_CREATE_FAILED.format();
+        HERMES_THROW_ERROR(MEMORY_BACKEND_CREATE_FAILED);
       }
       return backend;
     } else {
-      throw MEMORY_BACKEND_NOT_FOUND.format();
+      HERMES_THROW_ERROR(MEMORY_BACKEND_NOT_FOUND);
     }
   }
 
@@ -70,7 +70,7 @@ class MemoryBackendFactory {
       case MemoryBackendType::kPosixShmMmap: {
         auto backend = HERMES_MEMORY_MANAGER->GetDefaultAllocator()->NewObj<PosixShmMmap>();
         if (!backend->shm_deserialize(url)) {
-          throw MEMORY_BACKEND_NOT_FOUND.format();
+          HERMES_THROW_ERROR(MEMORY_BACKEND_NOT_FOUND);
         }
         return backend;
       }
@@ -79,7 +79,7 @@ class MemoryBackendFactory {
       case MemoryBackendType::kPosixMmap: {
         auto backend = HERMES_MEMORY_MANAGER->GetDefaultAllocator()->NewObj<PosixMmap>();
         if (!backend->shm_deserialize(url)) {
-          throw MEMORY_BACKEND_NOT_FOUND.format();
+          HERMES_THROW_ERROR(MEMORY_BACKEND_NOT_FOUND);
         }
         return backend;
       }
@@ -88,7 +88,7 @@ class MemoryBackendFactory {
       case MemoryBackendType::kNullBackend: {
         auto backend = HERMES_MEMORY_MANAGER->GetDefaultAllocator()->NewObj<NullBackend>();
         if (!backend->shm_deserialize(url)) {
-          throw MEMORY_BACKEND_NOT_FOUND.format();
+          HERMES_THROW_ERROR(MEMORY_BACKEND_NOT_FOUND);
         }
         return backend;
       }
@@ -97,7 +97,7 @@ class MemoryBackendFactory {
       case MemoryBackendType::kArrayBackend: {
         auto backend = HERMES_MEMORY_MANAGER->GetDefaultAllocator()->NewObj<ArrayBackend>();
         if (!backend->shm_deserialize(url)) {
-          throw MEMORY_BACKEND_NOT_FOUND.format();
+          HERMES_THROW_ERROR(MEMORY_BACKEND_NOT_FOUND);
         }
         return backend;
       }
