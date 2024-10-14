@@ -420,8 +420,8 @@ class MemoryAlignment {
    * @param size the size to make a multiple of alignment (e.g., 4097)
    * @return the new size  (e.g., 8192)
    * */
-  HSHM_INLINE_CROSS_FUN static size_t AlignTo(size_t alignment,
-                                           size_t size) {
+  static size_t AlignTo(size_t alignment,
+                        size_t size) {
     auto page_size = HERMES_SYSTEM_INFO->page_size_;
     size_t new_size = size;
     size_t page_off = size % alignment;
@@ -435,7 +435,7 @@ class MemoryAlignment {
    * Round up to the nearest multiple of page size
    * @param size the size to align to the PAGE_SIZE
    * */
-  HSHM_INLINE_CROSS_FUN static size_t AlignToPageSize(size_t size) {
+  static size_t AlignToPageSize(size_t size) {
     auto page_size = HERMES_SYSTEM_INFO->page_size_;
     size_t new_size = AlignTo(page_size, size);
     return new_size;

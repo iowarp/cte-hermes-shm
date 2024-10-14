@@ -38,15 +38,15 @@ struct ArgPackRecur {
     recur_; /**< Remaining args */
 
   /** Default constructor */
-  HSHM_ALWAYS_INLINE ArgPackRecur() = default;
+  HSHM_INLINE_CROSS_FUN ArgPackRecur() = default;
 
   /** Constructor. Rvalue reference. */
-  HSHM_ALWAYS_INLINE explicit ArgPackRecur(T arg, Args&& ...args)
+  HSHM_INLINE_CROSS_FUN explicit ArgPackRecur(T arg, Args&& ...args)
   : arg_(std::forward<T>(arg)), recur_(std::forward<Args>(args)...) {}
 
   /** Forward an rvalue reference (only if argpack) */
   template<size_t i>
-  HSHM_ALWAYS_INLINE constexpr decltype(auto) Forward() const {
+  HSHM_INLINE_CROSS_FUN constexpr decltype(auto) Forward() const {
     if constexpr(i == idx) {
       if constexpr(is_rval) {
         return std::forward<T>(arg_);
@@ -64,11 +64,11 @@ struct ArgPackRecur {
 template<size_t idx>
 struct ArgPackRecur<idx, EndTemplateRecurrence> {
   /** Default constructor */
-  HSHM_ALWAYS_INLINE ArgPackRecur() = default;
+  HSHM_INLINE_CROSS_FUN ArgPackRecur() = default;
 
   /** Forward an rvalue reference (only if argpack) */
   template<size_t i>
-  HSHM_ALWAYS_INLINE constexpr void Forward() const {
+  HSHM_INLINE_CROSS_FUN constexpr void Forward() const {
     static_assert("(Forward) ArgPack index outside of range");
   }
 };
@@ -99,8 +99,8 @@ struct ArgPack {
 
 /** Make an argpack */
 template<typename ...Args>
-HSHM_CROSS_FUN
-ArgPack<Args&&...> make_argpack(Args&& ...args) {
+HSHM_INLINE_CROSS_FUN
+constexpr ArgPack<Args&&...> make_argpack(Args&& ...args) {
   return ArgPack<Args&&...>(std::forward<Args>(args)...);
 }
 
@@ -122,8 +122,8 @@ class PassArgPack {
  public:
   /** Call function with ArgPack */
   template<typename ArgPackT, typename F>
-  HSHM_ALWAYS_INLINE constexpr static decltype(auto) Call(ArgPackT &&pack,
-                                                          F &&f) {
+  HSHM_INLINE_CROSS_FUN constexpr static decltype(auto) Call(ArgPackT &&pack,
+                                                             F &&f) {
     return _CallRecur<0, ArgPackT, F>(
       std::forward<ArgPackT>(pack), std::forward<F>(f));
   }
@@ -132,7 +132,7 @@ class PassArgPack {
   /** Unpacks the ArgPack and passes it to the function */
   template<size_t i, typename ArgPackT,
     typename F, typename ...CurArgs>
-  HSHM_ALWAYS_INLINE constexpr static decltype(auto)
+  HSHM_INLINE_CROSS_FUN constexpr static decltype(auto)
   _CallRecur(ArgPackT &&pack,
              F &&f,
              CurArgs&& ...args) {

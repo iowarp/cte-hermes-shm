@@ -32,7 +32,6 @@ class Singleton {
 
  public:
   /** Get or create an instance of type T */
-  HSHM_CROSS_FUN
   inline static T *GetInstance() {
     if (!obj_) {
       hshm::ScopedMutex lock(lock_, 0);

@@ -37,7 +37,6 @@ class EasySingleton {
    * @return instance of T
    */
   template<typename ...Args>
-  HSHM_CROSS_FUN
   static T* GetInstance(Args&& ...args) {
     if (obj_ == nullptr) {
       hshm::ScopedMutex lock(lock_, 0);

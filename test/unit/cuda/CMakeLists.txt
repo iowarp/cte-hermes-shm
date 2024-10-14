@@ -1,7 +1,9 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.24)
 set(CMAKE_CUDA_STANDARD 17)
 set(CMAKE_CUDA_STANDARD_REQUIRED ON)
-set(CMAKE_CUDA_ARCHITECTURES "60;70;80")
+set(CMAKE_CUDA_ARCHITECTURES all)
+# set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -Xcompiler -pthread")
+set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --forward-unknown-to-host-compiler")
 project(hermes_shm_cuda LANGUAGES C CXX CUDA)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -11,14 +13,16 @@ set(CMAKE_CXX_STANDARD 17)
 #------------------------------------------------------------------------------
 add_executable(test_memory_cuda_exec
         backend_cuda.cc)
-#add_dependencies(test_memory_cuda_exec
-#        hermes_shm_data_structures)
-#target_link_libraries(test_memory_cuda_exec
-#        hermes_shm_data_structures)
+add_dependencies(test_memory_cuda_exec
+        hermes_shm_data_structures)
+target_link_libraries(test_memory_cuda_exec
+        hermes_shm_data_structures)
 set_source_files_properties(backend_cuda.cc PROPERTIES LANGUAGE CUDA)
 set_target_properties(test_memory_cuda_exec PROPERTIES
         CUDA_SEPARABLE_COMPILATION ON)
 target_compile_definitions(test_memory_cuda_exec PRIVATE HERMES_ENABLE_CUDA)
+target_compile_options(test_memory_cuda_exec PRIVATE
+        $<$<COMPILE_LANGUAGE:CUDA>:--expt-relaxed-constexpr>)
 
 #------------------------------------------------------------------------------
 # Install Targets

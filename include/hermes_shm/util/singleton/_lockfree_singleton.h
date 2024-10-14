@@ -30,7 +30,6 @@ class LockfreeSingleton {
 
  public:
   /** Get or create an instance of type T */
-  HSHM_CROSS_FUN
   inline static T *GetInstance() {
     if (!obj_) {
       if (obj_ == nullptr) {

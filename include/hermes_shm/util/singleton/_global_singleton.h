@@ -29,12 +29,12 @@ class GlobalSingleton {
 
  public:
   /** Get instance of type T */
-  HSHM_CROSS_FUN static T* GetInstance() {
+  static T* GetInstance() {
     return &obj_;
   }
 
   /** Get ref of type T */
-  HSHM_INLINE_CROSS_FUN static T& GetRef() {
+  static T& GetRef() {
     return obj_;
   }
 };

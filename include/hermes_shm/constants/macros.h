@@ -73,14 +73,12 @@
   inline __attribute__((always_inline))
 
 /** Macro for functions */
+#define HSHM_REG_FUN
+#define HSHM_REG_INLINE_FUN HSHM_ALWAYS_INLINE
 #define HSHM_CROSS_FUN CUDA_HOST_DEVICE
-
-/** Macro for variables */
-#define HSHM_CROSS_VAR CUDA_HOST_DEVICE
-
-/** Macro for inline functions */
 #define HSHM_INLINE_CROSS_FUN HSHM_ALWAYS_INLINE HSHM_CROSS_FUN
 
+/** Bitfield macros */
 #define MARK_FIRST_BIT_MASK(T) ((T)1 << (sizeof(T) * 8 - 1))
 #define MARK_FIRST_BIT(T, X) ((X) | MARK_FIRST_BIT_MASK(T))
 #define IS_FIRST_BIT_MARKED(T, X) ((X) & MARK_FIRST_BIT_MASK(T))

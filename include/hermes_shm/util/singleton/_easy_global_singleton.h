@@ -27,10 +27,8 @@ class EasyGlobalSingleton {
  private:
   static T obj_;
  public:
-  HSHM_CROSS_FUN
   EasyGlobalSingleton() = default;
 
-  HSHM_CROSS_FUN
   static T* GetInstance() {
     return &obj_;
   }

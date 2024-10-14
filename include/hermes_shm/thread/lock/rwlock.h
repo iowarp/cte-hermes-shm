@@ -14,10 +14,10 @@
 #ifndef HERMES_THREAD_RWLOCK_H_
 #define HERMES_THREAD_RWLOCK_H_
 
-#include <atomic>
 #include <hermes_shm/constants/macros.h>
 #include "hermes_shm/thread/lock.h"
 #include "hermes_shm/thread/thread_model_manager.h"
+#include "hermes_shm/types/atomic.h"
 
 namespace hshm {
 
@@ -29,16 +29,17 @@ enum class RwLockMode {
 
 /** A reader-writer lock implementation */
 struct RwLock {
-  std::atomic<uint32_t> readers_;
-  std::atomic<uint32_t> writers_;
-  std::atomic<uint64_t> ticket_;
-  std::atomic<RwLockMode> mode_;
-  std::atomic<uint32_t> cur_writer_;
+  ipc::atomic<uint32_t> readers_;
+  ipc::atomic<uint32_t> writers_;
+  ipc::atomic<uint64_t> ticket_;
+  ipc::atomic<RwLockMode> mode_;
+  ipc::atomic<uint32_t> cur_writer_;
 #ifdef HERMES_DEBUG_LOCK
   uint32_t owner_;
 #endif
 
   /** Default constructor */
+  HSHM_REG_FUN
   RwLock()
   : readers_(0),
     writers_(0),
@@ -47,6 +48,7 @@ struct RwLock {
     cur_writer_(0) {}
 
   /** Explicit constructor */
+  HSHM_REG_FUN
   void Init() {
     readers_ = 0;
     writers_ = 0;
@@ -56,9 +58,11 @@ struct RwLock {
   }
 
   /** Delete copy constructor */
+  HSHM_REG_FUN
   RwLock(const RwLock &other) = delete;
 
   /** Move constructor */
+  HSHM_REG_FUN
   RwLock(RwLock &&other) noexcept
   : readers_(other.readers_.load()),
     writers_(other.writers_.load()),
@@ -67,6 +71,7 @@ struct RwLock {
     cur_writer_(other.cur_writer_.load()) {}
 
   /** Move assignment operator */
+  HSHM_REG_FUN
   RwLock& operator=(RwLock &&other) noexcept {
     if (this != &other) {
       readers_ = other.readers_.load();
@@ -79,6 +84,7 @@ struct RwLock {
   }
 
   /** Acquire read lock */
+  HSHM_REG_FUN
   void ReadLock(uint32_t owner) {
     RwLockMode mode;
 
@@ -106,11 +112,13 @@ struct RwLock {
   }
 
   /** Release read lock */
+  HSHM_REG_FUN
   void ReadUnlock() {
     readers_.fetch_sub(1);
   }
 
   /** Acquire write lock */
+  HSHM_REG_FUN
   void WriteLock(uint32_t owner) {
     RwLockMode mode;
     uint32_t cur_writer;
@@ -141,6 +149,7 @@ struct RwLock {
   }
 
   /** Release write lock */
+  HSHM_REG_FUN
   void WriteUnlock() {
     writers_.fetch_sub(1);
     cur_writer_.fetch_add(1);
@@ -148,7 +157,8 @@ struct RwLock {
 
  private:
   /** Update the mode of the lock */
-  HSHM_INLINE_CROSS_FUN void UpdateMode(RwLockMode &mode) {
+  HSHM_ALWAYS_INLINE
+  void UpdateMode(RwLockMode &mode) {
     // When # readers is 0, there is a lag to when the mode is updated
     // When # writers is 0, there is a lag to when the mode is updated
     mode = mode_.load();
@@ -165,17 +175,20 @@ struct ScopedRwReadLock {
   bool is_locked_;
 
   /** Acquire the read lock */
+  HSHM_REG_FUN
   explicit ScopedRwReadLock(RwLock &lock, uint32_t owner)
     : lock_(lock), is_locked_(false) {
     Lock(owner);
   }
 
   /** Release the read lock */
+  HSHM_REG_FUN
   ~ScopedRwReadLock() {
     Unlock();
   }
 
   /** Explicitly acquire read lock */
+  HSHM_REG_FUN
   void Lock(uint32_t owner) {
     if (!is_locked_) {
       lock_.ReadLock(owner);
@@ -184,6 +197,7 @@ struct ScopedRwReadLock {
   }
 
   /** Explicitly release read lock */
+  HSHM_REG_FUN
   void Unlock() {
     if (is_locked_) {
       lock_.ReadUnlock();
@@ -198,17 +212,20 @@ struct ScopedRwWriteLock {
   bool is_locked_;
 
   /** Acquire the write lock */
+  HSHM_REG_FUN
   explicit ScopedRwWriteLock(RwLock &lock, uint32_t owner)
   : lock_(lock), is_locked_(false) {
     Lock(owner);
   }
 
   /** Release the write lock */
+  HSHM_REG_FUN
   ~ScopedRwWriteLock() {
     Unlock();
   }
 
   /** Explicity acquire the write lock */
+  HSHM_REG_FUN
   void Lock(uint32_t owner) {
     if (!is_locked_) {
       lock_.WriteLock(owner);
@@ -217,6 +234,7 @@ struct ScopedRwWriteLock {
   }
 
   /** Explicitly release the write lock */
+  HSHM_REG_FUN
   void Unlock() {
     if (is_locked_) {
       lock_.WriteUnlock();
