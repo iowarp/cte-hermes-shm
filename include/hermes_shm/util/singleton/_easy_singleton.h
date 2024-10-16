@@ -14,8 +14,11 @@
 #define HERMES_SHM_INCLUDE_HERMES_SHM_UTIL_SINGLETON_EASY_SINGLETON_H_
 
 #include <memory>
-#include "hermes_shm/thread/lock/mutex.h"
 #include "hermes_shm/constants/macros.h"
+#include "_easy_lockfree_singleton.h"
+#ifndef __CUDA_ARCH__
+#include "hermes_shm/thread/lock/mutex.h"
+#endif
 
 namespace hshm {
 
@@ -23,6 +26,7 @@ namespace hshm {
  * A class to represent singleton pattern
  * Does not require specific initialization of the static variable
  * */
+#ifndef __CUDA_ARCH__
 template<typename T>
 class EasySingleton {
  protected:
@@ -51,6 +55,12 @@ template <typename T>
 T* EasySingleton<T>::obj_ = nullptr;
 template <typename T>
 hshm::Mutex EasySingleton<T>::lock_ = hshm::Mutex();
+#else
+#include "_easy_lockfree_singleton.h"
+template<typename T>
+using EasySingleton = EasyLockfreeSingleton<T>;
+#endif
+
 
 }  // namespace hshm
 

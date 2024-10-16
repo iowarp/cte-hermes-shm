@@ -14,11 +14,15 @@
 #define HERMES_SHM_INCLUDE_HERMES_SHM_UTIL_SINGLETON_SINGLETON_H_
 
 #include <memory>
-#include "hermes_shm/thread/lock/mutex.h"
 #include "hermes_shm/constants/macros.h"
+#include "_easy_lockfree_singleton.h"
+#ifndef __CUDA_ARCH__
+#include "hermes_shm/thread/lock/mutex.h"
+#endif
 
 namespace hshm {
 
+#ifndef __CUDA_ARCH__
 /**
  * Makes a singleton. Constructs the first time GetInstance is called.
  * Requires user to define the static storage of obj_ in separate file.
@@ -46,6 +50,12 @@ class Singleton {
 #define DEFINE_SINGLETON_CC(T)\
   template<> T* hshm::Singleton<T>::obj_ = nullptr; \
   template<> hshm::Mutex hshm::Singleton<T>::lock_ = hshm::Mutex();
+
+#else
+#include "_easy_lockfree_singleton.h"
+template<typename T>
+using Singleton = EasyLockfreeSingleton<T>;
+#endif
 
 }  // namespace hshm
 

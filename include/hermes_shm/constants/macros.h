@@ -61,7 +61,7 @@
 /** Macros for CUDA functions */
 #ifdef HERMES_ENABLE_CUDA
 #include <cuda_runtime.h>
-#define CUDA_HOST_DEVICE __host__ __device__
+#define CUDA_HOST_DEVICE __device__ __host__
 #else
 #define CUDA_HOST_DEVICE
 #endif

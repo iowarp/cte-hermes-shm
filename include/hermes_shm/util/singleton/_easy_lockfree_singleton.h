@@ -10,29 +10,25 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_SHM_INCLUDE_HERMES_SHM_UTIL_LOCKFREE_SINGLETON_SINGLETON_H_
-#define HERMES_SHM_INCLUDE_HERMES_SHM_UTIL_LOCKFREE_SINGLETON_SINGLETON_H_
+#ifndef HERMES_SHM_INCLUDE_HERMES_SHM_UTIL_EASY_LOCKFREE_SINGLETON_SINGLETON_H
+#define HERMES_SHM_INCLUDE_HERMES_SHM_UTIL_EASY_LOCKFREE_SINGLETON_SINGLETON_H
 
 #include <memory>
 #include "hermes_shm/constants/macros.h"
-#include "_easy_lockfree_singleton.h"
 
 namespace hshm {
 
-#ifndef __CUDA_ARCH__
 /**
  * Makes a singleton. Constructs the first time GetInstance is called.
  * Requires user to define the static storage of obj_ in separate file.
  * @tparam T
  */
 template<typename T>
-class LockfreeSingleton {
- private:
-  static T *obj_;
-
+class EasyLockfreeSingleton {
  public:
   /** Get or create an instance of type T */
-  inline static T* GetInstance() {
+  HSHM_CROSS_FUN static T* GetInstance() {
+    static T *obj_;
     if (!obj_) {
       if (obj_ == nullptr) {
         obj_ = new T();
@@ -42,15 +38,6 @@ class LockfreeSingleton {
   }
 };
 
-#define DEFINE_LOCKFREE_SINGLETON_CC(T)\
-  template<> T* hshm::LockfreeSingleton<T>::obj_ = nullptr;
-
-#else
-#include "_easy_lockfree_singleton.h"
-template<typename T>
-using LockfreeSingleton = EasyLockfreeSingleton<T>;
-#endif
-
 }  // namespace hshm
 
-#endif  // HERMES_SHM_INCLUDE_HERMES_SHM_UTIL_LOCKFREE_SINGLETON_SINGLETON_H_
+#endif  // HERMES_SHM_INCLUDE_HERMES_SHM_UTIL_EASY_LOCKFREE_SINGLETON_SINGLETON_H

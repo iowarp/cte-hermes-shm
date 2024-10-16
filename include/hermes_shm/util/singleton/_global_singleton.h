@@ -15,6 +15,7 @@
 
 #include <memory>
 #include "hermes_shm/constants/macros.h"
+#include "_easy_lockfree_singleton.h"
 
 namespace hshm {
 
@@ -22,6 +23,7 @@ namespace hshm {
  * Makes a singleton. Constructs during initialization of program.
  * Requires user to define the static storage of obj_ in separate file.
  * */
+#ifndef __CUDA_ARCH__
 template<typename T>
 class GlobalSingleton {
  public:
@@ -40,6 +42,11 @@ class GlobalSingleton {
 };
 #define DEFINE_GLOBAL_SINGLETON_CC(T)\
   template<> T hshm::GlobalSingleton<T>::obj_ = T();
+#else
+#include "_easy_lockfree_singleton.h"
+template<typename T>
+using GlobalSingleton = EasyLockfreeSingleton<T>;
+#endif
 
 }  // namespace hshm
 

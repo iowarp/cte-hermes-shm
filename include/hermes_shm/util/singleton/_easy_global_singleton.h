@@ -15,6 +15,7 @@
 
 #include <memory>
 #include "hermes_shm/constants/macros.h"
+#include "_easy_lockfree_singleton.h"
 
 namespace hshm {
 
@@ -22,6 +23,7 @@ namespace hshm {
  * Makes a singleton. Constructs during initialization of program.
  * Does not require specific initialization of the static variable.
  * */
+#ifndef __CUDA_ARCH__
 template<typename T>
 class EasyGlobalSingleton {
  private:
@@ -35,6 +37,10 @@ class EasyGlobalSingleton {
 };
 template <typename T>
 T EasyGlobalSingleton<T>::obj_;
+#else
+template<typename T>
+using EasyGlobalSingleton = EasyLockfreeSingleton<T>;
+#endif
 
 }  // namespace hshm
 

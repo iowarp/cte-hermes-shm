@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.24)
 set(CMAKE_CUDA_STANDARD 17)
 set(CMAKE_CUDA_STANDARD_REQUIRED ON)
-set(CMAKE_CUDA_ARCHITECTURES all)
+set(CMAKE_CUDA_ARCHITECTURES "60;70;80")
 # set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -Xcompiler -pthread")
 set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --forward-unknown-to-host-compiler")
 project(hermes_shm_cuda LANGUAGES C CXX CUDA)
