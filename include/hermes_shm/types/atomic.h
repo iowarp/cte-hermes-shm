@@ -15,6 +15,11 @@
 
 #include <atomic>
 #include <hermes_shm/constants/macros.h>
+#include <hermes_shm/types/numbers.h>
+#ifdef __CUDA_ARCH__
+#include <cuda/atomic>
+#endif
+#include <cuda/atomic>
 
 namespace hshm::ipc {
 
@@ -144,9 +149,118 @@ struct nonatomic {
   }
 };
 
+/** A wrapper for CUDA atomic operations */
+#ifdef __CUDA_ARCH__
+template<typename T>
+struct cuda_atomic {
+  T x;
+
+  /** Constructor */
+  HSHM_INLINE_GPU_FUN cuda_atomic() = default;
+
+  /** Full constructor */
+  HSHM_INLINE_GPU_FUN explicit cuda_atomic(T def) : x(def) {}
+
+  /** Atomic fetch_add wrapper*/
+  HSHM_INLINE_GPU_FUN T fetch_add(T count) {
+    return atomicAdd(&x, count);
+  }
+
+  /** Atomic fetch_sub wrapper*/
+  HSHM_INLINE_GPU_FUN T fetch_sub(T count) {
+    return atomicSub(&x, count);
+  }
+
+  /** Atomic load wrapper */
+  HSHM_INLINE_GPU_FUN T load() const {
+    return x;
+  }
+
+  /** Atomic store wrapper */
+  HSHM_INLINE_GPU_FUN void store(T count) {
+    exchange(count);
+  }
+
+  /** Atomic exchange wrapper */
+  HSHM_INLINE_GPU_FUN T exchange(T count) {
+    return atomicExch(&x, count);
+  }
+
+  /** Atomic compare exchange weak wrapper */
+  HSHM_INLINE_GPU_FUN bool compare_exchange_weak(T& expected, T desired) {
+    return atomicCAS(&x, expected, desired);
+  }
+
+  /** Atomic compare exchange strong wrapper */
+  HSHM_INLINE_GPU_FUN bool compare_exchange_strong(T& expected, T desired) {
+    return atomicCAS(&x, expected, desired);
+  }
+
+  /** Atomic pre-increment operator */
+  HSHM_INLINE_GPU_FUN cuda_atomic& operator++() {
+    atomicInc(&x);
+    return *this;
+  }
+
+  /** Atomic post-increment operator */
+  HSHM_INLINE_GPU_FUN cuda_atomic operator++(int) {
+    return atomic(x + 1);
+  }
+
+  /** Atomic pre-decrement operator */
+  HSHM_INLINE_GPU_FUN cuda_atomic& operator--() {
+    atomicSub(&x);
+    return (this);
+  }
+
+  /** Atomic post-decrement operator */
+  HSHM_INLINE_GPU_FUN cuda_atomic operator--(int) {
+    return atomic(x - 1);
+  }
+
+  /** Atomic add operator */
+  HSHM_INLINE_GPU_FUN cuda_atomic operator+(T count) const {
+    return atomicAdd(&x, count);
+  }
+
+  /** Atomic subtract operator */
+  HSHM_INLINE_GPU_FUN cuda_atomic operator-(T count) const {
+    return atomicSub(&x, count);
+  }
+
+  /** Atomic add assign operator */
+  HSHM_INLINE_GPU_FUN cuda_atomic& operator+=(T count) {
+    atomicAdd(&x, count);
+    return *this;
+  }
+
+  /** Atomic subtract assign operator */
+  HSHM_INLINE_GPU_FUN cuda_atomic& operator-=(T count) {
+    atomicSub(&x, count);
+    return *this;
+  }
+
+  /** Atomic assign operator */
+  HSHM_INLINE_GPU_FUN cuda_atomic& operator=(T count) {
+    store(count);
+    return *this;
+  }
+
+  /** Equality check */
+  HSHM_INLINE_GPU_FUN bool operator==(const cuda_atomic &other) const {
+    return atomicCAS(&x, other.x);
+  }
+
+  /** Inequality check */
+  HSHM_INLINE_GPU_FUN bool operator!=(const cuda_atomic &other) const {
+    return !atomicCAS(&x, other.x);
+  }
+};
+#endif
+
 /** A wrapper around std::atomic */
 template<typename T>
-struct atomic {
+struct std_atomic {
   std::atomic<T> x;
 
   /** Serialization */
@@ -156,10 +270,11 @@ struct atomic {
   }
 
   /** Constructor */
-  HSHM_ALWAYS_INLINE atomic() = default;
+  HSHM_ALWAYS_INLINE std_atomic() = default;
 
   /** Full constructor */
-  HSHM_ALWAYS_INLINE explicit atomic(T def) : x(def) {}
+  HSHM_ALWAYS_INLINE explicit std_atomic(T def) : x(def) {
+  }
 
   /** Atomic fetch_add wrapper*/
   HSHM_ALWAYS_INLINE T fetch_add(
@@ -177,6 +292,12 @@ struct atomic {
   HSHM_ALWAYS_INLINE T load(
     std::memory_order order = std::memory_order_seq_cst) const {
     return x.load(order);
+  }
+
+  /** Atomic store wrapper */
+  HSHM_ALWAYS_INLINE void store(T count,
+                                std::memory_order order = std::memory_order_seq_cst) {
+    x.store(count, order);
   }
 
   /** Atomic exchange wrapper */
@@ -200,65 +321,73 @@ struct atomic {
   }
 
   /** Atomic pre-increment operator */
-  HSHM_ALWAYS_INLINE atomic& operator++() {
+  HSHM_ALWAYS_INLINE std_atomic& operator++() {
     ++x;
     return *this;
   }
 
   /** Atomic post-increment operator */
-  HSHM_ALWAYS_INLINE atomic operator++(int) {
+  HSHM_ALWAYS_INLINE std_atomic operator++(int) {
     return atomic(x + 1);
   }
 
   /** Atomic pre-decrement operator */
-  HSHM_ALWAYS_INLINE atomic& operator--() {
+  HSHM_ALWAYS_INLINE std_atomic& operator--() {
     --x;
     return *this;
   }
 
   /** Atomic post-decrement operator */
-  HSHM_ALWAYS_INLINE atomic operator--(int) {
+  HSHM_ALWAYS_INLINE std_atomic operator--(int) {
     return atomic(x - 1);
   }
 
   /** Atomic add operator */
-  HSHM_ALWAYS_INLINE atomic operator+(T count) const {
+  HSHM_ALWAYS_INLINE std_atomic operator+(T count) const {
     return x + count;
   }
 
   /** Atomic subtract operator */
-  HSHM_ALWAYS_INLINE atomic operator-(T count) const {
+  HSHM_ALWAYS_INLINE std_atomic operator-(T count) const {
     return x - count;
   }
 
   /** Atomic add assign operator */
-  HSHM_ALWAYS_INLINE atomic& operator+=(T count) {
+  HSHM_ALWAYS_INLINE std_atomic& operator+=(T count) {
     x += count;
     return *this;
   }
 
   /** Atomic subtract assign operator */
-  HSHM_ALWAYS_INLINE atomic& operator-=(T count) {
+  HSHM_ALWAYS_INLINE std_atomic& operator-=(T count) {
     x -= count;
     return *this;
   }
 
   /** Atomic assign operator */
-  HSHM_ALWAYS_INLINE atomic& operator=(T count) {
+  HSHM_ALWAYS_INLINE std_atomic& operator=(T count) {
     x.exchange(count);
     return *this;
   }
 
   /** Equality check */
-  HSHM_ALWAYS_INLINE bool operator==(const atomic &other) const {
+  HSHM_ALWAYS_INLINE bool operator==(const std_atomic &other) const {
     return (other.x == x);
   }
 
   /** Inequality check */
-  HSHM_ALWAYS_INLINE bool operator!=(const atomic &other) const {
+  HSHM_ALWAYS_INLINE bool operator!=(const std_atomic &other) const {
     return (other.x != x);
   }
 };
+
+#ifndef __CUDA_ARCH__
+template<typename T>
+using atomic = std_atomic<T>;
+#else
+template<typename T>
+using atomic = cuda_atomic<T>;
+#endif
 
 namespace hipc = hshm::ipc;
 

@@ -14,9 +14,11 @@
 #define HERMES_SHM_INCLUDE_HERMES_SHM_TYPES_NUMBERS_H_
 
 #include <cstdint>
+#include "hermes_shm/constants/macros.h"
 
 namespace hshm {
 
+#ifndef __CUDA_ARCH__
 typedef uint8_t u8;   /**< 8-bit unsigned integer */
 typedef uint16_t u16; /**< 16-bit unsigned integer */
 typedef uint32_t u32; /**< 32-bit unsigned integer */
@@ -27,6 +29,18 @@ typedef int32_t i32;  /**< 32-bit signed integer */
 typedef int64_t i64;  /**< 64-bit signed integer */
 typedef float f32;    /**< 32-bit float */
 typedef double f64;   /**< 64-bit float */
+#else
+typedef unsigned char u8;   /**< 8-bit unsigned integer */
+typedef unsigned short u16; /**< 16-bit unsigned integer */
+typedef unsigned u32; /**< 32-bit unsigned integer */
+typedef long long unsigned u64; /**< 64-bit unsigned integer */
+typedef char i8;    /**< 8-bit signed integer */
+typedef short i16;  /**< 16-bit signed integer */
+typedef int i32;  /**< 32-bit signed integer */
+typedef long long int i64;  /**< 64-bit signed integer */
+typedef float f32;    /**< 32-bit float */
+typedef double f64;   /**< 64-bit float */
+#endif
 
 }  // namespace hshm
 

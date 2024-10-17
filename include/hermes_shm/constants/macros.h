@@ -61,9 +61,13 @@
 /** Macros for CUDA functions */
 #ifdef HERMES_ENABLE_CUDA
 #include <cuda_runtime.h>
+#define CUDA_HOST __host__
+#define CUDA_DEVICE __device__
 #define CUDA_HOST_DEVICE __device__ __host__
 #else
 #define CUDA_HOST_DEVICE
+#define CUDA_HOST
+#define CUDA_DEVICE
 #endif
 
 /**
@@ -73,15 +77,23 @@
   inline __attribute__((always_inline))
 
 /** Macro for functions */
-#define HSHM_REG_FUN
-#define HSHM_REG_INLINE_FUN HSHM_ALWAYS_INLINE
+#define HSHM_REG_FUN CUDA_HOST
+#define HSHM_HOST_FUN CUDA_HOST
+#define HSHM_GPU_FUN CUDA_DEVICE
 #define HSHM_CROSS_FUN CUDA_HOST_DEVICE
+
+/** Macro for inline function */
 #define HSHM_INLINE_CROSS_FUN HSHM_ALWAYS_INLINE HSHM_CROSS_FUN
+#define HSHM_INLINE_GPU_FUN CUDA_DEVICE HSHM_ALWAYS_INLINE
+#define HSHM_INLINE_HOST_FUN CUDA_HOST HSHM_ALWAYS_INLINE
 
 /** Bitfield macros */
 #define MARK_FIRST_BIT_MASK(T) ((T)1 << (sizeof(T) * 8 - 1))
 #define MARK_FIRST_BIT(T, X) ((X) | MARK_FIRST_BIT_MASK(T))
 #define IS_FIRST_BIT_MARKED(T, X) ((X) & MARK_FIRST_BIT_MASK(T))
 #define UNMARK_FIRST_BIT(T, X) ((X) & ~MARK_FIRST_BIT_MASK(T))
+
+/** Class constant macro */
+#define CLS_CONST static inline constexpr
 
 #endif  // HERMES_MACROS_H

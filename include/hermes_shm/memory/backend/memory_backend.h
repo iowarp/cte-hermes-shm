@@ -44,44 +44,55 @@ class MemoryBackend {
   bitfield32_t flags_;
 
  public:
+  HSHM_CROSS_FUN
   MemoryBackend() : header_(nullptr), data_(nullptr) {}
 
+  HSHM_CROSS_FUN
   virtual ~MemoryBackend() = default;
 
   /** Mark data as valid */
+  HSHM_CROSS_FUN
   void SetInitialized() {
     flags_.SetBits(MEMORY_BACKEND_INITIALIZED);
   }
 
   /** Check if data is valid */
+  HSHM_CROSS_FUN
   bool IsInitialized() {
     return flags_.Any(MEMORY_BACKEND_INITIALIZED);
   }
 
   /** Mark data as invalid */
+  HSHM_CROSS_FUN
   void UnsetInitialized() {
     flags_.UnsetBits(MEMORY_BACKEND_INITIALIZED);
   }
 
   /** This is the process which destroys the backend */
+  HSHM_CROSS_FUN
   void Own() {
     flags_.SetBits(MEMORY_BACKEND_OWNED);
   }
 
   /** This is owned */
+  HSHM_CROSS_FUN
   bool IsOwned() {
     return flags_.Any(MEMORY_BACKEND_OWNED);
   }
 
   /** This is not the process which destroys the backend */
+  HSHM_CROSS_FUN
   void Disown() {
     flags_.UnsetBits(MEMORY_BACKEND_OWNED);
   }
 
   /// Each allocator must define its own shm_init.
   // virtual bool shm_init(size_t size, ...) = 0;
+  HSHM_CROSS_FUN
   virtual bool shm_deserialize(std::string url) = 0;
+  HSHM_CROSS_FUN
   virtual void shm_detach() = 0;
+  HSHM_CROSS_FUN
   virtual void shm_destroy() = 0;
 };
 

@@ -7,7 +7,14 @@
 #include "hermes_shm/constants/macros.h"
 #include "hermes_shm/types/argpack.h"
 #include "hermes_shm/util/singleton/_easy_lockfree_singleton.h"
+#include "hermes_shm/types/atomic.h"
+#include "hermes_shm/thread/lock/mutex.h"
+#include "hermes_shm/memory/memory_manager.h"
 #include <cassert>
+
+enum class TestMode {
+  kWrite
+};
 
 struct MyStruct {
   int x;
@@ -33,10 +40,30 @@ __global__ void my_kernel(MyStruct* ptr) {
       });
   *hshm::EasyLockfreeSingleton<int>::GetInstance() = 25;
   ptr->x = *hshm::EasyLockfreeSingleton<int>::GetInstance();
-  // MyStruct::GetInstance() = 16;
+
+
+  hshm::Mutex mutex;
+  mutex.Lock(0);
+  hshm::RwLock rw;
+  rw.ReadLock(0);
+  rw.ReadUnlock();
+  rw.WriteLock(0);
+  rw.WriteUnlock();
 }
 
-int main() {
+__global__ void my_allocator(hshm::ipc::allocator_id_t id) {
+//  auto mem_mngr = HERMES_MEMORY_MANAGER;
+
+//  mem_mngr->UnregisterAllocator(alloc_id);
+//  mem_mngr->UnregisterBackend(shm_url);
+//  mem_mngr->CreateBackend<hipc::PosixShmMmap>(
+//      MEGABYTES(100), shm_url);
+//  mem_mngr->CreateAllocator<hipc::StackAllocator>(
+//      shm_url, alloc_id, 0);
+//  mem_mngr->ScanBackends();
+}
+
+void backend_test() {
   // Allocate memory on the host and device using UM
   size_t size = sizeof(MyStruct);
 
@@ -58,10 +85,18 @@ int main() {
 
   // Verify correctness
   MyStruct new_struct = *shm_struct;
+  printf("Result: x=%d, y=%f\n", new_struct.x, new_struct.y);
   assert(new_struct.x == 25);
   assert(new_struct.y == 3);
-  // assert(MyStruct::GetInstance() == 222);
 
   // Free memory
   shm.shm_destroy();
+}
+
+void allocator_test() {
+  printf("LONG LONG: %d\n", std::is_same_v<size_t, unsigned long long>);
+}
+
+int main() {
+  backend_test();
 }

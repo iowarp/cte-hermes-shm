@@ -37,23 +37,32 @@ namespace hshm::ipc {
 class CudaShmMmap : public PosixShmMmap {
  public:
   /** Initialize shared memory */
+  HSHM_CROSS_FUN
   bool shm_init(size_t size, const std::string &url, int device) {
+#ifndef __CUDA_ARCH__
     cudaDeviceSynchronize();
     cudaSetDevice(device);
     return PosixShmMmap::shm_init(size, url);
+#endif
   }
 
   /** Map shared memory */
+  HSHM_CROSS_FUN
   char* _Map(size_t size, off64_t off) override {
+#ifndef __CUDA_ARCH__
     char* ptr = _ShmMap(size, off);
     cudaHostRegister(ptr, size, cudaHostRegisterPortable);
     return ptr;
+#endif
   }
 
   /** Detach shared memory */
+  HSHM_CROSS_FUN
   void _Detach() override {
+#ifndef __CUDA_ARCH__
     cudaHostUnregister(data_);
     _ShmDetach();
+#endif
   }
 };
 
