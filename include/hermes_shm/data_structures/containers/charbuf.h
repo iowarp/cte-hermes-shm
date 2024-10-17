@@ -188,7 +188,7 @@ struct charbuf {
   }
 
   /** Convert to std::string */
-  HSHM_INLINE_CROSS_FUN const std::string str() const {
+  HSHM_INLINE_HOST_FUN const std::string str() const {
     return std::string(data(), size());
   }
 
