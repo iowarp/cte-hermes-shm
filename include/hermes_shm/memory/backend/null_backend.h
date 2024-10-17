@@ -40,7 +40,7 @@ class NullBackend : public MemoryBackend {
 
   ~NullBackend() override {}
 
-  bool shm_init(size_t size, const std::string &url) {
+  bool shm_init(size_t size, const hshm::chararr &url) {
     (void) url;
     SetInitialized();
     Own();
@@ -53,11 +53,13 @@ class NullBackend : public MemoryBackend {
     return true;
   }
 
-  bool shm_deserialize(std::string url) override {
+  HSHM_CROSS_FUN
+  bool shm_deserialize(const hshm::chararr &url) override {
     (void) url;
     HERMES_THROW_ERROR(SHMEM_NOT_SUPPORTED);
   }
 
+  HSHM_CROSS_FUN
   void shm_detach() override {
     _Detach();
   }

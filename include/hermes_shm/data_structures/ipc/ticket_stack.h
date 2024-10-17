@@ -27,7 +27,7 @@ class ticket_stack;
 
 /**
  * MACROS used to simplify the ticket_stack namespace
- * Used as inputs to the SHM_CONTAINER_TEMPLATE
+ * Used as inputs to the HIPC_CONTAINER_TEMPLATE
  * */
 #define CLASS_NAME ticket_stack
 #define TYPED_CLASS ticket_stack<T>
@@ -40,7 +40,7 @@ class ticket_stack;
 template<typename T>
 class ticket_stack : public ShmContainer {
  public:
-  SHM_CONTAINER_TEMPLATE((CLASS_NAME), (TYPED_CLASS))
+  HIPC_CONTAINER_TEMPLATE((CLASS_NAME), (TYPED_CLASS))
   ShmArchive<spsc_queue<T>> queue_;
   hshm::Mutex lock_;
 

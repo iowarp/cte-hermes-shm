@@ -208,7 +208,7 @@ struct vector_iterator_templ {
 
 /**
  * MACROS used to simplify the vector namespace
- * Used as inputs to the SHM_CONTAINER_TEMPLATE
+ * Used as inputs to the HIPC_CONTAINER_TEMPLATE
  * */
 #define CLASS_NAME vector
 #define TYPED_CLASS vector<T>
@@ -220,7 +220,7 @@ struct vector_iterator_templ {
 template<typename T>
 class vector : public ShmContainer {
  public:
-  SHM_CONTAINER_TEMPLATE((CLASS_NAME), (TYPED_CLASS))
+  HIPC_CONTAINER_TEMPLATE((CLASS_NAME), (TYPED_CLASS))
 
  public:
   /**====================================

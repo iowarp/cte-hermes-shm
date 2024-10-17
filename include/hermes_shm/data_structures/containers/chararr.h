@@ -2,15 +2,16 @@
 // Created by llogan on 10/16/24.
 //
 
-#ifndef HERMES_SHM_INCLUDE_HERMES_SHM_DATA_STRUCTURES_CONTAINERS_chararr_H_
-#define HERMES_SHM_INCLUDE_HERMES_SHM_DATA_STRUCTURES_CONTAINERS_chararr_H_
+#ifndef HERMES_SHM_INCLUDE_HERMES_SHM_DATA_STRUCTURES_CONTAINERS_chararr_templ_H_
+#define HERMES_SHM_INCLUDE_HERMES_SHM_DATA_STRUCTURES_CONTAINERS_chararr_templ_H_
 
 #include "hermes_shm/constants/macros.h"
+#include "hermes_shm/data_structures/serialization/serialize_common.h"
 
 namespace hshm {
 
-template<int LENGTH=4096>
-class chararr {
+template<int LENGTH>
+class chararr_templ {
  public:
   char buf_[LENGTH];
   int length_;
@@ -21,11 +22,11 @@ class chararr {
    * ===================================*/
   /** Default constructor */
   HSHM_CROSS_FUN
-  chararr() = default;
+  chararr_templ() = default;
 
   /** Size-based constructor */
-  HSHM_INLINE_CROSS_FUN explicit chararr(size_t size) {
-    resize(length_);
+  HSHM_INLINE_CROSS_FUN explicit chararr_templ(size_t size) {
+    resize(size);
   }
 
   /**====================================
@@ -33,34 +34,34 @@ class chararr {
    * ===================================*/
   /** Construct from const char* */
   HSHM_CROSS_FUN
-  chararr(const char *data) {
+  chararr_templ(const char *data) {
     length_ = strnlen(data, LENGTH);
     memcpy(buf_, data, length_);
   }
 
   /** Construct from sized char* */
   HSHM_CROSS_FUN
-  chararr(const char *data, size_t length) {
-    length_ = strnlen(data, LENGTH);
+  chararr_templ(const char *data, size_t length) {
+    length_ = length;
     memcpy(buf_, data, length);
   }
 
   /** Construct from std::string */
   HSHM_CROSS_FUN
-  chararr(const std::string &data) {
+  chararr_templ(const std::string &data) {
     length_ = data.size();
     memcpy(buf_, data.data(), length_);
   }
 
-  /** Construct from chararr */
+  /** Construct from chararr_templ */
   HSHM_CROSS_FUN
-  chararr(const chararr &data) {
+  chararr_templ(const chararr_templ &data) {
     length_ = data.size();
     memcpy(buf_, data.data(), length_);
   }
 
   /** Copy assignment operator */
-  HSHM_INLINE_CROSS_FUN chararr& operator=(const chararr &other) {
+  HSHM_INLINE_CROSS_FUN chararr_templ& operator=(const chararr_templ &other) {
     if (this != &other) {
       length_ = other.size();
       memcpy(buf_, other.data(), length_);
@@ -73,13 +74,13 @@ class chararr {
    * ===================================*/
 
   /** Move constructor */
-  HSHM_CROSS_FUN chararr(chararr &&other) {
+  HSHM_CROSS_FUN chararr_templ(chararr_templ &&other) {
     length_ = other.length_;
     memcpy(buf_, other.buf_, length_);
   }
 
   /** Move assignment operator */
-  HSHM_CROSS_FUN chararr& operator=(chararr &&other) noexcept {
+  HSHM_CROSS_FUN chararr_templ& operator=(chararr_templ &&other) noexcept {
     if (this != &other) {
       length_ = other.length_;
       memcpy(buf_, other.buf_, length_);
@@ -103,6 +104,16 @@ class chararr {
 
   /** Reference data */
   HSHM_INLINE_CROSS_FUN const char* data() const {
+    return buf_;
+  }
+
+  /** Reference data */
+  HSHM_INLINE_CROSS_FUN char* c_str() {
+    return buf_;
+  }
+
+  /** Reference data */
+  HSHM_INLINE_CROSS_FUN const char* c_str() const {
     return buf_;
   }
 
@@ -130,20 +141,25 @@ class chararr {
     return buf_[idx];
   }
 
+  /** Hash function */
+  HSHM_CROSS_FUN size_t operator()() const {
+    return string_hash<hshm::chararr_templ<LENGTH>>(*this);
+  }
+
   /**====================================
    * Serialization
    * ===================================*/
 
   /** Serialize */
   template <typename Ar>
-  HSHM_CROSS_FUN void save(Ar &ar) const {
-    save_string<Ar, chararr>(ar, *this);
+  void save(Ar &ar) const {
+    save_string<Ar, chararr_templ>(ar, *this);
   }
 
   /** Deserialize */
   template <typename Ar>
-  HSHM_CROSS_FUN void load(Ar &ar) {
-    load_string<Ar, chararr>(ar, *this);
+  void load(Ar &ar) {
+    load_string<Ar, chararr_templ>(ar, *this);
   }
 
   /**====================================
@@ -170,7 +186,7 @@ class chararr {
   bool operator op(const std::string &other) const { \
     return _strncmp(data(), size(), other.data(), other.size()) op 0; \
   } \
-  bool operator op(const chararr &other) const { \
+  bool operator op(const chararr_templ &other) const { \
     return _strncmp(data(), size(), other.data(), other.size()) op 0; \
   }
 
@@ -180,8 +196,31 @@ class chararr {
   HERMES_STR_CMP_OPERATOR(>)  // NOLINT
   HERMES_STR_CMP_OPERATOR(<=)  // NOLINT
   HERMES_STR_CMP_OPERATOR(>=)  // NOLINT
+#undef HERMES_STR_CMP_OPERATOR
 };
+
+typedef chararr_templ<4096> chararr;
 
 }  // namespace hshm
 
-#endif  // HERMES_SHM_INCLUDE_HERMES_SHM_DATA_STRUCTURES_CONTAINERS_chararr_H_
+/** std::hash function for string */
+namespace std {
+template<>
+struct hash<hshm::chararr> {
+  HSHM_CROSS_FUN size_t operator()(const hshm::chararr &text) const {
+    return text();
+  }
+};
+}  // namespace std
+
+/** hshm::hash function for string */
+namespace hshm {
+template<>
+struct hash<hshm::chararr> {
+  HSHM_CROSS_FUN size_t operator()(const hshm::chararr &text) const {
+    return text();
+  }
+};
+}  // namespace hshm
+
+#endif  // HERMES_SHM_INCLUDE_HERMES_SHM_DATA_STRUCTURES_CONTAINERS_chararr_templ_H_

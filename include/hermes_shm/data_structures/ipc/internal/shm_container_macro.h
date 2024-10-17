@@ -1,7 +1,7 @@
 #ifndef HERMES_DATA_STRUCTURES_INTERNAL_SHM_CONTAINER_MACRO_H_
 #define HERMES_DATA_STRUCTURES_INTERNAL_SHM_CONTAINER_MACRO_H_
 #include "hermes_shm/constants/macros.h"
-#define SHM_CONTAINER_TEMPLATE(CLASS_NAME,TYPED_CLASS)\
+#define HIPC_CONTAINER_TEMPLATE(CLASS_NAME,TYPED_CLASS)\
 public:\
 /**====================================\
  * Variables & Types\

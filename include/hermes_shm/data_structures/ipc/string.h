@@ -27,7 +27,7 @@ class string_templ;
 
 /**
  * MACROS used to simplify the string namespace
- * Used as inputs to the SHM_CONTAINER_TEMPLATE
+ * Used as inputs to the HIPC_CONTAINER_TEMPLATE
  * */
 #define CLASS_NAME string_templ
 #define TYPED_CLASS string_templ<SSO>
@@ -36,7 +36,7 @@ class string_templ;
 /** string shared-memory header */
 template<size_t SSO>
 struct ShmHeader<string_templ<SSO>> {
-  SHM_CONTAINER_HEADER_TEMPLATE(ShmHeader)
+  HIPC_CONTAINER_HEADER_TEMPLATE(ShmHeader)
   size_t length_;
   char sso_[SSO];
   Pointer text_;
@@ -58,7 +58,7 @@ struct ShmHeader<string_templ<SSO>> {
 template<size_t SSO>
 class string_templ : public ShmContainer {
  public:
-  SHM_CONTAINER_TEMPLATE((CLASS_NAME), (TYPED_CLASS))
+  HIPC_CONTAINER_TEMPLATE((CLASS_NAME), (TYPED_CLASS))
 
  public:
   size_t length_;
@@ -239,6 +239,11 @@ class string_templ : public ShmContainer {
     return data()[i];
   }
 
+  /** Hash function */
+  HSHM_CROSS_FUN size_t operator()() const {
+    return string_hash<string_templ<SSO>>(*this);
+  }
+
   /** Convert into a std::string */
   HSHM_INLINE_CROSS_FUN std::string str() const {
     return {c_str(), length_};
@@ -338,7 +343,6 @@ class string_templ : public ShmContainer {
   HERMES_STR_CMP_OPERATOR(>)  // NOLINT
   HERMES_STR_CMP_OPERATOR(<=)  // NOLINT
   HERMES_STR_CMP_OPERATOR(>=)  // NOLINT
-
 #undef HERMES_STR_CMP_OPERATOR
 
  private:
@@ -367,24 +371,25 @@ typedef string charbuf;
 
 }  // namespace hshm::ipc
 
+/** std::hash function for string */
 namespace std {
-
-/** Hash function for string */
 template<size_t SSO>
 struct hash<hshm::ipc::string_templ<SSO>> {
-  HSHM_CROSS_FUN
-  size_t operator()(const hshm::ipc::string_templ<SSO> &text) const {
-    size_t sum = 0;
-    for (size_t i = 0; i < text.size(); ++i) {
-      auto shift = static_cast<size_t>(i % sizeof(size_t));
-      auto c = static_cast<size_t>((unsigned char)text[i]);
-      sum = 31*sum + (c << shift);
-    }
-    return sum;
+  HSHM_CROSS_FUN size_t operator()(const hshm::ipc::string_templ<SSO> &text) const {
+    return text();
   }
 };
-
 }  // namespace std
+
+/** hshm::hash function for string */
+namespace hshm {
+template<size_t SSO>
+struct hash<hshm::ipc::string_templ<SSO>> {
+  HSHM_CROSS_FUN size_t operator()(const hshm::ipc::string_templ<SSO> &text) const {
+    return text();
+  }
+};
+}  // namespace hshm
 
 #undef CLASS_NAME
 #undef TYPED_CLASS

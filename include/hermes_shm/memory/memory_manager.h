@@ -32,7 +32,7 @@ namespace hshm::ipc {
 template<typename BackendT, typename ...Args>
 HSHM_CROSS_FUN
 MemoryBackend* MemoryManager::CreateBackend(size_t size,
-                             const std::string &url,
+                             const hshm::chararr &url,
                              Args&& ...args) {
   auto backend = MemoryBackendFactory::shm_init<BackendT>(
     size, url, std::forward<Args>(args)...);
@@ -46,7 +46,7 @@ MemoryBackend* MemoryManager::CreateBackend(size_t size,
  * */
 template<typename AllocT, typename ...Args>
 HSHM_CROSS_FUN
-Allocator* MemoryManager::CreateAllocator(const std::string &url,
+Allocator* MemoryManager::CreateAllocator(const hshm::chararr &url,
                                           allocator_id_t alloc_id,
                                           size_t custom_header_size,
                                           Args&& ...args) {

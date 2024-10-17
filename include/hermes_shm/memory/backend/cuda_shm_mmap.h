@@ -38,7 +38,7 @@ class CudaShmMmap : public PosixShmMmap {
  public:
   /** Initialize shared memory */
   HSHM_CROSS_FUN
-  bool shm_init(size_t size, const std::string &url, int device) {
+  bool shm_init(size_t size, const hshm::chararr &url, int device) {
 #ifndef __CUDA_ARCH__
     cudaDeviceSynchronize();
     cudaSetDevice(device);

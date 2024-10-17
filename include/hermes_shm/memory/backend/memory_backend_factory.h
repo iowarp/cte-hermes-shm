@@ -28,7 +28,7 @@ class MemoryBackendFactory {
   /** Initialize a new backend */
   template<typename BackendT, typename ...Args>
   static MemoryBackend* shm_init(
-    size_t size, const std::string &url, Args ...args) {
+    size_t size, const hshm::chararr &url, Args ...args) {
     if constexpr(std::is_same_v<PosixShmMmap, BackendT>) {
       // PosixShmMmap
       auto backend = HERMES_MEMORY_MANAGER->GetDefaultAllocator()->NewObj<PosixShmMmap>();
@@ -63,8 +63,9 @@ class MemoryBackendFactory {
   }
 
   /** Deserialize an existing backend */
+  HSHM_CROSS_FUN
   static MemoryBackend* shm_deserialize(
-    MemoryBackendType type, const std::string &url) {
+    MemoryBackendType type, const hshm::chararr &url) {
     switch (type) {
       // PosixShmMmap
       case MemoryBackendType::kPosixShmMmap: {

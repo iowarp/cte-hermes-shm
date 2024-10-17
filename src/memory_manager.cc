@@ -25,7 +25,7 @@
 
 namespace hshm::ipc {
 
-typedef std::unordered_map<std::string, MemoryBackend*> BACKEND_MAP_T;
+typedef std::unordered_map<hshm::chararr, MemoryBackend*> BACKEND_MAP_T;
 
 /** Create the root allocator */
 HSHM_CROSS_FUN
@@ -65,7 +65,7 @@ size_t MemoryManager::GetDefaultBackendSize() {
  * */
 HSHM_CROSS_FUN
 MemoryBackend* MemoryManager::AttachBackend(MemoryBackendType type,
-                                            const std::string &url) {
+                                            const hshm::chararr &url) {
   auto backend = MemoryBackendFactory::shm_deserialize(type, url);
   HERMES_MEMORY_MANAGER->RegisterBackend(url, backend);
   ScanBackends();
@@ -83,7 +83,7 @@ MemoryBackend* MemoryManager::AttachBackend(MemoryBackendType type,
  * */
 HSHM_CROSS_FUN
 MemoryBackend* MemoryManager::RegisterBackend(
-    const std::string &url,
+    const hshm::chararr &url,
     MemoryBackend *backend) {
   BACKEND_MAP_T &backends = *(BACKEND_MAP_T*)backends_;
   if (GetBackend(url)) {
@@ -110,7 +110,7 @@ void MemoryManager::ScanBackends() {
  * Returns a pointer to a backend that has already been attached.
  * */
 HSHM_CROSS_FUN
-MemoryBackend* MemoryManager::GetBackend(const std::string &url) {
+MemoryBackend* MemoryManager::GetBackend(const hshm::chararr &url) {
   BACKEND_MAP_T &backends = *(BACKEND_MAP_T*)backends_;
   auto iter = backends.find(url);
   if (iter == backends.end()) {
@@ -123,7 +123,7 @@ MemoryBackend* MemoryManager::GetBackend(const std::string &url) {
  * Unregister backend
  * */
 HSHM_CROSS_FUN
-void MemoryManager::UnregisterBackend(const std::string &url) {
+void MemoryManager::UnregisterBackend(const hshm::chararr &url) {
   BACKEND_MAP_T &backends = *(BACKEND_MAP_T*)backends_;
   backends.erase(url);
 }
@@ -132,7 +132,7 @@ void MemoryManager::UnregisterBackend(const std::string &url) {
  * Destroy backend
  * */
 HSHM_CROSS_FUN
-void MemoryManager::DestroyBackend(const std::string &url) {
+void MemoryManager::DestroyBackend(const hshm::chararr &url) {
   auto backend = GetBackend(url);
   backend->Own();
   UnregisterBackend(url);

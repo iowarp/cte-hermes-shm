@@ -28,7 +28,7 @@ template<typename T>
 struct ShmHeader;
 
 /** The ShmHeader used for base containers */
-#define SHM_CONTAINER_HEADER_TEMPLATE(HEADER_NAME)\
+#define HIPC_CONTAINER_HEADER_TEMPLATE(HEADER_NAME)\
   /** Default constructor */\
   HSHM_CROSS_FUN TYPE_UNWRAP(HEADER_NAME)() = default;\
   \

@@ -1,26 +1,14 @@
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- * Distributed under BSD 3-Clause license.                                   *
- * Copyright by The HDF Group.                                               *
- * Copyright by the Illinois Institute of Technology.                        *
- * All rights reserved.                                                      *
- *                                                                           *
- * This file is part of Hermes. The full Hermes copyright notice, including  *
- * terms governing use, modification, and redistribution, is contained in    *
- * the COPYING file, which can be found at the top directory. If you do not  *
- * have access to the file, you may request a copy from help@hdfgroup.org.   *
- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+//
+// Created by llogan on 10/17/24.
+//
 
+#ifndef HERMES_SHM_INCLUDE_HERMES_SHM_DATA_STRUCTURES_CONTAINERS_LIST_H_
+#define HERMES_SHM_INCLUDE_HERMES_SHM_DATA_STRUCTURES_CONTAINERS_LIST_H_
 
-#ifndef HERMES_DATA_STRUCTURES_THREAD_UNSAFE_LIST_H_
-#define HERMES_DATA_STRUCTURES_THREAD_UNSAFE_LIST_H_
-
-#include "hermes_shm/data_structures/ipc/internal/shm_internal.h"
-#include "hermes_shm/data_structures/containers/functional.h"
+#include "hermes_shm/memory/memory_manager_.h"
 #include "hermes_shm/data_structures/serialization/serialize_common.h"
 
-#include <list>
-
-namespace hshm::ipc {
+namespace hshm {
 
 /** forward pointer for list */
 template<typename T>
@@ -30,8 +18,8 @@ class list;
 template<typename T>
 struct list_entry {
  public:
-  OffsetPointer next_ptr_, prior_ptr_;
-  ShmArchive<T> data_;
+  list_entry* next_ptr_, prior_ptr_;
+  T data_;
 };
 
 /**
@@ -56,7 +44,7 @@ struct list_iterator_templ {
   explicit list_iterator_templ(list<T> &list,
                                list_entry<T> *entry,
                                OffsetPointer entry_ptr)
-    : list_(&list), entry_(entry), entry_ptr_(entry_ptr) {}
+      : list_(&list), entry_(entry), entry_ptr_(entry_ptr) {}
 
   /** Copy constructor */
   HSHM_CROSS_FUN
@@ -95,7 +83,7 @@ struct list_iterator_templ {
     if (is_end()) { return *this; }
     entry_ptr_ = entry_->next_ptr_;
     entry_ = list_->GetAllocator()->template
-      Convert<list_entry<T>>(entry_->next_ptr_);
+        Convert<list_entry<T>>(entry_->next_ptr_);
     return *this;
   }
 
@@ -105,7 +93,7 @@ struct list_iterator_templ {
     if (is_end() || is_begin()) { return *this; }
     entry_ptr_ = entry_->prior_ptr_;
     entry_ = list_->GetAllocator()->template
-      Convert<list_entry<T>>(entry_->prior_ptr_);
+        Convert<list_entry<T>>(entry_->prior_ptr_);
     return *this;
   }
 
@@ -204,10 +192,9 @@ struct list_iterator_templ {
  * Doubly linked list implementation
  * */
 template<typename T>
-class list : public ShmContainer {
+class list {
  public:
-  HIPC_CONTAINER_TEMPLATE((CLASS_NAME), (TYPED_CLASS))
-  OffsetPointer head_ptr_, tail_ptr_;
+  list_entry<T> *head_ptr_, *tail_ptr_;
   size_t length_;
 
  public:
@@ -227,8 +214,13 @@ class list : public ShmContainer {
 
   /** SHM constructor. Default. */
   HSHM_CROSS_FUN
+  explicit list() {
+    SetNull();
+  }
+
+  /** SHM constructor. Default. */
+  HSHM_CROSS_FUN
   explicit list(Allocator *alloc) {
-    shm_init_container(alloc);
     SetNull();
   }
 
@@ -373,21 +365,21 @@ class list : public ShmContainer {
       entry->prior_ptr_.SetNull();
       entry->next_ptr_ = head_ptr_;
       auto head = GetAllocator()->template
-        Convert<list_entry<T>>(tail_ptr_);
+          Convert<list_entry<T>>(tail_ptr_);
       head->prior_ptr_ = entry_ptr;
       head_ptr_ = entry_ptr;
     } else if (pos.is_end()) {
       entry->prior_ptr_ = tail_ptr_;
       entry->next_ptr_.SetNull();
       auto tail = GetAllocator()->template
-        Convert<list_entry<T>>(tail_ptr_);
+          Convert<list_entry<T>>(tail_ptr_);
       tail->next_ptr_ = entry_ptr;
       tail_ptr_ = entry_ptr;
     } else {
       auto next = GetAllocator()->template
-        Convert<list_entry<T>>(pos.entry_->next_ptr_);
+          Convert<list_entry<T>>(pos.entry_->next_ptr_);
       auto prior = GetAllocator()->template
-        Convert<list_entry<T>>(pos.entry_->prior_ptr_);
+          Convert<list_entry<T>>(pos.entry_->prior_ptr_);
       entry->next_ptr_ = pos.entry_->next_ptr_;
       entry->prior_ptr_ = pos.entry_->prior_ptr_;
       next->prior_ptr_ = entry_ptr;
@@ -428,7 +420,7 @@ class list : public ShmContainer {
       head_ptr_ = last.entry_ptr_;
     } else {
       auto first_prior = GetAllocator()->template
-        Convert<list_entry<T>>(first_prior_ptr);
+          Convert<list_entry<T>>(first_prior_ptr);
       first_prior->next_ptr_ = last.entry_ptr_;
     }
 
@@ -478,9 +470,9 @@ class list : public ShmContainer {
   iterator_t begin() {
     if (size() == 0) { return end(); }
     auto head = GetAllocator()->template
-      Convert<list_entry<T>>(head_ptr_);
+        Convert<list_entry<T>>(head_ptr_);
     return iterator_t(*this,
-      head, head_ptr_);
+                      head, head_ptr_);
   }
 
   /** Last iterator begin */
@@ -488,7 +480,7 @@ class list : public ShmContainer {
   iterator_t last() {
     if (size() == 0) { return end(); }
     auto tail = GetAllocator()->template
-      Convert<list_entry<T>>(tail_ptr_);
+        Convert<list_entry<T>>(tail_ptr_);
     return iterator_t(*this, tail, tail_ptr_);
   }
 
@@ -503,7 +495,7 @@ class list : public ShmContainer {
   citerator_t cbegin() const {
     if (size() == 0) { return cend(); }
     auto head = GetAllocator()->template
-      Convert<list_entry<T>>(head_ptr_);
+        Convert<list_entry<T>>(head_ptr_);
     return citerator_t(const_cast<list&>(*this),
                        head, head_ptr_);
   }
@@ -536,18 +528,14 @@ class list : public ShmContainer {
  private:
   template<typename ...Args>
   HSHM_INLINE_CROSS_FUN list_entry<T>* _create_entry(
-    OffsetPointer &p, Args&& ...args) {
+      OffsetPointer &p, Args&& ...args) {
     auto entry = GetAllocator()->template
-      AllocateObjs<list_entry<T>>(1, p);
+        AllocateObjs<list_entry<T>>(1, p);
     HSHM_MAKE_AR(entry->data_, GetAllocator(), std::forward<Args>(args)...)
     return entry;
   }
 };
 
-}  // namespace hshm::ipc
+}  // namespace hshm
 
-#undef CLASS_NAME
-#undef TYPED_CLASS
-#undef TYPED_HEADER
-
-#endif  // HERMES_DATA_STRUCTURES_THREAD_UNSAFE_LIST_H_
+#endif  // HERMES_SHM_INCLUDE_HERMES_SHM_DATA_STRUCTURES_CONTAINERS_LIST_H_

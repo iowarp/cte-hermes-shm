@@ -24,7 +24,7 @@ class pair;
 
 /**
 * MACROS used to simplify the string namespace
-* Used as inputs to the SHM_CONTAINER_TEMPLATE
+* Used as inputs to the HIPC_CONTAINER_TEMPLATE
 * */
 #define CLASS_NAME pair
 #define TYPED_CLASS pair<FirstT, SecondT>
@@ -39,7 +39,7 @@ class pair : public ShmContainer {
   /**====================================
    * Variables
    * ===================================*/
-  SHM_CONTAINER_TEMPLATE((CLASS_NAME), (TYPED_CLASS))
+  HIPC_CONTAINER_TEMPLATE((CLASS_NAME), (TYPED_CLASS))
   ShmArchive<FirstT> first_;
   ShmArchive<SecondT> second_;
 

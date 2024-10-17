@@ -16,6 +16,7 @@
 #include "hermes_shm/types/real_number.h"
 #include "hermes_shm/memory/memory_manager_.h"
 #include "hermes_shm/data_structures/serialization/serialize_common.h"
+#include "hermes_shm/data_structures/containers/internal/hshm_container.h"
 #include <string>
 
 namespace hshm {
@@ -25,8 +26,7 @@ struct charbuf {
   /**====================================
    * Variables & Types
    * ===================================*/
-
-  hipc::Allocator *alloc_; /**< The allocator used to allocate data */
+  HSHM_CONTAINER_BASE_TEMPLATE
   char *data_; /**< The pointer to data */
   size_t size_; /**< The size of data */
   size_t total_size_; /**< The true size of data buffer */
@@ -182,11 +182,6 @@ struct charbuf {
     return size_;
   }
 
-  /** Get allocator */
-  HSHM_INLINE_CROSS_FUN hipc::Allocator* GetAllocator() {
-    return alloc_;
-  }
-
   /** Convert to std::string */
   HSHM_INLINE_HOST_FUN const std::string str() const {
     return std::string(data(), size());
@@ -204,6 +199,11 @@ struct charbuf {
   /** Const index operator */
   HSHM_INLINE_CROSS_FUN const char& operator[](size_t idx) const {
     return data_[idx];
+  }
+
+  /** Hash function */
+  HSHM_CROSS_FUN size_t operator()() const {
+    return string_hash<hshm::charbuf>(*this);
   }
 
   /**====================================
@@ -227,7 +227,7 @@ struct charbuf {
    * ===================================*/
 
   HSHM_INLINE_CROSS_FUN int _strncmp(const char *a, size_t len_a,
-                                  const char *b, size_t len_b) const {
+                                     const char *b, size_t len_b) const {
     if (len_a != len_b) {
       return int((int64_t)len_a - (int64_t)len_b);
     }
@@ -256,7 +256,6 @@ struct charbuf {
   HERMES_STR_CMP_OPERATOR(>)  // NOLINT
   HERMES_STR_CMP_OPERATOR(<=)  // NOLINT
   HERMES_STR_CMP_OPERATOR(>=)  // NOLINT
-
 #undef HERMES_STR_CMP_OPERATOR
 
  private:
@@ -295,22 +294,24 @@ typedef charbuf string;
 
 }  // namespace hshm
 
+/** std::hash function for string */
 namespace std {
-
-/** Hash function for string */
 template<>
 struct hash<hshm::charbuf> {
   HSHM_CROSS_FUN size_t operator()(const hshm::charbuf &text) const {
-    size_t sum = 0;
-    for (size_t i = 0; i < text.size(); ++i) {
-      auto shift = static_cast<size_t>(i % sizeof(size_t));
-      auto c = static_cast<size_t>((unsigned char)text[i]);
-      sum = 31*sum + (c << shift);
-    }
-    return sum;
+    return text();
   }
 };
-
 }  // namespace std
+
+/** hshm::hash function for string */
+namespace hshm {
+template<>
+struct hash<hshm::charbuf> {
+  HSHM_CROSS_FUN size_t operator()(const hshm::charbuf &text) const {
+    return text();
+  }
+};
+}  // namespace hshm
 
 #endif  // HERMES_INCLUDE_HERMES_TYPES_CHARBUF_H_

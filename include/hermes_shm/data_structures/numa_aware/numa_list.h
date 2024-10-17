@@ -41,7 +41,7 @@ class ShmHeader<numa_list<T>> : public hipc::ShmBaseHeader {
 template<typename T>
 class numa_list : public ShmContainer {
  public:
-  SHM_CONTAINER_TEMPLATE((CLASS_NAME), (TYPED_CLASS), (TYPED_HEADER))
+  HIPC_CONTAINER_TEMPLATE((CLASS_NAME), (TYPED_CLASS), (TYPED_HEADER))
 
  public:
   /**====================================

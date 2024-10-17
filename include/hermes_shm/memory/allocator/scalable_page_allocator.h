@@ -26,7 +26,7 @@
 namespace hshm::ipc {
 
 struct FreeListSetIpc : public ShmContainer {
-  SHM_CONTAINER_TEMPLATE(FreeListSetIpc, FreeListSetIpc)
+  HIPC_CONTAINER_TEMPLATE(FreeListSetIpc, FreeListSetIpc)
   ShmArchive<vector<pair<Mutex, iqueue<MpPage>>>> lists_;
   std::atomic<uint16_t> rr_free_;
   std::atomic<uint16_t> rr_alloc_;

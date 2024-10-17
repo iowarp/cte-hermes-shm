@@ -54,7 +54,7 @@ class ArrayBackend : public MemoryBackend {
   }
 
   HSHM_CROSS_FUN
-  bool shm_deserialize(std::string url) override {
+  bool shm_deserialize(const hshm::chararr &url) override {
     (void) url;
     HERMES_THROW_ERROR(SHMEM_NOT_SUPPORTED);
   }

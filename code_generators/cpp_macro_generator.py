@@ -11,7 +11,7 @@ CppMacroGenerator().generate(
                  f"{DATA_STRUCTURE_TEMPLATES}/shm_container_base_template.h"),
     os.path.join(PROJECT_ROOT,
                 f"{DATA_STRUCTURE_INTERNAL}/shm_container_macro.h"),
-    "SHM_CONTAINER_TEMPLATE",
+    "HIPC_CONTAINER_TEMPLATE",
     ["CLASS_NAME", "TYPED_CLASS"],
     ["TYPE_UNWRAP", "TYPE_UNWRAP"],
     "HERMES_DATA_STRUCTURES_INTERNAL_SHM_CONTAINER_MACRO_H_")

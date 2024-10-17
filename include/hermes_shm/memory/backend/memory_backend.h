@@ -19,6 +19,7 @@
 #include <hermes_shm/memory/memory.h>
 #include "hermes_shm/constants/macros.h"
 #include <limits>
+#include "hermes_shm/data_structures/containers/chararr.h"
 
 namespace hshm::ipc {
 
@@ -89,10 +90,10 @@ class MemoryBackend {
   /// Each allocator must define its own shm_init.
   // virtual bool shm_init(size_t size, ...) = 0;
   HSHM_CROSS_FUN
-  virtual bool shm_deserialize(std::string url) = 0;
+  virtual bool shm_deserialize(const hshm::chararr &url) = 0;
   HSHM_CROSS_FUN
   virtual void shm_detach() = 0;
-  HSHM_CROSS_FUN
+  HSHM_HOST_FUN
   virtual void shm_destroy() = 0;
 };
 

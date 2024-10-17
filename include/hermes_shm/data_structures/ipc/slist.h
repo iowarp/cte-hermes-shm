@@ -199,7 +199,7 @@ struct slist_iterator_templ {
 
 /**
  * MACROS used to simplify the slist namespace
- * Used as inputs to the SHM_CONTAINER_TEMPLATE
+ * Used as inputs to the HIPC_CONTAINER_TEMPLATE
  * */
 #define CLASS_NAME slist
 #define TYPED_CLASS slist<T>
@@ -214,7 +214,7 @@ class slist : public ShmContainer {
   /**====================================
    * Variables
    * ===================================*/
-  SHM_CONTAINER_TEMPLATE((CLASS_NAME), (TYPED_CLASS))
+  HIPC_CONTAINER_TEMPLATE((CLASS_NAME), (TYPED_CLASS))
   OffsetPointer head_ptr_, tail_ptr_;
   size_t length_;
 

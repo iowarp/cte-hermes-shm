@@ -14,6 +14,8 @@ add_library(hermes_shm_data_structures
         ../include/hermes_shm/memory/memory_manager_.h
         ../include/hermes_shm/data_structures/containers/unique_ptr.h
         ../include/hermes_shm/data_structures/containers/chararr.h
+        ../include/hermes_shm/data_structures/containers/hash.h
+        ../include/hermes_shm/data_structures/containers/list.h
 )
 target_link_libraries(hermes_shm_data_structures
         -lrt -ldl

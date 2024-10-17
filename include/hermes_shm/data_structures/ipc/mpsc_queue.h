@@ -27,7 +27,7 @@ class mpsc_queue;
 
 /**
  * MACROS used to simplify the mpsc_queue namespace
- * Used as inputs to the SHM_CONTAINER_TEMPLATE
+ * Used as inputs to the HIPC_CONTAINER_TEMPLATE
  * */
 #define CLASS_NAME mpsc_queue
 #define TYPED_CLASS mpsc_queue<T>
@@ -40,7 +40,7 @@ class mpsc_queue;
 template<typename T>
 class mpsc_queue : public ShmContainer {
  public:
-  SHM_CONTAINER_TEMPLATE((CLASS_NAME), (TYPED_CLASS))
+  HIPC_CONTAINER_TEMPLATE((CLASS_NAME), (TYPED_CLASS))
   ShmArchive<vector<pair<bitfield32_t, T>>> queue_;
   std::atomic<_qtok_t> tail_;
   std::atomic<_qtok_t> head_;

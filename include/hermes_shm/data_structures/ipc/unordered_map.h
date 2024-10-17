@@ -149,7 +149,7 @@ struct unordered_map_iterator {
 
 /**
  * MACROS to simplify the unordered_map namespace
- * Used as inputs to the SHM_CONTAINER_TEMPLATE
+ * Used as inputs to the HIPC_CONTAINER_TEMPLATE
  * */
 
 #define CLASS_NAME unordered_map
@@ -162,7 +162,7 @@ struct unordered_map_iterator {
 template<typename Key, typename T, class Hash>
 class unordered_map : public ShmContainer {
  public:
-  SHM_CONTAINER_TEMPLATE((CLASS_NAME), (TYPED_CLASS))
+  HIPC_CONTAINER_TEMPLATE((CLASS_NAME), (TYPED_CLASS))
 
   /**====================================
    * Typedefs

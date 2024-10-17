@@ -150,7 +150,7 @@ struct iqueue_iterator_templ {
 
 /**
  * MACROS used to simplify the iqueue namespace
- * Used as inputs to the SHM_CONTAINER_TEMPLATE
+ * Used as inputs to the HIPC_CONTAINER_TEMPLATE
  * */
 #define CLASS_NAME iqueue
 #define TYPED_CLASS iqueue<T>
@@ -162,7 +162,7 @@ struct iqueue_iterator_templ {
 template<typename T>
 class iqueue : public ShmContainer {
  public:
-  SHM_CONTAINER_TEMPLATE((CLASS_NAME), (TYPED_CLASS))
+  HIPC_CONTAINER_TEMPLATE((CLASS_NAME), (TYPED_CLASS))
   OffsetPointer head_ptr_;
   size_t length_;
 

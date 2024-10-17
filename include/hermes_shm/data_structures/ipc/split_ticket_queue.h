@@ -26,7 +26,7 @@ class split_ticket_queue;
 
 /**
  * MACROS used to simplify the split_ticket_queue namespace
- * Used as inputs to the SHM_CONTAINER_TEMPLATE
+ * Used as inputs to the HIPC_CONTAINER_TEMPLATE
  * */
 #define CLASS_NAME split_ticket_queue
 #define TYPED_CLASS split_ticket_queue<T>
@@ -39,7 +39,7 @@ class split_ticket_queue;
 template<typename T>
 class split_ticket_queue : public ShmContainer {
  public:
-  SHM_CONTAINER_TEMPLATE((CLASS_NAME), (TYPED_CLASS))
+  HIPC_CONTAINER_TEMPLATE((CLASS_NAME), (TYPED_CLASS))
   ShmArchive<vector<ticket_queue<T>>> splits_;
   std::atomic<uint16_t> rr_tail_, rr_head_;
 

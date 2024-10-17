@@ -28,7 +28,7 @@ class spsc_queue_templ;
 
 /**
  * MACROS used to simplify the spsc_queue_templ namespace
- * Used as inputs to the SHM_CONTAINER_TEMPLATE
+ * Used as inputs to the HIPC_CONTAINER_TEMPLATE
  * */
 #define CLASS_NAME spsc_queue_templ
 #define TYPED_CLASS spsc_queue_templ<T, EXTENSIBLE>
@@ -41,7 +41,7 @@ class spsc_queue_templ;
 template<typename T, bool EXTENSIBLE>
 class spsc_queue_templ : public ShmContainer {
  public:
-  SHM_CONTAINER_TEMPLATE((CLASS_NAME), (TYPED_CLASS))
+  HIPC_CONTAINER_TEMPLATE((CLASS_NAME), (TYPED_CLASS))
   ShmArchive<vector<T>> queue_;
   _qtok_t tail_;
   _qtok_t head_;

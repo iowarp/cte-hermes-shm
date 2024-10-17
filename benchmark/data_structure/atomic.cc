@@ -42,6 +42,9 @@ GLOBAL_COUNTER(std::atomic, uint64_t)
 GLOBAL_COUNTER(hipc::nonatomic, uint16_t)
 GLOBAL_COUNTER(hipc::nonatomic, uint32_t)
 GLOBAL_COUNTER(hipc::nonatomic, uint64_t)
+GLOBAL_COUNTER(hipc::atomic, uint16_t)
+GLOBAL_COUNTER(hipc::atomic, uint32_t)
+GLOBAL_COUNTER(hipc::atomic, uint64_t)
 
 /** Atomic Test Suite */
 template<typename AtomicT, typename T, std::memory_order MemoryOrder>

@@ -15,6 +15,7 @@
 
 #include <stddef.h>
 #include <cereal/archives/binary.hpp>
+#include "hermes_shm/data_structures/containers/hash.h"
 
 template<typename Ar, typename T>
 HSHM_CROSS_FUN

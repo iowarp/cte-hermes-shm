@@ -47,7 +47,7 @@ class MemoryManager {
   template<typename BackendT, typename ...Args>
   HSHM_CROSS_FUN
   MemoryBackend* CreateBackend(size_t size,
-                               const std::string &url,
+                               const hshm::chararr &url,
                                Args&& ...args);
 
   /**
@@ -60,7 +60,7 @@ class MemoryManager {
    * */
   HSHM_CROSS_FUN
   MemoryBackend* RegisterBackend(
-      const std::string &url,
+      const hshm::chararr &url,
       MemoryBackend* backend);
 
   /**
@@ -68,25 +68,25 @@ class MemoryManager {
    * */
   HSHM_CROSS_FUN
   MemoryBackend* AttachBackend(MemoryBackendType type,
-                               const std::string &url);
+                               const hshm::chararr &url);
 
   /**
    * Returns a pointer to a backend that has already been attached.
    * */
   HSHM_CROSS_FUN
-  MemoryBackend* GetBackend(const std::string &url);
+  MemoryBackend* GetBackend(const hshm::chararr &url);
 
   /**
    * Unregister backend
    * */
   HSHM_CROSS_FUN
-  void UnregisterBackend(const std::string &url);
+  void UnregisterBackend(const hshm::chararr &url);
 
   /**
    * Destroy backend
    * */
   HSHM_CROSS_FUN
-  void DestroyBackend(const std::string &url);
+  void DestroyBackend(const hshm::chararr &url);
 
   /**
    * Scans all attached backends for new memory allocators.
@@ -99,7 +99,7 @@ class MemoryManager {
    * */
   template<typename AllocT, typename ...Args>
   HSHM_CROSS_FUN
-  Allocator* CreateAllocator(const std::string &url,
+  Allocator* CreateAllocator(const hshm::chararr &url,
                              allocator_id_t alloc_id,
                              size_t custom_header_size,
                              Args&& ...args);

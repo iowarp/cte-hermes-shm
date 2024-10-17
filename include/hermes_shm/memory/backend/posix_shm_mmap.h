@@ -34,7 +34,7 @@ namespace hshm::ipc {
 
 class PosixShmMmap : public MemoryBackend {
  protected:
-  std::string url_;
+  hshm::chararr url_;
   int fd_;
 
  public:
@@ -51,7 +51,7 @@ class PosixShmMmap : public MemoryBackend {
   }
 
   /** Initialize backend */
-  bool shm_init(size_t size, const std::string &url) {
+  bool shm_init(size_t size, const hshm::chararr &url) {
     SetInitialized();
     Own();
     url_ = std::move(url);
@@ -70,7 +70,8 @@ class PosixShmMmap : public MemoryBackend {
   }
 
   /** Deserialize the backend */
-  bool shm_deserialize(std::string url) override {
+  HSHM_CROSS_FUN
+  bool shm_deserialize(const hshm::chararr &url) override {
     SetInitialized();
     Disown();
     url_ = std::move(url);
@@ -86,6 +87,7 @@ class PosixShmMmap : public MemoryBackend {
   }
 
   /** Detach the mapped memory */
+  HSHM_CROSS_FUN
   void shm_detach() override {
     _Detach();
   }
