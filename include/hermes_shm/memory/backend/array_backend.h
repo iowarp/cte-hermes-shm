@@ -36,10 +36,8 @@ class ArrayBackend : public MemoryBackend {
   HSHM_CROSS_FUN
   ArrayBackend() = default;
 
-  HSHM_CROSS_FUN
   ~ArrayBackend() override {}
 
-  HSHM_CROSS_FUN
   bool shm_init(size_t size, char *region) {
     if (size < sizeof(MemoryBackendHeader)) {
       HERMES_THROW_ERROR(SHMEM_CREATE_FAILED);
@@ -53,16 +51,13 @@ class ArrayBackend : public MemoryBackend {
     return true;
   }
 
-  HSHM_CROSS_FUN
   bool shm_deserialize(const hshm::chararr &url) override {
     (void) url;
     HERMES_THROW_ERROR(SHMEM_NOT_SUPPORTED);
   }
 
-  HSHM_CROSS_FUN
   void shm_detach() override {}
 
-  HSHM_CROSS_FUN
   void shm_destroy() override {}
 };
 

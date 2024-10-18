@@ -41,7 +41,6 @@ __global__ void my_kernel(MyStruct* ptr) {
   *hshm::EasyLockfreeSingleton<int>::GetInstance() = 25;
   ptr->x = *hshm::EasyLockfreeSingleton<int>::GetInstance();
 
-
   hshm::Mutex mutex;
   mutex.Lock(0);
   hshm::RwLock rw;
@@ -51,16 +50,11 @@ __global__ void my_kernel(MyStruct* ptr) {
   rw.WriteUnlock();
 }
 
-__global__ void my_allocator(hshm::ipc::allocator_id_t id) {
-//  auto mem_mngr = HERMES_MEMORY_MANAGER;
-
-//  mem_mngr->UnregisterAllocator(alloc_id);
-//  mem_mngr->UnregisterBackend(shm_url);
-//  mem_mngr->CreateBackend<hipc::PosixShmMmap>(
-//      MEGABYTES(100), shm_url);
-//  mem_mngr->CreateAllocator<hipc::StackAllocator>(
-//      shm_url, alloc_id, 0);
-//  mem_mngr->ScanBackends();
+__global__ void my_allocator(hipc::MemoryBackend *backend,
+                             hipc::Allocator *allocator) {
+  auto mem_mngr = HERMES_MEMORY_MANAGER;
+  mem_mngr->RegisterBackend(hshm::chararr("shm"), backend);
+  mem_mngr->RegisterAllocator(allocator);
 }
 
 void backend_test() {

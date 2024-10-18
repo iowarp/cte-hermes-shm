@@ -53,7 +53,7 @@ class MemoryBackendFactory {
     } else if constexpr(std::is_same_v<ArrayBackend, BackendT>) {
       // ArrayBackend
       auto backend = HERMES_MEMORY_MANAGER->GetDefaultAllocator()->NewObj<ArrayBackend>();
-      if (!backend->shm_init(size, url, std::forward<args>(args)...)) {
+      if (!backend->shm_init(size, std::forward<args>(args)...)) {
         HERMES_THROW_ERROR(MEMORY_BACKEND_CREATE_FAILED);
       }
       return backend;
@@ -63,7 +63,6 @@ class MemoryBackendFactory {
   }
 
   /** Deserialize an existing backend */
-  HSHM_CROSS_FUN
   static MemoryBackend* shm_deserialize(
     MemoryBackendType type, const hshm::chararr &url) {
     switch (type) {

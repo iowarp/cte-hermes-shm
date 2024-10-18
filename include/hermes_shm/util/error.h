@@ -30,8 +30,12 @@
 #define HERMES_ERROR_HANDLE_CATCH catch(HERMES_ERROR_TYPE &HERMES_ERROR_PTR)
 #define HERMES_ERROR_IS(err, check) (err->get_code() == check.get_code())
 
+#ifndef __CUDA_ARCH__
 #define HERMES_THROW_ERROR(CODE, ...) \
   throw CODE.format(__VA_ARGS__)
+#else
+#define HERMES_THROW_ERROR(CODE, ...)
+#endif
 
 namespace hshm {
 

@@ -1,21 +1,25 @@
 cmake_minimum_required(VERSION 3.10)
-project(hermes_shm)
+set(LANG C CXX)
+if (HERMES_ENABLE_CUDA)
+    set(CMAKE_CUDA_STANDARD 17)
+    set(CMAKE_CUDA_STANDARD_REQUIRED ON)
+    set(CMAKE_CUDA_ARCHITECTURES "60;70;80")
+    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --forward-unknown-to-host-compiler")
+    set(LANG ${LANG} CUDA)
+endif()
+project(hermes_shm LANGUAGES ${LANG})
 
 set(CMAKE_CXX_STANDARD 17)
 
 #-----------------------------------------------------------------------------
 # Build HSHM
 #-----------------------------------------------------------------------------
-add_library(hermes_shm_data_structures
+set (SOURCE_FILES
         memory_manager.cc
         thread_model_manager.cc
         thread_factory.cc
-        data_structure_singleton.cc
-        ../include/hermes_shm/memory/memory_manager_.h
-        ../include/hermes_shm/data_structures/containers/unique_ptr.h
-        ../include/hermes_shm/data_structures/containers/chararr.h
-        ../include/hermes_shm/data_structures/containers/hash.h
-)
+        data_structure_singleton.cc)
+add_library(hermes_shm_data_structures ${SOURCE_FILES})
 target_link_libraries(hermes_shm_data_structures
         -lrt -ldl
         cereal::cereal
@@ -28,6 +32,16 @@ if (HERMES_ENABLE_PTHREAD)
 endif()
 if (HERMES_ENABLE_OPENMP)
     target_link_libraries(hermes_shm_data_structures OpenMP::OpenMP_CXX)
+endif()
+if (HERMES_ENABLE_CUDA)
+    foreach (SOURCE IN LISTS ${SOURCE_FILES})
+        set_source_files_properties(${SOURCE} PROPERTIES LANGUAGE CUDA)
+    endforeach()
+    set_target_properties(hermes_shm_data_structures PROPERTIES
+            CUDA_SEPARABLE_COMPILATION ON)
+    target_compile_definitions(hermes_shm_data_structures PRIVATE HERMES_ENABLE_CUDA)
+    target_compile_options(hermes_shm_data_structures PRIVATE
+            $<$<COMPILE_LANGUAGE:CUDA>:--expt-relaxed-constexpr>)
 endif()
 
 #-----------------------------------------------------------------------------

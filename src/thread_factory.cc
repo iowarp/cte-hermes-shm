@@ -24,6 +24,7 @@
 
 namespace hshm::thread_model {
 
+HSHM_CROSS_FUN
 ThreadModel* ThreadFactory::Get(ThreadType type) {
   switch (type) {
     case ThreadType::kPthread: {

@@ -89,11 +89,8 @@ class MemoryBackend {
 
   /// Each allocator must define its own shm_init.
   // virtual bool shm_init(size_t size, ...) = 0;
-  HSHM_CROSS_FUN
   virtual bool shm_deserialize(const hshm::chararr &url) = 0;
-  HSHM_CROSS_FUN
   virtual void shm_detach() = 0;
-  HSHM_HOST_FUN
   virtual void shm_destroy() = 0;
 };
 

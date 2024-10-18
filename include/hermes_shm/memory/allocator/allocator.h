@@ -69,7 +69,7 @@ class Allocator {
   /**
    * Destructor
    * */
-  HSHM_CROSS_FUN virtual ~Allocator() = default;
+  virtual ~Allocator() = default;
 
   /**
    * Create the shared-memory allocator with \a id unique allocator id over

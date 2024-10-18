@@ -70,7 +70,6 @@ class PosixShmMmap : public MemoryBackend {
   }
 
   /** Deserialize the backend */
-  HSHM_CROSS_FUN
   bool shm_deserialize(const hshm::chararr &url) override {
     SetInitialized();
     Disown();
@@ -87,7 +86,6 @@ class PosixShmMmap : public MemoryBackend {
   }
 
   /** Detach the mapped memory */
-  HSHM_CROSS_FUN
   void shm_detach() override {
     _Detach();
   }

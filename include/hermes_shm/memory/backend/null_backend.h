@@ -53,13 +53,11 @@ class NullBackend : public MemoryBackend {
     return true;
   }
 
-  HSHM_CROSS_FUN
   bool shm_deserialize(const hshm::chararr &url) override {
     (void) url;
     HERMES_THROW_ERROR(SHMEM_NOT_SUPPORTED);
   }
 
-  HSHM_CROSS_FUN
   void shm_detach() override {
     _Detach();
   }

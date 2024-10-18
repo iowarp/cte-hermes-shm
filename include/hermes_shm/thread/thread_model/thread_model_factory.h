@@ -20,6 +20,7 @@ namespace hshm::thread_model {
 class ThreadFactory {
  public:
   /** Get a thread instance */
+  HSHM_CROSS_FUN
   static ThreadModel* Get(ThreadType type);
 };
 
