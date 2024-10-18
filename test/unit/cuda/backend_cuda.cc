@@ -2,6 +2,7 @@
 // Created by llogan on 10/9/24.
 //
 
+#include <cuda_runtime.h>
 #include <stdio.h>
 #include "hermes_shm/memory/backend/cuda_shm_mmap.h"
 #include "hermes_shm/constants/macros.h"
@@ -30,6 +31,7 @@ struct MyStruct {
 };
 
 __global__ void my_kernel(MyStruct* ptr) {
+#ifdef __CUDA__ARCH__
   int idx = blockIdx.x * blockDim.x + threadIdx.x;
   MyStruct quest;
   ptr->x = quest.DoSomething();
@@ -48,13 +50,23 @@ __global__ void my_kernel(MyStruct* ptr) {
   rw.ReadUnlock();
   rw.WriteLock(0);
   rw.WriteUnlock();
+#else
+  static_assert(false);
+#endif
 }
 
 __global__ void my_allocator(hipc::MemoryBackend *backend,
                              hipc::Allocator *allocator) {
+#ifdef __CUDA__ARCH__
   auto mem_mngr = HERMES_MEMORY_MANAGER;
-  mem_mngr->RegisterBackend(hshm::chararr("shm"), backend);
-  mem_mngr->RegisterAllocator(allocator);
+  static_assert(!std::is_same<
+      hshm::EasyLockfreeSingleton<hshm::ipc::MemoryManager>,
+      hshm::GlobalSingleton<hshm::ipc::MemoryManager>>::value, "Type information");
+#else
+  static_assert(false);
+#endif
+//  mem_mngr->RegisterBackend(hshm::chararr("shm"), backend);
+//  mem_mngr->RegisterAllocator(allocator);
 }
 
 void backend_test() {
@@ -88,6 +100,8 @@ void backend_test() {
 }
 
 void allocator_test() {
+  auto mem_mngr = HERMES_MEMORY_MANAGER;
+  my_allocator<<<1, 1>>>(nullptr, nullptr);
   printf("LONG LONG: %d\n", std::is_same_v<size_t, unsigned long long>);
 }
 

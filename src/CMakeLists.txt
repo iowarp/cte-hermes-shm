@@ -3,7 +3,7 @@ set(LANG C CXX)
 if (HERMES_ENABLE_CUDA)
     set(CMAKE_CUDA_STANDARD 17)
     set(CMAKE_CUDA_STANDARD_REQUIRED ON)
-    set(CMAKE_CUDA_ARCHITECTURES "60;70;80")
+    set(CMAKE_CUDA_ARCHITECTURES "80")
     set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --forward-unknown-to-host-compiler")
     set(LANG ${LANG} CUDA)
 endif()
@@ -19,7 +19,11 @@ set (SOURCE_FILES
         thread_model_manager.cc
         thread_factory.cc
         data_structure_singleton.cc)
-add_library(hermes_shm_data_structures ${SOURCE_FILES})
+if (BUILD_SHARED_LIBS)
+    add_library(hermes_shm_data_structures SHARED ${SOURCE_FILES})
+else()
+    add_library(hermes_shm_data_structures STATIC ${SOURCE_FILES})
+endif()
 target_link_libraries(hermes_shm_data_structures
         -lrt -ldl
         cereal::cereal
@@ -38,7 +42,14 @@ if (HERMES_ENABLE_CUDA)
         set_source_files_properties(${SOURCE} PROPERTIES LANGUAGE CUDA)
     endforeach()
     set_target_properties(hermes_shm_data_structures PROPERTIES
-            CUDA_SEPARABLE_COMPILATION ON)
+            CUDA_SEPARABLE_COMPILATION ON
+    )
+    if (BUILD_SHARED_LIBS)
+        set_target_properties(hermes_shm_data_structures PROPERTIES
+                CUDA_RUNTIME_LIBRARY Shared
+                POSITION_INDEPENDENT_CODE ON
+        )
+    endif()
     target_compile_definitions(hermes_shm_data_structures PRIVATE HERMES_ENABLE_CUDA)
     target_compile_options(hermes_shm_data_structures PRIVATE
             $<$<COMPILE_LANGUAGE:CUDA>:--expt-relaxed-constexpr>)
