@@ -8,17 +8,8 @@ hipc::allocator_id_t alloc_id_;
  * Constructors
  * ===================================*/
 
-/** Default constructor. Deleted. */
-HSHM_CROSS_FUN CLASS_NAME() = delete;
-
-/** Move constructor. Deleted. */
-HSHM_CROSS_FUN CLASS_NAME(CLASS_NAME &&other) = delete;
-
-/** Copy constructor. Deleted. */
-HSHM_CROSS_FUN CLASS_NAME(const CLASS_NAME &other) = delete;
-
 /** Initialize container */
-HSHM_CROSS_FUN void shm_init_container(hipc::Allocator *alloc) {
+HSHM_CROSS_FUN void init_shm_container(hipc::Allocator *alloc) {
   alloc_id_ = alloc->GetId();
 }
 

@@ -31,7 +31,6 @@ class string_templ;
  * */
 #define CLASS_NAME string_templ
 #define TYPED_CLASS string_templ<SSO>
-#define TYPED_HEADER ShmHeader<string_templ<SSO>>
 
 /** string shared-memory header */
 template<size_t SSO>
@@ -73,7 +72,7 @@ class string_templ : public ShmContainer {
   /** SHM Constructor. Default. */
   HSHM_CROSS_FUN
   explicit string_templ(Allocator *alloc) {
-    shm_init_container(alloc);
+    init_shm_container(alloc);
     SetNull();
   }
 
@@ -85,7 +84,7 @@ class string_templ : public ShmContainer {
   HSHM_CROSS_FUN
   explicit string_templ(Allocator *alloc,
                         size_t length) {
-    shm_init_container(alloc);
+    init_shm_container(alloc);
     _create_str(length);
   }
 
@@ -97,7 +96,7 @@ class string_templ : public ShmContainer {
   HSHM_CROSS_FUN
   explicit string_templ(Allocator *alloc,
                         const char *text) {
-    shm_init_container(alloc);
+    init_shm_container(alloc);
     size_t length = strlen(text);
     _create_str(text, length);
   }
@@ -106,7 +105,7 @@ class string_templ : public ShmContainer {
   HSHM_CROSS_FUN
   explicit string_templ(Allocator *alloc,
                         const char *text, size_t length) {
-    shm_init_container(alloc);
+    init_shm_container(alloc);
     _create_str(text, length);
   }
 
@@ -114,7 +113,7 @@ class string_templ : public ShmContainer {
   HSHM_CROSS_FUN
   explicit string_templ(Allocator *alloc,
                         const std::string &text) {
-    shm_init_container(alloc);
+    init_shm_container(alloc);
     _create_str(text.data(), text.size());
   }
 
@@ -130,7 +129,7 @@ class string_templ : public ShmContainer {
   HSHM_CROSS_FUN
   explicit string_templ(Allocator *alloc,
                         const hshm::charbuf &text) {
-    shm_init_container(alloc);
+    init_shm_container(alloc);
     _create_str(text.data(), text.size());
   }
 
@@ -146,7 +145,7 @@ class string_templ : public ShmContainer {
   HSHM_CROSS_FUN
   explicit string_templ(Allocator *alloc,
                         const string_templ &other) {
-    shm_init_container(alloc);
+    init_shm_container(alloc);
     _create_str(other.data(), other.size());
   }
 
@@ -177,7 +176,7 @@ class string_templ : public ShmContainer {
   /** SHM move constructor. */
   HSHM_CROSS_FUN
   string_templ(Allocator *alloc, string_templ &&other) {
-    shm_init_container(alloc);
+    init_shm_container(alloc);
     if (GetAllocator() == other.GetAllocator()) {
       strong_copy(other);
       other.SetNull();
@@ -393,6 +392,5 @@ struct hash<hshm::ipc::string_templ<SSO>> {
 
 #undef CLASS_NAME
 #undef TYPED_CLASS
-#undef TYPED_HEADER
 
 #endif  // HERMES_DATA_STRUCTURES_LOCKLESS_STRING_H_

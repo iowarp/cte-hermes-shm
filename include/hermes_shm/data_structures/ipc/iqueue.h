@@ -154,7 +154,6 @@ struct iqueue_iterator_templ {
  * */
 #define CLASS_NAME iqueue
 #define TYPED_CLASS iqueue<T>
-#define TYPED_HEADER ShmHeader<iqueue<T>>
 
 /**
  * Doubly linked iqueue implementation
@@ -183,7 +182,7 @@ class iqueue : public ShmContainer {
   /** SHM constructor. Default. */
   HSHM_CROSS_FUN
   explicit iqueue(Allocator *alloc) {
-    shm_init_container(alloc);
+    init_shm_container(alloc);
     length_ = 0;
     head_ptr_.SetNull();
   }
@@ -196,7 +195,7 @@ class iqueue : public ShmContainer {
   HSHM_CROSS_FUN
   explicit iqueue(Allocator *alloc,
                   const iqueue &other) {
-    shm_init_container(alloc);
+    init_shm_container(alloc);
     shm_strong_copy_construct_and_op(other);
   }
 
@@ -223,7 +222,7 @@ class iqueue : public ShmContainer {
   /** SHM move constructor. */
   HSHM_CROSS_FUN
   iqueue(Allocator *alloc, iqueue &&other) noexcept {
-    shm_init_container(alloc);
+    init_shm_container(alloc);
     if (GetAllocator() == other.GetAllocator()) {
       memcpy((void*)this, (void*)&other, sizeof(*this));
       other.SetNull();
@@ -379,6 +378,5 @@ class iqueue : public ShmContainer {
 
 #undef CLASS_NAME
 #undef TYPED_CLASS
-#undef TYPED_HEADER
 
 #endif  // HERMES_DATA_STRUCTURES_THREAD_UNSAFE_IQUEUE_H

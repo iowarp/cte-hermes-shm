@@ -154,7 +154,6 @@ struct unordered_map_iterator {
 
 #define CLASS_NAME unordered_map
 #define TYPED_CLASS unordered_map<Key, T, Hash>
-#define TYPED_HEADER ShmHeader<unordered_map<Key, T, Hash>>
 
 /**
  * The unordered map implementation
@@ -199,7 +198,7 @@ class unordered_map : public ShmContainer {
                          int num_buckets = 20,
                          RealNumber max_capacity = RealNumber(4, 5),
                          RealNumber growth = RealNumber(5, 4)) {
-    shm_init_container(alloc);
+    init_shm_container(alloc);
     HSHM_MAKE_AR(buckets_, GetAllocator(), num_buckets)
     max_capacity_ = max_capacity;
     growth_ = growth;
@@ -214,7 +213,7 @@ class unordered_map : public ShmContainer {
   HSHM_CROSS_FUN
   explicit unordered_map(Allocator *alloc,
                          const unordered_map &other) {
-    shm_init_container(alloc);
+    init_shm_container(alloc);
     shm_strong_copy_construct(other);
   }
 
@@ -262,7 +261,7 @@ class unordered_map : public ShmContainer {
   /** SHM move constructor. */
   HSHM_INLINE_CROSS_FUN unordered_map(Allocator *alloc,
                                    unordered_map &&other) noexcept {
-    shm_init_container(alloc);
+    init_shm_container(alloc);
     if (GetAllocator() == other.GetAllocator()) {
       strong_copy(other);
       HSHM_MAKE_AR(buckets_, GetAllocator(), std::move(other.GetBuckets()))
@@ -544,6 +543,5 @@ class unordered_map : public ShmContainer {
 
 #undef CLASS_NAME
 #undef TYPED_CLASS
-#undef TYPED_HEADER
 
 #endif  // HERMES_DATA_STRUCTURES_UNORDERED_MAP_H_

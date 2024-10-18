@@ -31,7 +31,6 @@ class mpsc_queue;
  * */
 #define CLASS_NAME mpsc_queue
 #define TYPED_CLASS mpsc_queue<T>
-#define TYPED_HEADER ShmHeader<mpsc_queue<T>>
 
 /**
  * A queue optimized for multiple producers (emplace) with a single
@@ -56,7 +55,7 @@ class mpsc_queue : public ShmContainer {
   HSHM_CROSS_FUN
   explicit mpsc_queue(Allocator *alloc,
                       size_t depth = 1024) {
-    shm_init_container(alloc);
+    init_shm_container(alloc);
     HSHM_MAKE_AR(queue_, GetAllocator(), depth);
     flags_.Clear();
     SetNull();
@@ -70,7 +69,7 @@ class mpsc_queue : public ShmContainer {
   HSHM_CROSS_FUN
   explicit mpsc_queue(Allocator *alloc,
                       const mpsc_queue &other) {
-    shm_init_container(alloc);
+    init_shm_container(alloc);
     SetNull();
     shm_strong_copy_construct_and_op(other);
   }
@@ -101,7 +100,7 @@ class mpsc_queue : public ShmContainer {
   HSHM_CROSS_FUN
   mpsc_queue(Allocator *alloc,
              mpsc_queue &&other) noexcept {
-    shm_init_container(alloc);
+    init_shm_container(alloc);
     if (GetAllocator() == other.GetAllocator()) {
       head_ = other.head_.load();
       tail_ = other.tail_.load();
@@ -299,6 +298,5 @@ class mpsc_queue : public ShmContainer {
 
 #undef CLASS_NAME
 #undef TYPED_CLASS
-#undef TYPED_HEADER
 
 #endif  // HERMES_SHM_INCLUDE_HERMES_SHM_DATA_STRUCTURES_IPC_mpsc_queue_H_

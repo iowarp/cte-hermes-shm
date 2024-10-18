@@ -30,7 +30,6 @@ class split_ticket_queue;
  * */
 #define CLASS_NAME split_ticket_queue
 #define TYPED_CLASS split_ticket_queue<T>
-#define TYPED_HEADER ShmHeader<split_ticket_queue<T>>
 
 /**
  * A MPMC queue for allocating tickets. Handles concurrency
@@ -53,7 +52,7 @@ class split_ticket_queue : public ShmContainer {
   explicit split_ticket_queue(Allocator *alloc,
                               size_t depth_per_split = 1024,
                               size_t split = 0) {
-    shm_init_container(alloc);
+    init_shm_container(alloc);
     if (split == 0) {
       split = HERMES_SYSTEM_INFO->ncpu_;
     }
@@ -69,7 +68,7 @@ class split_ticket_queue : public ShmContainer {
   HSHM_CROSS_FUN
   explicit split_ticket_queue(Allocator *alloc,
                               const split_ticket_queue &other) {
-    shm_init_container(alloc);
+    init_shm_container(alloc);
     SetNull();
     shm_strong_copy_construct_and_op(other);
   }
@@ -98,7 +97,7 @@ class split_ticket_queue : public ShmContainer {
   HSHM_CROSS_FUN
   split_ticket_queue(Allocator *alloc,
                      split_ticket_queue &&other) noexcept {
-    shm_init_container(alloc);
+    init_shm_container(alloc);
     if (GetAllocator() == other.GetAllocator()) {
       (*splits_) = std::move(*other.splits_);
       other.SetNull();
@@ -192,7 +191,6 @@ class split_ticket_queue : public ShmContainer {
 
 }  // namespace hshm::ipc
 
-#undef TYPED_HEADER
 #undef TYPED_CLASS
 #undef CLASS_NAME
 

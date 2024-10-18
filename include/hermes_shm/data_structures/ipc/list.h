@@ -198,7 +198,6 @@ struct list_iterator_templ {
  * */
 #define CLASS_NAME list
 #define TYPED_CLASS list<T>
-#define TYPED_HEADER ShmHeader<list<T>>
 
 /**
  * Doubly linked list implementation
@@ -228,7 +227,7 @@ class list : public ShmContainer {
   /** SHM constructor. Default. */
   HSHM_CROSS_FUN
   explicit list(Allocator *alloc) {
-    shm_init_container(alloc);
+    init_shm_container(alloc);
     SetNull();
   }
 
@@ -240,7 +239,7 @@ class list : public ShmContainer {
   HSHM_CROSS_FUN
   explicit list(Allocator *alloc,
                 const list &other) {
-    shm_init_container(alloc);
+    init_shm_container(alloc);
     SetNull();
     shm_strong_copy_construct_and_op<list>(other);
   }
@@ -259,7 +258,7 @@ class list : public ShmContainer {
   HSHM_CROSS_FUN
   explicit list(Allocator *alloc,
                 std::list<T> &other) {
-    shm_init_container(alloc);
+    init_shm_container(alloc);
     SetNull();
     shm_strong_copy_construct_and_op<std::list<T>>(other);
   }
@@ -290,7 +289,7 @@ class list : public ShmContainer {
   /** SHM move constructor. */
   HSHM_CROSS_FUN
   list(Allocator *alloc, list &&other) noexcept {
-    shm_init_container(alloc);
+    init_shm_container(alloc);
     if (GetAllocator() == other.GetAllocator()) {
       memcpy((void*) this, (void *) &other, sizeof(*this));
       other.SetNull();
@@ -548,6 +547,5 @@ class list : public ShmContainer {
 
 #undef CLASS_NAME
 #undef TYPED_CLASS
-#undef TYPED_HEADER
 
 #endif  // HERMES_DATA_STRUCTURES_THREAD_UNSAFE_LIST_H_

@@ -14,7 +14,6 @@
 #include "test_init.h"
 #include "list.h"
 
-// #include "hermes_shm/data_structures/containers/list.h"
 #include "hermes_shm/data_structures/ipc/list.h"
 #include "hermes_shm/data_structures/ipc/string.h"
 
@@ -33,6 +32,10 @@ void ListTestRunner(ListTestSuite<T, ListT> &test) {
   test.EraseTest();
 }
 
+/**
+ * HIPC list tests
+ * */
+
 template<typename T>
 void HipcListTest() {
   Allocator *alloc = alloc_g;
@@ -41,17 +44,6 @@ void HipcListTest() {
   ListTestRunner(test);
 }
 
-//template<typename T>
-//void HshmListTest() {
-//  Allocator *alloc = alloc_g;
-//  hshm::list<T> lp;
-//  ListTestSuite<T, hipc::list<T>> test(lp, alloc);
-//  ListTestRunner(test);
-//}
-
-/**
- * HIPC list tests
- * */
 
 TEST_CASE("hipc::ListOfInt") {
   Allocator *alloc = alloc_g;
@@ -77,7 +69,17 @@ TEST_CASE("hipc::ListOfStdString") {
 /**
  * HSHM list tests
  * */
-
+//
+//#include "hermes_shm/data_structures/containers/list.h"
+//
+//template<typename T>
+//void HshmListTest() {
+//  Allocator *alloc = alloc_g;
+//  hshm::list<T> lp;
+//  ListTestSuite<T, hshm::list<T>> test(lp, alloc);
+//  ListTestRunner(test);
+//}
+//
 //TEST_CASE("hshm::ListOfInt") {
 //  Allocator *alloc = alloc_g;
 //  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);

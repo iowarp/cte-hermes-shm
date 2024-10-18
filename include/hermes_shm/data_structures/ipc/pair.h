@@ -28,7 +28,6 @@ class pair;
 * */
 #define CLASS_NAME pair
 #define TYPED_CLASS pair<FirstT, SecondT>
-#define TYPED_HEADER ShmHeader<TYPED_CLASS>
 
 /**
 * A pair of two objects.
@@ -51,7 +50,7 @@ class pair : public ShmContainer {
   /** SHM constructor. Default. */
   HSHM_CROSS_FUN
   explicit pair(Allocator *alloc) {
-    shm_init_container(alloc);
+    init_shm_container(alloc);
     HSHM_MAKE_AR0(first_, GetAllocator())
     HSHM_MAKE_AR0(second_, GetAllocator())
   }
@@ -64,7 +63,7 @@ class pair : public ShmContainer {
   HSHM_CROSS_FUN
   explicit pair(Allocator *alloc,
                 FirstT &&first, SecondT &&second) {
-    shm_init_container(alloc);
+    init_shm_container(alloc);
     HSHM_MAKE_AR(first_, GetAllocator(),
                  std::forward<FirstT>(first))
     HSHM_MAKE_AR(second_, GetAllocator(),
@@ -75,7 +74,7 @@ class pair : public ShmContainer {
   HSHM_CROSS_FUN
   explicit pair(Allocator *alloc,
                 const FirstT &first, const SecondT &second) {
-    shm_init_container(alloc);
+    init_shm_container(alloc);
     HSHM_MAKE_AR(first_, GetAllocator(), first)
     HSHM_MAKE_AR(second_, GetAllocator(), second)
   }
@@ -87,7 +86,7 @@ class pair : public ShmContainer {
                 PiecewiseConstruct &&hint,
                 FirstArgPackT &&first,
                 SecondArgPackT &&second) {
-    shm_init_container(alloc);
+    init_shm_container(alloc);
     HSHM_MAKE_AR_PW(first_, GetAllocator(),
                     std::forward<FirstArgPackT>(first))
     HSHM_MAKE_AR_PW(second_, GetAllocator(),
@@ -101,7 +100,7 @@ class pair : public ShmContainer {
   /** SHM copy constructor. From pair. */
   HSHM_CROSS_FUN
   explicit pair(Allocator *alloc, const pair &other) {
-    shm_init_container(alloc);
+    init_shm_container(alloc);
     shm_strong_copy_construct(other);
   }
 
@@ -136,7 +135,7 @@ class pair : public ShmContainer {
   /** SHM move constructor. From pair. */
   HSHM_CROSS_FUN
   explicit pair(Allocator *alloc, pair &&other) {
-    shm_init_container(alloc);
+    init_shm_container(alloc);
     if (GetAllocator() == other.GetAllocator()) {
       HSHM_MAKE_AR(first_, GetAllocator(),
                    std::forward<FirstT>(*other.first_))
@@ -214,7 +213,6 @@ class pair : public ShmContainer {
 
 #undef CLASS_NAME
 #undef TYPED_CLASS
-#undef TYPED_HEADER
 
 }  // namespace hshm::ipc
 

@@ -34,7 +34,7 @@ struct FreeListSetIpc : public ShmContainer {
   /** SHM constructor. Default. */
   HSHM_CROSS_FUN
   explicit FreeListSetIpc(Allocator *alloc) {
-    shm_init_container(alloc);
+    init_shm_container(alloc);
     HSHM_MAKE_AR0(lists_, alloc)
     SetNull();
   }
@@ -42,7 +42,7 @@ struct FreeListSetIpc : public ShmContainer {
   /** SHM emplace constructor */
   HSHM_CROSS_FUN
   explicit FreeListSetIpc(Allocator *alloc, size_t conc) {
-    shm_init_container(alloc);
+    init_shm_container(alloc);
     HSHM_MAKE_AR(lists_, alloc, conc)
     SetNull();
   }
@@ -50,7 +50,7 @@ struct FreeListSetIpc : public ShmContainer {
   /** SHM copy constructor. */
   HSHM_CROSS_FUN
   explicit FreeListSetIpc(Allocator *alloc, const FreeListSetIpc &other) {
-    shm_init_container(alloc);
+    init_shm_container(alloc);
     SetNull();
   }
 

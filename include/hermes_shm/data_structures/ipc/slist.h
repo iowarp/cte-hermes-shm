@@ -203,7 +203,6 @@ struct slist_iterator_templ {
  * */
 #define CLASS_NAME slist
 #define TYPED_CLASS slist<T>
-#define TYPED_HEADER ShmHeader<slist<T>>
 
 /**
  * Doubly linked slist implementation
@@ -234,7 +233,7 @@ class slist : public ShmContainer {
   /** SHM constructor. Default. */
   HSHM_CROSS_FUN
   explicit slist(Allocator *alloc) {
-    shm_init_container(alloc);
+    init_shm_container(alloc);
     SetNull();
   }
 
@@ -254,7 +253,7 @@ class slist : public ShmContainer {
   HSHM_CROSS_FUN
   explicit slist(Allocator *alloc,
                  const slist &other) {
-    shm_init_container(alloc);
+    init_shm_container(alloc);
     SetNull();
     shm_strong_copy_construct_and_op<slist>(other);
   }
@@ -273,7 +272,7 @@ class slist : public ShmContainer {
   HSHM_CROSS_FUN
   explicit slist(Allocator *alloc,
                  std::list<T> &other) {
-    shm_init_container(alloc);
+    init_shm_container(alloc);
     SetNull();
     shm_strong_copy_construct_and_op<std::list<T>>(other);
   }
@@ -304,7 +303,7 @@ class slist : public ShmContainer {
   /** SHM move constructor. From slist. */
   HSHM_CROSS_FUN
   slist(Allocator *alloc, slist &&other) noexcept {
-    shm_init_container(alloc);
+    init_shm_container(alloc);
     if (GetAllocator() == other.GetAllocator()) {
       strong_copy(other);
       other.SetNull();
@@ -569,6 +568,5 @@ class slist : public ShmContainer {
 
 #undef CLASS_NAME
 #undef TYPED_CLASS
-#undef TYPED_HEADER
 
 #endif  // HERMES_DATA_STRUCTURES_THREAD_UNSAFE_Sslist_H

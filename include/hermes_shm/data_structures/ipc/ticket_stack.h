@@ -31,7 +31,6 @@ class ticket_stack;
  * */
 #define CLASS_NAME ticket_stack
 #define TYPED_CLASS ticket_stack<T>
-#define TYPED_HEADER ShmHeader<ticket_stack<T>>
 
 /**
  * A MPMC queue for allocating tickets. Handles concurrency
@@ -53,7 +52,7 @@ class ticket_stack : public ShmContainer {
   HSHM_CROSS_FUN
   explicit ticket_stack(Allocator *alloc,
                         size_t depth = 1024) {
-    shm_init_container(alloc);
+    init_shm_container(alloc);
     HSHM_MAKE_AR(queue_, GetAllocator(), depth);
     lock_.Init();
     SetNull();
@@ -67,7 +66,7 @@ class ticket_stack : public ShmContainer {
   HSHM_CROSS_FUN
   explicit ticket_stack(Allocator *alloc,
                         const ticket_stack &other) {
-    shm_init_container(alloc);
+    init_shm_container(alloc);
     SetNull();
     shm_strong_copy_construct_and_op(other);
   }
@@ -96,7 +95,7 @@ class ticket_stack : public ShmContainer {
   HSHM_CROSS_FUN
   ticket_stack(Allocator *alloc,
                ticket_stack &&other) noexcept {
-    shm_init_container(alloc);
+    init_shm_container(alloc);
     if (GetAllocator() == other.GetAllocator()) {
       (*queue_) = std::move(*other.queue_);
       other.SetNull();
@@ -168,7 +167,6 @@ class ticket_stack : public ShmContainer {
 
 }  // namespace hshm::ipc
 
-#undef TYPED_HEADER
 #undef TYPED_CLASS
 #undef CLASS_NAME
 

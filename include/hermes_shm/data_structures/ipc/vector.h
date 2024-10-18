@@ -212,7 +212,6 @@ struct vector_iterator_templ {
  * */
 #define CLASS_NAME vector
 #define TYPED_CLASS vector<T>
-#define TYPED_HEADER ShmHeader<vector<T>>
 
 /**
  * The vector class
@@ -251,7 +250,7 @@ class vector : public ShmContainer {
   /** SHM constructor. Default. */
   HSHM_CROSS_FUN
   explicit vector(Allocator *alloc) {
-    shm_init_container(alloc);
+    init_shm_container(alloc);
     SetNull();
   }
 
@@ -259,7 +258,7 @@ class vector : public ShmContainer {
   template<typename ...Args>
   HSHM_CROSS_FUN
   explicit vector(Allocator *alloc, size_t length, Args&& ...args) {
-    shm_init_container(alloc);
+    init_shm_container(alloc);
     SetNull();
     resize(length, std::forward<Args>(args)...);
   }
@@ -271,7 +270,7 @@ class vector : public ShmContainer {
   /** SHM copy constructor. From vector. */
   HSHM_CROSS_FUN
   explicit vector(Allocator *alloc, const vector &other) {
-    shm_init_container(alloc);
+    init_shm_container(alloc);
     SetNull();
     shm_strong_copy_main<vector<T>>(other);
   }
@@ -289,7 +288,7 @@ class vector : public ShmContainer {
   /** SHM copy constructor. From std::vector */
   HSHM_CROSS_FUN
   explicit vector(Allocator *alloc, const std::vector<T> &other) {
-    shm_init_container(alloc);
+    init_shm_container(alloc);
     SetNull();
     shm_strong_copy_main<std::vector<T>>(other);
   }
@@ -328,7 +327,7 @@ class vector : public ShmContainer {
   /** SHM move constructor. */
   HSHM_CROSS_FUN
   vector(Allocator *alloc, vector &&other) {
-    shm_init_container(alloc);
+    init_shm_container(alloc);
     SetNull();
     if (GetAllocator() == other.GetAllocator()) {
       memcpy((void *) this, (void *) &other, sizeof(*this));
@@ -713,6 +712,5 @@ class vector : public ShmContainer {
 
 #undef CLASS_NAME
 #undef TYPED_CLASS
-#undef TYPED_HEADER
 
 #endif  // HERMES_DATA_STRUCTURES_LOCKLESS_VECTOR_H_

@@ -22,7 +22,7 @@ TYPE_UNWRAP(CLASS_NAME)(TYPE_UNWRAP(CLASS_NAME) &&other) = delete;\
 TYPE_UNWRAP(CLASS_NAME)(const TYPE_UNWRAP(CLASS_NAME) &other) = delete;\
 \
 /** Initialize container */\
-HSHM_CROSS_FUN void shm_init_container(hipc::Allocator *alloc) {\
+HSHM_CROSS_FUN void init_shm_container(hipc::Allocator *alloc) {\
   alloc_id_ = alloc->GetId();\
 }\
 \

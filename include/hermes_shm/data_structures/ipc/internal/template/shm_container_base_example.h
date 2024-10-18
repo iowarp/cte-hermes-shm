@@ -81,7 +81,7 @@ class ShmContainerExample : public hipc::ShmContainer {
   HSHM_CROSS_FUN CLASS_NAME(const CLASS_NAME &other) = delete;
 
   /** Initialize container */
-  HSHM_CROSS_FUN void shm_init_container(hipc::Allocator *alloc) {
+  HSHM_CROSS_FUN void init_shm_container(hipc::Allocator *alloc) {
     alloc_id_ = alloc->GetId();
   }
 
@@ -128,6 +128,5 @@ class ShmContainerExample : public hipc::ShmContainer {
 
 #undef CLASS_NAME
 #undef TYPED_CLASS
-#undef TYPED_HEADER
 
 #endif  // HERMES_INCLUDE_HERMES_DATA_STRUCTURES_INTERNAL_SHM_CONTAINER_EXAMPLE_H_

@@ -32,7 +32,6 @@ class spsc_queue_templ;
  * */
 #define CLASS_NAME spsc_queue_templ
 #define TYPED_CLASS spsc_queue_templ<T, EXTENSIBLE>
-#define TYPED_HEADER ShmHeader<spsc_queue_templ<T, EXTENSIBLE>>
 
 /**
  * A queue optimized for multiple producers (emplace) with a single
@@ -55,7 +54,7 @@ class spsc_queue_templ : public ShmContainer {
   HSHM_CROSS_FUN
   explicit spsc_queue_templ(Allocator *alloc,
                             size_t depth = 1024) {
-    shm_init_container(alloc);
+    init_shm_container(alloc);
     HSHM_MAKE_AR(queue_, GetAllocator(), depth)
     SetNull();
   }
@@ -68,7 +67,7 @@ class spsc_queue_templ : public ShmContainer {
   HSHM_CROSS_FUN
   explicit spsc_queue_templ(Allocator *alloc,
                             const spsc_queue_templ &other) {
-    shm_init_container(alloc);
+    init_shm_container(alloc);
     SetNull();
     shm_strong_copy_construct_and_op(other);
   }
@@ -99,7 +98,7 @@ class spsc_queue_templ : public ShmContainer {
   HSHM_CROSS_FUN
   spsc_queue_templ(Allocator *alloc,
                    spsc_queue_templ &&other) noexcept {
-    shm_init_container(alloc);
+    init_shm_container(alloc);
     if (GetAllocator() == other.GetAllocator()) {
       head_ = other.head_;
       tail_ = other.tail_;
@@ -207,6 +206,5 @@ using spsc_queue = spsc_queue_templ<T, false>;
 
 #undef CLASS_NAME
 #undef TYPED_CLASS
-#undef TYPED_HEADER
 
 #endif  // HERMES_SHM_INCLUDE_HERMES_SHM_DATA_STRUCTURES_IPC_spsc_queue_templ_H_
