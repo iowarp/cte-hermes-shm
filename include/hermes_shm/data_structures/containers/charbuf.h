@@ -202,7 +202,7 @@ struct charbuf {
   }
 
   /** Hash function */
-  HSHM_CROSS_FUN size_t operator()() const {
+  HSHM_CROSS_FUN size_t Hash() const {
     return string_hash<hshm::charbuf>(*this);
   }
 
@@ -299,7 +299,7 @@ namespace std {
 template<>
 struct hash<hshm::charbuf> {
   HSHM_CROSS_FUN size_t operator()(const hshm::charbuf &text) const {
-    return text();
+    return text.Hash();
   }
 };
 }  // namespace std
@@ -309,7 +309,7 @@ namespace hshm {
 template<>
 struct hash<hshm::charbuf> {
   HSHM_CROSS_FUN size_t operator()(const hshm::charbuf &text) const {
-    return text();
+    return text.Hash();
   }
 };
 }  // namespace hshm

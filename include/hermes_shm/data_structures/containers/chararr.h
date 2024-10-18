@@ -142,7 +142,7 @@ class chararr_templ {
   }
 
   /** Hash function */
-  HSHM_CROSS_FUN size_t operator()() const {
+  HSHM_CROSS_FUN size_t Hash() const {
     return string_hash<hshm::chararr_templ<LENGTH>>(*this);
   }
 
@@ -208,7 +208,7 @@ namespace std {
 template<>
 struct hash<hshm::chararr> {
   HSHM_CROSS_FUN size_t operator()(const hshm::chararr &text) const {
-    return text();
+    return text.Hash();
   }
 };
 }  // namespace std
@@ -218,7 +218,7 @@ namespace hshm {
 template<>
 struct hash<hshm::chararr> {
   HSHM_CROSS_FUN size_t operator()(const hshm::chararr &text) const {
-    return text();
+    return text.Hash();
   }
 };
 }  // namespace hshm

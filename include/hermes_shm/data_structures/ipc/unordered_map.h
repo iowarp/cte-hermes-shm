@@ -24,7 +24,7 @@
 namespace hshm::ipc {
 
 /** forward pointer for unordered_map */
-template<typename Key, typename T, class Hash = std::hash<Key>>
+template<typename Key, typename T, class Hash = hshm::hash<Key>>
 class unordered_map;
 
 /**

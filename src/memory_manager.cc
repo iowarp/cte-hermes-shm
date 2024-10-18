@@ -19,13 +19,11 @@
 #include "hermes_shm/util/errors.h"
 #include "hermes_shm/util/logging.h"
 #include "hermes_shm/thread/thread_model_manager.h"
-
-#include <unordered_map>
-#include <string>
+#include "hermes_shm/data_structures/ipc/unordered_map.h"
 
 namespace hshm::ipc {
 
-typedef std::unordered_map<hshm::chararr, MemoryBackend*> BACKEND_MAP_T;
+typedef hipc::unordered_map<hshm::chararr, MemoryBackend*> BACKEND_MAP_T;
 
 /** Create the root allocator */
 HSHM_CROSS_FUN
@@ -43,7 +41,7 @@ MemoryManager::MemoryManager() {
   default_allocator_ = root_allocator_;
   memset(allocators_, 0, sizeof(allocators_));
   RegisterAllocator(root_allocator_);
-  backends_ = root_allocator_->NewObj<BACKEND_MAP_T>();
+  backends_ = hipc::make_mptr<BACKEND_MAP_T>().get();
   HERMES_THREAD_MODEL->SetThreadModel(ThreadType::kPthread);
 }
 
@@ -99,8 +97,8 @@ MemoryBackend* MemoryManager::RegisterBackend(
 HSHM_CROSS_FUN
 void MemoryManager::ScanBackends() {
   BACKEND_MAP_T &backends = *(BACKEND_MAP_T*)backends_;
-  for (auto &[url, backend] : backends) {
-    auto alloc = AllocatorFactory::shm_deserialize(backend);
+  for (hipc::pair<hshm::chararr, MemoryBackend*> &backend_info : backends) {
+    auto alloc = AllocatorFactory::shm_deserialize(backend_info.GetSecond());
     RegisterAllocator(alloc);
   }
 }
@@ -116,7 +114,7 @@ MemoryBackend* MemoryManager::GetBackend(const hshm::chararr &url) {
   if (iter == backends.end()) {
     return nullptr;
   }
-  return (*iter).second;
+  return *(*iter).second_;
 }
 
 /**

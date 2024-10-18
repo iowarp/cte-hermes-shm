@@ -41,23 +41,22 @@ class spsc_queue {
    * ===================================*/
 
   /** Default constructor */
-  HSHM_CROSS_FUN spsc_queue() : head_(0), tail_(0) {}
+  spsc_queue() : head_(0), tail_(0) {}
 
   /** Emplace constructor */
-  HSHM_CROSS_FUN
   explicit spsc_queue(size_t max_size) : head_(0), tail_(0) {
     queue_.resize(max_size);
   }
 
   /** Copy constructor */
-  HSHM_CROSS_FUN spsc_queue(const spsc_queue &other) {
+  spsc_queue(const spsc_queue &other) {
     queue_ = other.queue_;
     head_ = other.head_;
     tail_ = other.tail_;
   }
 
   /** Copy assignment operator */
-  HSHM_CROSS_FUN spsc_queue &operator=(const spsc_queue &other) {
+  spsc_queue &operator=(const spsc_queue &other) {
     queue_ = other.queue_;
     head_ = other.head_;
     tail_ = other.tail_;
@@ -65,14 +64,14 @@ class spsc_queue {
   }
 
   /** Move constructor */
-  HSHM_CROSS_FUN spsc_queue(spsc_queue &&other) noexcept {
+  spsc_queue(spsc_queue &&other) noexcept {
     queue_ = std::move(other.queue_);
     head_ = other.head_;
     tail_ = other.tail_;
   }
 
   /** Move assignment operator */
-  HSHM_CROSS_FUN spsc_queue &operator=(spsc_queue &&other) noexcept {
+  spsc_queue &operator=(spsc_queue &&other) noexcept {
     queue_ = std::move(other.queue_);
     head_ = other.head_;
     tail_ = other.tail_;
@@ -84,7 +83,7 @@ class spsc_queue {
    * ===================================*/
 
   /** Resize SPSC queue (not thread safe) */
-  HSHM_CROSS_FUN void Resize(size_t max_size) {
+  void Resize(size_t max_size) {
     spsc_queue new_queue(max_size);
     T val;
     while (!pop(val).IsNull()) {
@@ -95,7 +94,7 @@ class spsc_queue {
 
   /** Construct an element at \a pos position in the list */
   template<typename ...Args>
-  HSHM_CROSS_FUN qtok_t emplace(Args&&... args) {
+  qtok_t emplace(Args&&... args) {
     // Don't emplace if there is no space
     _qtok_t entry_tok = tail_;
     size_t size = tail_ - head_;
@@ -111,7 +110,7 @@ class spsc_queue {
   }
 
   /** Consumer pops the head object */
-  HSHM_CROSS_FUN qtok_t pop(T &val) {
+  qtok_t pop(T &val) {
     // Don't pop if there's no entries
     _qtok_t head = head_;
     _qtok_t tail = tail_;
@@ -128,7 +127,7 @@ class spsc_queue {
   }
 
   /** Get current size of SPSC queue */
-  HSHM_CROSS_FUN size_t size() {
+  size_t size() {
     return tail_ - head_;
   }
 };
