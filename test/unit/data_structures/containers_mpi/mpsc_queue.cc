@@ -61,3 +61,4 @@ TEST_CASE("TestMpscQueueMpi") {
   // The uptr frees data when rank 0 exits.
   MPI_Barrier(MPI_COMM_WORLD);
 }
+
