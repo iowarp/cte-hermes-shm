@@ -14,6 +14,7 @@
 #define HERMES_TIMER_H
 
 #include <chrono>
+#include <algorithm>
 #include <vector>
 #include <functional>
 #include "hermes_shm/constants/macros.h"
