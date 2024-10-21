@@ -23,7 +23,7 @@ namespace hshm::ipc {
 class MemoryManager {
  public:
   allocator_id_t root_allocator_id_;
-  PosixMmap root_backend_;
+  MemoryBackend *root_backend_;
   Allocator *root_allocator_;
   void *backends_;
   Allocator *allocators_[MAX_ALLOCATORS];

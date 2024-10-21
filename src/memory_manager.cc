@@ -28,16 +28,22 @@ typedef hipc::unordered_map<hshm::chararr, MemoryBackend*> BACKEND_MAP_T;
 /** Create the root allocator */
 HSHM_CROSS_FUN
 MemoryManager::MemoryManager() {
+#ifndef __CUDA_ARCH__
+  static PosixMmap root_backend;
   HERMES_SYSTEM_INFO->RefreshInfo();
+  root_backend.shm_init(MEGABYTES(128));
+  root_backend.Own();
+  root_backend_ = &root_backend;
+#else
+  // TODO(llogan)
+#endif
   root_allocator_id_.bits_.major_ = 3;
   root_allocator_id_.bits_.minor_ = 3;
-  root_backend_.shm_init(MEGABYTES(128));
-  root_backend_.Own();
   root_allocator_ = GetRootAllocator();
   ((StackAllocator*)root_allocator_)->shm_init(
       root_allocator_id_, 0,
-      root_backend_.data_,
-      root_backend_.data_size_);
+      root_backend_->data_,
+      root_backend_->data_size_);
   default_allocator_ = root_allocator_;
   memset(allocators_, 0, sizeof(allocators_));
   RegisterAllocator(root_allocator_);

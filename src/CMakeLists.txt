@@ -20,8 +20,10 @@ set (SOURCE_FILES
         thread_factory.cc
         data_structure_singleton.cc)
 if (BUILD_SHARED_LIBS)
+    message("Building dynamic library")
     add_library(hermes_shm_data_structures SHARED ${SOURCE_FILES})
 else()
+    message("Building static library")
     add_library(hermes_shm_data_structures STATIC ${SOURCE_FILES})
 endif()
 target_link_libraries(hermes_shm_data_structures
@@ -46,7 +48,6 @@ if (HERMES_ENABLE_CUDA)
     )
     if (BUILD_SHARED_LIBS)
         set_target_properties(hermes_shm_data_structures PROPERTIES
-                CUDA_RUNTIME_LIBRARY Shared
                 POSITION_INDEPENDENT_CODE ON
         )
     endif()

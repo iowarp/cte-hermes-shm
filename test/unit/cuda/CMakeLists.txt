@@ -3,7 +3,8 @@ set(CMAKE_CUDA_STANDARD 17)
 set(CMAKE_CUDA_STANDARD_REQUIRED ON)
 set(CMAKE_CUDA_ARCHITECTURES native)
 set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --forward-unknown-to-host-compiler")
-project(hermes_shm_cuda LANGUAGES C CXX CUDA)
+set(LANG C CXX CUDA)
+project(hermes_shm_cuda LANGUAGES ${LANG})
 
 set(CMAKE_CXX_STANDARD 17)
 
