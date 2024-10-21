@@ -31,7 +31,6 @@ struct MyStruct {
 };
 
 __global__ void my_kernel(MyStruct* ptr) {
-#ifdef __CUDA__ARCH__
   int idx = blockIdx.x * blockDim.x + threadIdx.x;
   MyStruct quest;
   ptr->x = quest.DoSomething();
@@ -50,26 +49,17 @@ __global__ void my_kernel(MyStruct* ptr) {
   rw.ReadUnlock();
   rw.WriteLock(0);
   rw.WriteUnlock();
-#else
-  static_assert(false);
-#endif
 }
 
 __global__ void my_allocator(hipc::MemoryBackend *backend,
                              hipc::Allocator *allocator) {
-#ifdef __CUDA__ARCH__
-  auto mem_mngr = HERMES_MEMORY_MANAGER;
-  static_assert(!std::is_same<
-      hshm::EasyLockfreeSingleton<hshm::ipc::MemoryManager>,
-      hshm::GlobalSingleton<hshm::ipc::MemoryManager>>::value, "Type information");
-#else
-  static_assert(false);
-#endif
+  // auto mem_mngr = HERMES_MEMORY_MANAGER;
 //  mem_mngr->RegisterBackend(hshm::chararr("shm"), backend);
 //  mem_mngr->RegisterAllocator(allocator);
 }
 
 void backend_test() {
+  auto mem_mngr = HERMES_MEMORY_MANAGER;
   // Allocate memory on the host and device using UM
   size_t size = sizeof(MyStruct);
 
