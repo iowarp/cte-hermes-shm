@@ -16,10 +16,9 @@
 #include <atomic>
 #include <hermes_shm/constants/macros.h>
 #include <hermes_shm/types/numbers.h>
-#ifdef __CUDA_ARCH__
+#ifdef HERMES_ENABLE_CUDA
 #include <cuda/atomic>
 #endif
-#include <cuda/atomic>
 
 namespace hshm::ipc {
 
@@ -35,13 +34,13 @@ struct nonatomic {
   }
 
   /** Constructor */
-  HSHM_ALWAYS_INLINE nonatomic() = default;
+  HSHM_INLINE_CROSS_FUN nonatomic() = default;
 
   /** Full constructor */
-  HSHM_ALWAYS_INLINE explicit nonatomic(T def) : x(def) {}
+  HSHM_INLINE_CROSS_FUN explicit nonatomic(T def) : x(def) {}
 
   /** Atomic fetch_add wrapper*/
-  HSHM_ALWAYS_INLINE T fetch_add(
+  HSHM_INLINE_CROSS_FUN T fetch_add(
     T count, std::memory_order order = std::memory_order_seq_cst) {
     (void) order;
     x += count;
@@ -49,7 +48,7 @@ struct nonatomic {
   }
 
   /** Atomic fetch_sub wrapper*/
-  HSHM_ALWAYS_INLINE T fetch_sub(
+  HSHM_INLINE_CROSS_FUN T fetch_sub(
     T count, std::memory_order order = std::memory_order_seq_cst) {
     (void) order;
     x -= count;
@@ -57,21 +56,21 @@ struct nonatomic {
   }
 
   /** Atomic load wrapper */
-  HSHM_ALWAYS_INLINE T load(
+  HSHM_INLINE_CROSS_FUN T load(
     std::memory_order order = std::memory_order_seq_cst) const {
     (void) order;
     return x;
   }
 
   /** Atomic exchange wrapper */
-  HSHM_ALWAYS_INLINE void exchange(
+  HSHM_INLINE_CROSS_FUN void exchange(
     T count, std::memory_order order = std::memory_order_seq_cst) {
     (void) order;
     x = count;
   }
 
   /** Atomic compare exchange weak wrapper */
-  HSHM_ALWAYS_INLINE bool compare_exchange_weak(T& expected, T desired,
+  HSHM_INLINE_CROSS_FUN bool compare_exchange_weak(T& expected, T desired,
                                     std::memory_order order =
                                     std::memory_order_seq_cst) {
     (void) expected; (void) order;
@@ -80,7 +79,7 @@ struct nonatomic {
   }
 
   /** Atomic compare exchange strong wrapper */
-  HSHM_ALWAYS_INLINE bool compare_exchange_strong(T& expected, T desired,
+  HSHM_INLINE_CROSS_FUN bool compare_exchange_strong(T& expected, T desired,
                                       std::memory_order order =
                                       std::memory_order_seq_cst) {
     (void) expected; (void) order;
@@ -89,62 +88,62 @@ struct nonatomic {
   }
 
   /** Atomic pre-increment operator */
-  HSHM_ALWAYS_INLINE nonatomic& operator++() {
+  HSHM_INLINE_CROSS_FUN nonatomic& operator++() {
     ++x;
     return *this;
   }
 
   /** Atomic post-increment operator */
-  HSHM_ALWAYS_INLINE nonatomic operator++(int) {
+  HSHM_INLINE_CROSS_FUN nonatomic operator++(int) {
     return atomic(x+1);
   }
 
   /** Atomic pre-decrement operator */
-  HSHM_ALWAYS_INLINE nonatomic& operator--() {
+  HSHM_INLINE_CROSS_FUN nonatomic& operator--() {
     --x;
     return *this;
   }
 
   /** Atomic post-decrement operator */
-  HSHM_ALWAYS_INLINE nonatomic operator--(int) {
+  HSHM_INLINE_CROSS_FUN nonatomic operator--(int) {
     return atomic(x-1);
   }
 
   /** Atomic add operator */
-  HSHM_ALWAYS_INLINE nonatomic operator+(T count) const {
+  HSHM_INLINE_CROSS_FUN nonatomic operator+(T count) const {
     return nonatomic(x + count);
   }
 
   /** Atomic subtract operator */
-  HSHM_ALWAYS_INLINE nonatomic operator-(T count) const {
+  HSHM_INLINE_CROSS_FUN nonatomic operator-(T count) const {
     return nonatomic(x - count);
   }
 
   /** Atomic add assign operator */
-  HSHM_ALWAYS_INLINE nonatomic& operator+=(T count) {
+  HSHM_INLINE_CROSS_FUN nonatomic& operator+=(T count) {
     x += count;
     return *this;
   }
 
   /** Atomic subtract assign operator */
-  HSHM_ALWAYS_INLINE nonatomic& operator-=(T count) {
+  HSHM_INLINE_CROSS_FUN nonatomic& operator-=(T count) {
     x -= count;
     return *this;
   }
 
   /** Atomic assign operator */
-  HSHM_ALWAYS_INLINE nonatomic& operator=(T count) {
+  HSHM_INLINE_CROSS_FUN nonatomic& operator=(T count) {
     x = count;
     return *this;
   }
 
   /** Equality check */
-  HSHM_ALWAYS_INLINE bool operator==(const nonatomic &other) const {
+  HSHM_INLINE_CROSS_FUN bool operator==(const nonatomic &other) const {
     return (other.x == x);
   }
 
   /** Inequality check */
-  HSHM_ALWAYS_INLINE bool operator!=(const nonatomic &other) const {
+  HSHM_INLINE_CROSS_FUN bool operator!=(const nonatomic &other) const {
     return (other.x != x);
   }
 };

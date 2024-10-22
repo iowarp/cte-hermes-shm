@@ -67,7 +67,6 @@ class AllocatorFactory {
   /**
    * Deserialize the allocator managing this backend.
    * */
-  HSHM_CROSS_FUN
   static Allocator* shm_deserialize(MemoryBackend *backend) {
     auto header_ = reinterpret_cast<AllocatorHeader*>(backend->data_);
     switch (static_cast<AllocatorType>(header_->allocator_type_)) {

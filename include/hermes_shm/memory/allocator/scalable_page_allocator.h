@@ -28,8 +28,8 @@ namespace hshm::ipc {
 struct FreeListSetIpc : public ShmContainer {
   HIPC_CONTAINER_TEMPLATE(FreeListSetIpc, FreeListSetIpc)
   ShmArchive<vector<pair<Mutex, iqueue<MpPage>>>> lists_;
-  std::atomic<uint16_t> rr_free_;
-  std::atomic<uint16_t> rr_alloc_;
+  hipc::atomic<uint16_t> rr_free_;
+  hipc::atomic<uint16_t> rr_alloc_;
 
   /** SHM constructor. Default. */
   HSHM_CROSS_FUN
@@ -84,13 +84,13 @@ struct FreeListSetIpc : public ShmContainer {
 
 struct FreeListSet {
   std::vector<std::pair<Mutex*, iqueue<MpPage>*>> lists_;
-  std::atomic<uint16_t> *rr_free_;
-  std::atomic<uint16_t> *rr_alloc_;
+  hipc::atomic<uint16_t> *rr_free_;
+  hipc::atomic<uint16_t> *rr_alloc_;
 };
 
 struct ScalablePageAllocatorHeader : public AllocatorHeader {
   ShmArchive<vector<FreeListSetIpc>> free_lists_;
-  std::atomic<size_t> total_alloc_;
+  hipc::atomic<size_t> total_alloc_;
   size_t coalesce_trigger_;
   size_t coalesce_window_;
 
@@ -107,7 +107,7 @@ struct ScalablePageAllocatorHeader : public AllocatorHeader {
     AllocatorHeader::Configure(alloc_id,
                                AllocatorType::kScalablePageAllocator,
                                custom_header_size);
-    HSHM_MAKE_AR0(free_lists_, alloc)
+    HSHM_MAKE_AR0(free_lists_, alloc);
     total_alloc_ = 0;
     coalesce_trigger_ = (coalesce_trigger * buffer_size).as_int();
     coalesce_window_ = coalesce_window;
@@ -440,7 +440,7 @@ class ScalablePageAllocator : public Allocator {
    * */
   HSHM_CROSS_FUN
   size_t GetCurrentlyAllocatedSize() override {
-    return header_->total_alloc_;
+    return header_->total_alloc_.load();
   }
 
  private:

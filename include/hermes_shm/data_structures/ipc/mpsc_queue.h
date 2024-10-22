@@ -41,8 +41,8 @@ class mpsc_queue : public ShmContainer {
  public:
   HIPC_CONTAINER_TEMPLATE((CLASS_NAME), (TYPED_CLASS))
   ShmArchive<vector<pair<bitfield32_t, T>>> queue_;
-  std::atomic<_qtok_t> tail_;
-  std::atomic<_qtok_t> head_;
+  hipc::atomic<_qtok_t> tail_;
+  hipc::atomic<_qtok_t> head_;
   RwLock lock_;
   bitfield32_t flags_;
 

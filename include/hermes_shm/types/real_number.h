@@ -15,6 +15,7 @@
 
 #include <cstdint>
 #include <cstddef>
+#include <hermes_shm/constants/macros.h>
 
 #ifdef __cplusplus
 
@@ -26,8 +27,9 @@ namespace hshm {
 struct RealNumber {
   uint64_t decimal_;
   uint32_t numerator_;
-  static const uint32_t precision = 65536;
+  CLS_CONST uint32_t precision = 65536;
 
+  HSHM_INLINE_CROSS_FUN
   RealNumber() =  default;
 
   /**
@@ -37,6 +39,7 @@ struct RealNumber {
    * For example,
    * 4/5 = (4 * 65536 / 5) / 65536
    * */
+  HSHM_INLINE_CROSS_FUN
   explicit RealNumber(uint64_t numerator, uint64_t denominator) {
     decimal_ = numerator / denominator;
     uint64_t rem = numerator % denominator;
@@ -47,6 +50,7 @@ struct RealNumber {
    * (d1 + n1/p) * d2 =
    * d1 * d2 + d2 * n1 / p
    * */
+  HSHM_INLINE_CROSS_FUN
   RealNumber operator*(size_t other) const {
     RealNumber res;
     res.decimal_ = other * decimal_;
@@ -61,6 +65,7 @@ struct RealNumber {
    * (d1 * d2) + (d1 * n2)/p + (d2 * n1) / p + (n1 * n2 / p) / p =
    * (d1 * d2) + [(d1 * n2) + (d2 * n1) + (n1 * n2)/p] / p
    * */
+  HSHM_INLINE_CROSS_FUN
   RealNumber operator*(const RealNumber &other) const {
     RealNumber res;
     // d1 * d2
@@ -74,16 +79,19 @@ struct RealNumber {
     return res;
   }
 
+  HSHM_INLINE_CROSS_FUN
   RealNumber operator*=(size_t other) {
     (*this) = (*this) * other;
     return *this;
   }
 
+  HSHM_INLINE_CROSS_FUN
   RealNumber operator*=(const RealNumber &other) {
     (*this) = (*this) * other;
     return *this;
   }
 
+  HSHM_INLINE_CROSS_FUN
   size_t as_int() const {
     return decimal_ + numerator_ / precision;
   }

@@ -19,6 +19,7 @@
 #include <hermes_shm/types/bitfield.h>
 #include <hermes_shm/types/atomic.h>
 #include <hermes_shm/constants/macros.h>
+#include <hermes_shm/data_structures/containers/hash.h>
 
 namespace hshm::ipc {
 
@@ -450,7 +451,7 @@ template <>
 struct hash<hshm::ipc::allocator_id_t> {
   HSHM_INLINE_CROSS_FUN std::size_t operator()(
     const hshm::ipc::allocator_id_t &key) const {
-    return std::hash<uint64_t>{}(key.int_);
+    return hshm::hash<uint64_t>{}(key.int_);
   }
 };
 

@@ -19,7 +19,7 @@
 namespace hshm::ipc {
 
 struct HeapAllocator {
-  std::atomic<size_t> heap_off_;
+  hipc::atomic<size_t> heap_off_;
   size_t heap_size_;
 
   /** Default constructor */

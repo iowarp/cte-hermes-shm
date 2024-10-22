@@ -32,7 +32,7 @@ struct MyStruct {
 };
 
 __global__ void my_kernel(MyStruct* ptr) {
-  int idx = blockIdx.x * blockDim.x + threadIdx.x;
+  // int idx = blockIdx.x * blockDim.x + threadIdx.x;
   MyStruct quest;
   ptr->x = quest.DoSomething();
   ptr->y = hshm::PassArgPack::Call(

@@ -219,11 +219,11 @@ void TestMemoryOrdersPerThread() {
  * thread.
  * */
 void TestAtomicTypes() {
-  TestMemoryOrdersPerThread<std::atomic<uint16_t>, uint16_t>();
-  TestMemoryOrdersPerThread<std::atomic<uint32_t>, uint32_t>();
-  TestMemoryOrdersPerThread<std::atomic<uint64_t>, uint64_t>();
+  // TestMemoryOrdersPerThread<hipc::atomic<uint16_t>, uint16_t>();
+  TestMemoryOrdersPerThread<hipc::atomic<uint32_t>, uint32_t>();
+  TestMemoryOrdersPerThread<hipc::atomic<uint64_t>, uint64_t>();
 
-  TestMemoryOrdersPerThread<hipc::nonatomic<uint16_t>, uint16_t>();
+  // TestMemoryOrdersPerThread<hipc::nonatomic<uint16_t>, uint16_t>();
   TestMemoryOrdersPerThread<hipc::nonatomic<uint32_t>, uint32_t>();
   TestMemoryOrdersPerThread<hipc::nonatomic<uint64_t>, uint64_t>();
 }

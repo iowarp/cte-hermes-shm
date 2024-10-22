@@ -39,7 +39,8 @@ struct AllocatorHeader {
   allocator_id_t allocator_id_;
   size_t custom_header_size_;
 
-  HSHM_CROSS_FUN AllocatorHeader() = default;
+  HSHM_CROSS_FUN
+  AllocatorHeader() = default;
 
   HSHM_CROSS_FUN
   void Configure(allocator_id_t allocator_id,
@@ -69,7 +70,7 @@ class Allocator {
   /**
    * Destructor
    * */
-  virtual ~Allocator() = default;
+  HSHM_CROSS_FUN virtual ~Allocator() = default;
 
   /**
    * Create the shared-memory allocator with \a id unique allocator id over
@@ -582,7 +583,8 @@ class Allocator {
       typename T,
       typename PointerT = Pointer,
       typename ...Args>
-  HSHM_INLINE_CROSS_FUN T* NewObjs(size_t count, PointerT &p, Args&& ...args) {
+  HSHM_INLINE_CROSS_FUN
+  T* NewObjs(size_t count, PointerT &p, Args&& ...args) {
     return AllocateConstructObjs<T>(count, p, std::forward<Args>(args)...);
   }
 
@@ -590,7 +592,8 @@ class Allocator {
   template<
       typename T,
       typename ...Args>
-  HSHM_INLINE_CROSS_FUN T* NewObjs(size_t count, Args&& ...args) {
+  HSHM_INLINE_CROSS_FUN
+  T* NewObjs(size_t count, Args&& ...args) {
     OffsetPointer p;
     return NewObjs<T>(count, p, std::forward<Args>(args)...);
   }
@@ -600,8 +603,8 @@ class Allocator {
       typename T,
       typename PointerT = Pointer,
       typename ...Args>
-  HSHM_INLINE_CROSS_FUN LPointer<T, PointerT>
-  NewObjsLocal(size_t count, Args&& ...args) {
+  HSHM_INLINE_CROSS_FUN
+  LPointer<T, PointerT> NewObjsLocal(size_t count, Args&& ...args) {
     LPointer<T, PointerT> p;
     p.ptr_ = NewObjs<T>(count, p.shm_, std::forward<Args>(args)...);
     return p;
@@ -612,7 +615,8 @@ class Allocator {
       typename T,
       typename PointerT = Pointer,
       typename ...Args>
-  HSHM_INLINE_CROSS_FUN T* NewObj(PointerT &p, Args&& ...args) {
+  HSHM_INLINE_CROSS_FUN
+  T* NewObj(PointerT &p, Args&& ...args) {
     return NewObjs<T>(1, p, std::forward<Args>(args)...);
   }
 
@@ -620,7 +624,8 @@ class Allocator {
   template<
       typename T,
       typename ...Args>
-  HSHM_INLINE_CROSS_FUN T* NewObj(Args&& ...args) {
+  HSHM_INLINE_CROSS_FUN
+  T* NewObj(Args&& ...args) {
     OffsetPointer p;
     return NewObj<T>(p, std::forward<Args>(args)...);
   }
@@ -630,8 +635,8 @@ class Allocator {
       typename T,
       typename PointerT = Pointer,
       typename ...Args>
-  HSHM_INLINE_CROSS_FUN LPointer<T, PointerT>
-  NewObjLocal(Args&& ...args) {
+  HSHM_INLINE_CROSS_FUN
+  LPointer<T, PointerT> NewObjLocal(Args&& ...args) {
     LPointer<T, PointerT> p;
     p.ptr_ = NewObj<T>(p.shm_, std::forward<Args>(args)...);
     return p;
@@ -789,8 +794,8 @@ class Allocator {
   template<
       typename T,
       typename ...Args>
-  HSHM_INLINE_CROSS_FUN static void
-  ConstructObjs(T *ptr,
+  HSHM_INLINE_CROSS_FUN
+  static void ConstructObjs(T *ptr,
                 size_t old_count,
                 size_t new_count, Args&& ...args) {
     if (ptr == nullptr) { return; }
@@ -809,8 +814,8 @@ class Allocator {
   template<
       typename T,
       typename ...Args>
-  HSHM_INLINE_CROSS_FUN static void
-  ConstructObj(T &obj, Args&& ...args) {
+  HSHM_INLINE_CROSS_FUN
+  static void ConstructObj(T &obj, Args&& ...args) {
     new (&obj) T(std::forward<Args>(args)...);
   }
 
@@ -822,8 +827,8 @@ class Allocator {
    * @return None
    * */
   template<typename T>
-  HSHM_INLINE_CROSS_FUN static void
-  DestructObjs(T *ptr, size_t count) {
+  HSHM_INLINE_CROSS_FUN
+  static void DestructObjs(T *ptr, size_t count) {
     if (ptr == nullptr) { return; }
     for (size_t i = 0; i < count; ++i) {
       DestructObj<T>(*(ptr + i));

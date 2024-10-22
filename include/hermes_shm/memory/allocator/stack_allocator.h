@@ -23,7 +23,7 @@ namespace hshm::ipc {
 
 struct StackAllocatorHeader : public AllocatorHeader {
   HeapAllocator heap_;
-  std::atomic<size_t> total_alloc_;
+  hipc::atomic<size_t> total_alloc_;
 
   HSHM_CROSS_FUN
   StackAllocatorHeader() = default;
@@ -154,7 +154,7 @@ class StackAllocator : public Allocator {
    * */
   HSHM_CROSS_FUN
   size_t GetCurrentlyAllocatedSize() override {
-    return header_->total_alloc_;
+    return header_->total_alloc_.load();
   }
 };
 

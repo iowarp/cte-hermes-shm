@@ -24,7 +24,7 @@ struct MallocPage {
 };
 
 struct MallocAllocatorHeader : public AllocatorHeader {
-  std::atomic<size_t> total_alloc_size_;
+  hipc::atomic<size_t> total_alloc_size_;
 
   HSHM_CROSS_FUN
   MallocAllocatorHeader() = default;
@@ -147,7 +147,7 @@ class MallocAllocator : public Allocator {
    * */
   HSHM_CROSS_FUN
   size_t GetCurrentlyAllocatedSize() override {
-    return header_->total_alloc_size_;
+    return header_->total_alloc_size_.load();
   }
 };
 

@@ -28,7 +28,7 @@ template<typename T>
 class split_ticket_queue {
  public:
   std::vector<ticket_queue<T>> splits_;
-  std::atomic<uint16_t> rr_tail_, rr_head_;
+  hipc::atomic<uint16_t> rr_tail_, rr_head_;
 
  public:
   /**====================================
