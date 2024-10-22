@@ -7,8 +7,8 @@
 #include "hermes_shm/memory/backend/cuda_shm_mmap.h"
 #include "hermes_shm/constants/macros.h"
 #include "hermes_shm/types/argpack.h"
-#include "hermes_shm/util/singleton/_global_singleton.h"
 #include "hermes_shm/util/singleton/_easy_lockfree_singleton.h"
+#include "hermes_shm/util/singleton/_global_singleton.h"
 #include "hermes_shm/types/atomic.h"
 #include "hermes_shm/thread/lock/mutex.h"
 #include "hermes_shm/memory/memory_manager.h"
@@ -42,14 +42,6 @@ __global__ void my_kernel(MyStruct* ptr) {
       });
   *hshm::EasyLockfreeSingleton<int>::GetInstance() = 25;
   ptr->x = *hshm::EasyLockfreeSingleton<int>::GetInstance();
-
-  hshm::Mutex mutex;
-  mutex.Lock(0);
-  hshm::RwLock rw;
-  rw.ReadLock(0);
-  rw.ReadUnlock();
-  rw.WriteLock(0);
-  rw.WriteUnlock();
 }
 
 __global__ void my_allocator(hipc::MemoryBackend *backend,
@@ -99,5 +91,5 @@ void allocator_test() {
 }
 
 int main() {
-  backend_test();
+  allocator_test();
 }

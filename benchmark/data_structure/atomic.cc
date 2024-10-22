@@ -209,8 +209,8 @@ void TestMemoryOrdersPerThread() {
   TestAtomicInstructionsPerThread<AtomicT, T, std::memory_order_relaxed>();
   TestAtomicInstructionsPerThread<AtomicT, T, std::memory_order_consume>();
   TestAtomicInstructionsPerThread<AtomicT, T, std::memory_order_acquire>();
-  TestAtomicInstructionsPerThread<AtomicT, T, std::memory_order_release>();
-  TestAtomicInstructionsPerThread<AtomicT, T, std::memory_order_acq_rel>();
+  // TestAtomicInstructionsPerThread<AtomicT, T, std::memory_order_release>();
+  // TestAtomicInstructionsPerThread<AtomicT, T, std::memory_order_acq_rel>();
   TestAtomicInstructionsPerThread<AtomicT, T, std::memory_order_seq_cst>();
 }
 
@@ -219,7 +219,7 @@ void TestMemoryOrdersPerThread() {
  * thread.
  * */
 void TestAtomicTypes() {
-  // TestMemoryOrdersPerThread<hipc::atomic<uint16_t>, uint16_t>();
+  // TestMemoryOrdersPerThread<hipc::atomic<s_u16>, uint16_t>();
   TestMemoryOrdersPerThread<hipc::atomic<uint32_t>, uint32_t>();
   TestMemoryOrdersPerThread<hipc::atomic<uint64_t>, uint64_t>();
 

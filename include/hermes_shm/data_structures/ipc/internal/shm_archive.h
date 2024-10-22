@@ -24,6 +24,7 @@ namespace hshm::ipc {
 
 template<typename T>
 struct ShmArchiveShm {
+  HSHM_CROSS_FUN
   static void shm_destroy(T &obj) {
     obj.shm_destroy();
   }
@@ -31,6 +32,7 @@ struct ShmArchiveShm {
 
 template<typename T>
 struct ShmArchiveNoShm {
+  HSHM_CROSS_FUN
   static void shm_destroy(T &obj) {
     Allocator::DestructObj<T>(obj);
   }
@@ -125,7 +127,7 @@ class ShmArchive {
 
   /** Destroy */
   HSHM_INLINE_CROSS_FUN
-  void HSHM_CROSS_FUN shm_destroy() {
+  void shm_destroy() {
     if constexpr(IS_SHM_ARCHIVEABLE(T)) {
       ShmArchiveShm<T>::shm_destroy(get_ref());
     } else {

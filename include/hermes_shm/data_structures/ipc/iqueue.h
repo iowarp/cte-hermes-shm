@@ -41,6 +41,7 @@ struct iqueue_iterator_templ {
   iqueue_entry *prior_entry_;
 
   /** Default constructor */
+  HSHM_CROSS_FUN
   iqueue_iterator_templ() = default;
 
   /** Construct begin iterator  */

@@ -23,7 +23,7 @@ namespace hshm::ipc {
 
 struct StackAllocatorHeader : public AllocatorHeader {
   HeapAllocator heap_;
-  hipc::atomic<size_t> total_alloc_;
+  hipc::atomic<s_u64> total_alloc_;
 
   HSHM_CROSS_FUN
   StackAllocatorHeader() = default;

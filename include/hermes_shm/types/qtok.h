@@ -16,7 +16,7 @@
 namespace hshm {
 
 /** Represents the internal qtok type */
-typedef uint64_t _qtok_t;
+typedef s_u64 _qtok_t;
 
 /** Represents a ticket in the queue */
 struct qtok_t {

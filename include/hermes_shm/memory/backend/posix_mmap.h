@@ -37,6 +37,7 @@ class PosixMmap : public MemoryBackend {
 
  public:
   /** Constructor */
+  HSHM_CROSS_FUN
   PosixMmap() = default;
 
   /** Destructor */

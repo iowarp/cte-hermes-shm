@@ -143,7 +143,7 @@ struct OffsetPointerBase {
 
   /** Get the null pointer */
   HSHM_INLINE_CROSS_FUN static OffsetPointerBase GetNull() {
-    return OffsetPointerBase(-1);
+    return OffsetPointerBase((size_t)-1);
   }
 
   /** Atomic load wrapper */

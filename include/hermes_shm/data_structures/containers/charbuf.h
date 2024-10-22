@@ -17,6 +17,7 @@
 #include "hermes_shm/memory/memory_manager_.h"
 #include "hermes_shm/data_structures/serialization/serialize_common.h"
 #include "hermes_shm/data_structures/containers/internal/hshm_container.h"
+#include "string_common.h"
 #include <string>
 
 namespace hshm {
@@ -225,29 +226,15 @@ struct charbuf {
   /**====================================
    * Comparison Operators
    * ===================================*/
-
-  HSHM_INLINE_CROSS_FUN int _strncmp(const char *a, size_t len_a,
-                                     const char *b, size_t len_b) const {
-    if (len_a != len_b) {
-      return int((int64_t)len_a - (int64_t)len_b);
-    }
-    for (size_t i = 0; i < len_a; ++i) {
-      if (a[i] != b[i]) {
-        return a[i] - b[i];
-      }
-    }
-    return 0;
-  }
-
 #define HERMES_STR_CMP_OPERATOR(op) \
   bool operator TYPE_UNWRAP(op)(const char *other) const { \
-    return _strncmp(data(), size(), other, strlen(other)) op 0; \
+    return hshm::strncmp(data(), size(), other, hshm::strlen(other)) op 0; \
   } \
   bool operator op(const std::string &other) const { \
-    return _strncmp(data(), size(), other.data(), other.size()) op 0; \
+  return hshm::strncmp(data(), size(), other.data(), other.size()) op 0; \
   } \
   bool operator op(const charbuf &other) const { \
-    return _strncmp(data(), size(), other.data(), other.size()) op 0; \
+  return hshm::strncmp(data(), size(), other.data(), other.size()) op 0; \
   }
 
   HERMES_STR_CMP_OPERATOR(==)  // NOLINT

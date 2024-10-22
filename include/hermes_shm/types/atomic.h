@@ -15,7 +15,7 @@
 
 #include <atomic>
 #include <hermes_shm/constants/macros.h>
-#include <hermes_shm/types/numbers.h>
+#include "numbers.h"
 #ifdef HERMES_ENABLE_CUDA
 #include <cuda/atomic>
 #endif
@@ -247,12 +247,12 @@ struct cuda_atomic {
 
   /** Equality check */
   HSHM_INLINE_GPU_FUN bool operator==(const cuda_atomic &other) const {
-    return atomicCAS(&x, other.x);
+    return atomicCAS(&x, other.x, other.x);
   }
 
   /** Inequality check */
   HSHM_INLINE_GPU_FUN bool operator!=(const cuda_atomic &other) const {
-    return !atomicCAS(&x, other.x);
+    return !atomicCAS(&x, other.x, other.x);
   }
 };
 #endif

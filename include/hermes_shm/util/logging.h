@@ -95,7 +95,9 @@ class Logger {
   FILE *fout_;
 
  public:
+  HSHM_CROSS_FUN
   Logger() {
+#ifndef __CUDA_ARCH__
     // exe_name_ = std::filesystem::path(exe_path_).filename().string();
     int verbosity = kDebug;
     auto verbosity_env = getenv("HERMES_LOG_VERBOSITY");
@@ -114,6 +116,7 @@ class Logger {
     } else {
       fout_ = fopen(env, "w");
     }
+#endif
   }
 
   void SetVerbosity(int LOG_LEVEL) {

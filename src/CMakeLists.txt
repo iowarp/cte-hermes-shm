@@ -18,7 +18,8 @@ set (SOURCE_FILES
         memory_manager.cc
         thread_model_manager.cc
         thread_factory.cc
-        data_structure_singleton.cc)
+        data_structure_singleton.cc
+        ../include/hermes_shm/data_structures/containers/string_common.h)
 if (BUILD_SHARED_LIBS)
     message("Building dynamic library")
     add_library(hermes_shm_data_structures SHARED ${SOURCE_FILES})

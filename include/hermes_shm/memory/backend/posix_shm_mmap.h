@@ -39,6 +39,7 @@ class PosixShmMmap : public MemoryBackend {
 
  public:
   /** Constructor */
+  HSHM_CROSS_FUN
   PosixShmMmap() : fd_(-1) {}
 
   /** Destructor */

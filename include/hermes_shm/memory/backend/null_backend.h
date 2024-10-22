@@ -36,6 +36,7 @@ class NullBackend : public MemoryBackend {
   size_t total_size_;
 
  public:
+  HSHM_CROSS_FUN
   NullBackend() = default;
 
   ~NullBackend() override {}
