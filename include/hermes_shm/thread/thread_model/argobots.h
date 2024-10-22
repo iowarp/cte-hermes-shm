@@ -25,24 +25,32 @@ namespace hshm::thread_model {
 class Argobots : public ThreadModel {
  public:
   /** Default constructor */
+  HSHM_CROSS_FUN
   Argobots() = default;
 
   /** Virtual destructor */
+  HSHM_CROSS_FUN
   virtual ~Argobots() = default;
 
   /** Yield the current thread for a period of time */
+  HSHM_CROSS_FUN
   void SleepForUs(size_t us) override {
     /**
      * TODO(llogan): make this API flexible enough to support argobots fully
      * tl::thread::self().sleep(*HERMES->rpc_.server_engine_,
                                HERMES->server_config_.borg_.blob_reorg_period_);
      */
+#ifndef __CUDA_ARCH__
     usleep(us);
+#endif
   }
 
   /** Yield thread time slice */
+  HSHM_CROSS_FUN
   void Yield() override {
+#ifndef __CUDA_ARCH__
     ABT_thread_yield();
+#endif
   }
 
   /** Get the TID of the current thread */

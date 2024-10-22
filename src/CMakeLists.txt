@@ -18,8 +18,7 @@ set (SOURCE_FILES
         memory_manager.cc
         thread_model_manager.cc
         thread_factory.cc
-        data_structure_singleton.cc
-        ../include/hermes_shm/data_structures/containers/string_common.h)
+        data_structure_singleton.cc)
 if (BUILD_SHARED_LIBS)
     message("Building dynamic library")
     add_library(hermes_shm_data_structures SHARED ${SOURCE_FILES})
@@ -41,8 +40,9 @@ if (HERMES_ENABLE_OPENMP)
     target_link_libraries(hermes_shm_data_structures OpenMP::OpenMP_CXX)
 endif()
 if (HERMES_ENABLE_CUDA)
-    foreach (SOURCE IN LISTS ${SOURCE_FILES})
+    foreach (SOURCE IN LISTS SOURCE_FILES)
         set_source_files_properties(${SOURCE} PROPERTIES LANGUAGE CUDA)
+        message(${SOURCE})
     endforeach()
     set_target_properties(hermes_shm_data_structures PROPERTIES
             CUDA_SEPARABLE_COMPILATION ON

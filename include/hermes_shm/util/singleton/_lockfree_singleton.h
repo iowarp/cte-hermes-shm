@@ -49,6 +49,7 @@ class LockfreeSingleton {
 #include "_easy_lockfree_singleton.h"
 template<typename T>
 using LockfreeSingleton = EasyLockfreeSingleton<T>;
+#define DEFINE_LOCKFREE_SINGLETON_CC(T)
 #endif
 
 }  // namespace hshm

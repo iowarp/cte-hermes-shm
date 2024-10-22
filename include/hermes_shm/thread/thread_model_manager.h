@@ -44,7 +44,6 @@ class ThreadModelManager {
   void Yield();
 
   /** Call GetTid */
-  HSHM_CROSS_FUN
   tid_t GetTid();
 };
 

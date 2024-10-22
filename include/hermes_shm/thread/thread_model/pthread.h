@@ -30,13 +30,19 @@ class Pthread : public ThreadModel {
   virtual ~Pthread() = default;
 
   /** Yield the thread for a period of time */
+  HSHM_CROSS_FUN
   void SleepForUs(size_t us) override {
+#ifndef __CUDA_ARCH__
     usleep(us);
+#endif
   }
 
   /** Yield thread time slice */
+  HSHM_CROSS_FUN
   void Yield() override {
+#ifndef __CUDA_ARCH__
     sched_yield();
+#endif
   }
 
   /** Get the TID of the current thread */

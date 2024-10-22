@@ -45,7 +45,6 @@ void ThreadModelManager::Yield() {
 }
 
 /** Call GetTid */
-HSHM_CROSS_FUN
 tid_t ThreadModelManager::GetTid() {
   return thread_static_->GetTid();
 }

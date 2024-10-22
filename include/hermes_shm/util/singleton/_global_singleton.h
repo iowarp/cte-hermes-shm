@@ -46,6 +46,7 @@ class GlobalSingleton {
 #include "_easy_lockfree_singleton.h"
 template<typename T>
 using GlobalSingleton = EasyLockfreeSingleton<T>;
+#define DEFINE_GLOBAL_SINGLETON_CC(T)
 #endif
 
 }  // namespace hshm

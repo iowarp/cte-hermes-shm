@@ -119,31 +119,39 @@ class Logger {
 #endif
   }
 
+  HSHM_CROSS_FUN
   void SetVerbosity(int LOG_LEVEL) {
+#ifndef __CUDA_ARCH__
     verbosity_ = LOG_LEVEL;
     if (verbosity_ < 0) {
       verbosity_ = 0;
     }
+#endif
   }
 
   template<typename ...Args>
+  HSHM_CROSS_FUN
   void Print(const char *fmt,
              Args&& ...args) {
+#ifndef __CUDA_ARCH__
     std::string out =
       hshm::Formatter::format(fmt, std::forward<Args>(args)...);
     std::cout << out;
     if (fout_) {
       fwrite(out.data(), 1, out.size(), fout_);
     }
+#endif
   }
 
   template<typename ...Args>
+  HSHM_CROSS_FUN
   void InfoLog(int LOG_LEVEL,
                const char *path,
                const char *func,
                int line,
                const char *fmt,
                Args&& ...args) {
+#ifndef __CUDA_ARCH__
     if (LOG_LEVEL > verbosity_) { return; }
     std::string msg =
       hshm::Formatter::format(fmt, std::forward<Args>(args)...);
@@ -155,15 +163,18 @@ class Logger {
     if (fout_) {
       fwrite(out.data(), 1, out.size(), fout_);
     }
+#endif
   }
 
   template<typename ...Args>
+  HSHM_CROSS_FUN
   void ErrorLog(int LOG_LEVEL,
                 const char *path,
                 const char *func,
                 int line,
                 const char *fmt,
                 Args&& ...args) {
+#ifndef __CUDA_ARCH__
     if (LOG_LEVEL > verbosity_) { return; }
     std::string level;
     switch (LOG_LEVEL) {
@@ -198,6 +209,7 @@ class Logger {
     if (LOG_LEVEL == kFatal) {
       exit(1);
     }
+#endif
   }
 
   int GetTid() {
