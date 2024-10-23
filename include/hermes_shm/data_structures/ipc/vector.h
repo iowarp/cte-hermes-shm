@@ -249,15 +249,37 @@ class vector : public ShmContainer {
 
   /** SHM constructor. Default. */
   HSHM_CROSS_FUN
+  explicit vector() {
+    init_shm_container(HERMES_MEMORY_MANAGER->GetDefaultAllocator());
+    SetNull();
+  }
+
+  /** SHM constructor. Default. */
+  HSHM_CROSS_FUN
   explicit vector(Allocator *alloc) {
     init_shm_container(alloc);
     SetNull();
+  }
+
+  /** Constructor. Resize + construct. */
+  template<typename ...Args>
+  HSHM_CROSS_FUN
+  explicit vector(size_t length, Args&& ...args) {
+    shm_init(HERMES_MEMORY_MANAGER->GetDefaultAllocator(),
+      length, std::forward<Args>(args)...);
   }
 
   /** SHM constructor. Resize + construct. */
   template<typename ...Args>
   HSHM_CROSS_FUN
   explicit vector(Allocator *alloc, size_t length, Args&& ...args) {
+    shm_init(alloc, length, std::forward<Args>(args)...);
+  }
+
+  /** Constructor */
+  template<typename ...Args>
+  HSHM_CROSS_FUN
+  void shm_init(Allocator *alloc, size_t length, Args&& ...args) {
     init_shm_container(alloc);
     SetNull();
     resize(length, std::forward<Args>(args)...);
@@ -266,6 +288,14 @@ class vector : public ShmContainer {
   /**====================================
    * Copy Constructors
    * ===================================*/
+
+  /** Copy constructor. From vector. */
+  HSHM_CROSS_FUN
+  explicit vector(const vector &other) {
+    init_shm_container(other.GetAllocator());
+    SetNull();
+    shm_strong_copy_main<vector<T>>(other);
+  }
 
   /** SHM copy constructor. From vector. */
   HSHM_CROSS_FUN
@@ -283,6 +313,14 @@ class vector : public ShmContainer {
       shm_strong_copy_main<vector>(other);
     }
     return *this;
+  }
+
+  /** Copy constructor. From std::vector */
+  HSHM_CROSS_FUN
+  explicit vector(const std::vector<T> &other) {
+    init_shm_container(other.GetAllocator());
+    SetNull();
+    shm_strong_copy_main<std::vector<T>>(other);
   }
 
   /** SHM copy constructor. From std::vector */
@@ -324,11 +362,37 @@ class vector : public ShmContainer {
    * Move Constructors
    * ===================================*/
 
+  /** Move constructor. */
+  HSHM_CROSS_FUN
+  vector(vector &&other) {
+    shm_move_op<false>(
+      HERMES_MEMORY_MANAGER->GetDefaultAllocator(), std::move(other));
+  }
+
   /** SHM move constructor. */
   HSHM_CROSS_FUN
   vector(Allocator *alloc, vector &&other) {
-    init_shm_container(alloc);
-    SetNull();
+    shm_move_op<false>(alloc, std::move(other));
+  }
+
+  /** SHM move assignment operator. */
+  HSHM_CROSS_FUN
+  vector& operator=(vector &&other) noexcept {
+    if (this != &other) {
+      shm_move_op<true>(other.GetAllocator(), std::move(other));
+    }
+    return *this;
+  }
+
+  /** SHM move assignment operator. */
+  template<bool IS_ASSIGN>
+  HSHM_CROSS_FUN
+  void shm_move_op(Allocator *alloc, vector &&other) noexcept {
+    if constexpr (IS_ASSIGN) {
+      shm_destroy();
+    } else {
+      init_shm_container(alloc);
+    }
     if (GetAllocator() == other.GetAllocator()) {
       memcpy((void *) this, (void *) &other, sizeof(*this));
       other.SetNull();
@@ -336,22 +400,6 @@ class vector : public ShmContainer {
       shm_strong_copy_main<vector>(other);
       other.shm_destroy();
     }
-  }
-
-  /** SHM move assignment operator. */
-  HSHM_CROSS_FUN
-  vector& operator=(vector &&other) noexcept {
-    if (this != &other) {
-      shm_destroy();
-      if (GetAllocator() == other.GetAllocator()) {
-        memcpy((void *) this, (void *) &other, sizeof(*this));
-        other.SetNull();
-      } else {
-        shm_strong_copy_main<vector>(other);
-        other.shm_destroy();
-      }
-    }
-    return *this;
   }
 
   /**====================================

@@ -180,9 +180,20 @@ class iqueue : public ShmContainer {
    * Default Constructor
    * ===================================*/
 
+  /** Constructor. Default. */
+  HSHM_CROSS_FUN
+  iqueue() {
+    shm_init(HERMES_MEMORY_MANAGER->GetDefaultAllocator());
+  }
+
   /** SHM constructor. Default. */
   HSHM_CROSS_FUN
   explicit iqueue(Allocator *alloc) {
+    shm_init(alloc);
+  }
+
+  /** SHM constructor. Default. */
+  void shm_init(Allocator *alloc) {
     init_shm_container(alloc);
     length_ = 0;
     head_ptr_.SetNull();
@@ -192,12 +203,19 @@ class iqueue : public ShmContainer {
    * Copy Constructors
    * ===================================*/
 
+  /** Copy constructor */
+  HSHM_CROSS_FUN
+  explicit iqueue(const iqueue &other) {
+    init_shm_container(HERMES_MEMORY_MANAGER->GetDefaultAllocator());
+    shm_strong_copy_op(other);
+  }
+
   /** SHM copy constructor */
   HSHM_CROSS_FUN
   explicit iqueue(Allocator *alloc,
                   const iqueue &other) {
     init_shm_container(alloc);
-    shm_strong_copy_construct_and_op(other);
+    shm_strong_copy_op(other);
   }
 
   /** SHM copy assignment operator */
@@ -205,20 +223,28 @@ class iqueue : public ShmContainer {
   iqueue& operator=(const iqueue &other) {
     if (this != &other) {
       shm_destroy();
-      shm_strong_copy_construct_and_op(other);
+      shm_strong_copy_op(other);
     }
     return *this;
   }
 
   /** SHM copy constructor + operator */
   HSHM_CROSS_FUN
-  void shm_strong_copy_construct_and_op(const iqueue &other) {
+  void shm_strong_copy_op(const iqueue &other) {
     memcpy((void*)this, (void*)&other, sizeof(*this));
   }
 
   /**====================================
    * Move Constructors
    * ===================================*/
+
+  /** Move constructor. */
+  HSHM_CROSS_FUN
+  iqueue(iqueue &&other) noexcept {
+    init_shm_container(other.GetAllocator());
+    memcpy((void*)this, (void*)&other, sizeof(*this));
+    other.SetNull();
+  }
 
   /** SHM move constructor. */
   HSHM_CROSS_FUN
@@ -228,7 +254,7 @@ class iqueue : public ShmContainer {
       memcpy((void*)this, (void*)&other, sizeof(*this));
       other.SetNull();
     } else {
-      shm_strong_copy_construct_and_op(other);
+      shm_strong_copy_op(other);
       other.shm_destroy();
     }
   }
@@ -242,7 +268,7 @@ class iqueue : public ShmContainer {
         memcpy((void *) this, (void *) &other, sizeof(*this));
         other.SetNull();
       } else {
-        shm_strong_copy_construct_and_op(other);
+        shm_strong_copy_op(other);
         other.shm_destroy();
       }
     }
@@ -270,13 +296,6 @@ class iqueue : public ShmContainer {
   void shm_destroy_main() {
     clear();
   }
-
-  /**====================================
-   * SHM Deserialization
-   * ===================================*/
-
-  /** Load from shared memory */
-  HSHM_CROSS_FUN void shm_deserialize_main() {}
 
   /**====================================
    * iqueue Methods

@@ -39,9 +39,6 @@ class ShmContainerExample : public hipc::ShmContainer {
     SetNull();
   }
 
-  /** Load from shared memory */
-  HSHM_CROSS_FUN void shm_deserialize_main() {}
-
   /** Destroy object */
   HSHM_CROSS_FUN void shm_destroy_main() {}
 

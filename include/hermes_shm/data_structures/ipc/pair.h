@@ -47,9 +47,20 @@ class pair : public ShmContainer {
    * Default Constructor
    * ===================================*/
 
+  /** Constructor. Default. */
+  HSHM_CROSS_FUN
+  explicit pair() {
+    shm_init(HERMES_MEMORY_MANAGER->GetDefaultAllocator());
+  }
+
   /** SHM constructor. Default. */
   HSHM_CROSS_FUN
   explicit pair(Allocator *alloc) {
+    shm_init(alloc);
+  }
+
+  /** SHM constructor */
+  void shm_init(Allocator *alloc) {
     init_shm_container(alloc);
     HSHM_MAKE_AR0(first_, GetAllocator())
     HSHM_MAKE_AR0(second_, GetAllocator())
@@ -58,6 +69,16 @@ class pair : public ShmContainer {
   /**====================================
    * Emplace Constructors
    * ===================================*/
+
+  /** Constructor. Move parameters. */
+  HSHM_CROSS_FUN
+  explicit pair(FirstT &&first, SecondT &&second) {
+    init_shm_container(first.GetAllocator());
+    HSHM_MAKE_AR(first_, GetAllocator(),
+                 std::forward<FirstT>(first))
+    HSHM_MAKE_AR(second_, GetAllocator(),
+                 std::forward<SecondT>(second))
+  }
 
   /** SHM constructor. Move parameters. */
   HSHM_CROSS_FUN
@@ -99,6 +120,13 @@ class pair : public ShmContainer {
 
   /** SHM copy constructor. From pair. */
   HSHM_CROSS_FUN
+  explicit pair(const pair &other) {
+    init_shm_container(other.GetAllocator());
+    shm_strong_copy_construct(other);
+  }
+
+  /** SHM copy constructor. From pair. */
+  HSHM_CROSS_FUN
   explicit pair(Allocator *alloc, const pair &other) {
     init_shm_container(alloc);
     shm_strong_copy_construct(other);
@@ -131,6 +159,21 @@ class pair : public ShmContainer {
   /**====================================
    * Move Constructors
    * ===================================*/
+
+  /** SHM move constructor. From pair. */
+  HSHM_CROSS_FUN
+  explicit pair(pair &&other) {
+    init_shm_container(other.GetAllocator());
+    if (GetAllocator() == other.GetAllocator()) {
+      HSHM_MAKE_AR(first_, other.first_->GetAllocator(),
+                   std::forward<FirstT>(*other.first_))
+      HSHM_MAKE_AR(second_, other.second_->GetAllocator(),
+                   std::forward<SecondT>(*other.second_))
+    } else {
+      shm_strong_copy_construct(other);
+      other.shm_destroy();
+    }
+  }
 
   /** SHM move constructor. From pair. */
   HSHM_CROSS_FUN

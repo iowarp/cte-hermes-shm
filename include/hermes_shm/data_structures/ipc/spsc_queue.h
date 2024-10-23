@@ -52,8 +52,19 @@ class spsc_queue_templ : public ShmContainer {
 
   /** SHM constructor. Default. */
   HSHM_CROSS_FUN
-  explicit spsc_queue_templ(Allocator *alloc,
-                            size_t depth = 1024) {
+  explicit spsc_queue_templ(size_t depth = 1024) {
+    shm_init(HERMES_MEMORY_MANAGER->GetDefaultAllocator(), depth);
+  }
+
+  /** SHM constructor. Default. */
+  HSHM_CROSS_FUN
+  explicit spsc_queue_templ(Allocator *alloc, size_t depth = 1024) {
+    shm_init(alloc, depth);
+  }
+
+  /** SHM constructor. */
+  HSHM_CROSS_FUN
+  void shm_init(Allocator *alloc, size_t depth = 1024) {
     init_shm_container(alloc);
     HSHM_MAKE_AR(queue_, GetAllocator(), depth)
     SetNull();
@@ -63,13 +74,21 @@ class spsc_queue_templ : public ShmContainer {
    * Copy Constructors
    * ===================================*/
 
+  /** Copy constructor */
+  HSHM_CROSS_FUN
+  explicit spsc_queue_templ(const spsc_queue_templ &other) {
+    init_shm_container(other.GetAllocator());
+    SetNull();
+    shm_strong_copy_op(other);
+  }
+
   /** SHM copy constructor */
   HSHM_CROSS_FUN
   explicit spsc_queue_templ(Allocator *alloc,
                             const spsc_queue_templ &other) {
     init_shm_container(alloc);
     SetNull();
-    shm_strong_copy_construct_and_op(other);
+    shm_strong_copy_op(other);
   }
 
   /** SHM copy assignment operator */
@@ -77,14 +96,14 @@ class spsc_queue_templ : public ShmContainer {
   spsc_queue_templ& operator=(const spsc_queue_templ &other) {
     if (this != &other) {
       shm_destroy();
-      shm_strong_copy_construct_and_op(other);
+      shm_strong_copy_op(other);
     }
     return *this;
   }
 
   /** SHM copy constructor + operator main */
   HSHM_CROSS_FUN
-  void shm_strong_copy_construct_and_op(const spsc_queue_templ &other) {
+  void shm_strong_copy_op(const spsc_queue_templ &other) {
     head_ = other.head_;
     tail_ = other.tail_;
     (*queue_) = (*other.queue_);
@@ -96,36 +115,44 @@ class spsc_queue_templ : public ShmContainer {
 
   /** SHM move constructor. */
   HSHM_CROSS_FUN
+  spsc_queue_templ(spsc_queue_templ &&other) noexcept {
+    shm_move_op<false>(other.GetAllocator(), std::move(other));
+  }
+
+  /** SHM move constructor. */
+  HSHM_CROSS_FUN
   spsc_queue_templ(Allocator *alloc,
                    spsc_queue_templ &&other) noexcept {
-    init_shm_container(alloc);
-    if (GetAllocator() == other.GetAllocator()) {
-      head_ = other.head_;
-      tail_ = other.tail_;
-      (*queue_) = std::move(*other.queue_);
-      other.SetNull();
-    } else {
-      shm_strong_copy_construct_and_op(other);
-      other.shm_destroy();
-    }
+    shm_move_op<false>(alloc, std::move(other));
   }
 
   /** SHM move assignment operator. */
   HSHM_CROSS_FUN
   spsc_queue_templ& operator=(spsc_queue_templ &&other) noexcept {
     if (this != &other) {
-      shm_destroy();
-      if (GetAllocator() == other.GetAllocator()) {
-        head_ = other.head_;
-        tail_ = other.tail_;
-        (*queue_) = std::move(*other.queue_);
-        other.SetNull();
-      } else {
-        shm_strong_copy_construct_and_op(other);
-        other.shm_destroy();
-      }
+      shm_move_op<true>(GetAllocator(), std::move(other));
     }
     return *this;
+  }
+
+  /** SHM move assignment operator. */
+  template<bool IS_ASSIGN>
+  HSHM_CROSS_FUN
+  void shm_move_op(Allocator *alloc, spsc_queue_templ &&other) noexcept {
+    if constexpr (IS_ASSIGN) {
+      shm_destroy();
+    } else {
+      init_shm_container(alloc);
+    }
+    if (GetAllocator() == other.GetAllocator()) {
+      head_ = other.head_;
+      tail_ = other.tail_;
+      (*queue_) = std::move(*other.queue_);
+      other.SetNull();
+    } else {
+      shm_strong_copy_op(other);
+      other.shm_destroy();
+    }
   }
 
   /**====================================

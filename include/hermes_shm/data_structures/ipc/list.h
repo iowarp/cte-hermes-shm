@@ -224,6 +224,13 @@ class list : public ShmContainer {
    * Default Constructor
    * ===================================*/
 
+  /** Constructor. Default. */
+  HSHM_CROSS_FUN
+  explicit list() {
+    init_shm_container(HERMES_MEMORY_MANAGER->GetDefaultAllocator());
+    SetNull();
+  }
+
   /** SHM constructor. Default. */
   HSHM_CROSS_FUN
   explicit list(Allocator *alloc) {
@@ -235,13 +242,21 @@ class list : public ShmContainer {
    * Copy Constructors
    * ===================================*/
 
+  /** Copy constructor */
+  HSHM_CROSS_FUN
+  explicit list(const list &other) {
+    init_shm_container(other.GetAllocator());
+    SetNull();
+    shm_strong_copy_op<list>(other);
+  }
+
   /** SHM copy constructor */
   HSHM_CROSS_FUN
   explicit list(Allocator *alloc,
                 const list &other) {
     init_shm_container(alloc);
     SetNull();
-    shm_strong_copy_construct_and_op<list>(other);
+    shm_strong_copy_op<list>(other);
   }
 
   /** SHM copy assignment operator */
@@ -249,7 +264,7 @@ class list : public ShmContainer {
   list& operator=(const list &other) {
     if (this != &other) {
       shm_destroy();
-      shm_strong_copy_construct_and_op<list>(other);
+      shm_strong_copy_op<list>(other);
     }
     return *this;
   }
@@ -260,7 +275,7 @@ class list : public ShmContainer {
                 std::list<T> &other) {
     init_shm_container(alloc);
     SetNull();
-    shm_strong_copy_construct_and_op<std::list<T>>(other);
+    shm_strong_copy_op<std::list<T>>(other);
   }
 
   /** SHM copy assignment operator. From std::list. */
@@ -268,7 +283,7 @@ class list : public ShmContainer {
   list& operator=(const std::list<T> &other) {
     if (this != &other) {
       shm_destroy();
-      shm_strong_copy_construct_and_op<std::list<T>>(other);
+      shm_strong_copy_op<std::list<T>>(other);
     }
     return *this;
   }
@@ -276,7 +291,7 @@ class list : public ShmContainer {
   /** SHM copy constructor + operator main */
   template<typename ListT>
   HSHM_CROSS_FUN
-  void shm_strong_copy_construct_and_op(const ListT &other) {
+  void shm_strong_copy_op(const ListT &other) {
     for (auto iter = other.cbegin(); iter != other.cend(); ++iter) {
       emplace_back(*iter);
     }
@@ -286,33 +301,43 @@ class list : public ShmContainer {
    * Move Constructors
    * ===================================*/
 
+  /** Move constructor. */
+  HSHM_CROSS_FUN
+  list(list &&other) noexcept {
+    shm_move_op<false>(other.GetAllocator(), std::move(other));
+  }
+
   /** SHM move constructor. */
   HSHM_CROSS_FUN
   list(Allocator *alloc, list &&other) noexcept {
-    init_shm_container(alloc);
-    if (GetAllocator() == other.GetAllocator()) {
-      memcpy((void*) this, (void *) &other, sizeof(*this));
-      other.SetNull();
-    } else {
-      shm_strong_copy_construct_and_op<list>(other);
-      other.shm_destroy();
-    }
+    shm_move_op<false>(alloc, std::move(other));
   }
 
   /** SHM move assignment operator. */
   HSHM_CROSS_FUN
   list& operator=(list &&other) noexcept {
     if (this != &other) {
-      shm_destroy();
-      if (GetAllocator() == other.GetAllocator()) {
-        memcpy((void *) this, (void *) &other, sizeof(*this));
-        other.SetNull();
-      } else {
-        shm_strong_copy_construct_and_op<list>(other);
-        other.shm_destroy();
-      }
+      shm_move_op<true>(GetAllocator(), std::move(other));
     }
     return *this;
+  }
+
+  /** SHM move base */
+  template<bool IS_ASSIGN>
+  HSHM_CROSS_FUN
+  void shm_move_op(Allocator *alloc, list &&other) {
+    if constexpr (IS_ASSIGN) {
+      shm_destroy();
+    } else {
+      init_shm_container(alloc);
+    }
+    if (GetAllocator() == other.GetAllocator()) {
+      memcpy((void *) this, (void *) &other, sizeof(*this));
+      other.SetNull();
+    } else {
+      shm_strong_copy_op<list>(other);
+      other.shm_destroy();
+    }
   }
 
   /**====================================

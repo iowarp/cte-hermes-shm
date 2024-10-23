@@ -47,10 +47,22 @@ class ticket_queue : public ShmContainer {
    * Default Constructor
    * ===================================*/
 
+  /** Constructor. Default. */
+  HSHM_CROSS_FUN
+  explicit ticket_queue(size_t depth = 1024) {
+    shm_init(HERMES_MEMORY_MANAGER->GetDefaultAllocator(), depth);
+  }
+
   /** SHM constructor. Default. */
   HSHM_CROSS_FUN
   explicit ticket_queue(Allocator *alloc,
                         size_t depth = 1024) {
+    shm_init(alloc, depth);
+  }
+
+  /** SHM Constructor. */
+  void shm_init(Allocator *alloc,
+                size_t depth = 1024) {
     init_shm_container(alloc);
     HSHM_MAKE_AR(queue_, GetAllocator(), depth);
     lock_.Init();
@@ -61,13 +73,21 @@ class ticket_queue : public ShmContainer {
    * Copy Constructors
    * ===================================*/
 
+  /** Copy constructor */
+  HSHM_CROSS_FUN
+  explicit ticket_queue(const ticket_queue &other) {
+    init_shm_container(other.GetAllocator());
+    SetNull();
+    shm_strong_copy_op(other);
+  }
+
   /** SHM copy constructor */
   HSHM_CROSS_FUN
   explicit ticket_queue(Allocator *alloc,
                         const ticket_queue &other) {
     init_shm_container(alloc);
     SetNull();
-    shm_strong_copy_construct_and_op(other);
+    shm_strong_copy_op(other);
   }
 
   /** SHM copy assignment operator */
@@ -75,14 +95,14 @@ class ticket_queue : public ShmContainer {
   ticket_queue& operator=(const ticket_queue &other) {
     if (this != &other) {
       shm_destroy();
-      shm_strong_copy_construct_and_op(other);
+      shm_strong_copy_op(other);
     }
     return *this;
   }
 
   /** SHM copy constructor + operator main */
   HSHM_CROSS_FUN
-  void shm_strong_copy_construct_and_op(const ticket_queue &other) {
+  void shm_strong_copy_op(const ticket_queue &other) {
     (*queue_) = (*other.queue_);
   }
 
@@ -90,34 +110,44 @@ class ticket_queue : public ShmContainer {
    * Move Constructors
    * ===================================*/
 
+  /** Move constructor. */
+  HSHM_CROSS_FUN
+  ticket_queue(ticket_queue &&other) noexcept {
+    shm_move_op<false>(other.GetAllocator(), std::move(other));
+  }
+
   /** SHM move constructor. */
   HSHM_CROSS_FUN
   ticket_queue(Allocator *alloc,
                ticket_queue &&other) noexcept {
-    init_shm_container(alloc);
-    if (GetAllocator() == other.GetAllocator()) {
-      (*queue_) = std::move(*other.queue_);
-      other.SetNull();
-    } else {
-      shm_strong_copy_construct_and_op(other);
-      other.shm_destroy();
-    }
+    shm_move_op<false>(alloc, std::move(other));
   }
 
   /** SHM move assignment operator. */
   HSHM_CROSS_FUN
   ticket_queue& operator=(ticket_queue &&other) noexcept {
     if (this != &other) {
-      shm_destroy();
-      if (GetAllocator() == other.GetAllocator()) {
-        (*queue_) = std::move(*other.queue_);
-        other.SetNull();
-      } else {
-        shm_strong_copy_construct_and_op(other);
-        other.shm_destroy();
-      }
+      shm_move_op<true>(GetAllocator(), std::move(other));
     }
     return *this;
+  }
+
+  /** SHM move operator. */
+  template<bool IS_ASSIGN>
+  HSHM_CROSS_FUN
+  void shm_move_op(Allocator *alloc, ticket_queue &&other) noexcept {
+    if constexpr (IS_ASSIGN) {
+      shm_destroy();
+    } else {
+      init_shm_container(alloc);
+    }
+    if (GetAllocator() == other.GetAllocator()) {
+      (*queue_) = std::move(*other.queue_);
+      other.SetNull();
+    } else {
+      shm_strong_copy_op(other);
+      other.shm_destroy();
+    }
   }
 
   /**====================================

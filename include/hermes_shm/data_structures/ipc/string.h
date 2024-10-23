@@ -69,6 +69,13 @@ class string_templ : public ShmContainer {
    * Default Constructor
    * ===================================*/
 
+  /** Constructor. Default. */
+  HSHM_CROSS_FUN
+  explicit string_templ() {
+    init_shm_container(HERMES_MEMORY_MANAGER->GetDefaultAllocator());
+    SetNull();
+  }
+
   /** SHM Constructor. Default. */
   HSHM_CROSS_FUN
   explicit string_templ(Allocator *alloc) {
@@ -92,78 +99,110 @@ class string_templ : public ShmContainer {
    * Copy Constructors
    * ===================================*/
 
+  /** Constructor. From const char* */
+  HSHM_CROSS_FUN
+  explicit string_templ(const char *text) {
+    shm_strong_copy_op<false, false>(
+          GetAllocator(), text, 0);
+  }
+
   /** SHM Constructor. From const char* */
   HSHM_CROSS_FUN
   explicit string_templ(Allocator *alloc,
                         const char *text) {
-    init_shm_container(alloc);
-    size_t length = strlen(text);
-    _create_str(text, length);
+    shm_strong_copy_op<false, false>(
+          alloc, text, 0);
+  }
+
+  /** Constructor. From const char* and size */
+  HSHM_CROSS_FUN
+  explicit string_templ(const char *text, size_t length) {
+    shm_strong_copy_op<false, true>(
+      HERMES_MEMORY_MANAGER->GetDefaultAllocator(), text, length);
   }
 
   /** SHM Constructor. From const char* and size */
   HSHM_CROSS_FUN
   explicit string_templ(Allocator *alloc,
                         const char *text, size_t length) {
-    init_shm_container(alloc);
-    _create_str(text, length);
+    shm_strong_copy_op<false, true>(
+      alloc, text, length);
+  }
+
+  /** SHM copy constructor. From string_templ. */
+  HSHM_CROSS_FUN
+  explicit string_templ(Allocator *alloc,
+                        const string_templ &other) {
+    shm_strong_copy_op<false, true>(
+            alloc, other.data(), other.size());
+  }
+
+  /** SHM copy assignment operator. From string_templ. */
+  HSHM_CROSS_FUN
+  string_templ& operator=(const string_templ &other) {
+    if (this != &other) {
+      shm_strong_copy_op<true, true>(
+        GetAllocator(), other.data(), other.size());
+    }
+    return *this;
+  }
+
+  /** Constructor. From std::string */
+  HSHM_CROSS_FUN
+  explicit string_templ(const std::string &other) {
+    shm_strong_copy_op<false, true>(
+      GetAllocator(), other.data(), other.size());
   }
 
   /** SHM Constructor. From std::string */
   HSHM_CROSS_FUN
   explicit string_templ(Allocator *alloc,
-                        const std::string &text) {
-    init_shm_container(alloc);
-    _create_str(text.data(), text.size());
+                        const std::string &other) {
+    shm_strong_copy_op<false, true>(
+      alloc, other.data(), other.size());
   }
 
   /** SHM copy assignment operator. From std::string. */
   HSHM_CROSS_FUN
   string_templ& operator=(const std::string &other) {
-    shm_destroy();
-    _create_str(other.data(), other.size());
+    shm_strong_copy_op<true, true>(
+      GetAllocator(), other.data(), other.size());
     return *this;
   }
 
-  /** SHM Constructor. From std::string */
+  /** SHM Constructor. From hshm::charbuf */
   HSHM_CROSS_FUN
   explicit string_templ(Allocator *alloc,
-                        const hshm::charbuf &text) {
-    init_shm_container(alloc);
-    _create_str(text.data(), text.size());
+                        const hshm::charbuf &other) {
+    shm_strong_copy_op<false, true>(
+                    alloc, other.data(), other.size());
   }
 
-  /** SHM copy assignment operator. From std::string. */
+  /** SHM copy assignment operator. From hshm::charbuf. */
   HSHM_CROSS_FUN
   string_templ& operator=(const hshm::charbuf &other) {
-    shm_destroy();
-    _create_str(other.data(), other.size());
+    shm_strong_copy_op<true, true>(
+                GetAllocator(), other.data(), other.size());
     return *this;
   }
-
-  /** SHM copy constructor. From string. */
-  HSHM_CROSS_FUN
-  explicit string_templ(Allocator *alloc,
-                        const string_templ &other) {
-    init_shm_container(alloc);
-    _create_str(other.data(), other.size());
-  }
-
-  /** SHM copy assignment operator. From string. */
-  HSHM_CROSS_FUN
-  string_templ& operator=(const string_templ &other) {
-    if (this != &other) {
-      shm_destroy();
-      _create_str(other.data(), other.size());
-    }
-    return *this;
-  }
-
-  /**====================================
-   * Move Constructors
-   * ===================================*/
 
   /** Strong copy operation */
+  template<bool IS_ASSIGN, bool HAS_LENGTH>
+  void shm_strong_copy_op(Allocator *alloc,
+                          const char *text,
+                          size_t length) {
+    if constexpr (IS_ASSIGN) {
+      shm_destroy();
+    } else {
+      init_shm_container(alloc);
+    }
+    if constexpr (!HAS_LENGTH) {
+      length = strlen(text);
+    }
+    _create_str(text, length);
+  }
+
+  /** Strong copy */
   HSHM_INLINE_CROSS_FUN
   void strong_copy(const string_templ &other) {
     length_ = other.length_;
@@ -173,10 +212,40 @@ class string_templ : public ShmContainer {
     }
   }
 
+  /**====================================
+   * Move Constructors
+   * ===================================*/
+
+  /** Move constructor. */
+  HSHM_CROSS_FUN
+  string_templ(string_templ &&other) {
+    shm_move_op<false>(HERMES_MEMORY_MANAGER->GetDefaultAllocator(), std::move(other));
+  }
+
   /** SHM move constructor. */
   HSHM_CROSS_FUN
   string_templ(Allocator *alloc, string_templ &&other) {
-    init_shm_container(alloc);
+    shm_move_op<false>(alloc, std::move(other));
+  }
+
+  /** SHM move assignment operator. */
+  HSHM_CROSS_FUN
+  string_templ& operator=(string_templ &&other) noexcept {
+    if (this != &other) {
+      shm_move_op<true>(GetAllocator(), std::move(other));
+    }
+    return *this;
+  }
+
+  /** SHM move operator. */
+  template<bool IS_ASSIGN>
+  HSHM_CROSS_FUN
+  void shm_move_op(Allocator *alloc, string_templ &&other) noexcept {
+    if constexpr (IS_ASSIGN) {
+      shm_destroy();
+    } else {
+      init_shm_container(alloc);
+    }
     if (GetAllocator() == other.GetAllocator()) {
       strong_copy(other);
       other.SetNull();
@@ -184,22 +253,6 @@ class string_templ : public ShmContainer {
       _create_str(other.data(), other.size());
       other.shm_destroy();
     }
-  }
-
-  /** SHM move assignment operator. */
-  HSHM_CROSS_FUN
-  string_templ& operator=(string_templ &&other) noexcept {
-    if (this != &other) {
-      shm_destroy();
-      if (GetAllocator() == other.GetAllocator()) {
-        strong_copy(other);
-        other.SetNull();
-      } else {
-        _create_str(other.data(), other.size());
-        other.shm_destroy();
-      }
-    }
-    return *this;
   }
 
   /**====================================

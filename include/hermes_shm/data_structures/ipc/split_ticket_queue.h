@@ -47,11 +47,26 @@ class split_ticket_queue : public ShmContainer {
    * Default Constructor
    * ===================================*/
 
+  /** Constructor. Default. */
+  HSHM_CROSS_FUN
+  explicit split_ticket_queue(size_t depth_per_split = 1024,
+                              size_t split = 0) {
+    shm_init(HERMES_MEMORY_MANAGER->GetDefaultAllocator(),
+      depth_per_split, split);
+  }
+
   /** SHM constructor. Default. */
   HSHM_CROSS_FUN
   explicit split_ticket_queue(Allocator *alloc,
                               size_t depth_per_split = 1024,
                               size_t split = 0) {
+    shm_init(alloc, depth_per_split, split);
+  }
+
+  /** SHM constructor */
+  void shm_init(Allocator *alloc,
+                size_t depth_per_split = 1024,
+                size_t split = 0) {
     init_shm_container(alloc);
     if (split == 0) {
       split = HERMES_SYSTEM_INFO->ncpu_;
@@ -64,13 +79,21 @@ class split_ticket_queue : public ShmContainer {
    * Copy Constructors
    * ===================================*/
 
+  /** Copy constructor */
+  HSHM_CROSS_FUN
+  explicit split_ticket_queue(const split_ticket_queue &other) {
+    init_shm_container(other.GetAllocator());
+    SetNull();
+    shm_strong_copy_op(other);
+  }
+
   /** SHM copy constructor */
   HSHM_CROSS_FUN
   explicit split_ticket_queue(Allocator *alloc,
                               const split_ticket_queue &other) {
     init_shm_container(alloc);
     SetNull();
-    shm_strong_copy_construct_and_op(other);
+    shm_strong_copy_op(other);
   }
 
   /** SHM copy assignment operator */
@@ -78,14 +101,14 @@ class split_ticket_queue : public ShmContainer {
   split_ticket_queue& operator=(const split_ticket_queue &other) {
     if (this != &other) {
       shm_destroy();
-      shm_strong_copy_construct_and_op(other);
+      shm_strong_copy_op(other);
     }
     return *this;
   }
 
   /** SHM copy constructor + operator main */
   HSHM_CROSS_FUN
-  void shm_strong_copy_construct_and_op(const split_ticket_queue &other) {
+  void shm_strong_copy_op(const split_ticket_queue &other) {
     (*splits_) = (*other.splits_);
   }
 
@@ -93,34 +116,44 @@ class split_ticket_queue : public ShmContainer {
    * Move Constructors
    * ===================================*/
 
+  /** Move constructor. */
+  HSHM_CROSS_FUN
+  split_ticket_queue(split_ticket_queue &&other) noexcept {
+    shm_move_op<false>(other.GetAllocator(), std::move(other));
+  }
+
   /** SHM move constructor. */
   HSHM_CROSS_FUN
   split_ticket_queue(Allocator *alloc,
                      split_ticket_queue &&other) noexcept {
-    init_shm_container(alloc);
-    if (GetAllocator() == other.GetAllocator()) {
-      (*splits_) = std::move(*other.splits_);
-      other.SetNull();
-    } else {
-      shm_strong_copy_construct_and_op(other);
-      other.shm_destroy();
-    }
+    shm_move_op<false>(alloc, std::move(other));
   }
 
   /** SHM move assignment operator. */
   HSHM_CROSS_FUN
   split_ticket_queue& operator=(split_ticket_queue &&other) noexcept {
     if (this != &other) {
-      shm_destroy();
-      if (GetAllocator() == other.GetAllocator()) {
-        (*splits_) = std::move(*other.splits_);
-        other.SetNull();
-      } else {
-        shm_strong_copy_construct_and_op(other);
-        other.shm_destroy();
-      }
+      shm_move_op<true>(GetAllocator(), std::move(other));
     }
     return *this;
+  }
+
+  /** SHM move assignment operator. */
+  template<bool IS_ASSIGN>
+  HSHM_CROSS_FUN
+  void shm_move_op(Allocator *alloc, split_ticket_queue &&other) noexcept {
+    if constexpr (IS_ASSIGN) {
+      shm_destroy();
+    } else {
+      init_shm_container(alloc);
+    }
+    if (GetAllocator() == other.GetAllocator()) {
+      (*splits_) = std::move(*other.splits_);
+      other.SetNull();
+    } else {
+      shm_strong_copy_op(other);
+      other.shm_destroy();
+    }
   }
 
   /**====================================

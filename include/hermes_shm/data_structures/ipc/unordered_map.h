@@ -187,6 +187,22 @@ class unordered_map : public ShmContainer {
   /**
    * SHM constructor. Initialize the map.
    *
+   * @param num_buckets the number of buckets to create
+   * @param max_capacity the maximum number of elements before a growth is
+   * triggered
+   * @param growth the multiplier to grow the bucket vector size
+   * */
+  HSHM_CROSS_FUN
+  explicit unordered_map(int num_buckets = 20,
+                         RealNumber max_capacity = RealNumber(4, 5),
+                         RealNumber growth = RealNumber(5, 4)) {
+    shm_init(HERMES_MEMORY_MANAGER->GetDefaultAllocator(),
+             num_buckets, max_capacity, growth);
+  }
+
+  /**
+   * SHM constructor. Initialize the map.
+   *
    * @param alloc the shared-memory allocator
    * @param num_buckets the number of buckets to create
    * @param max_capacity the maximum number of elements before a growth is
@@ -198,6 +214,15 @@ class unordered_map : public ShmContainer {
                          int num_buckets = 20,
                          RealNumber max_capacity = RealNumber(4, 5),
                          RealNumber growth = RealNumber(5, 4)) {
+    shm_init(alloc, num_buckets, max_capacity, growth);
+  }
+
+  /** SHM constructor. */
+  HSHM_CROSS_FUN
+  void shm_init(Allocator *alloc,
+                int num_buckets = 20,
+                RealNumber max_capacity = RealNumber(4, 5),
+                RealNumber growth = RealNumber(5, 4)) {
     init_shm_container(alloc);
     HSHM_MAKE_AR(buckets_, GetAllocator(), num_buckets)
     max_capacity_ = max_capacity;
@@ -205,9 +230,17 @@ class unordered_map : public ShmContainer {
     length_ = 0;
   }
 
+
   /**====================================
    * Copy Constructors
    * ===================================*/
+
+  /** Copy constructor */
+  HSHM_CROSS_FUN
+  explicit unordered_map(const unordered_map &other) {
+    init_shm_container(HERMES_MEMORY_MANAGER->GetDefaultAllocator());
+    shm_strong_copy_construct(other);
+  }
 
   /** SHM copy constructor */
   HSHM_CROSS_FUN
@@ -222,7 +255,7 @@ class unordered_map : public ShmContainer {
   void shm_strong_copy_construct(const unordered_map &other) {
     SetNull();
     HSHM_MAKE_AR(buckets_, GetAllocator(), other.GetBuckets())
-    shm_strong_copy_construct_and_op(other);
+    shm_strong_copy_op(other);
   }
 
   /** SHM copy assignment operator */
@@ -235,17 +268,11 @@ class unordered_map : public ShmContainer {
     return *this;
   }
 
-  /** SHM copy assignment main */
+  /** Internal copy operation */
   HSHM_CROSS_FUN
   void shm_strong_copy_op(const unordered_map &other) {
     int num_buckets = other.get_num_buckets();
     GetBuckets().resize(num_buckets);
-    shm_strong_copy_construct_and_op(other);
-  }
-
-  /** Internal copy operation */
-  HSHM_CROSS_FUN
-  void shm_strong_copy_construct_and_op(const unordered_map &other) {
     max_capacity_ = other.max_capacity_;
     growth_ = other.growth_;
     for (hipc::pair<Key, T> &entry : other) {
@@ -258,42 +285,49 @@ class unordered_map : public ShmContainer {
    * Move Constructors
    * ===================================*/
 
-  /** SHM move constructor. */
-  HSHM_INLINE_CROSS_FUN unordered_map(Allocator *alloc,
-                                   unordered_map &&other) noexcept {
-    init_shm_container(alloc);
-    if (GetAllocator() == other.GetAllocator()) {
-      strong_copy(other);
-      HSHM_MAKE_AR(buckets_, GetAllocator(), std::move(other.GetBuckets()))
-      other.SetNull();
-    } else {
-      shm_strong_copy_construct(other);
-      other.shm_destroy();
-    }
+  /** Move constructor. */
+  HSHM_INLINE_CROSS_FUN unordered_map(unordered_map &&other) noexcept {
+    shm_move_op<false>(other.GetAllocator(), std::move(other));
   }
 
-  /** Copy */
-  HSHM_INLINE_CROSS_FUN void strong_copy(const unordered_map &other) {
-    max_capacity_ = other.max_capacity_;
-    growth_ = other.growth_;
-    length_ = other.length_.load();
+  /** SHM move constructor. */
+  HSHM_INLINE_CROSS_FUN unordered_map(Allocator *alloc,
+                                      unordered_map &&other) noexcept {
+    shm_move_op<false>(alloc, std::move(other));
   }
 
   /** SHM move assignment operator. */
   HSHM_CROSS_FUN
   unordered_map& operator=(unordered_map &&other) noexcept {
     if (this != &other) {
-      shm_destroy();
-      if (GetAllocator() == other.GetAllocator()) {
-        GetBuckets() = std::move(other.GetBuckets());
-        strong_copy(other);
-        other.SetNull();
-      } else {
-        shm_strong_copy_op(other);
-        other.shm_destroy();
-      }
+      shm_move_op<true>(GetAllocator(), std::move(other));
     }
     return *this;
+  }
+
+  /** SHM move operator. */
+  template<bool IS_ASSIGN>
+  HSHM_CROSS_FUN
+  void shm_move_op(Allocator *alloc, unordered_map &&other) noexcept {
+    if constexpr (IS_ASSIGN) {
+      shm_destroy();
+    } else {
+      init_shm_container(alloc);
+    }
+    if (GetAllocator() == other.GetAllocator()) {
+      if constexpr (IS_ASSIGN) {
+        GetBuckets() = std::move(other.GetBuckets());
+      } else {
+        HSHM_MAKE_AR(buckets_, GetAllocator(), std::move(other.GetBuckets()));
+      }
+      max_capacity_ = other.max_capacity_;
+      growth_ = other.growth_;
+      length_ = other.length_.load();
+      other.SetNull();
+    } else {
+      shm_strong_copy_op(other);
+      other.shm_destroy();
+    }
   }
 
   /**====================================

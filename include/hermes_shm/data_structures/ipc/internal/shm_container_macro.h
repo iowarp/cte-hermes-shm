@@ -11,16 +11,6 @@ hipc::allocator_id_t alloc_id_;\
 /**====================================\
  * Constructors\
  * ===================================*/\
-\
-/** Default constructor. Deleted. */\
-TYPE_UNWRAP(CLASS_NAME)() = delete;\
-\
-/** Move constructor. Deleted. */\
-TYPE_UNWRAP(CLASS_NAME)(TYPE_UNWRAP(CLASS_NAME) &&other) = delete;\
-\
-/** Copy constructor. Deleted. */\
-TYPE_UNWRAP(CLASS_NAME)(const TYPE_UNWRAP(CLASS_NAME) &other) = delete;\
-\
 /** Initialize container */\
 HSHM_CROSS_FUN void init_shm_container(hipc::Allocator *alloc) {\
   alloc_id_ = alloc->GetId();\
@@ -29,9 +19,8 @@ HSHM_CROSS_FUN void init_shm_container(hipc::Allocator *alloc) {\
 /**====================================\
  * Destructor\
  * ===================================*/\
-\
 /** Destructor. */\
-HSHM_INLINE_CROSS_FUN ~TYPE_UNWRAP(CLASS_NAME)() = default;\
+HSHM_INLINE_CROSS_FUN ~TYPE_UNWRAP(CLASS_NAME)() { shm_destroy(); }\
 \
 /** Destruction operation */\
 HSHM_INLINE_CROSS_FUN void shm_destroy() {\
