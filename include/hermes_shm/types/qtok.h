@@ -60,8 +60,7 @@ struct qtok_t {
 
   /** Get the null qtok */
   HSHM_INLINE_CROSS_FUN static qtok_t GetNull() {
-    static qtok_t other(std::numeric_limits<_qtok_t>::max());
-    return other;
+    return qtok_t(std::numeric_limits<_qtok_t>::max());
   }
 
   /** Check if null */
