@@ -336,7 +336,7 @@ class unordered_map : public ShmContainer {
 
   /** Check if the pair is empty */
   HSHM_INLINE_CROSS_FUN bool IsNull() {
-    return length_.load() == 0;
+    return buckets_->IsNull();
   }
 
   /** Sets this pair as empty */
