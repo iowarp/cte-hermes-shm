@@ -153,7 +153,7 @@ class MergeArgPacks {
  public:
   /** Call function with ArgPack */
   template<typename ...ArgPacks>
-  HSHM_ALWAYS_INLINE constexpr static decltype(auto)
+  HSHM_INLINE_CROSS_FUN constexpr static decltype(auto)
   Merge(ArgPacks&& ...packs) {
     return _MergePacksRecur<0>(make_argpack(std::forward<ArgPacks>(packs)...));
   }
@@ -161,7 +161,7 @@ class MergeArgPacks {
  private:
   /** Unpacks the C++ parameter pack of ArgPacks */
   template<size_t cur_pack, typename ArgPacksT, typename ...CurArgs>
-  HSHM_ALWAYS_INLINE constexpr static decltype(auto) _MergePacksRecur(
+  HSHM_INLINE_CROSS_FUN constexpr static decltype(auto) _MergePacksRecur(
     ArgPacksT &&packs, CurArgs&& ...args) {
     if constexpr(cur_pack < ArgPacksT::Size()) {
       return _MergeRecur<
@@ -180,7 +180,7 @@ class MergeArgPacks {
     size_t cur_pack, typename ArgPacksT,
     size_t i, typename ArgPackT,
     typename ...CurArgs>
-  HSHM_ALWAYS_INLINE constexpr static decltype(auto) _MergeRecur(
+  HSHM_INLINE_CROSS_FUN constexpr static decltype(auto) _MergeRecur(
     ArgPacksT &&packs, ArgPackT &&pack, CurArgs&& ...args) {
     if constexpr(i < ArgPackT::Size()) {
       return _MergeRecur<cur_pack, ArgPacksT, i + 1, ArgPackT>(
@@ -200,7 +200,7 @@ class ProductArgPacks {
  public:
   /** The product function */
   template<typename ProductPackT, typename ...ArgPacks>
-  HSHM_ALWAYS_INLINE constexpr static decltype(auto) Product(
+  HSHM_INLINE_CROSS_FUN constexpr static decltype(auto) Product(
     ProductPackT &&prod_pack, ArgPacks&& ...packs) {
     return _ProductPacksRecur<0>(
       std::forward<ProductPackT>(prod_pack),
@@ -214,7 +214,7 @@ class ProductArgPacks {
     typename ProductPackT,
     typename OrigPacksT,
     typename ...NewPacks>
-  HSHM_ALWAYS_INLINE constexpr static decltype(auto) _ProductPacksRecur(
+  HSHM_INLINE_CROSS_FUN constexpr static decltype(auto) _ProductPacksRecur(
     ProductPackT &&prod_pack,
     OrigPacksT &&orig_packs,
     NewPacks&& ...packs) {
@@ -235,7 +235,7 @@ class ProductArgPacks {
 template<typename T, T Val>
 struct MakeConstexpr {
   constexpr static T val_ = Val;
-  HSHM_ALWAYS_INLINE constexpr static T Get() {
+  HSHM_INLINE_CROSS_FUN constexpr static T Get() {
     return val_;
   }
 };
@@ -246,14 +246,14 @@ class IterateArgpack {
  public:
   /** Apply a function to every element of a tuple */
   template<typename TupleT, typename F>
-  HSHM_ALWAYS_INLINE constexpr static void Apply(TupleT &&pack, F &&f) {
+  HSHM_INLINE_CROSS_FUN constexpr static void Apply(TupleT &&pack, F &&f) {
     _Apply<0, TupleT, F>(std::forward<TupleT>(pack), std::forward<F>(f));
   }
 
  private:
   /** Apply the function recursively */
   template<size_t i, typename TupleT, typename F>
-  HSHM_ALWAYS_INLINE constexpr static void _Apply(TupleT &&pack, F &&f) {
+  HSHM_INLINE_CROSS_FUN constexpr static void _Apply(TupleT &&pack, F &&f) {
     if constexpr(i < TupleT::Size()) {
       if constexpr(reverse) {
         _Apply<i + 1, TupleT, F>(std::forward<TupleT>(pack),

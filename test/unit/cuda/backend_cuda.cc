@@ -122,5 +122,5 @@ void mpsc_test() {
 }
 
 int main() {
-  allocator_test();
+  mpsc_test();
 }
