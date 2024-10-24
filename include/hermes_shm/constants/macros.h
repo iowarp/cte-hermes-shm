@@ -96,4 +96,7 @@
 /** Class constant macro */
 #define CLS_CONST static inline constexpr
 
+/** Class constant macro */
+#define GLOBAL_CONST static inline const
+
 #endif  // HERMES_MACROS_H
