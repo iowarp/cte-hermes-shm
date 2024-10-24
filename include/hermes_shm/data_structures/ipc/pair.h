@@ -91,6 +91,14 @@ class pair : public ShmContainer {
                  std::forward<SecondT>(second))
   }
 
+  /** Constructor. Copy parameters. */
+  HSHM_CROSS_FUN
+  explicit pair(const FirstT &first, const SecondT &second) {
+    init_shm_container(HERMES_MEMORY_MANAGER->GetDefaultAllocator());
+    HSHM_MAKE_AR(first_, GetAllocator(), first)
+    HSHM_MAKE_AR(second_, GetAllocator(), second)
+  }
+
   /** SHM constructor. Copy parameters. */
   HSHM_CROSS_FUN
   explicit pair(Allocator *alloc,
@@ -98,6 +106,19 @@ class pair : public ShmContainer {
     init_shm_container(alloc);
     HSHM_MAKE_AR(first_, GetAllocator(), first)
     HSHM_MAKE_AR(second_, GetAllocator(), second)
+  }
+
+  /** SHM constructor. Piecewise emplace. */
+  template<typename FirstArgPackT, typename SecondArgPackT>
+  HSHM_CROSS_FUN
+  explicit pair(PiecewiseConstruct &&hint,
+                FirstArgPackT &&first,
+                SecondArgPackT &&second) {
+    init_shm_container(HERMES_MEMORY_MANAGER->GetDefaultAllocator());
+    HSHM_MAKE_AR_PW(first_, GetAllocator(),
+                    std::forward<FirstArgPackT>(first))
+    HSHM_MAKE_AR_PW(second_, GetAllocator(),
+                    std::forward<SecondArgPackT>(second))
   }
 
   /** SHM constructor. Piecewise emplace. */

@@ -39,8 +39,8 @@ void ListTestRunner(ListTestSuite<T, ListT> &test) {
 template<typename T>
 void HipcListTest() {
   Allocator *alloc = alloc_g;
-  auto lp = hipc::make_uptr<hipc::list<T>>(alloc);
-  ListTestSuite<T, hipc::list<T>> test(*lp, alloc);
+  hipc::list<T> lp(alloc);
+  ListTestSuite<T, hipc::list<T>> test(lp, alloc);
   ListTestRunner(test);
 }
 

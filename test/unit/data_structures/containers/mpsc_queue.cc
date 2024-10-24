@@ -87,18 +87,18 @@ TEST_CASE("TestMpscPtrQueueIntMultiThreaded") {
 
 TEST_CASE("TestMpscOffsetPointerQueueCompile") {
   Allocator *alloc = alloc_g;
-  auto p = hipc::make_uptr<hipc::mpsc_ptr_queue<hipc::OffsetPointer>>(alloc);
+  hipc::mpsc_ptr_queue<hipc::OffsetPointer> queue(alloc);
   hipc::OffsetPointer off_p;
-  p->emplace(hipc::OffsetPointer(5));
-  p->pop(off_p);
+  queue.emplace(hipc::OffsetPointer(5));
+  queue.pop(off_p);
   REQUIRE(off_p == hipc::OffsetPointer(5));
 }
 
 TEST_CASE("TestMpscPointerQueueCompile") {
   Allocator *alloc = alloc_g;
-  auto p = hipc::make_uptr<hipc::mpsc_ptr_queue<hipc::Pointer>>(alloc);
+  hipc::mpsc_ptr_queue<hipc::Pointer> queue(alloc);
   hipc::Pointer off_p;
-  p->emplace(hipc::Pointer(allocator_id_t(5, 2), 1));
-  p->pop(off_p);
+  queue.emplace(hipc::Pointer(allocator_id_t(5, 2), 1));
+  queue.pop(off_p);
   REQUIRE(off_p == hipc::Pointer(allocator_id_t(5, 2), 1));
 }

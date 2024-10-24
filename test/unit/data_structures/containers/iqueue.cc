@@ -23,8 +23,8 @@ using hshm::ipc::iqueue;
 template<typename T>
 void IqueueTest() {
   Allocator *alloc = alloc_g;
-  auto lp = hipc::make_uptr<iqueue<T>>(alloc);
-  IqueueTestSuite<T, iqueue<T>> test(*lp, alloc);
+  iqueue<T> lp(alloc);
+  IqueueTestSuite<T, iqueue<T>> test(lp, alloc);
 
   test.EnqueueTest(30);
   test.ForwardIteratorTest();

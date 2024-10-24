@@ -23,60 +23,91 @@ void PairTest() {
   PAGE_DIVIDE("Construct") {
     CREATE_SET_VAR_TO_INT_OR_STRING(FirstT, first, 124);
     CREATE_SET_VAR_TO_INT_OR_STRING(SecondT, second, 130);
-    auto data = hipc::make_uptr<hipc::pair<FirstT, SecondT>>(
+    hipc::pair<FirstT, SecondT> data(first, second);
+    REQUIRE(data.GetFirst() == first);
+    REQUIRE(data.GetSecond() == second);
+  }
+
+  // SHM Construct test
+  PAGE_DIVIDE("SHM Construct") {
+    CREATE_SET_VAR_TO_INT_OR_STRING(FirstT, first, 124);
+    CREATE_SET_VAR_TO_INT_OR_STRING(SecondT, second, 130);
+    hipc::pair<FirstT, SecondT> data(
       alloc, first, second);
-    REQUIRE(*data->first_ == first);
-    REQUIRE(*data->second_ == second);
+    REQUIRE(data.GetFirst() == first);
+    REQUIRE(data.GetSecond() == second);
   }
 
   // Copy constructor test
   PAGE_DIVIDE("Copy constructor") {
     CREATE_SET_VAR_TO_INT_OR_STRING(FirstT, first, 124);
     CREATE_SET_VAR_TO_INT_OR_STRING(SecondT, second, 130);
-    auto data = hipc::make_uptr<hipc::pair<FirstT, SecondT>>(
+    hipc::pair<FirstT, SecondT> data(
       alloc, first, second);
-    auto cpy = hipc::make_uptr<hipc::pair<FirstT, SecondT>>(
-      alloc, *data);
-    REQUIRE(*cpy->first_ == first);
-    REQUIRE(*cpy->second_ == second);
+    hipc::pair<FirstT, SecondT> cpy(data);
+    REQUIRE(cpy.GetFirst() == first);
+    REQUIRE(cpy.GetSecond() == second);
+  }
+
+  // SHM Copy constructor test
+  PAGE_DIVIDE("SHM Copy constructor") {
+    CREATE_SET_VAR_TO_INT_OR_STRING(FirstT, first, 124);
+    CREATE_SET_VAR_TO_INT_OR_STRING(SecondT, second, 130);
+    hipc::pair<FirstT, SecondT> data(
+      alloc, first, second);
+    hipc::pair<FirstT, SecondT> cpy(
+      alloc, data);
+    REQUIRE(cpy.GetFirst() == first);
+    REQUIRE(cpy.GetSecond() == second);
   }
 
   // Copy assignment test
   PAGE_DIVIDE("Copy assignment operator") {
     CREATE_SET_VAR_TO_INT_OR_STRING(FirstT, first, 124);
     CREATE_SET_VAR_TO_INT_OR_STRING(SecondT, second, 130);
-    auto data = hipc::make_uptr<hipc::pair<FirstT, SecondT>>(
+    hipc::pair<FirstT, SecondT> data(
       alloc, first, second);
-    auto cpy = hipc::make_uptr<hipc::pair<FirstT, SecondT>>(
+    hipc::pair<FirstT, SecondT> cpy(
       alloc);
-    *cpy = *data;
-    REQUIRE(*cpy->first_ == first);
-    REQUIRE(*cpy->second_ == second);
+    cpy = data;
+    REQUIRE(cpy.GetFirst() == first);
+    REQUIRE(cpy.GetSecond() == second);
   }
 
   // Move constructor test
   PAGE_DIVIDE("Move constructor") {
     CREATE_SET_VAR_TO_INT_OR_STRING(FirstT, first, 124);
     CREATE_SET_VAR_TO_INT_OR_STRING(SecondT, second, 130);
-    auto data = hipc::make_uptr<hipc::pair<FirstT, SecondT>>(
+    hipc::pair<FirstT, SecondT> data(
       alloc, first, second);
-    auto cpy = hipc::make_uptr<hipc::pair<FirstT, SecondT>>(
-      alloc, std::move(*data));
-    REQUIRE(*cpy->first_ == first);
-    REQUIRE(*cpy->second_ == second);
+    hipc::pair<FirstT, SecondT> cpy(std::move(data));
+    REQUIRE(cpy.GetFirst() == first);
+    REQUIRE(cpy.GetSecond() == second);
+  }
+
+  // SHM Move constructor test
+  PAGE_DIVIDE("SHM Move constructor") {
+    CREATE_SET_VAR_TO_INT_OR_STRING(FirstT, first, 124);
+    CREATE_SET_VAR_TO_INT_OR_STRING(SecondT, second, 130);
+    hipc::pair<FirstT, SecondT> data(
+      alloc, first, second);
+    hipc::pair<FirstT, SecondT> cpy(
+      alloc, std::move(data));
+    REQUIRE(cpy.GetFirst() == first);
+    REQUIRE(cpy.GetSecond() == second);
   }
 
   // Move assignment test
   PAGE_DIVIDE("Move assignment operator") {
     CREATE_SET_VAR_TO_INT_OR_STRING(FirstT, first, 124);
     CREATE_SET_VAR_TO_INT_OR_STRING(SecondT, second, 130);
-    auto data = hipc::make_uptr<hipc::pair<FirstT, SecondT>>(
+    hipc::pair<FirstT, SecondT> data(
       alloc, first, second);
-    auto cpy = hipc::make_uptr<hipc::pair<FirstT, SecondT>>(
+    hipc::pair<FirstT, SecondT> cpy(
       alloc);
-    *cpy = std::move(*data);
-    REQUIRE(*cpy->first_ == first);
-    REQUIRE(*cpy->second_ == second);
+    cpy = std::move(data);
+    REQUIRE(cpy.GetFirst() == first);
+    REQUIRE(cpy.GetSecond() == second);
   }
 }
 

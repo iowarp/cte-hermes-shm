@@ -61,35 +61,35 @@ class ListTestSuite {
   /// Copy constructor
   void CopyConstructorTest() {
     size_t count = obj_.size();
-    auto cpy = hipc::make_uptr<Container>(obj_);
-    VerifyCopy(obj_, *cpy, count);
+    Container cpy(obj_);
+    VerifyCopy(obj_, cpy, count);
   }
 
   /// Copy assignment
   void CopyAssignmentTest() {
     size_t count = obj_.size();
-    auto cpy = hipc::make_uptr<Container>();
-    *cpy = obj_;
-    VerifyCopy(obj_, *cpy, count);
+    Container cpy;
+    cpy = obj_;
+    VerifyCopy(obj_, cpy, count);
   }
 
   /// Move constructor
   void MoveConstructorTest() {
     size_t count = obj_.size();
-    auto cpy = hipc::make_uptr<Container>(std::move(obj_));
-    VerifyMove(obj_, *cpy, count);
-    obj_ = std::move(*cpy);
-    VerifyMove(*cpy, obj_, count);
+    Container cpy(std::move(obj_));
+    VerifyMove(obj_, cpy, count);
+    obj_ = std::move(cpy);
+    VerifyMove(cpy, obj_, count);
   }
 
   /// Move assignment
   void MoveAssignmentTest() {
     size_t count = obj_.size();
-    auto cpy = hipc::make_uptr<Container>();
-    (*cpy) = std::move(obj_);
-    VerifyMove(obj_, *cpy, count);
-    obj_ = std::move(*cpy);
-    VerifyMove(*cpy, obj_, count);
+    Container cpy;
+    cpy = std::move(obj_);
+    VerifyMove(obj_, cpy, count);
+    obj_ = std::move(cpy);
+    VerifyMove(cpy, obj_, count);
   }
 
   /// Emplace and erase front
