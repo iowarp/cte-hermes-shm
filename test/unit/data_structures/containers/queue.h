@@ -20,11 +20,11 @@
 template<typename QueueT, typename T>
 class QueueTestSuite {
  public:
-  hipc::uptr<QueueT> &queue_;
+  QueueT &queue_;
 
  public:
   /** Constructor */
-  explicit QueueTestSuite(hipc::uptr<QueueT> &queue)
+  explicit QueueTestSuite(QueueT &queue)
     : queue_(queue) {}
 
   /** Producer method */
@@ -37,7 +37,7 @@ class QueueTestSuite {
         CREATE_SET_VAR_TO_INT_OR_STRING(T, var, idx);
         CREATE_GET_INT_FROM_VAR(T, entry_int, var)
         idxs.emplace_back(entry_int);
-        while (queue_->emplace(var).IsNull()) {}
+        while (queue_.emplace(var).IsNull()) {}
       }
     } catch (hshm::Error &e) {
       HELOG(kFatal, e.what())
@@ -59,7 +59,7 @@ class QueueTestSuite {
 
     // Consume everything
     while (count < total_count) {
-      auto qtok = queue_->pop(entry_ref);
+      auto qtok = queue_.pop(entry_ref);
       if (qtok.IsNull()) {
         continue;
       }
@@ -74,7 +74,7 @@ class QueueTestSuite {
     int rank = omp_get_thread_num();
     if (rank == 0) {
       // Ensure there's no data left in the queue
-      REQUIRE(queue_->pop(entry_ref).IsNull());
+      REQUIRE(queue_.pop(entry_ref).IsNull());
 
       // Ensure the data is all correct
       REQUIRE(entries.size() == total_count);
@@ -92,7 +92,7 @@ void ProduceThenConsume(size_t nproducers,
                         size_t nconsumers,
                         size_t count_per_rank,
                         size_t depth) {
-  auto queue = hipc::make_uptr<QueueT>(depth);
+  QueueT queue(depth);
   QueueTestSuite<QueueT, T> q(queue);
   std::atomic<size_t> count = 0;
   std::vector<size_t> entries;
@@ -122,7 +122,7 @@ void ProduceAndConsume(size_t nproducers,
                        size_t nconsumers,
                        size_t count_per_rank,
                        size_t depth) {
-  auto queue = hipc::make_uptr<QueueT>(depth);
+  QueueT queue(depth);
   size_t nthreads = nproducers + nconsumers;
   QueueTestSuite<QueueT, T> q(queue);
   std::atomic<size_t> count = 0;

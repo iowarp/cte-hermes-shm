@@ -12,8 +12,6 @@
 
 #include "basic_test.h"
 #include "test_init.h"
-#include "hermes_shm/data_structures/containers/ticket_queue.h"
-#include "hermes_shm/data_structures/containers/split_ticket_queue.h"
 #include "hermes_shm/data_structures/ipc/ticket_queue.h"
 #include "hermes_shm/data_structures/ipc/ticket_stack.h"
 #include "hermes_shm/data_structures/ipc/split_ticket_queue.h"
@@ -66,19 +64,5 @@ TEST_CASE("TestSplitTicketQueueIntMultiThreaded") {
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
   ProduceAndConsume<hipc::split_ticket_queue<int>, int>(8, 1, 8192, 64);
   ProduceAndConsume<hipc::split_ticket_queue<int>, int>(8, 8, 8192, 64);
-  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
-}
-
-TEST_CASE("TestTicketQueuePrivateInt") {
-  Allocator *alloc = alloc_g;
-  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
-  ProduceThenConsume<hshm::ticket_queue<int>, int>(1, 1, 32, 32);
-  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
-}
-
-TEST_CASE("TestSplitTicketQueuePrivateInt") {
-  Allocator *alloc = alloc_g;
-  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
-  ProduceThenConsume<hshm::split_ticket_queue<int>, int>(1, 1, 32, 32);
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
 }
