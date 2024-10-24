@@ -48,7 +48,7 @@ class chararr_templ {
   }
 
   /** Construct from std::string */
-  HSHM_CROSS_FUN
+  HSHM_HOST_FUN
   chararr_templ(const std::string &data) {
     length_ = data.size();
     memcpy(buf_, data.data(), length_);
@@ -168,12 +168,15 @@ class chararr_templ {
    * ===================================*/
 
 #define HERMES_STR_CMP_OPERATOR(op) \
+  HSHM_CROSS_FUN\
   bool operator TYPE_UNWRAP(op)(const char *other) const { \
     return hshm::strncmp(data(), size(), other, hshm::strlen(other)) op 0; \
   } \
+  HSHM_HOST_FUN \
   bool operator op(const std::string &other) const { \
     return hshm::strncmp(data(), size(), other.data(), other.size()) op 0; \
   } \
+  HSHM_CROSS_FUN \
   bool operator op(const chararr_templ &other) const { \
     return hshm::strncmp(data(), size(), other.data(), other.size()) op 0; \
   }

@@ -60,6 +60,7 @@ class pair : public ShmContainer {
   }
 
   /** SHM constructor */
+  HSHM_CROSS_FUN
   void shm_init(Allocator *alloc) {
     init_shm_container(alloc);
     HSHM_MAKE_AR0(first_, GetAllocator())
@@ -139,7 +140,7 @@ class pair : public ShmContainer {
    * Copy Constructors
    * ===================================*/
 
-  /** SHM copy constructor. From pair. */
+  /** Copy constructor. From pair. */
   HSHM_CROSS_FUN
   explicit pair(const pair &other) {
     init_shm_container(other.GetAllocator());

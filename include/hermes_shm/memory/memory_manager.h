@@ -30,7 +30,6 @@ namespace hshm::ipc {
  * policies over a single memory region.
  * */
 template<typename BackendT, typename ...Args>
-HSHM_CROSS_FUN
 MemoryBackend* MemoryManager::CreateBackend(size_t size,
                              const hshm::chararr &url,
                              Args&& ...args) {
@@ -45,7 +44,6 @@ MemoryBackend* MemoryManager::CreateBackend(size_t size,
  * Create and register a memory allocator for a particular backend.
  * */
 template<typename AllocT, typename ...Args>
-HSHM_CROSS_FUN
 Allocator* MemoryManager::CreateAllocator(const hshm::chararr &url,
                                           allocator_id_t alloc_id,
                                           size_t custom_header_size,

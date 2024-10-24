@@ -193,6 +193,7 @@ class iqueue : public ShmContainer {
   }
 
   /** SHM constructor. Default. */
+  HSHM_CROSS_FUN
   void shm_init(Allocator *alloc) {
     init_shm_container(alloc);
     length_ = 0;

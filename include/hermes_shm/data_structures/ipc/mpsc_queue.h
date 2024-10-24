@@ -64,6 +64,7 @@ class mpsc_queue : public ShmContainer {
   }
 
   /** SHM Constructor */
+  HSHM_CROSS_FUN
   void shm_init(Allocator *alloc, size_t depth = 1024) {
     init_shm_container(alloc);
     HSHM_MAKE_AR(queue_, GetAllocator(), depth);

@@ -45,7 +45,6 @@ class MemoryManager {
    * policies over a single memory region.
    * */
   template<typename BackendT, typename ...Args>
-  HSHM_CROSS_FUN
   MemoryBackend* CreateBackend(size_t size,
                                const hshm::chararr &url,
                                Args&& ...args);
@@ -98,7 +97,6 @@ class MemoryManager {
    * Create and register a memory allocator for a particular backend.
    * */
   template<typename AllocT, typename ...Args>
-  HSHM_CROSS_FUN
   Allocator* CreateAllocator(const hshm::chararr &url,
                              allocator_id_t alloc_id,
                              size_t custom_header_size,
