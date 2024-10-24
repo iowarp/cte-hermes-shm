@@ -15,7 +15,7 @@
 #define HERMES_DATA_STRUCTURES_LOCKLESS_STRING_H_
 
 #include "hermes_shm/data_structures/ipc/internal/shm_internal.h"
-#include "hermes_shm/data_structures/containers/charbuf.h"
+#include "hermes_shm/data_structures/ipc/string.h"
 #include "hermes_shm/data_structures/serialization/serialize_common.h"
 #include <string>
 
@@ -89,6 +89,13 @@ class string_templ : public ShmContainer {
 
   /** SHM Constructor. Just allocate space. */
   HSHM_CROSS_FUN
+  explicit string_templ(size_t length) {
+    init_shm_container(HERMES_MEMORY_MANAGER->GetDefaultAllocator());
+    _create_str(length);
+  }
+
+  /** SHM Constructor. Just allocate space. */
+  HSHM_CROSS_FUN
   explicit string_templ(Allocator *alloc,
                         size_t length) {
     init_shm_container(alloc);
@@ -129,6 +136,13 @@ class string_templ : public ShmContainer {
       alloc, text, length);
   }
 
+  /** Copy constructor. From string_templ. */
+  HSHM_CROSS_FUN
+  explicit string_templ(const string_templ &other) {
+    shm_strong_copy_op<false, true>(
+            other.GetAllocator(), other.data(), other.size());
+  }
+
   /** SHM copy constructor. From string_templ. */
   HSHM_CROSS_FUN
   explicit string_templ(Allocator *alloc,
@@ -167,22 +181,6 @@ class string_templ : public ShmContainer {
   string_templ& operator=(const std::string &other) {
     shm_strong_copy_op<true, true>(
       GetAllocator(), other.data(), other.size());
-    return *this;
-  }
-
-  /** SHM Constructor. From hshm::charbuf */
-  HSHM_CROSS_FUN
-  explicit string_templ(Allocator *alloc,
-                        const hshm::charbuf &other) {
-    shm_strong_copy_op<false, true>(
-                    alloc, other.data(), other.size());
-  }
-
-  /** SHM copy assignment operator. From hshm::charbuf. */
-  HSHM_CROSS_FUN
-  string_templ& operator=(const hshm::charbuf &other) {
-    shm_strong_copy_op<true, true>(
-                GetAllocator(), other.data(), other.size());
     return *this;
   }
 

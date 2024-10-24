@@ -15,7 +15,6 @@
 #include "hermes_shm/memory/backend/memory_backend_factory.h"
 #include "hermes_shm/memory/allocator/allocator_factory.h"
 #include "hermes_shm/introspect/system_info.h"
-#include "hermes_shm/data_structures/containers/unique_ptr.h"
 #include "hermes_shm/util/errors.h"
 #include "hermes_shm/util/logging.h"
 #include "hermes_shm/thread/thread_model_manager.h"
