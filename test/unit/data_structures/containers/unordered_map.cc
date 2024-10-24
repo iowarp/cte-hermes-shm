@@ -35,8 +35,7 @@ using hshm::ipc::string;
 template<typename Key, typename Val>
 void UnorderedMapOpTest() {
   Allocator *alloc = alloc_g;
-  auto map_p = hipc::make_uptr<unordered_map<Key, Val>>(alloc, 5);
-  auto &map = *map_p;
+  unordered_map<Key, Val> map(alloc, 5);
 
   // Insert 20 entries into the map (no growth trigger)
   PAGE_DIVIDE("Insert entries") {
@@ -185,12 +184,12 @@ void UnorderedMapOpTest() {
 
   // Copy assignment operator
   PAGE_DIVIDE("Copy the map") {
-    auto cpy = hipc::make_uptr<unordered_map<Key, Val>>(alloc);
-    (*cpy) = map;
+    unordered_map<Key, Val> cpy(alloc);
+    cpy = map;
     for (int i = 0; i < 100; ++i) {
       CREATE_KV_PAIR(key, i, val, i);
       auto iter1 = map.find(key);
-      auto iter2 = cpy->find(key);
+      auto iter2 = cpy.find(key);
       REQUIRE(!iter1.is_end());
       hipc::pair<Key, Val>& pair1 = *iter1;
       REQUIRE(pair1.GetKey() == key);
@@ -205,17 +204,17 @@ void UnorderedMapOpTest() {
 
   // Move assignment operator
   PAGE_DIVIDE("Move the map") {
-    auto cpy = hipc::make_uptr<unordered_map<Key, Val>>(alloc);
-    (*cpy) = std::move(map);
+    unordered_map<Key, Val> cpy(alloc);
+    cpy = std::move(map);
     for (int i = 0; i < 100; ++i) {
       CREATE_KV_PAIR(key, i, val, i);
-      auto iter = cpy->find(key);
+      auto iter = cpy.find(key);
       REQUIRE(!iter.is_end());
       hipc::pair<Key, Val>& pair = *iter;
       REQUIRE(pair.GetKey() == key);
       REQUIRE(pair.GetVal() == val);
     }
-    map = std::move(*cpy);
+    map = std::move(cpy);
   }
 }
 
