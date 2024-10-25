@@ -30,7 +30,7 @@ MemoryManager::MemoryManager() {
 #ifndef __CUDA_ARCH__
   static PosixMmap root_backend;
   HERMES_SYSTEM_INFO->RefreshInfo();
-  root_backend.shm_init(MEGABYTES(128));
+  root_backend.shm_init(MEGABYTES(128), "");
   root_backend.Own();
   root_backend_ = &root_backend;
   root_allocator_id_.bits_.major_ = 3;
@@ -84,6 +84,56 @@ MemoryBackend* MemoryManager::AttachBackend(MemoryBackendType type,
   backend->Disown();
   return backend;
 #endif
+}
+
+/**
+ * Attaches to an existing memory backend.
+ * */
+HSHM_CROSS_FUN
+MemoryBackend* MemoryManager::AttachBackend(MemoryBackend *other) {
+  MemoryBackend *backend;
+  switch (other->header_->type_) {
+    // Posix Mmap
+    case MemoryBackendType::kPosixMmap: {
+      backend = hipc::make_mptr<PosixMmap>(*(PosixMmap*)other).get();
+      break;
+    }
+
+    // Malloc
+    case MemoryBackendType::kMallocBackend: {
+      backend = hipc::make_mptr<MallocBackend>(*(MallocBackend*)other).get();
+      break;
+    }
+
+    // Array
+    case MemoryBackendType::kArrayBackend: {
+      backend = hipc::make_mptr<ArrayBackend>(*(ArrayBackend*)other).get();
+      break;
+    }
+
+#ifdef HERMES_ENABLE_CUDA
+    // Cuda Malloc
+    case MemoryBackendType::kCudaMalloc: {
+      backend = hipc::make_mptr<CudaMalloc>(*(CudaMalloc*)other).get();
+      break;
+    }
+
+    // Cuda Shm Mmap
+    case MemoryBackendType::kCudaShmMmap: {
+      backend = hipc::make_mptr<CudaShmMmap>(*(CudaShmMmap*)other).get();
+      break;
+    }
+#endif
+
+    // Default
+    default: {
+      HERMES_THROW_ERROR(MEMORY_BACKEND_NOT_FOUND);
+    }
+  }
+  HERMES_MEMORY_MANAGER->RegisterBackend(backend->header_->url_, backend);
+  ScanBackends();
+  backend->Disown();
+  return backend;
 }
 
 /**

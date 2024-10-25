@@ -34,7 +34,6 @@ namespace hshm::ipc {
 
 class PosixShmMmap : public MemoryBackend {
  protected:
-  hshm::chararr url_;
   int fd_;
 
  public:
@@ -55,15 +54,15 @@ class PosixShmMmap : public MemoryBackend {
   bool shm_init(size_t size, const hshm::chararr &url) {
     SetInitialized();
     Own();
-    url_ = std::move(url);
-    shm_unlink(url_.c_str());
-    fd_ = shm_open(url_.c_str(), O_CREAT | O_RDWR, 0666);
+    shm_unlink(url.c_str());
+    fd_ = shm_open(url.c_str(), O_CREAT | O_RDWR, 0666);
     if (fd_ < 0) {
       HILOG(kError, "shm_open failed: {}", strerror(errno));
       return false;
     }
     _Reserve(size + HERMES_SYSTEM_INFO->page_size_);
     header_ = (MemoryBackendHeader*)_Map(HERMES_SYSTEM_INFO->page_size_, 0);
+    header_->url_ = url;
     header_->type_ = MemoryBackendType::kPosixShmMmap;
     header_->data_size_ = size;
     data_size_ = size;
@@ -75,8 +74,7 @@ class PosixShmMmap : public MemoryBackend {
   bool shm_deserialize(const hshm::chararr &url) override {
     SetInitialized();
     Disown();
-    url_ = std::move(url);
-    fd_ = shm_open(url_.c_str(), O_RDWR, 0666);
+    fd_ = shm_open(url.c_str(), O_RDWR, 0666);
     if (fd_ < 0) {
       HILOG(kError, "shm_open failed: {}", strerror(errno));
       return false;
@@ -139,8 +137,9 @@ class PosixShmMmap : public MemoryBackend {
   /** Destroy shared memory */
   void _Destroy() {
     if (!IsInitialized()) { return; }
+    hshm::chararr url = header_->url_;
     _Detach();
-    shm_unlink(url_.c_str());
+    shm_unlink(url.c_str());
     UnsetInitialized();
   }
 };

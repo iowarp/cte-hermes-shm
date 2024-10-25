@@ -35,6 +35,7 @@ enum class MemoryBackendType {
 
 struct MemoryBackendHeader {
   MemoryBackendType type_;
+  hshm::chararr url_;
   size_t data_size_;
 };
 

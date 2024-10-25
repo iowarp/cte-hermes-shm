@@ -70,6 +70,12 @@ class MemoryManager {
                                const hshm::chararr &url);
 
   /**
+   * Attaches to an existing memory backend located.
+   * */
+  HSHM_CROSS_FUN
+  MemoryBackend* AttachBackend(MemoryBackend *backend);
+
+  /**
    * Returns a pointer to a backend that has already been attached.
    * */
   HSHM_CROSS_FUN
@@ -103,10 +109,10 @@ class MemoryManager {
                              Args&& ...args);
 
   /**
-  * Attaches to an existing memory backend located at \a url url.
-  * */
+   * Attaches to an existing memory backend located.
+   * */
   HSHM_CROSS_FUN
-  void Attach(MemoryBackendType type);
+  MemoryBackend* AttachAllocator(Allocator *alloc);
 
 
   /**

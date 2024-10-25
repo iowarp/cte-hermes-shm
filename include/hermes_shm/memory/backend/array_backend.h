@@ -38,7 +38,7 @@ class ArrayBackend : public MemoryBackend {
 
   ~ArrayBackend() override {}
 
-  bool shm_init(size_t size, char *region) {
+  bool shm_init(size_t size, const hshm::chararr &url, char *region) {
     if (size < sizeof(MemoryBackendHeader)) {
       HERMES_THROW_ERROR(SHMEM_CREATE_FAILED);
     }
@@ -46,6 +46,7 @@ class ArrayBackend : public MemoryBackend {
     Own();
     header_ = reinterpret_cast<MemoryBackendHeader *>(region);
     header_->type_ = MemoryBackendType::kArrayBackend;
+    header_->url_ = url;
     header_->data_size_ = size - sizeof(MemoryBackendHeader);
     data_size_ = header_->data_size_;
     data_ = region + sizeof(MemoryBackendHeader);
