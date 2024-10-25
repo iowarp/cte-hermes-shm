@@ -98,11 +98,11 @@ __global__ void mpsc_kernel(
     hipc::mpsc_queue<int> *queue) {
   auto mem_mngr = HERMES_MEMORY_MANAGER;
   mem_mngr->AttachBackend(backend);
-  mem_mngr->AttachAllocator(alloc);
-  printf("%d %d",
-         HERMES_MEMORY_MANAGER->GetDefaultAllocator() == alloc,
-         HERMES_MEMORY_MANAGER->GetBackend(backend->header_->url_) == backend);
-  queue->emplace(10);
+//  mem_mngr->AttachAllocator(alloc);
+//  printf("%d %d",
+//         HERMES_MEMORY_MANAGER->GetDefaultAllocator() == alloc,
+//         HERMES_MEMORY_MANAGER->GetBackend(backend->header_->url_) == backend);
+  // queue->emplace(10);
 }
 
 void mpsc_test() {

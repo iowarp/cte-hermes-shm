@@ -27,28 +27,33 @@ typedef hipc::unordered_map<hshm::chararr, MemoryBackend*> BACKEND_MAP_T;
 /** Create the root allocator */
 HSHM_CROSS_FUN
 MemoryManager::MemoryManager() {
-#ifndef __CUDA_ARCH__
-  static PosixMmap root_backend;
+  // System info
   HERMES_SYSTEM_INFO->RefreshInfo();
-  root_backend.shm_init(MEGABYTES(128), "");
-  root_backend.Own();
-  root_backend_ = &root_backend;
+
+  // Root backend
+  ArrayBackend *root_backend = (ArrayBackend*)root_backend_space_;
+  Allocator::ConstructObj(*root_backend);
+  root_backend->shm_init(KILOBYTES(16), "", root_alloc_data_);
+  root_backend->Own();
+  root_backend_ = root_backend;
+
+  // Root allocator
   root_allocator_id_.bits_.major_ = 3;
   root_allocator_id_.bits_.minor_ = 3;
-  Allocator::ConstructObj(*(StackAllocator*)root_alloc_space_);
-  root_alloc_ = (StackAllocator*)root_alloc_space_;
-  ((StackAllocator*)root_alloc_)->shm_init(
+  StackAllocator *root_alloc = (StackAllocator*)root_alloc_space_;
+  Allocator::ConstructObj(*root_alloc);
+  root_alloc->shm_init(
       root_allocator_id_, 0,
       root_backend_->data_,
       root_backend_->data_size_);
+  root_alloc_ = root_alloc;
   default_allocator_ = root_alloc_;
+
+  // Other allocators
   memset(allocators_, 0, sizeof(allocators_));
   RegisterAllocator(root_alloc_);
-  backends_ = hipc::make_mptr<BACKEND_MAP_T>().get();
+  backends_ = (void*)root_alloc_->NewObj<BACKEND_MAP_T>();
   HERMES_THREAD_MODEL->SetThreadModel(ThreadType::kPthread);
-#else
-  // TODO(llogan)
-#endif
 }
 
 /** Get the root allocator */
@@ -88,9 +93,10 @@ MemoryBackend* MemoryManager::AttachBackend(MemoryBackendType type,
 HSHM_CROSS_FUN
 MemoryBackend* MemoryManager::AttachBackend(MemoryBackend *other) {
   MemoryBackend *backend = MemoryBackendFactory::shm_attach(other);
-  RegisterBackend(backend->header_->url_, backend);
-  ScanBackends();
-  backend->Disown();
+//  RegisterBackend(backend->header_->url_, backend);
+//  ScanBackends();
+//  backend->Disown();
+//  return backend;
   return backend;
 }
 

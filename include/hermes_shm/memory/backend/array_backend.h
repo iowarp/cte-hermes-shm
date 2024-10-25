@@ -38,6 +38,7 @@ class ArrayBackend : public MemoryBackend {
 
   ~ArrayBackend() override {}
 
+  HSHM_CROSS_FUN
   bool shm_init(size_t size, const hshm::chararr &url, char *region) {
     if (size < sizeof(MemoryBackendHeader)) {
       HERMES_THROW_ERROR(SHMEM_CREATE_FAILED);

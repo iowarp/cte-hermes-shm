@@ -28,7 +28,9 @@ class MemoryManager {
   void *backends_;
   Allocator *allocators_[MAX_ALLOCATORS];
   Allocator *default_allocator_;
-  char root_alloc_space_[256];
+  char root_backend_space_[64];
+  char root_alloc_space_[64];
+  char root_alloc_data_[KILOBYTES(16)];
 
  public:
   /** Create the root allocator */

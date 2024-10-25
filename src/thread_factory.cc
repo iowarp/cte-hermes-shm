@@ -26,6 +26,7 @@ namespace hshm::thread_model {
 
 HSHM_CROSS_FUN
 ThreadModel* ThreadFactory::Get(ThreadType type) {
+#ifndef __CUDA_ARCH__
   switch (type) {
     case ThreadType::kPthread: {
 #ifdef HERMES_PTHREADS_ENABLED
@@ -46,6 +47,7 @@ ThreadModel* ThreadFactory::Get(ThreadType type) {
       return nullptr;
     }
   }
+#endif
 }
 
 }  // namespace hshm::thread_model

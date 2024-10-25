@@ -41,17 +41,19 @@ class MallocBackend : public MemoryBackend {
 
   ~MallocBackend() override {}
 
+  HSHM_CROSS_FUN
   bool shm_init(size_t size, const hshm::chararr &url) {
     (void) url;
     SetInitialized();
     Own();
     total_size_ = sizeof(MemoryBackendHeader) + size;
-    char *ptr = (char*)malloc(sizeof(MemoryBackendHeader));
+    char *ptr = (char*)malloc(total_size_);
     header_ = reinterpret_cast<MemoryBackendHeader*>(ptr);
     header_->type_ = MemoryBackendType::kMallocBackend;
+    header_->url_ = url;
     header_->data_size_ = size;
     data_size_ = size;
-    data_ = nullptr;
+    data_ = (char*)(header_ + 1);
     return true;
   }
 

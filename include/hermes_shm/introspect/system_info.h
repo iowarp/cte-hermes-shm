@@ -31,7 +31,9 @@ struct SystemInfo {
   int gid_;
   size_t ram_size_;
 
+  HSHM_CROSS_FUN
   void RefreshInfo() {
+#ifndef __CUDA_ARCH__
     pid_ = getpid();
     ncpu_ = get_nprocs_conf();
     page_size_ = getpagesize();
@@ -40,6 +42,7 @@ struct SystemInfo {
     uid_ = getuid();
     gid_ = getgid();
     ram_size_ = info.totalram;
+#endif
   }
 };
 
