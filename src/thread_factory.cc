@@ -35,13 +35,13 @@ ThreadModel* ThreadFactory::Get(ThreadType type) {
     // PTHREAD
 #ifdef HERMES_PTHREADS_ENABLED
     case ThreadType::kPthread: {
-      return HERMES_MEMORY_MANAGER->GetDefaultAllocator()->NewObj<Pthread>();
+      return HERMES_MEMORY_MANAGER->GetRootAllocator()->NewObj<Pthread>();
     }
 #endif
     // Argobots
 #ifdef HERMES_RPC_THALLIUM
     case ThreadType::kArgobots: {
-      return HERMES_MEMORY_MANAGER->GetDefaultAllocator()->NewObj<Argobots>();
+      return HERMES_MEMORY_MANAGER->GetRootAllocator()->NewObj<Argobots>();
     }
 #endif
 
@@ -49,7 +49,7 @@ ThreadModel* ThreadFactory::Get(ThreadType type) {
       ///////////// ON GPU
       // CUDA
     case ThreadType::kCuda: {
-      return HERMES_MEMORY_MANAGER->GetDefaultAllocator()->NewObj<Cuda>();
+      return HERMES_MEMORY_MANAGER->GetRootAllocator()->NewObj<Cuda>();
     }
 #endif
     default: {

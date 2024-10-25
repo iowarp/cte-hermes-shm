@@ -28,14 +28,21 @@ namespace hshm {
 template<typename T>
 class LockfreeSingleton {
  private:
+#ifndef __CUDA_ARCH__
+  static char data_[sizeof(T)];
   static T *obj_;
+#else
+  __device__ static char data_[sizeof(T)];
+  __device__ static T *obj_;
+#endif
 
  public:
   /** Get or create an instance of type T */
   inline static T* GetInstance() {
     if (!obj_) {
       if (obj_ == nullptr) {
-        obj_ = new T();
+        obj_ = (T*)data_;
+        new (obj_) T();
       }
     }
     return obj_;
@@ -43,6 +50,7 @@ class LockfreeSingleton {
 };
 
 #define DEFINE_LOCKFREE_SINGLETON_CC(T)\
+  template<> char hshm::LockfreeSingleton<T>::data_[sizeof(T)] = {0}; \
   template<> T* hshm::LockfreeSingleton<T>::obj_ = nullptr;
 
 #else

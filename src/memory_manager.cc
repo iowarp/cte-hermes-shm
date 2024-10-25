@@ -27,6 +27,8 @@ typedef hipc::unordered_map<hshm::chararr, MemoryBackend*> BACKEND_MAP_T;
 /** Create the root allocator */
 HSHM_CROSS_FUN
 MemoryManager::MemoryManager() {
+#ifndef __CUDA_ARCH__
+
   // System info
   HERMES_SYSTEM_INFO->RefreshInfo();
 
@@ -52,12 +54,7 @@ MemoryManager::MemoryManager() {
   // Other allocators
   memset(allocators_, 0, sizeof(allocators_));
   RegisterAllocator(root_alloc_);
-  hipc::pair<int, int> x;
-  // backends_ = (void*)root_alloc_->NewObj<BACKEND_MAP_T>();
-#ifndef __CUDA_ARCH__
-  HERMES_THREAD_MODEL->SetThreadModel(ThreadType::kPthread);
-#else
-  HERMES_THREAD_MODEL->SetThreadModel(ThreadType::kCuda);
+  backends_ = (void*)root_alloc_->NewObj<BACKEND_MAP_T>();
 #endif
 }
 
@@ -98,10 +95,9 @@ MemoryBackend* MemoryManager::AttachBackend(MemoryBackendType type,
 HSHM_CROSS_FUN
 MemoryBackend* MemoryManager::AttachBackend(MemoryBackend *other) {
   MemoryBackend *backend = MemoryBackendFactory::shm_attach(other);
-//  RegisterBackend(backend->header_->url_, backend);
-//  ScanBackends();
-//  backend->Disown();
-//  return backend;
+  RegisterBackend(backend->header_->url_, backend);
+  ScanBackends();
+  backend->Disown();
   return backend;
 }
 

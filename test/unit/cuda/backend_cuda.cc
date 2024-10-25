@@ -12,8 +12,10 @@
 #include "hermes_shm/types/atomic.h"
 #include "hermes_shm/thread/lock/mutex.h"
 #include "hermes_shm/memory/memory_manager.h"
+#include "hermes_shm/data_structures/ipc/string.h"
 #include <cassert>
 #include <hermes_shm/data_structures/ipc/mpsc_queue.h>
+#include <hermes_shm/data_structures/ipc/unordered_map.h>
 
 enum class TestMode {
   kWrite
@@ -32,7 +34,7 @@ struct MyStruct {
   }
 };
 
-__global__ void my_backend(MyStruct* ptr) {
+__global__ void backend_kernel(MyStruct* ptr) {
   // int idx = blockIdx.x * blockDim.x + threadIdx.x;
   MyStruct quest;
   ptr->x = quest.DoSomething();
@@ -62,7 +64,7 @@ void backend_test() {
   int numBlocks = 1;
   dim3 block(blockSize);
   dim3 grid(numBlocks);
-  my_backend<<<grid, block>>>(shm_struct);
+  backend_kernel<<<grid, block>>>(shm_struct);
   cudaDeviceSynchronize();
 
   // Verify correctness
@@ -75,29 +77,13 @@ void backend_test() {
   shm.shm_destroy();
 }
 
-__global__ void my_allocator(hipc::MemoryBackend *backend,
-                             hipc::Allocator *allocator) {
-  auto mem_mngr = HERMES_MEMORY_MANAGER;
-  mem_mngr->AttachBackend(backend);
-  mem_mngr->AttachAllocator(allocator);
-  hipc::uptr<hipc::vector<int>> vec = hipc::make_uptr<hipc::vector<int>>(10);
-  for (int i = 0; i < 10; ++i) {
-    (*vec)[i] = 10;
-  }
-}
-
-void allocator_test() {
-  auto mem_mngr = HERMES_MEMORY_MANAGER;
-  my_allocator<<<1, 1>>>(nullptr, nullptr);
-  printf("LONG LONG: %d\n", std::is_same_v<size_t, unsigned long long>);
-}
-
 __global__ void mpsc_kernel(
     hipc::MemoryBackend *backend,
     hipc::Allocator *alloc,
     hipc::mpsc_queue<int> *queue) {
   auto mem_mngr = HERMES_MEMORY_MANAGER;
   mem_mngr->AttachBackend(backend);
+  hipc::uptr<hipc::unordered_map<hshm::chararr, int>> x;
 //  mem_mngr->AttachAllocator(alloc);
 //  printf("%d %d",
 //         HERMES_MEMORY_MANAGER->GetDefaultAllocator() == alloc,
@@ -145,6 +131,19 @@ void atomic_test() {
   printf("ATOMIC: %llu\n", x->load());
 }
 
+__global__ void vclass_kernel() {
+  hipc::StackAllocator realalloc;
+  hipc::Allocator *alloc = &realalloc;
+  HERMES_THREAD_MODEL->SetThreadModel(hshm::ThreadType::kCuda);
+  HERMES_SYSTEM_INFO->RefreshInfo();
+  // alloc->GetId();
+  // HERMES_MEMORY_MANAGER->RegisterAllocator(alloc);
+}
+
+void vclass_test() {
+  vclass_kernel<<<1, 1>>>();
+  printf("LONG LONG: %d\n", std::is_same_v<size_t, unsigned long long>);
+}
 
 int main() {
   mpsc_test();

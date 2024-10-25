@@ -31,6 +31,16 @@ class ThreadModelManager {
   ThreadType type_; /**< The type of threads used in this program */
   thread_model::ThreadModel *thread_static_; /**< Functions static to all threads */
 
+  /** Default constructor */
+  HSHM_CROSS_FUN
+  ThreadModelManager() {
+#ifndef __CUDA_ARCH__
+    SetThreadModel(ThreadType::kPthread);
+#else
+    SetThreadModel(ThreadType::kCuda);
+#endif
+  }
+
   /** Set the threading model of this application */
   HSHM_CROSS_FUN
   void SetThreadModel(ThreadType type);
