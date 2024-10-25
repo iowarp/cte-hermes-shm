@@ -489,6 +489,7 @@ class unordered_map : public ShmContainer {
   }
 
   /** Find an object in the unordered_map */
+  HSHM_CROSS_FUN
   iterator_t find(const Key &key) {
     iterator_t iter(*this);
 

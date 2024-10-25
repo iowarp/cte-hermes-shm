@@ -197,7 +197,7 @@ struct cuda_atomic {
 
   /** Atomic pre-increment operator */
   HSHM_INLINE_GPU_FUN cuda_atomic& operator++() {
-    atomicInc(&x);
+    atomicAdd(&x, 1);
     return *this;
   }
 
@@ -208,8 +208,8 @@ struct cuda_atomic {
 
   /** Atomic pre-decrement operator */
   HSHM_INLINE_GPU_FUN cuda_atomic& operator--() {
-    atomicAdd(&x, -1);
-    return (this);
+    atomicAdd(&x, (T)(-1));
+    return (*this);
   }
 
   /** Atomic post-decrement operator */
@@ -224,7 +224,7 @@ struct cuda_atomic {
 
   /** Atomic subtract operator */
   HSHM_INLINE_GPU_FUN cuda_atomic operator-(T count) const {
-    return atomicAdd(&x, -count);
+    return atomicAdd(&x, (T)(-count));
   }
 
   /** Atomic add assign operator */

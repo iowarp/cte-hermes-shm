@@ -24,10 +24,11 @@ class MemoryManager {
  public:
   allocator_id_t root_allocator_id_;
   MemoryBackend *root_backend_;
-  Allocator *root_allocator_;
+  Allocator *root_alloc_;
   void *backends_;
   Allocator *allocators_[MAX_ALLOCATORS];
   Allocator *default_allocator_;
+  char root_alloc_space_[256];
 
  public:
   /** Create the root allocator */

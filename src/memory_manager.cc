@@ -35,14 +35,15 @@ MemoryManager::MemoryManager() {
   root_backend_ = &root_backend;
   root_allocator_id_.bits_.major_ = 3;
   root_allocator_id_.bits_.minor_ = 3;
-  root_allocator_ = GetRootAllocator();
-  ((StackAllocator*)root_allocator_)->shm_init(
+  Allocator::ConstructObj(*(StackAllocator*)root_alloc_space_);
+  root_alloc_ = (StackAllocator*)root_alloc_space_;
+  ((StackAllocator*)root_alloc_)->shm_init(
       root_allocator_id_, 0,
       root_backend_->data_,
       root_backend_->data_size_);
-  default_allocator_ = root_allocator_;
+  default_allocator_ = root_alloc_;
   memset(allocators_, 0, sizeof(allocators_));
-  RegisterAllocator(root_allocator_);
+  RegisterAllocator(root_alloc_);
   backends_ = hipc::make_mptr<BACKEND_MAP_T>().get();
   HERMES_THREAD_MODEL->SetThreadModel(ThreadType::kPthread);
 #else
@@ -53,12 +54,7 @@ MemoryManager::MemoryManager() {
 /** Get the root allocator */
 HSHM_CROSS_FUN
 Allocator* MemoryManager::GetRootAllocator() {
-#ifndef __CUDA_ARCH__
-  static StackAllocator root_allocator;
-  return &root_allocator;
-#else
-  // TODO(llogan)
-#endif
+  return root_alloc_;
 }
 
 /** Default backend size */
@@ -79,7 +75,7 @@ MemoryBackend* MemoryManager::AttachBackend(MemoryBackendType type,
                                             const hshm::chararr &url) {
 #ifndef __CUDA_ARCH__
   auto backend = MemoryBackendFactory::shm_deserialize(type, url);
-  HERMES_MEMORY_MANAGER->RegisterBackend(url, backend);
+  RegisterBackend(url, backend);
   ScanBackends();
   backend->Disown();
   return backend;
@@ -92,7 +88,7 @@ MemoryBackend* MemoryManager::AttachBackend(MemoryBackendType type,
 HSHM_CROSS_FUN
 MemoryBackend* MemoryManager::AttachBackend(MemoryBackend *other) {
   MemoryBackend *backend = MemoryBackendFactory::shm_attach(other);
-  HERMES_MEMORY_MANAGER->RegisterBackend(backend->header_->url_, backend);
+  RegisterBackend(backend->header_->url_, backend);
   ScanBackends();
   backend->Disown();
   return backend;
@@ -110,15 +106,12 @@ HSHM_CROSS_FUN
 MemoryBackend* MemoryManager::RegisterBackend(
     const hshm::chararr &url,
     MemoryBackend *backend) {
-#ifndef __CUDA_ARCH__
   BACKEND_MAP_T &backends = *(BACKEND_MAP_T*)backends_;
   if (GetBackend(url)) {
     HERMES_THROW_ERROR(MEMORY_BACKEND_REPEATED);
   }
   backends.emplace(url, backend);
   return backend;
-#endif
-
 }
 
 /**
@@ -141,14 +134,12 @@ void MemoryManager::ScanBackends() {
  * */
 HSHM_CROSS_FUN
 MemoryBackend* MemoryManager::GetBackend(const hshm::chararr &url) {
-#ifndef __CUDA_ARCH__
   BACKEND_MAP_T &backends = *(BACKEND_MAP_T*)backends_;
   auto iter = backends.find(url);
   if (iter == backends.end()) {
     return nullptr;
   }
   return *(*iter).second_;
-#endif
 }
 
 /**
@@ -180,8 +171,8 @@ void MemoryManager::DestroyBackend(const hshm::chararr &url) {
  * the virtual function table is not compatible with SHM.
  * */
 HSHM_CROSS_FUN
-void MemoryManager::AttachAllocator(Allocator *other) {
-  RegisterAllocator(AllocatorFactory::shm_attach(other));
+void MemoryManager::AttachAllocator(Allocator *alloc) {
+  RegisterAllocator(AllocatorFactory::shm_attach(alloc));
 }
 
 /**
@@ -190,9 +181,8 @@ void MemoryManager::AttachAllocator(Allocator *other) {
  * */
 HSHM_CROSS_FUN
 Allocator* MemoryManager::RegisterAllocator(Allocator *alloc) {
-#ifndef __CUDA_ARCH__
   if (default_allocator_ == nullptr ||
-      default_allocator_ == root_allocator_ ||
+      default_allocator_ == root_alloc_ ||
       default_allocator_->GetId() == alloc->GetId()) {
     default_allocator_ = alloc;
   }
@@ -203,7 +193,6 @@ Allocator* MemoryManager::RegisterAllocator(Allocator *alloc) {
   }
   allocators_[idx] = alloc;
   return alloc;
-#endif
 }
 
 /**
@@ -211,21 +200,17 @@ Allocator* MemoryManager::RegisterAllocator(Allocator *alloc) {
  * */
 HSHM_CROSS_FUN
 void MemoryManager::UnregisterAllocator(allocator_id_t alloc_id) {
-#ifndef __CUDA_ARCH__
   if (alloc_id == default_allocator_->GetId()) {
-    default_allocator_ = root_allocator_;
+    default_allocator_ = root_alloc_;
   }
   allocators_[alloc_id.ToIndex()] = nullptr;
-#endif
 }
 
 /**
  * Locates an allocator of a particular id
  * */
 HSHM_CROSS_FUN Allocator* MemoryManager::GetAllocator(allocator_id_t alloc_id) {
-#ifndef __CUDA_ARCH__
   return allocators_[alloc_id.ToIndex()];
-#endif
 }
 
 /**
@@ -234,9 +219,7 @@ HSHM_CROSS_FUN Allocator* MemoryManager::GetAllocator(allocator_id_t alloc_id) {
  * */
 HSHM_CROSS_FUN
 Allocator* MemoryManager::GetDefaultAllocator() {
-#ifndef __CUDA_ARCH__
   return reinterpret_cast<Allocator*>(default_allocator_);
-#endif
 }
 
 /**
@@ -245,9 +228,7 @@ Allocator* MemoryManager::GetDefaultAllocator() {
  * */
 HSHM_CROSS_FUN
 void MemoryManager::SetDefaultAllocator(Allocator *alloc) {
-#ifndef __CUDA_ARCH__
   default_allocator_ = alloc;
-#endif
 }
 
 }  // namespace hshm::ipc

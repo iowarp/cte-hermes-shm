@@ -92,16 +92,16 @@ void allocator_test() {
   printf("LONG LONG: %d\n", std::is_same_v<size_t, unsigned long long>);
 }
 
-__global__ void mpsc_queue_test(
+__global__ void mpsc_kernel(
     hipc::MemoryBackend *backend,
     hipc::Allocator *alloc,
     hipc::mpsc_queue<int> *queue) {
   auto mem_mngr = HERMES_MEMORY_MANAGER;
-  printf("%d, %d\n",
-         static_cast<int>(backend->header_->type_),
-         static_cast<int>(alloc->type_));
   mem_mngr->AttachBackend(backend);
   mem_mngr->AttachAllocator(alloc);
+  printf("%d %d",
+         HERMES_MEMORY_MANAGER->GetDefaultAllocator() == alloc,
+         HERMES_MEMORY_MANAGER->GetBackend(backend->header_->url_) == backend);
   queue->emplace(10);
 }
 
@@ -115,13 +115,9 @@ void mpsc_test() {
     MEGABYTES(100), shm_url, 0);
   hipc::Allocator *alloc = mem_mngr->CreateAllocator<hipc::ScalablePageAllocator>(
     shm_url, alloc_id, 0);
-  printf("%d, %d\n",
-         static_cast<int>(backend->header_->type_),
-         static_cast<int>(alloc->type_));
-
   auto queue = hipc::make_uptr<hipc::mpsc_queue<int>>(alloc, 256 * 256);
   printf("GetSize: %lu\n", queue->GetSize());
-  mpsc_queue_test<<<1, 128>>>(
+  mpsc_kernel<<<1, 1>>>(
     backend,
     alloc,
     queue.get());
