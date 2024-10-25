@@ -91,45 +91,7 @@ MemoryBackend* MemoryManager::AttachBackend(MemoryBackendType type,
  * */
 HSHM_CROSS_FUN
 MemoryBackend* MemoryManager::AttachBackend(MemoryBackend *other) {
-  MemoryBackend *backend;
-  switch (other->header_->type_) {
-    // Posix Mmap
-    case MemoryBackendType::kPosixMmap: {
-      backend = hipc::make_mptr<PosixMmap>(*(PosixMmap*)other).get();
-      break;
-    }
-
-    // Malloc
-    case MemoryBackendType::kMallocBackend: {
-      backend = hipc::make_mptr<MallocBackend>(*(MallocBackend*)other).get();
-      break;
-    }
-
-    // Array
-    case MemoryBackendType::kArrayBackend: {
-      backend = hipc::make_mptr<ArrayBackend>(*(ArrayBackend*)other).get();
-      break;
-    }
-
-#ifdef HERMES_ENABLE_CUDA
-    // Cuda Malloc
-    case MemoryBackendType::kCudaMalloc: {
-      backend = hipc::make_mptr<CudaMalloc>(*(CudaMalloc*)other).get();
-      break;
-    }
-
-    // Cuda Shm Mmap
-    case MemoryBackendType::kCudaShmMmap: {
-      backend = hipc::make_mptr<CudaShmMmap>(*(CudaShmMmap*)other).get();
-      break;
-    }
-#endif
-
-    // Default
-    default: {
-      HERMES_THROW_ERROR(MEMORY_BACKEND_NOT_FOUND);
-    }
-  }
+  MemoryBackend *backend = MemoryBackendFactory::shm_attach(other);
   HERMES_MEMORY_MANAGER->RegisterBackend(backend->header_->url_, backend);
   ScanBackends();
   backend->Disown();
@@ -210,6 +172,16 @@ void MemoryManager::DestroyBackend(const hshm::chararr &url) {
   backend->Own();
   UnregisterBackend(url);
 #endif
+}
+
+/**
+ * Attaches an allocator that was previously allocated,
+ * but was stored in shared memory. This is needed because
+ * the virtual function table is not compatible with SHM.
+ * */
+HSHM_CROSS_FUN
+void MemoryManager::AttachAllocator(Allocator *other) {
+  RegisterAllocator(AllocatorFactory::shm_attach(other));
 }
 
 /**

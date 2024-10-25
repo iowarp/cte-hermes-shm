@@ -56,6 +56,9 @@ struct AllocatorHeader {
  * The allocator base class.
  * */
 class Allocator {
+ public:
+  AllocatorType type_;
+
  protected:
   char *buffer_;
   size_t buffer_size_;

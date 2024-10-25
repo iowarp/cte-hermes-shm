@@ -27,63 +27,40 @@
 
 namespace hshm::ipc {
 
+#define HSHM_CREATE_BACKEND(T) \
+  if constexpr(std::is_same_v<T, BackendT>) {\
+    auto backend = HERMES_MEMORY_MANAGER->GetRootAllocator()->NewObj<T>();\
+    if (!backend->shm_init(size, url, std::forward<Args>(args)...)) {\
+      HERMES_THROW_ERROR(MEMORY_BACKEND_CREATE_FAILED);\
+    }\
+    return backend;\
+  }
+
+#define HSHM_DESERIALIZE_BACKEND(T)\
+  case MemoryBackendType::k##T: {\
+    auto backend = HERMES_MEMORY_MANAGER->GetRootAllocator()->NewObj<PosixShmMmap>();\
+    if (!backend->shm_deserialize(url)) {\
+      HERMES_THROW_ERROR(MEMORY_BACKEND_NOT_FOUND);\
+    }\
+    return backend;\
+  }
+
 class MemoryBackendFactory {
  public:
   /** Initialize a new backend */
   template<typename BackendT, typename ...Args>
   static MemoryBackend* shm_init(
     size_t size, const hshm::chararr &url, Args ...args) {
-    // PosixShmMmap
-    if constexpr(std::is_same_v<PosixShmMmap, BackendT>) {
-      auto backend = HERMES_MEMORY_MANAGER->GetDefaultAllocator()->NewObj<PosixShmMmap>();
-      if (!backend->shm_init(size, url, std::forward<Args>(args)...)) {
-        HERMES_THROW_ERROR(MEMORY_BACKEND_CREATE_FAILED);
-      }
-      return backend;
-    }
+    HSHM_CREATE_BACKEND(PosixShmMmap)
 #ifdef HERMES_ENABLE_CUDA
-    // CudaShmMmap
-    if constexpr(std::is_same_v<CudaShmMmap, BackendT>) {
-      auto backend = HERMES_MEMORY_MANAGER->GetDefaultAllocator()->NewObj<CudaShmMmap>();
-      if (!backend->shm_init(size, url, std::forward<Args>(args)...)) {
-        HERMES_THROW_ERROR(MEMORY_BACKEND_CREATE_FAILED);
-      }
-      return backend;
-    }
-    // CudaMalloc
-    if constexpr(std::is_same_v<CudaMalloc, BackendT>) {
-      auto backend = HERMES_MEMORY_MANAGER->GetDefaultAllocator()->NewObj<CudaMalloc>();
-      if (!backend->shm_init(size, std::forward<Args>(args)...)) {
-        HERMES_THROW_ERROR(MEMORY_BACKEND_CREATE_FAILED);
-      }
-      return backend;
-    }
+    HSHM_CREATE_BACKEND(CudaShmMmap)
+    HSHM_CREATE_BACKEND(CudaMalloc)
 #endif
-    // PosixMmap
-    if constexpr(std::is_same_v<PosixMmap, BackendT>) {
-      auto backend = HERMES_MEMORY_MANAGER->GetDefaultAllocator()->NewObj<PosixMmap>();
-      if (!backend->shm_init(size, std::forward<Args>(args)...)) {
-        HERMES_THROW_ERROR(MEMORY_BACKEND_CREATE_FAILED);
-      }
-      return backend;
-    }
-    // MallocBackend
-    if constexpr(std::is_same_v<MallocBackend, BackendT>) {
-      auto backend = HERMES_MEMORY_MANAGER->GetDefaultAllocator()->NewObj<MallocBackend>();
-      if (!backend->shm_init(size, url, std::forward<Args>(args)...)) {
-        HERMES_THROW_ERROR(MEMORY_BACKEND_CREATE_FAILED);
-      }
-      return backend;
-    }
-    // ArrayBackend
-    if constexpr(std::is_same_v<ArrayBackend, BackendT>) {
-      auto backend = HERMES_MEMORY_MANAGER->GetDefaultAllocator()->NewObj<ArrayBackend>();
-      if (!backend->shm_init(size, std::forward<Args>(args)...)) {
-        HERMES_THROW_ERROR(MEMORY_BACKEND_CREATE_FAILED);
-      }
-      return backend;
-    }
+    HSHM_CREATE_BACKEND(PosixMmap)
+    HSHM_CREATE_BACKEND(MallocBackend)
+    HSHM_CREATE_BACKEND(ArrayBackend)
 
+    // Error handling
     HERMES_THROW_ERROR(MEMORY_BACKEND_NOT_FOUND);
   }
 
@@ -91,65 +68,58 @@ class MemoryBackendFactory {
   static MemoryBackend* shm_deserialize(
     MemoryBackendType type, const hshm::chararr &url) {
     switch (type) {
-      // PosixShmMmap
-      case MemoryBackendType::kPosixShmMmap: {
-        auto backend = HERMES_MEMORY_MANAGER->GetDefaultAllocator()->NewObj<PosixShmMmap>();
-        if (!backend->shm_deserialize(url)) {
-          HERMES_THROW_ERROR(MEMORY_BACKEND_NOT_FOUND);
-        }
-        return backend;
-      }
-
+      HSHM_DESERIALIZE_BACKEND(PosixShmMmap)
 #ifdef HERMES_ENABLE_CUDA
-      // CudaShmMmap
-      case MemoryBackendType::kCudaShmMmap: {
-        auto backend = HERMES_MEMORY_MANAGER->GetDefaultAllocator()->NewObj<CudaShmMmap>();
-        if (!backend->shm_deserialize(url)) {
-          HERMES_THROW_ERROR(MEMORY_BACKEND_NOT_FOUND);
-        }
-        return backend;
-      }
-
-      // CudaMalloc
-      case MemoryBackendType::kCudaMalloc: {
-        auto backend = HERMES_MEMORY_MANAGER->GetDefaultAllocator()->NewObj<CudaMalloc>();
-        if (!backend->shm_deserialize(url)) {
-          HERMES_THROW_ERROR(MEMORY_BACKEND_NOT_FOUND);
-        }
-        return backend;
-      }
+      HSHM_DESERIALIZE_BACKEND(CudaShmMmap)
+      HSHM_DESERIALIZE_BACKEND(CudaMalloc)
 #endif
-
-      // PosixMmap
-      case MemoryBackendType::kPosixMmap: {
-        auto backend = HERMES_MEMORY_MANAGER->GetDefaultAllocator()->NewObj<PosixMmap>();
-        if (!backend->shm_deserialize(url)) {
-          HERMES_THROW_ERROR(MEMORY_BACKEND_NOT_FOUND);
-        }
-        return backend;
-      }
-
-      // MallocBackend
-      case MemoryBackendType::kMallocBackend: {
-        auto backend = HERMES_MEMORY_MANAGER->GetDefaultAllocator()->NewObj<MallocBackend>();
-        if (!backend->shm_deserialize(url)) {
-          HERMES_THROW_ERROR(MEMORY_BACKEND_NOT_FOUND);
-        }
-        return backend;
-      }
-
-      // ArrayBackend
-      case MemoryBackendType::kArrayBackend: {
-        auto backend = HERMES_MEMORY_MANAGER->GetDefaultAllocator()->NewObj<ArrayBackend>();
-        if (!backend->shm_deserialize(url)) {
-          HERMES_THROW_ERROR(MEMORY_BACKEND_NOT_FOUND);
-        }
-        return backend;
-      }
+      HSHM_DESERIALIZE_BACKEND(PosixMmap)
+      HSHM_DESERIALIZE_BACKEND(MallocBackend)
+      HSHM_DESERIALIZE_BACKEND(ArrayBackend)
 
       // Default
       default: return nullptr;
     }
+  }
+
+  /** Deserialize an existing backend */
+  HSHM_CROSS_FUN
+  static MemoryBackend* shm_attach(MemoryBackend *backend) {
+    switch (backend->header_->type_) {
+      // Posix Mmap
+      case MemoryBackendType::kPosixMmap: {
+        return HERMES_MEMORY_MANAGER->GetRootAllocator()->NewObjLocal<PosixMmap>(*(PosixMmap*)backend).ptr_;
+      }
+
+        // Malloc
+      case MemoryBackendType::kMallocBackend: {
+        return HERMES_MEMORY_MANAGER->GetRootAllocator()->NewObjLocal<MallocBackend>(*(MallocBackend*)backend).ptr_;
+      }
+
+        // Array
+      case MemoryBackendType::kArrayBackend: {
+        return HERMES_MEMORY_MANAGER->GetRootAllocator()->NewObjLocal<ArrayBackend>(*(ArrayBackend*)backend).ptr_;
+      }
+
+#ifdef HERMES_ENABLE_CUDA
+        // Cuda Malloc
+      case MemoryBackendType::kCudaMalloc: {
+        return HERMES_MEMORY_MANAGER->GetRootAllocator()->NewObjLocal<CudaMalloc>(*(CudaMalloc*)backend).ptr_;
+      }
+
+        // Cuda Shm Mmap
+      case MemoryBackendType::kCudaShmMmap: {
+        return HERMES_MEMORY_MANAGER->GetRootAllocator()->NewObjLocal<CudaShmMmap>(*(CudaShmMmap*)backend).ptr_;
+      }
+#endif
+
+        // Default
+      default: {
+        HERMES_THROW_ERROR(MEMORY_BACKEND_NOT_FOUND);
+      }
+    }
+
+    return nullptr;
   }
 };
 

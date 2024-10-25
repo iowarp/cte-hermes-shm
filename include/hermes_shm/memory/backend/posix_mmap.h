@@ -49,6 +49,16 @@ class PosixMmap : public MemoryBackend {
     }
   }
 
+  /** Copy constructor */
+  HSHM_CROSS_FUN
+  PosixMmap(const PosixMmap &other) {
+    total_size_ = other.total_size_;
+    header_ = other.header_;
+    data_size_ = other.data_size_;
+    data_ = other.data_;
+    Disown();
+  }
+
   /** Initialize backend */
   bool shm_init(size_t size, const hshm::chararr &url) {
     SetInitialized();

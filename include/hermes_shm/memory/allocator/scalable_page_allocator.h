@@ -161,6 +161,7 @@ class ScalablePageAllocator : public Allocator {
                 size_t buffer_size,
                 RealNumber coalesce_trigger = RealNumber(1, 5),
                 size_t coalesce_window = MEGABYTES(1)) {
+    type_ = AllocatorType::kScalablePageAllocator;
     buffer_ = buffer;
     buffer_size_ = buffer_size;
     header_ = reinterpret_cast<ScalablePageAllocatorHeader*>(buffer_);

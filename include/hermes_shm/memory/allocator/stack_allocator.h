@@ -69,6 +69,7 @@ class StackAllocator : public Allocator {
                 size_t custom_header_size,
                 char *buffer,
                 size_t buffer_size) {
+    type_ = AllocatorType::kStackAllocator;
     buffer_ = buffer;
     buffer_size_ = buffer_size;
     header_ = reinterpret_cast<StackAllocatorHeader*>(buffer_);

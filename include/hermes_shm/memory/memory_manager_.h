@@ -109,10 +109,12 @@ class MemoryManager {
                              Args&& ...args);
 
   /**
-   * Attaches to an existing memory backend located.
+   * Attaches an allocator that was previously allocated,
+   * but was stored in shared memory. This is needed because
+   * the virtual function table is not compatible with SHM.
    * */
   HSHM_CROSS_FUN
-  MemoryBackend* AttachAllocator(Allocator *alloc);
+  void AttachAllocator(Allocator *alloc);
 
 
   /**

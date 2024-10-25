@@ -65,6 +65,7 @@ class MallocAllocator : public Allocator {
   void shm_init(allocator_id_t id,
                 size_t custom_header_size,
                 size_t buffer_size)  {
+    type_ = AllocatorType::kMallocAllocator;
     buffer_ = nullptr;
     buffer_size_ = buffer_size;
     header_ = reinterpret_cast<MallocAllocatorHeader*>(
@@ -101,11 +102,15 @@ class MallocAllocator : public Allocator {
    * */
   HSHM_CROSS_FUN
   OffsetPointer AlignedAllocateOffset(size_t size, size_t alignment) override {
+#ifndef __CUDA_ARCH__
     auto page = reinterpret_cast<MallocPage*>(
         aligned_alloc(alignment, sizeof(MallocPage) + size));
     page->page_size_ = size;
     header_->total_alloc_size_ += size;
     return OffsetPointer(size_t(page + 1));
+#else
+    return OffsetPointer(0);
+#endif
   }
 
   /**
@@ -116,6 +121,7 @@ class MallocAllocator : public Allocator {
   HSHM_CROSS_FUN
   OffsetPointer ReallocateOffsetNoNullCheck(OffsetPointer p,
                                             size_t new_size) override {
+#ifndef __CUDA_ARCH__
     // Get the input page
     auto page = reinterpret_cast<MallocPage*>(
         p.off_.load() - sizeof(MallocPage));
@@ -128,6 +134,9 @@ class MallocAllocator : public Allocator {
 
     // Create the pointer
     return OffsetPointer(size_t(new_page + 1));
+#else
+    return OffsetPointer(0);
+#endif
   }
 
   /**
