@@ -10,8 +10,8 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_INCLUDE_HERMES_MEMORY_BACKEND_NULL_H_
-#define HERMES_INCLUDE_HERMES_MEMORY_BACKEND_NULL_H_
+#ifndef HERMES_INCLUDE_HERMES_MEMORY_BACKEND_MALLOC_H
+#define HERMES_INCLUDE_HERMES_MEMORY_BACKEND_MALLOC_H
 
 #include "memory_backend.h"
 #include <string>
@@ -31,15 +31,15 @@
 
 namespace hshm::ipc {
 
-class NullBackend : public MemoryBackend {
+class MallocBackend : public MemoryBackend {
  private:
   size_t total_size_;
 
  public:
   HSHM_CROSS_FUN
-  NullBackend() = default;
+  MallocBackend() = default;
 
-  ~NullBackend() override {}
+  ~MallocBackend() override {}
 
   bool shm_init(size_t size, const hshm::chararr &url) {
     (void) url;
@@ -48,6 +48,7 @@ class NullBackend : public MemoryBackend {
     total_size_ = sizeof(MemoryBackendHeader) + size;
     char *ptr = (char*)malloc(sizeof(MemoryBackendHeader));
     header_ = reinterpret_cast<MemoryBackendHeader*>(ptr);
+    header_->type_ = MemoryBackendType::kMallocBackend;
     header_->data_size_ = size;
     data_size_ = size;
     data_ = nullptr;
@@ -79,4 +80,4 @@ class NullBackend : public MemoryBackend {
 
 }  // namespace hshm::ipc
 
-#endif  // HERMES_INCLUDE_HERMES_MEMORY_BACKEND_NULL_H_
+#endif  // HERMES_INCLUDE_HERMES_MEMORY_BACKEND_MALLOC_H

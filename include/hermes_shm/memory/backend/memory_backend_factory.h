@@ -17,7 +17,7 @@
 #include "memory_backend.h"
 #include "posix_mmap.h"
 #include "posix_shm_mmap.h"
-#include "null_backend.h"
+#include "malloc_backend.h"
 #include "array_backend.h"
 #include "hermes_shm/memory/memory_manager_.h"
 #ifdef HERMES_ENABLE_CUDA
@@ -67,9 +67,9 @@ class MemoryBackendFactory {
       }
       return backend;
     }
-    // NullBackend
-    if constexpr(std::is_same_v<NullBackend, BackendT>) {
-      auto backend = HERMES_MEMORY_MANAGER->GetDefaultAllocator()->NewObj<NullBackend>();
+    // MallocBackend
+    if constexpr(std::is_same_v<MallocBackend, BackendT>) {
+      auto backend = HERMES_MEMORY_MANAGER->GetDefaultAllocator()->NewObj<MallocBackend>();
       if (!backend->shm_init(size, url, std::forward<Args>(args)...)) {
         HERMES_THROW_ERROR(MEMORY_BACKEND_CREATE_FAILED);
       }
@@ -129,9 +129,9 @@ class MemoryBackendFactory {
         return backend;
       }
 
-      // NullBackend
-      case MemoryBackendType::kNullBackend: {
-        auto backend = HERMES_MEMORY_MANAGER->GetDefaultAllocator()->NewObj<NullBackend>();
+      // MallocBackend
+      case MemoryBackendType::kMallocBackend: {
+        auto backend = HERMES_MEMORY_MANAGER->GetDefaultAllocator()->NewObj<MallocBackend>();
         if (!backend->shm_deserialize(url)) {
           HERMES_THROW_ERROR(MEMORY_BACKEND_NOT_FOUND);
         }

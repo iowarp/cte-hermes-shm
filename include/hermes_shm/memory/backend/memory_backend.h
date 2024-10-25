@@ -23,17 +23,19 @@
 
 namespace hshm::ipc {
 
-struct MemoryBackendHeader {
-  size_t data_size_;
-};
-
 enum class MemoryBackendType {
   kPosixShmMmap,
   kCudaShmMmap,
   kCudaMalloc,
-  kNullBackend,
+  kMallocBackend,
   kArrayBackend,
   kPosixMmap,
+};
+
+
+struct MemoryBackendHeader {
+  MemoryBackendType type_;
+  size_t data_size_;
 };
 
 #define MEMORY_BACKEND_INITIALIZED 0x1

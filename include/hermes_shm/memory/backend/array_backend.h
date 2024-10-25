@@ -45,6 +45,7 @@ class ArrayBackend : public MemoryBackend {
     SetInitialized();
     Own();
     header_ = reinterpret_cast<MemoryBackendHeader *>(region);
+    header_->type_ = MemoryBackendType::kArrayBackend;
     header_->data_size_ = size - sizeof(MemoryBackendHeader);
     data_size_ = header_->data_size_;
     data_ = region + sizeof(MemoryBackendHeader);

@@ -42,6 +42,7 @@ public:
     total_size_ = sizeof(MemoryBackendHeader) + size;
     char *ptr = _Map(total_size_);
     header_ = reinterpret_cast<MemoryBackendHeader*>(ptr);
+    header_->type_ = MemoryBackendType::kArrayBackend;
     header_->data_size_ = size;
     data_size_ = size;
     data_ = reinterpret_cast<char*>(header_ + 1);

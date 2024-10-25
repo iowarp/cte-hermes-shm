@@ -40,7 +40,12 @@ class CudaShmMmap : public PosixShmMmap {
   bool shm_init(size_t size, const hshm::chararr &url, int device) {
     cudaDeviceSynchronize();
     cudaSetDevice(device);
-    return PosixShmMmap::shm_init(size, url);
+    bool ret = PosixShmMmap::shm_init(size, url);
+    if (!ret) {
+      return false;
+    }
+    header_->type_ = MemoryBackendType::kCudaShmMmap;
+    return true;
   }
 
   /** Map shared memory */

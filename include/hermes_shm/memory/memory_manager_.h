@@ -103,6 +103,13 @@ class MemoryManager {
                              Args&& ...args);
 
   /**
+  * Attaches to an existing memory backend located at \a url url.
+  * */
+  HSHM_CROSS_FUN
+  void Attach(MemoryBackendType type);
+
+
+  /**
    * Registers an allocator. Used internally by ScanBackends, but may
    * also be used externally.
    * */

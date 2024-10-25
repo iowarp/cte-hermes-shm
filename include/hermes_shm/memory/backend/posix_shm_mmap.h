@@ -64,6 +64,7 @@ class PosixShmMmap : public MemoryBackend {
     }
     _Reserve(size + HERMES_SYSTEM_INFO->page_size_);
     header_ = (MemoryBackendHeader*)_Map(HERMES_SYSTEM_INFO->page_size_, 0);
+    header_->type_ = MemoryBackendType::kPosixShmMmap;
     header_->data_size_ = size;
     data_size_ = size;
     data_ = _Map(size, HERMES_SYSTEM_INFO->page_size_);

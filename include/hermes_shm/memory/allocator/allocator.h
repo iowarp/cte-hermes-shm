@@ -35,7 +35,7 @@ enum class AllocatorType {
  * Allocators inherit from this.
  * */
 struct AllocatorHeader {
-  int allocator_type_;
+  AllocatorType allocator_type_;
   allocator_id_t allocator_id_;
   size_t custom_header_size_;
 
@@ -46,7 +46,7 @@ struct AllocatorHeader {
   void Configure(allocator_id_t allocator_id,
                  AllocatorType type,
                  size_t custom_header_size) {
-    allocator_type_ = static_cast<int>(type);
+    allocator_type_ = type;
     allocator_id_ = allocator_id;
     custom_header_size_ = custom_header_size;
   }

@@ -129,7 +129,7 @@ TEST_CASE("StackAllocator") {
 }
 
 TEST_CASE("MallocAllocator") {
-  auto alloc = Pretest<hipc::NullBackend, hipc::MallocAllocator>();
+  auto alloc = Pretest<hipc::MallocBackend, hipc::MallocAllocator>();
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
   PageAllocationTest(alloc);
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);

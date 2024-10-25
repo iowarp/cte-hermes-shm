@@ -69,7 +69,7 @@ class AllocatorFactory {
    * */
   static Allocator* shm_deserialize(MemoryBackend *backend) {
     auto header_ = reinterpret_cast<AllocatorHeader*>(backend->data_);
-    switch (static_cast<AllocatorType>(header_->allocator_type_)) {
+    switch (header_->allocator_type_) {
       // Stack Allocator
       case AllocatorType::kStackAllocator: {
         auto alloc = HERMES_MEMORY_MANAGER->GetDefaultAllocator()->NewObj<StackAllocator>();
