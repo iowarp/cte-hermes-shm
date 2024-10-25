@@ -36,15 +36,15 @@ struct GlobalAtomicCounter {
 #define GLOBAL_COUNTER(Atomic, T)\
   template<>\
   Atomic<T> GlobalAtomicCounter<Atomic<T>>::count_ = Atomic<T>(0);
-GLOBAL_COUNTER(std::atomic, uint16_t)
-GLOBAL_COUNTER(std::atomic, uint32_t)
-GLOBAL_COUNTER(std::atomic, uint64_t)
-GLOBAL_COUNTER(hipc::nonatomic, uint16_t)
-GLOBAL_COUNTER(hipc::nonatomic, uint32_t)
-GLOBAL_COUNTER(hipc::nonatomic, uint64_t)
-GLOBAL_COUNTER(hipc::atomic, uint16_t)
-GLOBAL_COUNTER(hipc::atomic, uint32_t)
-GLOBAL_COUNTER(hipc::atomic, uint64_t)
+GLOBAL_COUNTER(std::atomic, hshm::u16)
+GLOBAL_COUNTER(std::atomic, hshm::u32)
+GLOBAL_COUNTER(std::atomic, hshm::u64)
+GLOBAL_COUNTER(hipc::nonatomic, hshm::u16)
+GLOBAL_COUNTER(hipc::nonatomic, hshm::u32)
+GLOBAL_COUNTER(hipc::nonatomic, hshm::u64)
+GLOBAL_COUNTER(hipc::atomic, hshm::u16)
+GLOBAL_COUNTER(hipc::atomic, hshm::u32)
+GLOBAL_COUNTER(hipc::atomic, hshm::u64)
 
 /** Atomic Test Suite */
 template<typename AtomicT, typename T, std::memory_order MemoryOrder>
@@ -219,13 +219,13 @@ void TestMemoryOrdersPerThread() {
  * thread.
  * */
 void TestAtomicTypes() {
-  // TestMemoryOrdersPerThread<hipc::atomic<s_u16>, uint16_t>();
-  TestMemoryOrdersPerThread<hipc::atomic<uint32_t>, uint32_t>();
-  TestMemoryOrdersPerThread<hipc::atomic<uint64_t>, uint64_t>();
+  // TestMemoryOrdersPerThread<hipc::atomic<hshm::min_i32>, uint16_t>();
+  TestMemoryOrdersPerThread<hipc::atomic<hshm::u32>, hshm::u32>();
+  TestMemoryOrdersPerThread<hipc::atomic<hshm::u64>, hshm::u64>();
 
   // TestMemoryOrdersPerThread<hipc::nonatomic<uint16_t>, uint16_t>();
-  TestMemoryOrdersPerThread<hipc::nonatomic<uint32_t>, uint32_t>();
-  TestMemoryOrdersPerThread<hipc::nonatomic<uint64_t>, uint64_t>();
+  TestMemoryOrdersPerThread<hipc::nonatomic<hshm::u32>, hshm::u32>();
+  TestMemoryOrdersPerThread<hipc::nonatomic<hshm::u64>, hshm::u64>();
 }
 
 /**

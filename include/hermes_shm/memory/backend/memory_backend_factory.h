@@ -20,6 +20,9 @@
 #include "null_backend.h"
 #include "array_backend.h"
 #include "hermes_shm/memory/memory_manager_.h"
+#ifdef HERMES_ENABLE_CUDA
+#include "cuda_shm_mmap.h"
+#endif
 
 namespace hshm::ipc {
 
@@ -36,30 +39,43 @@ class MemoryBackendFactory {
         HERMES_THROW_ERROR(MEMORY_BACKEND_CREATE_FAILED);
       }
       return backend;
-    } else if constexpr(std::is_same_v<PosixMmap, BackendT>) {
+    }
+#ifdef HERMES_ENABLE_CUDA
+    if constexpr(std::is_same_v<CudaShmMmap, BackendT>) {
+      // PosixShmMmap
+      auto backend = HERMES_MEMORY_MANAGER->GetDefaultAllocator()->NewObj<PosixShmMmap>();
+      if (!backend->shm_init(size, url, std::forward<args>(args)...)) {
+        HERMES_THROW_ERROR(MEMORY_BACKEND_CREATE_FAILED);
+      }
+      return backend;
+    }
+#endif
+    if constexpr(std::is_same_v<PosixMmap, BackendT>) {
       // PosixMmap
       auto backend = HERMES_MEMORY_MANAGER->GetDefaultAllocator()->NewObj<PosixMmap>();
       if (!backend->shm_init(size, std::forward<args>(args)...)) {
         HERMES_THROW_ERROR(MEMORY_BACKEND_CREATE_FAILED);
       }
       return backend;
-    } else if constexpr(std::is_same_v<NullBackend, BackendT>) {
+    }
+    if constexpr(std::is_same_v<NullBackend, BackendT>) {
       // NullBackend
       auto backend = HERMES_MEMORY_MANAGER->GetDefaultAllocator()->NewObj<NullBackend>();
       if (!backend->shm_init(size, url, std::forward<args>(args)...)) {
         HERMES_THROW_ERROR(MEMORY_BACKEND_CREATE_FAILED);
       }
       return backend;
-    } else if constexpr(std::is_same_v<ArrayBackend, BackendT>) {
+    }
+    if constexpr(std::is_same_v<ArrayBackend, BackendT>) {
       // ArrayBackend
       auto backend = HERMES_MEMORY_MANAGER->GetDefaultAllocator()->NewObj<ArrayBackend>();
       if (!backend->shm_init(size, std::forward<args>(args)...)) {
         HERMES_THROW_ERROR(MEMORY_BACKEND_CREATE_FAILED);
       }
       return backend;
-    } else {
-      HERMES_THROW_ERROR(MEMORY_BACKEND_NOT_FOUND);
     }
+
+    HERMES_THROW_ERROR(MEMORY_BACKEND_NOT_FOUND);
   }
 
   /** Deserialize an existing backend */
@@ -74,6 +90,17 @@ class MemoryBackendFactory {
         }
         return backend;
       }
+
+#ifdef HERMES_ENABLE_CUDA
+      // CudaShmMmap
+      case MemoryBackendType::kCudaShmMmap: {
+        auto backend = HERMES_MEMORY_MANAGER->GetDefaultAllocator()->NewObj<CudaShmMmap>();
+        if (!backend->shm_deserialize(url)) {
+          HERMES_THROW_ERROR(MEMORY_BACKEND_NOT_FOUND);
+        }
+        return backend;
+      }
+#endif
 
       // PosixMmap
       case MemoryBackendType::kPosixMmap: {

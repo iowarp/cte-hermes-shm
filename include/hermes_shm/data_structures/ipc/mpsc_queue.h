@@ -41,8 +41,8 @@ class mpsc_queue : public ShmContainer {
  public:
   HIPC_CONTAINER_TEMPLATE((CLASS_NAME), (TYPED_CLASS))
   ShmArchive<vector<pair<bitfield32_t, T>>> queue_;
-  hipc::atomic<_qtok_t> tail_;
-  hipc::atomic<_qtok_t> head_;
+  hipc::atomic<qtok_id> tail_;
+  hipc::atomic<qtok_id> head_;
   RwLock lock_;
   bitfield32_t flags_;
 
@@ -182,8 +182,8 @@ class mpsc_queue : public ShmContainer {
   qtok_t emplace(Args&&... args) {
     // Allocate a slot in the queue
     // The slot is marked NULL, so pop won't do anything if context switch
-    _qtok_t head = head_.load();
-    _qtok_t tail = tail_.fetch_add(1);
+    qtok_id head = head_.load();
+    qtok_id tail = tail_.fetch_add(1);
     size_t size = tail - head + 1;
     vector<pair<bitfield32_t, T>> &queue = (*queue_);
 
@@ -218,14 +218,14 @@ class mpsc_queue : public ShmContainer {
   HSHM_CROSS_FUN
   qtok_t pop(T &val) {
     // Don't pop if there's no entries
-    _qtok_t head = head_.load();
-    _qtok_t tail = tail_.load();
+    qtok_id head = head_.load();
+    qtok_id tail = tail_.load();
     if (head >= tail) {
       return qtok_t::GetNull();
     }
 
     // Pop the element, but only if it's marked valid
-    _qtok_t idx = head % (*queue_).size();
+    qtok_id idx = head % (*queue_).size();
     hipc::pair<bitfield32_t, T> &entry = (*queue_)[idx];
     if (entry.GetFirst().Any(1)) {
       val = std::move(entry.GetSecond());
@@ -241,14 +241,14 @@ class mpsc_queue : public ShmContainer {
   HSHM_CROSS_FUN
   qtok_t pop() {
     // Don't pop if there's no entries
-    _qtok_t head = head_.load();
-    _qtok_t tail = tail_.load();
+    qtok_id head = head_.load();
+    qtok_id tail = tail_.load();
     if (head >= tail) {
       return qtok_t::GetNull();
     }
 
     // Pop the element, but only if it's marked valid
-    _qtok_t idx = head % (*queue_).size();
+    qtok_id idx = head % (*queue_).size();
     hipc::pair<bitfield32_t, T> &entry = (*queue_)[idx];
     if (entry.GetFirst().Any(1)) {
       entry.GetFirst().Clear();
@@ -263,14 +263,14 @@ class mpsc_queue : public ShmContainer {
   HSHM_CROSS_FUN
   qtok_t peek(T *&val, int off = 0) {
     // Don't pop if there's no entries
-    _qtok_t head = head_.load() + off;
-    _qtok_t tail = tail_.load();
+    qtok_id head = head_.load() + off;
+    qtok_id tail = tail_.load();
     if (head >= tail) {
       return qtok_t::GetNull();
     }
 
     // Pop the element, but only if it's marked valid
-    _qtok_t idx = (head) % (*queue_).size();
+    qtok_id idx = (head) % (*queue_).size();
     hipc::pair<bitfield32_t, T> &entry = (*queue_)[idx];
     if (entry.GetFirst().Any(1)) {
       val = &entry.GetSecond();
@@ -284,14 +284,14 @@ class mpsc_queue : public ShmContainer {
   HSHM_CROSS_FUN
   qtok_t peek(pair<bitfield32_t, T> *&val, int off = 0) {
     // Don't pop if there's no entries
-    _qtok_t head = head_.load() + off;
-    _qtok_t tail = tail_.load();
+    qtok_id head = head_.load() + off;
+    qtok_id tail = tail_.load();
     if (head >= tail) {
       return qtok_t::GetNull();
     }
 
     // Pop the element, but only if it's marked valid
-    _qtok_t idx = (head) % (*queue_).size();
+    qtok_id idx = (head) % (*queue_).size();
     hipc::pair<bitfield32_t, T> &entry = (*queue_)[idx];
     if (entry.GetFirst().Any(1)) {
       val = &entry;

@@ -24,7 +24,7 @@ struct MallocPage {
 };
 
 struct MallocAllocatorHeader : public AllocatorHeader {
-  hipc::atomic<s_u64> total_alloc_size_;
+  hipc::atomic<hshm::min_u64> total_alloc_size_;
 
   HSHM_CROSS_FUN
   MallocAllocatorHeader() = default;

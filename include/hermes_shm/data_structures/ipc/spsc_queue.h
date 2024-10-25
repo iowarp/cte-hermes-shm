@@ -42,8 +42,8 @@ class spsc_queue_templ : public ShmContainer {
  public:
   HIPC_CONTAINER_TEMPLATE((CLASS_NAME), (TYPED_CLASS))
   ShmArchive<vector<T>> queue_;
-  _qtok_t tail_;
-  _qtok_t head_;
+  qtok_id tail_;
+  qtok_id head_;
 
  public:
   /**====================================
@@ -187,7 +187,7 @@ class spsc_queue_templ : public ShmContainer {
   HSHM_CROSS_FUN
   qtok_t emplace(Args&&... args) {
     // Don't emplace if there is no space
-    _qtok_t entry_tok = tail_;
+    qtok_id entry_tok = tail_;
     size_t size = tail_ - head_;
     auto &queue = (*queue_);
     if (size >= queue.size()) {
@@ -195,7 +195,7 @@ class spsc_queue_templ : public ShmContainer {
     }
 
     // Do the emplace
-    _qtok_t idx = entry_tok % queue.size();
+    qtok_id idx = entry_tok % queue.size();
     auto iter = queue.begin() + idx;
     queue.replace(iter, std::forward<Args>(args)...);
     tail_ += 1;
@@ -207,15 +207,15 @@ class spsc_queue_templ : public ShmContainer {
   HSHM_CROSS_FUN
   qtok_t pop(T &val) {
     // Don't pop if there's no entries
-    _qtok_t head = head_;
-    _qtok_t tail = tail_;
+    qtok_id head = head_;
+    qtok_id tail = tail_;
     if (head >= tail) {
       return qtok_t::GetNull();
     }
 
     // Pop the element
     auto &queue = (*queue_);
-    _qtok_t idx = head % queue.size();
+    qtok_id idx = head % queue.size();
     T &entry = queue[idx];
     (val) = std::move(entry);
     head_ += 1;

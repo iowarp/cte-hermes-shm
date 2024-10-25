@@ -18,7 +18,6 @@
 
 namespace hshm {
 
-#ifndef __CUDA_ARCH__
 typedef uint8_t u8;   /**< 8-bit unsigned integer */
 typedef uint16_t u16; /**< 16-bit unsigned integer */
 typedef uint32_t u32; /**< 32-bit unsigned integer */
@@ -30,38 +29,31 @@ typedef int64_t i64;  /**< 64-bit signed integer */
 typedef float f32;    /**< 32-bit float */
 typedef double f64;   /**< 64-bit float */
 
-typedef uint8_t s_u8;   /**< 8-bit unsigned integer */
-typedef uint16_t s_u16; /**< 16-bit unsigned integer */
-typedef uint32_t s_u32; /**< 32-bit unsigned integer */
-typedef uint64_t s_u64; /**< 64-bit unsigned integer */
-typedef int8_t s_i8;    /**< 8-bit signed integer */
-typedef int16_t s_i16;  /**< 16-bit signed integer */
-typedef int32_t s_i32;  /**< 32-bit signed integer */
-typedef int64_t s_i64;  /**< 64-bit signed integer */
-typedef float s_f32;    /**< 32-bit float */
-typedef double s_f64;   /**< 64-bit float */
-#else
-typedef unsigned char u8;   /**< 8-bit unsigned integer */
-typedef unsigned short u16; /**< 16-bit unsigned integer */
-typedef unsigned u32; /**< 32-bit unsigned integer */
-typedef long long unsigned u64; /**< 64-bit unsigned integer */
-typedef char i8;    /**< 8-bit signed integer */
-typedef short i16;  /**< 16-bit signed integer */
-typedef int i32;  /**< 32-bit signed integer */
-typedef long long int i64;  /**< 64-bit signed integer */
-typedef float f32;    /**< 32-bit float */
-typedef double f64;   /**< 64-bit float */
+typedef char byte; /**< Signed char */
+typedef unsigned char ubyte; /**< Unsigned char */
+typedef short short_int; /**< Signed int */
+typedef unsigned short short_uint; /**< Unsigned int */
+typedef int reg_int; /**< Signed int */
+typedef unsigned reg_uint; /**< Unsigned int */
+typedef long long big_int; /**< Long long */
+typedef unsigned long long big_uint; /**< Unsigned long long */
 
-typedef int s_u8;   /**< 8-bit unsigned integer */
-typedef int s_u16; /**< 16-bit unsigned integer */
-typedef int s_u32; /**< 32-bit unsigned integer */
-typedef int s_u64; /**< 64-bit unsigned integer */
-typedef int s_i8;    /**< 8-bit signed integer */
-typedef int s_i16;  /**< 16-bit signed integer */
-typedef int s_i32;  /**< 32-bit signed integer */
-typedef int s_i64;  /**< 64-bit signed integer */
-typedef float s_f32;    /**< 32-bit float */
-typedef double s_f64;   /**< 64-bit float */
+#ifndef HERMES_ENABLE_CUDA
+typedef i16 min_i16;
+typedef i32 min_i32;
+typedef i64 min_i64;
+
+typedef u16 min_u16;
+typedef u32 min_u32;
+typedef u64 min_u64;
+#else
+typedef reg_int min_i16;
+typedef reg_int min_i32;
+typedef big_uint min_i64;
+
+typedef reg_uint min_u16;
+typedef reg_uint min_u32;
+typedef big_uint min_u64;
 #endif
 
 }  // namespace hshm

@@ -40,7 +40,7 @@ class split_ticket_queue : public ShmContainer {
  public:
   HIPC_CONTAINER_TEMPLATE((CLASS_NAME), (TYPED_CLASS))
   ShmArchive<vector<ticket_queue<T>>> splits_;
-  hipc::atomic<s_u16> rr_tail_, rr_head_;
+  hipc::atomic<hshm::min_i32> rr_tail_, rr_head_;
 
  public:
   /**====================================

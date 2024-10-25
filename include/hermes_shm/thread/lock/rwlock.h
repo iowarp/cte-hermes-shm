@@ -33,10 +33,10 @@ class RwLockMode {
 /** A reader-writer lock implementation */
 struct RwLock {
   ipc::atomic<RwLockMode::Type> mode_;
-  ipc::atomic<u32> readers_;
-  ipc::atomic<u32> writers_;
-  ipc::atomic<u64> ticket_;
-  ipc::atomic<u32> cur_writer_;
+  ipc::atomic<hshm::reg_uint> readers_;
+  ipc::atomic<hshm::reg_uint> writers_;
+  ipc::atomic<hshm::reg_uint> cur_writer_;
+  ipc::atomic<hshm::big_uint> ticket_;
 #ifdef HERMES_DEBUG_LOCK
   uint32_t owner_;
 #endif

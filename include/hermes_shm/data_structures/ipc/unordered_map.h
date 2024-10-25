@@ -177,7 +177,7 @@ class unordered_map : public ShmContainer {
   ShmArchive<vector<BUCKET_T>> buckets_;
   RealNumber max_capacity_;
   RealNumber growth_;
-  hipc::atomic<s_u64> length_;
+  hipc::atomic<hshm::min_u64> length_;
 
  public:
   /**====================================

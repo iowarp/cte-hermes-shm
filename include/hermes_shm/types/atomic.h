@@ -167,7 +167,7 @@ struct cuda_atomic {
 
   /** Atomic fetch_sub wrapper*/
   HSHM_INLINE_GPU_FUN T fetch_sub(T count) {
-    return atomicSub(&x, count);
+    return atomicAdd(&x, -count);
   }
 
   /** Atomic load wrapper */
@@ -208,7 +208,7 @@ struct cuda_atomic {
 
   /** Atomic pre-decrement operator */
   HSHM_INLINE_GPU_FUN cuda_atomic& operator--() {
-    atomicSub(&x);
+    atomicAdd(&x, -1);
     return (this);
   }
 
@@ -224,7 +224,7 @@ struct cuda_atomic {
 
   /** Atomic subtract operator */
   HSHM_INLINE_GPU_FUN cuda_atomic operator-(T count) const {
-    return atomicSub(&x, count);
+    return atomicAdd(&x, -count);
   }
 
   /** Atomic add assign operator */
@@ -235,7 +235,7 @@ struct cuda_atomic {
 
   /** Atomic subtract assign operator */
   HSHM_INLINE_GPU_FUN cuda_atomic& operator-=(T count) {
-    atomicSub(&x, count);
+    atomicAdd(&x, -count);
     return *this;
   }
 

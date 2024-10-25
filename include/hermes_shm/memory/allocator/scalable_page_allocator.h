@@ -28,8 +28,8 @@ namespace hshm::ipc {
 struct FreeListSetIpc : public ShmContainer {
   HIPC_CONTAINER_TEMPLATE(FreeListSetIpc, FreeListSetIpc)
   ShmArchive<vector<pair<Mutex, iqueue<MpPage>>>> lists_;
-  hipc::atomic<s_u16> rr_free_;
-  hipc::atomic<s_u16> rr_alloc_;
+  hipc::atomic<hshm::min_i32> rr_free_;
+  hipc::atomic<hshm::min_i32> rr_alloc_;
 
   /** SHM constructor. Default. */
   HSHM_CROSS_FUN
@@ -84,13 +84,13 @@ struct FreeListSetIpc : public ShmContainer {
 
 struct FreeListSet {
   hipc::vector<hipc::pair<Mutex*, iqueue<MpPage>*>> lists_;
-  hipc::atomic<s_u16> *rr_free_;
-  hipc::atomic<s_u16> *rr_alloc_;
+  hipc::atomic<hshm::min_i32> *rr_free_;
+  hipc::atomic<hshm::min_i32> *rr_alloc_;
 };
 
 struct ScalablePageAllocatorHeader : public AllocatorHeader {
   ShmArchive<vector<FreeListSetIpc>> free_lists_;
-  hipc::atomic<s_u64> total_alloc_;
+  hipc::atomic<hshm::min_u64> total_alloc_;
   size_t coalesce_trigger_;
   size_t coalesce_window_;
 

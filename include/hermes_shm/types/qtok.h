@@ -16,17 +16,18 @@
 namespace hshm {
 
 /** Represents the internal qtok type */
-typedef s_u64 _qtok_t;
+typedef hshm::min_u64 qtok_id;
+typedef qtok_id _qtok_t;
 
 /** Represents a ticket in the queue */
 struct qtok_t {
-  _qtok_t id_;
+  qtok_id id_;
 
   /** Default constructor */
   HSHM_INLINE_CROSS_FUN qtok_t() = default;
 
   /** Emplace constructor */
-  HSHM_INLINE_CROSS_FUN explicit qtok_t(_qtok_t id) : id_(id) {}
+  HSHM_INLINE_CROSS_FUN explicit qtok_t(qtok_id id) : id_(id) {}
 
   /** Copy constructor */
   HSHM_INLINE_CROSS_FUN qtok_t(const qtok_t &other) : id_(other.id_) {}
@@ -60,7 +61,7 @@ struct qtok_t {
 
   /** Get the null qtok */
   HSHM_INLINE_CROSS_FUN static qtok_t GetNull() {
-    return qtok_t(std::numeric_limits<_qtok_t>::max());
+    return qtok_t(std::numeric_limits<qtok_id>::max());
   }
 
   /** Check if null */

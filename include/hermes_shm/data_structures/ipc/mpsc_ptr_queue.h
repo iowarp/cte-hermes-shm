@@ -41,8 +41,8 @@ class mpsc_ptr_queue : public ShmContainer {
  public:
   HIPC_CONTAINER_TEMPLATE((CLASS_NAME), (TYPED_CLASS))
   ShmArchive<vector<T>> queue_;
-  hipc::atomic<_qtok_t> tail_;
-  hipc::atomic<_qtok_t> head_;
+  hipc::atomic<qtok_id> tail_;
+  hipc::atomic<qtok_id> head_;
   RwLock lock_;
   bitfield32_t flags_;
 
@@ -191,8 +191,8 @@ class mpsc_ptr_queue : public ShmContainer {
   qtok_t emplace(const T &val) {
     // Allocate a slot in the queue
     // The slot is marked NULL, so pop won't do anything if context switch
-    _qtok_t head = head_.load();
-    _qtok_t tail = tail_.fetch_add(1);
+    qtok_id head = head_.load();
+    qtok_id tail = tail_.fetch_add(1);
     size_t size = tail - head + 1;
     vector<T> &queue = (*queue_);
 
@@ -228,14 +228,14 @@ class mpsc_ptr_queue : public ShmContainer {
   HSHM_CROSS_FUN
   qtok_t pop(T &val) {
     // Don't pop if there's no entries
-    _qtok_t head = head_.load();
-    _qtok_t tail = tail_.load();
+    qtok_id head = head_.load();
+    qtok_id tail = tail_.load();
     if (head >= tail) {
       return qtok_t::GetNull();
     }
 
     // Pop the element, but only if it's marked valid
-    _qtok_t idx = head % (*queue_).size();
+    qtok_id idx = head % (*queue_).size();
     T &entry = (*queue_)[idx];
 
     // Check if bit is marked
