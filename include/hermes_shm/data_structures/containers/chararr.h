@@ -36,7 +36,7 @@ class chararr_templ {
   /** Construct from const char* */
   HSHM_CROSS_FUN
   chararr_templ(const char *data) {
-    length_ = 0;
+    length_ = hshm::strnlen(data, LENGTH);
     memcpy(buf_, data, length_);
   }
 

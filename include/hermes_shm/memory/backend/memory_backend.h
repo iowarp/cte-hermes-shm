@@ -30,6 +30,7 @@ struct MemoryBackendHeader {
 enum class MemoryBackendType {
   kPosixShmMmap,
   kCudaShmMmap,
+  kCudaMalloc,
   kNullBackend,
   kArrayBackend,
   kPosixMmap,

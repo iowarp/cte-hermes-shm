@@ -52,6 +52,7 @@ class CudaShmMmap : public PosixShmMmap {
 
   /** Detach shared memory */
   void _Detach() override {
+    cudaHostUnregister(header_);
     cudaHostUnregister(data_);
     _ShmDetach();
   }
