@@ -52,8 +52,13 @@ MemoryManager::MemoryManager() {
   // Other allocators
   memset(allocators_, 0, sizeof(allocators_));
   RegisterAllocator(root_alloc_);
-  backends_ = (void*)root_alloc_->NewObj<BACKEND_MAP_T>();
+  hipc::pair<int, int> x;
+  // backends_ = (void*)root_alloc_->NewObj<BACKEND_MAP_T>();
+#ifndef __CUDA_ARCH__
   HERMES_THREAD_MODEL->SetThreadModel(ThreadType::kPthread);
+#else
+  HERMES_THREAD_MODEL->SetThreadModel(ThreadType::kCuda);
+#endif
 }
 
 /** Get the root allocator */

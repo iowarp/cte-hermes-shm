@@ -20,34 +20,43 @@
 #ifdef HERMES_RPC_THALLIUM
 #include "hermes_shm/thread/thread_model/argobots.h"
 #endif
+#ifdef HERMES_ENABLE_CUDA
+#include "hermes_shm/thread/thread_model/cuda.h"
+#endif
 #include "hermes_shm/util/logging.h"
 
 namespace hshm::thread_model {
 
 HSHM_CROSS_FUN
 ThreadModel* ThreadFactory::Get(ThreadType type) {
-#ifndef __CUDA_ARCH__
   switch (type) {
-    case ThreadType::kPthread: {
+#ifndef __CUDA_ARCH__
+    ///////////// OFF GPU
+    // PTHREAD
 #ifdef HERMES_PTHREADS_ENABLED
+    case ThreadType::kPthread: {
       return HERMES_MEMORY_MANAGER->GetDefaultAllocator()->NewObj<Pthread>();
-#else
-      return nullptr;
-#endif
     }
-    case ThreadType::kArgobots: {
+#endif
+    // Argobots
 #ifdef HERMES_RPC_THALLIUM
+    case ThreadType::kArgobots: {
       return HERMES_MEMORY_MANAGER->GetDefaultAllocator()->NewObj<Argobots>();
-#else
-      return nullptr;
-#endif
     }
+#endif
+
+#else
+      ///////////// ON GPU
+      // CUDA
+    case ThreadType::kCuda: {
+      return HERMES_MEMORY_MANAGER->GetDefaultAllocator()->NewObj<Cuda>();
+    }
+#endif
     default: {
       HELOG(kWarning, "No such thread type");
       return nullptr;
     }
   }
-#endif
 }
 
 }  // namespace hshm::thread_model
