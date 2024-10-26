@@ -30,7 +30,7 @@ namespace hshm::ipc {
 #define HSHM_CREATE_BACKEND(T) \
   if constexpr(std::is_same_v<T, BackendT>) {\
     auto backend = HERMES_MEMORY_MANAGER->GetRootAllocator()->NewObj<T>();\
-    if (!backend->shm_init(size, url, std::forward<Args>(args)...)) {\
+    if (!backend->shm_init(backend_id, size, std::forward<Args>(args)...)) {\
       HERMES_THROW_ERROR(MEMORY_BACKEND_CREATE_FAILED);\
     }\
     return backend;\
@@ -50,7 +50,7 @@ class MemoryBackendFactory {
   /** Initialize a new backend */
   template<typename BackendT, typename ...Args>
   static MemoryBackend* shm_init(
-    size_t size, const hshm::chararr &url, Args ...args) {
+    const MemoryBackendId &backend_id, size_t size, Args ...args) {
     HSHM_CREATE_BACKEND(PosixShmMmap)
 #ifdef HERMES_ENABLE_CUDA
     HSHM_CREATE_BACKEND(CudaShmMmap)

@@ -22,7 +22,7 @@ using hshm::ipc::iqueue;
 
 template<typename T>
 void IqueueTest() {
-  Allocator *alloc = alloc_g;
+  Allocator *alloc = HERMES_MEMORY_MANAGER->GetDefaultAllocator();
   iqueue<T> lp(alloc);
   IqueueTestSuite<T, iqueue<T>> test(lp, alloc);
 
@@ -35,7 +35,7 @@ void IqueueTest() {
 }
 
 TEST_CASE("IqueueOfMpPage") {
-  Allocator *alloc = alloc_g;
+  Allocator *alloc = HERMES_MEMORY_MANAGER->GetDefaultAllocator();
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
   IqueueTest<MpPage>();
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);

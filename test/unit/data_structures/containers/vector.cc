@@ -39,14 +39,14 @@ void VectorTestRunner(VectorTestSuite<T, vector<T>> &test) {
 
 template<typename T, bool ptr>
 void VectorTest() {
-  Allocator *alloc = alloc_g;
+  Allocator *alloc = HERMES_MEMORY_MANAGER->GetDefaultAllocator();
   auto vec = hipc::make_uptr<vector<T>>(alloc);
   VectorTestSuite<T, vector<T>> test(*vec, alloc);
   VectorTestRunner<T>(test);
 }
 
 void VectorOfVectorOfStringTest() {
-  Allocator *alloc = alloc_g;
+  Allocator *alloc = HERMES_MEMORY_MANAGER->GetDefaultAllocator();
   auto vec = hipc::make_uptr<
     vector<vector<string>>>(alloc);
 
@@ -58,7 +58,7 @@ void VectorOfVectorOfStringTest() {
 }
 
 void VectorOfListOfStringTest() {
-  Allocator *alloc = alloc_g;
+  Allocator *alloc = HERMES_MEMORY_MANAGER->GetDefaultAllocator();
   auto vec = hipc::make_uptr<vector<list<string>>>(alloc);
 
   vec->resize(10);
@@ -87,7 +87,7 @@ void VectorOfListOfStringTest() {
 }
 
 TEST_CASE("VectorOfInt") {
-  Allocator *alloc = alloc_g;
+  Allocator *alloc = HERMES_MEMORY_MANAGER->GetDefaultAllocator();
   try {
     REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
     VectorTest<int, false>();
@@ -101,7 +101,7 @@ TEST_CASE("VectorOfInt") {
 }
 
 TEST_CASE("VectorOfString") {
-  Allocator *alloc = alloc_g;
+  Allocator *alloc = HERMES_MEMORY_MANAGER->GetDefaultAllocator();
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
   VectorTest<hipc::string, false>();
   VectorTest<int, true>();
@@ -109,7 +109,7 @@ TEST_CASE("VectorOfString") {
 }
 
 TEST_CASE("VectorOfStdString") {
-  Allocator *alloc = alloc_g;
+  Allocator *alloc = HERMES_MEMORY_MANAGER->GetDefaultAllocator();
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
   VectorTest<std::string, false>();
   VectorTest<int, true>();
@@ -117,7 +117,7 @@ TEST_CASE("VectorOfStdString") {
 }
 
 TEST_CASE("VectorOfVectorOfString") {
-  Allocator *alloc = alloc_g;
+  Allocator *alloc = HERMES_MEMORY_MANAGER->GetDefaultAllocator();
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
   VectorOfVectorOfStringTest();
   VectorOfVectorOfStringTest();
@@ -125,7 +125,7 @@ TEST_CASE("VectorOfVectorOfString") {
 }
 
 TEST_CASE("VectorOfListOfString") {
-  Allocator *alloc = alloc_g;
+  Allocator *alloc = HERMES_MEMORY_MANAGER->GetDefaultAllocator();
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
   VectorOfListOfStringTest();
   VectorOfListOfStringTest();

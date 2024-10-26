@@ -41,14 +41,14 @@ void ManualPtrTest() {
 }
 
 TEST_CASE("ManualPtrOfInt") {
-  Allocator *alloc = alloc_g;
+  Allocator *alloc = HERMES_MEMORY_MANAGER->GetDefaultAllocator();
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
   ManualPtrTest<hipc::string>();
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
 }
 
 TEST_CASE("ManualPtrOfString") {
-  Allocator *alloc = alloc_g;
+  Allocator *alloc = HERMES_MEMORY_MANAGER->GetDefaultAllocator();
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
   ManualPtrTest<hipc::string>();
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);

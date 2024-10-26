@@ -17,16 +17,17 @@
 void MainPretest() {
   // hermes shared memory
   std::string shm_url = "HermesBench";
-  allocator_id_t alloc_id(0, 1);
+  AllocatorId alloc_id(0, 1);
   auto mem_mngr = HERMES_MEMORY_MANAGER;
   mem_mngr->UnregisterAllocator(alloc_id);
-  mem_mngr->UnregisterBackend(shm_url);
+  mem_mngr->UnregisterBackend(hipc::MemoryBackendId::Get(0));
   auto backend = mem_mngr->CreateBackend<hipc::PosixShmMmap>(
-    mem_mngr->GetDefaultBackendSize(), shm_url);
+      hipc::MemoryBackendId::Get(0),
+      mem_mngr->GetDefaultBackendSize(), shm_url);
   memset(backend->data_, 0, MEGABYTES(16));
   // TODO(llogan): back to good allocator
   mem_mngr->CreateAllocator<hipc::ScalablePageAllocator>(
-    shm_url, alloc_id, 0);
+      hipc::MemoryBackendId::Get(0), alloc_id, 0);
 
 
   // Boost shared memory

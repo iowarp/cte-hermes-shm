@@ -21,14 +21,14 @@
  * */
 
 TEST_CASE("TestMpscQueueInt") {
-  Allocator *alloc = alloc_g;
+  Allocator *alloc = HERMES_MEMORY_MANAGER->GetDefaultAllocator();
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
   ProduceThenConsume<hipc::mpsc_queue<int>, int>(1, 1, 32, 32);
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
 }
 
 TEST_CASE("TestMpscQueueString") {
-  Allocator *alloc = alloc_g;
+  Allocator *alloc = HERMES_MEMORY_MANAGER->GetDefaultAllocator();
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
   ProduceThenConsume<hipc::mpsc_queue<hipc::string>, hipc::string>(
     1, 1, 32, 32);
@@ -36,14 +36,14 @@ TEST_CASE("TestMpscQueueString") {
 }
 
 TEST_CASE("TestMpscQueueIntMultiThreaded") {
-  Allocator *alloc = alloc_g;
+  Allocator *alloc = HERMES_MEMORY_MANAGER->GetDefaultAllocator();
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
   ProduceAndConsume<hipc::mpsc_queue<int>, int>(8, 1, 8192, 32);
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
 }
 
 TEST_CASE("TestMpscQueueStringMultiThreaded") {
-  Allocator *alloc = alloc_g;
+  Allocator *alloc = HERMES_MEMORY_MANAGER->GetDefaultAllocator();
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
   ProduceAndConsume<hipc::mpsc_queue<hipc::string>, hipc::string>(
     8, 1, 8192, 32);
@@ -51,7 +51,7 @@ TEST_CASE("TestMpscQueueStringMultiThreaded") {
 }
 
 TEST_CASE("TestMpscQueuePeek") {
-  Allocator *alloc = alloc_g;
+  Allocator *alloc = HERMES_MEMORY_MANAGER->GetDefaultAllocator();
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
 
   auto q = hipc::make_mptr<hipc::mpsc_queue<int>>(alloc);
@@ -72,21 +72,21 @@ TEST_CASE("TestMpscQueuePeek") {
  * */
 
 TEST_CASE("TestMpscPtrQueueInt") {
-  Allocator *alloc = alloc_g;
+  Allocator *alloc = HERMES_MEMORY_MANAGER->GetDefaultAllocator();
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
   ProduceThenConsume<hipc::mpsc_ptr_queue<int>, int>(1, 1, 32, 32);
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
 }
 
 TEST_CASE("TestMpscPtrQueueIntMultiThreaded") {
-  Allocator *alloc = alloc_g;
+  Allocator *alloc = HERMES_MEMORY_MANAGER->GetDefaultAllocator();
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
   ProduceAndConsume<hipc::mpsc_ptr_queue<int>, int>(8, 1, 8192, 32);
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
 }
 
 TEST_CASE("TestMpscOffsetPointerQueueCompile") {
-  Allocator *alloc = alloc_g;
+  Allocator *alloc = HERMES_MEMORY_MANAGER->GetDefaultAllocator();
   hipc::mpsc_ptr_queue<hipc::OffsetPointer> queue(alloc);
   hipc::OffsetPointer off_p;
   queue.emplace(hipc::OffsetPointer(5));
@@ -95,10 +95,10 @@ TEST_CASE("TestMpscOffsetPointerQueueCompile") {
 }
 
 TEST_CASE("TestMpscPointerQueueCompile") {
-  Allocator *alloc = alloc_g;
+  Allocator *alloc = HERMES_MEMORY_MANAGER->GetDefaultAllocator();
   hipc::mpsc_ptr_queue<hipc::Pointer> queue(alloc);
   hipc::Pointer off_p;
-  queue.emplace(hipc::Pointer(allocator_id_t(5, 2), 1));
+  queue.emplace(hipc::Pointer(AllocatorId(5, 2), 1));
   queue.pop(off_p);
-  REQUIRE(off_p == hipc::Pointer(allocator_id_t(5, 2), 1));
+  REQUIRE(off_p == hipc::Pointer(AllocatorId(5, 2), 1));
 }

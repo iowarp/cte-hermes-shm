@@ -14,18 +14,17 @@
   hshm::GlobalSingleton<hshm::ipc::MemoryManager>::GetInstance()
 #define HERMES_MEMORY_MANAGER_T hshm::ipc::MemoryManager*
 
-namespace hipc = hshm::ipc;
-
 namespace hshm::ipc {
 
 #define MAX_ALLOCATORS 64
+#define MAX_BACKENDS 16
 
 class MemoryManager {
  public:
-  allocator_id_t root_allocator_id_;
+  AllocatorId root_allocator_id_;
   MemoryBackend *root_backend_;
   Allocator *root_alloc_;
-  void *backends_;
+  MemoryBackend *backends_[MAX_BACKENDS];
   Allocator *allocators_[MAX_ALLOCATORS];
   Allocator *default_allocator_;
   char root_backend_space_[64];
@@ -36,6 +35,14 @@ class MemoryManager {
   /** Create the root allocator */
   HSHM_CROSS_FUN
   MemoryManager();
+
+  /**
+   * Initialize memory manager
+   * Automatically called in default constructor if on CPU.
+   * Must be called explicitly if on GPU.
+   * */
+  HSHM_CROSS_FUN
+  void Init();
 
   /** Default backend size */
   HSHM_CROSS_FUN
@@ -48,9 +55,25 @@ class MemoryManager {
    * policies over a single memory region.
    * */
   template<typename BackendT, typename ...Args>
-  MemoryBackend* CreateBackend(size_t size,
-                               const hshm::chararr &url,
+  MemoryBackend* CreateBackend(const MemoryBackendId &backend_id,
+                               size_t size,
                                Args&& ...args);
+
+  /**
+   * Create a memory backend. Always includes the url parameter.
+   * */
+  template<typename BackendT, typename ...Args>
+  MemoryBackend* CreateBackendWithUrl(
+      const MemoryBackendId &backend_id,
+      size_t size,
+      const hshm::chararr &url,
+      Args&& ...args) {
+    if constexpr (std::is_base_of_v<UrlMemoryBackend, BackendT>) {
+      return CreateBackend<BackendT>(backend_id, size, url, std::forward<Args>(args)...);
+    } else {
+      return CreateBackend<BackendT>(backend_id, size, std::forward<Args>(args)...);
+    }
+  }
 
   /**
    * Register a unique memory backend. Throws an exception if the backend
@@ -62,7 +85,7 @@ class MemoryManager {
    * */
   HSHM_CROSS_FUN
   MemoryBackend* RegisterBackend(
-      const hshm::chararr &url,
+      const MemoryBackendId &backend_id,
       MemoryBackend* backend);
 
   /**
@@ -82,19 +105,19 @@ class MemoryManager {
    * Returns a pointer to a backend that has already been attached.
    * */
   HSHM_CROSS_FUN
-  MemoryBackend* GetBackend(const hshm::chararr &url);
+  MemoryBackend* GetBackend(const MemoryBackendId &backend_id);
 
   /**
    * Unregister backend
    * */
   HSHM_CROSS_FUN
-  void UnregisterBackend(const hshm::chararr &url);
+  void UnregisterBackend(const MemoryBackendId &backend_id);
 
   /**
    * Destroy backend
    * */
   HSHM_CROSS_FUN
-  void DestroyBackend(const hshm::chararr &url);
+  void DestroyBackend(const MemoryBackendId &backend_id);
 
   /**
    * Scans all attached backends for new memory allocators.
@@ -106,8 +129,8 @@ class MemoryManager {
    * Create and register a memory allocator for a particular backend.
    * */
   template<typename AllocT, typename ...Args>
-  Allocator* CreateAllocator(const hshm::chararr &url,
-                             allocator_id_t alloc_id,
+  Allocator* CreateAllocator(const MemoryBackendId &backend_id,
+                             const AllocatorId &alloc_id,
                              size_t custom_header_size,
                              Args&& ...args);
 
@@ -131,12 +154,12 @@ class MemoryManager {
    * Destroys an allocator
    * */
   HSHM_CROSS_FUN
-  void UnregisterAllocator(allocator_id_t alloc_id);
+  void UnregisterAllocator(AllocatorId alloc_id);
 
   /**
    * Locates an allocator of a particular id
    * */
-  HSHM_CROSS_FUN Allocator* GetAllocator(allocator_id_t alloc_id);
+  HSHM_CROSS_FUN Allocator* GetAllocator(AllocatorId alloc_id);
 
   /**
    * Gets the allocator used for initializing other allocators.
@@ -174,7 +197,7 @@ class MemoryManager {
    * @param ptr the pointer to convert
    * */
   template<typename T, typename POINTER_T = Pointer>
-  HSHM_INLINE_CROSS_FUN POINTER_T Convert(allocator_id_t allocator_id, T *ptr) {
+  HSHM_INLINE_CROSS_FUN POINTER_T Convert(AllocatorId allocator_id, T *ptr) {
     return GetAllocator(allocator_id)->template
         Convert<T, POINTER_T>(ptr);
   }

@@ -18,7 +18,7 @@
 
 using hshm::ipc::MemoryBackendType;
 using hshm::ipc::MemoryBackend;
-using hshm::ipc::allocator_id_t;
+using hshm::ipc::AllocatorId;
 using hshm::ipc::AllocatorType;
 using hshm::ipc::MemoryManager;
 
@@ -32,7 +32,7 @@ TEST_CASE("MemoryManager") {
   size_t page_size = KILOBYTES(4);
   std::string shm_url = "test_mem_backend";
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  allocator_id_t alloc_id(0, 1);
+  AllocatorId alloc_id(0, 1);
 
   HERMES_ERROR_HANDLE_START()
   auto mem_mngr = HERMES_MEMORY_MANAGER;
@@ -40,11 +40,11 @@ TEST_CASE("MemoryManager") {
   if (rank == 0) {
     std::cout << "Creating SHMEM (rank 0): " << shm_url << std::endl;
     mem_mngr->UnregisterAllocator(alloc_id);
-    mem_mngr->UnregisterBackend(shm_url);
+    mem_mngr->UnregisterBackend(hipc::MemoryBackendId::Get(0));
     mem_mngr->CreateBackend<hipc::PosixShmMmap>(
-       MEGABYTES(100), shm_url);
+        hipc::MemoryBackendId::Get(0), MEGABYTES(100), shm_url);
     mem_mngr->CreateAllocator<hipc::StackAllocator>(
-      shm_url, alloc_id, 0);
+        hipc::MemoryBackendId::Get(0), alloc_id, 0);
     mem_mngr->ScanBackends();
   }
   MPI_Barrier(MPI_COMM_WORLD);

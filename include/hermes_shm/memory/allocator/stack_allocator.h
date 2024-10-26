@@ -29,7 +29,7 @@ struct StackAllocatorHeader : public AllocatorHeader {
   StackAllocatorHeader() = default;
 
   HSHM_CROSS_FUN
-  void Configure(allocator_id_t alloc_id,
+  void Configure(AllocatorId alloc_id,
                  size_t custom_header_size,
                  size_t region_off,
                  size_t region_size) {
@@ -57,7 +57,7 @@ class StackAllocator : public Allocator {
    * Get the ID of this allocator from shared memory
    * */
   HSHM_CROSS_FUN
-  allocator_id_t &GetId() override {
+  AllocatorId &GetId() override {
     return header_->allocator_id_;
   }
 
@@ -65,7 +65,7 @@ class StackAllocator : public Allocator {
    * Initialize the allocator in shared memory
    * */
   HSHM_CROSS_FUN
-  void shm_init(allocator_id_t id,
+  void shm_init(AllocatorId id,
                 size_t custom_header_size,
                 char *buffer,
                 size_t buffer_size) {

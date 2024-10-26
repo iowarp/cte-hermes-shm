@@ -99,4 +99,8 @@
 /** Class constant macro */
 #define GLOBAL_CONST static inline const
 
+namespace hshm {}
+namespace hshm::ipc {}
+namespace hipc = hshm::ipc;
+
 #endif  // HERMES_MACROS_H

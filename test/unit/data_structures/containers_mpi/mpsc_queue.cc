@@ -22,7 +22,7 @@ TEST_CASE("TestMpscQueueMpi") {
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   // The allocator was initialized in test_init.c
   // we are getting the "header" of the allocator
-  Allocator *alloc = alloc_g;
+  Allocator *alloc = HERMES_MEMORY_MANAGER->GetDefaultAllocator();
   Pointer *header = alloc->GetCustomHeader<Pointer>();
 
   // Make the queue uptr

@@ -20,14 +20,14 @@
 using hshm::ipc::PosixShmMmap;
 using hshm::ipc::MemoryBackendType;
 using hshm::ipc::MemoryBackend;
-using hshm::ipc::allocator_id_t;
+using hshm::ipc::AllocatorId;
 using hshm::ipc::AllocatorType;
 using hshm::ipc::Allocator;
 using hshm::ipc::Pointer;
 
 using hshm::ipc::MemoryBackendType;
 using hshm::ipc::MemoryBackend;
-using hshm::ipc::allocator_id_t;
+using hshm::ipc::AllocatorId;
 using hshm::ipc::AllocatorType;
 using hshm::ipc::Allocator;
 using hshm::ipc::MemoryManager;

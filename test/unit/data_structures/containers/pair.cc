@@ -17,7 +17,7 @@
 
 template<typename FirstT, typename SecondT>
 void PairTest() {
-  Allocator *alloc = alloc_g;
+  Allocator *alloc = HERMES_MEMORY_MANAGER->GetDefaultAllocator();
 
   // Construct test
   PAGE_DIVIDE("Construct") {
@@ -112,14 +112,14 @@ void PairTest() {
 }
 
 TEST_CASE("PairOfIntInt") {
-  Allocator *alloc = alloc_g;
+  Allocator *alloc = HERMES_MEMORY_MANAGER->GetDefaultAllocator();
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
   PairTest<int, int>();
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
 }
 
 TEST_CASE("PairOfIntString") {
-  Allocator *alloc = alloc_g;
+  Allocator *alloc = HERMES_MEMORY_MANAGER->GetDefaultAllocator();
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
   PairTest<int, hipc::string>();
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);

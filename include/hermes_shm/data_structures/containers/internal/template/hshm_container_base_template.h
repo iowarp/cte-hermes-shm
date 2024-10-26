@@ -19,6 +19,6 @@ HSHM_INLINE_CROSS_FUN hipc::Allocator* GetAllocator() const {
 }
 
 /** Get the shared-memory allocator id */
-HSHM_INLINE_CROSS_FUN hipc::allocator_id_t& GetAllocatorId() const {
+HSHM_INLINE_CROSS_FUN hipc::AllocatorId& GetAllocatorId() const {
   return GetAllocator()->GetId();
 }

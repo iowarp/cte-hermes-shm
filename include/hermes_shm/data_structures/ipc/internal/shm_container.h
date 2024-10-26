@@ -19,8 +19,6 @@
 #include "shm_container_macro.h"
 #include "shm_macros.h"
 
-namespace hipc = hshm::ipc;
-
 namespace hshm::ipc {
 
 /** The shared-memory header used for data structures */

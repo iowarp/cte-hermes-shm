@@ -19,8 +19,6 @@
 #include "hermes_shm/constants/macros.h"
 #include "hermes_shm/util/logging.h"
 
-namespace hipc = hshm::ipc;
-
 namespace hshm::ipc {
 
 /**
@@ -30,12 +28,13 @@ namespace hshm::ipc {
  * policies over a single memory region.
  * */
 template<typename BackendT, typename ...Args>
-MemoryBackend* MemoryManager::CreateBackend(size_t size,
-                             const hshm::chararr &url,
-                             Args&& ...args) {
+MemoryBackend* MemoryManager::CreateBackend(
+    const MemoryBackendId &backend_id,
+    size_t size,
+    Args&& ...args) {
   auto backend = MemoryBackendFactory::shm_init<BackendT>(
-    size, url, std::forward<Args>(args)...);
-  RegisterBackend(url, backend);
+      backend_id, size, std::forward<Args>(args)...);
+  RegisterBackend(backend_id, backend);
   backend->Own();
   return backend;
 }
@@ -44,11 +43,11 @@ MemoryBackend* MemoryManager::CreateBackend(size_t size,
  * Create and register a memory allocator for a particular backend.
  * */
 template<typename AllocT, typename ...Args>
-Allocator* MemoryManager::CreateAllocator(const hshm::chararr &url,
-                                          allocator_id_t alloc_id,
+Allocator* MemoryManager::CreateAllocator(const MemoryBackendId &backend_id,
+                                          const AllocatorId &alloc_id,
                                           size_t custom_header_size,
                                           Args&& ...args) {
-  auto backend = GetBackend(url);
+  auto backend = GetBackend(backend_id);
   if (alloc_id.IsNull()) {
     HELOG(kFatal, "Allocator cannot be created with a NIL ID");
   }

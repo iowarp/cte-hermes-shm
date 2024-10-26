@@ -36,14 +36,14 @@ void UniquePtrTest() {
 }
 
 TEST_CASE("UniquePtrOfInt") {
-  Allocator *alloc = alloc_g;
+  Allocator *alloc = HERMES_MEMORY_MANAGER->GetDefaultAllocator();
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
   UniquePtrTest<int>();
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
 }
 
 TEST_CASE("UniquePtrOfString") {
-  Allocator *alloc = alloc_g;
+  Allocator *alloc = HERMES_MEMORY_MANAGER->GetDefaultAllocator();
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
   UniquePtrTest<hipc::string>();
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);

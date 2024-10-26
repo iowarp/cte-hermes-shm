@@ -388,8 +388,6 @@ template<typename T>
 using atomic = cuda_atomic<T>;
 #endif
 
-namespace hipc = hshm::ipc;
-
 }  // namespace hshm::ipc
 
 #endif  // HERMES_INCLUDE_HERMES_TYPES_ATOMIC_H_

@@ -20,6 +20,7 @@
 #include "hermes_shm/constants/macros.h"
 #include <limits>
 #include "hermes_shm/data_structures/containers/chararr.h"
+#include "../../constants/macros.h"
 
 namespace hshm::ipc {
 
@@ -32,15 +33,57 @@ enum class MemoryBackendType {
   kPosixMmap,
 };
 
+/** ID for memory backend */
+class MemoryBackendId {
+ public:
+  u32 id_;
+
+  MemoryBackendId() = default;
+
+  MemoryBackendId(u32 id) : id_(id) {}
+
+  MemoryBackendId(const MemoryBackendId &other) : id_(other.id_) {}
+
+  MemoryBackendId(MemoryBackendId &&other) noexcept : id_(other.id_) {}
+
+  MemoryBackendId &operator=(const MemoryBackendId &other) {
+    id_ = other.id_;
+    return *this;
+  }
+
+  MemoryBackendId &operator=(MemoryBackendId &&other) noexcept {
+    id_ = other.id_;
+    return *this;
+  }
+
+  static MemoryBackendId GetRoot() {
+    return {0};
+  }
+
+  static MemoryBackendId Get(u32 id) {
+    return {id + 1};
+  }
+
+  bool operator==(const MemoryBackendId &other) const {
+    return id_ == other.id_;
+  }
+
+  bool operator!=(const MemoryBackendId &other) const {
+    return id_ != other.id_;
+  }
+};
+typedef MemoryBackendId memory_backend_id_t;
 
 struct MemoryBackendHeader {
   MemoryBackendType type_;
-  hshm::chararr url_;
+  MemoryBackendId id_;
   size_t data_size_;
 };
 
 #define MEMORY_BACKEND_INITIALIZED 0x1
 #define MEMORY_BACKEND_OWNED 0x2
+
+class UrlMemoryBackend {};
 
 class MemoryBackend {
  public:

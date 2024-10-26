@@ -19,19 +19,19 @@ Allocator *alloc_g = nullptr;
 template<typename AllocT>
 void PretestRank0() {
   std::string shm_url = "test_allocators";
-  allocator_id_t alloc_id(0, 1);
+  AllocatorId alloc_id(0, 1);
   auto mem_mngr = HERMES_MEMORY_MANAGER;
   mem_mngr->UnregisterAllocator(alloc_id);
-  mem_mngr->UnregisterBackend(shm_url);
+  mem_mngr->UnregisterBackend(hipc::MemoryBackendId::GetRoot());
   mem_mngr->CreateBackend<PosixShmMmap>(
-    MEGABYTES(100), shm_url);
-  mem_mngr->CreateAllocator<AllocT>(shm_url, alloc_id, sizeof(Pointer));
-  alloc_g = mem_mngr->GetAllocator(alloc_id);
+      hipc::MemoryBackendId::Get(0), MEGABYTES(100), shm_url);
+  mem_mngr->CreateAllocator<AllocT>(
+      hipc::MemoryBackendId::Get(0), alloc_id, 0);
 }
 
 void PretestRankN() {
   std::string shm_url = "test_allocators";
-  allocator_id_t alloc_id(0, 1);
+  AllocatorId alloc_id(0, 1);
   auto mem_mngr = HERMES_MEMORY_MANAGER;
   mem_mngr->AttachBackend(MemoryBackendType::kPosixShmMmap, shm_url);
   alloc_g = mem_mngr->GetAllocator(alloc_id);

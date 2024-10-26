@@ -36,6 +36,4 @@
 
 #include "serialization/serialize_common.h"
 
-namespace hipc = hshm::ipc;
-
 #endif  // HERMES_DATA_STRUCTURES_DATA_STRUCTURE_H_

@@ -175,18 +175,20 @@ template<typename BackendT, typename AllocT, typename ...Args>
 Allocator* Pretest(MemoryBackendType backend_type,
                    Args&& ...args) {
   int rank = omp_get_thread_num();
-  allocator_id_t alloc_id(0, minor);
+  AllocatorId alloc_id(0, minor);
   Allocator *alloc;
   auto mem_mngr = HERMES_MEMORY_MANAGER;
 
   if (rank == 0) {
     // Create the allocator + backend
     mem_mngr->UnregisterAllocator(alloc_id);
-    mem_mngr->UnregisterBackend(shm_url);
-    mem_mngr->CreateBackend<BackendT>(
-      mem_mngr->GetDefaultBackendSize(), shm_url);
+    mem_mngr->UnregisterBackend(hipc::MemoryBackendId::Get(0));
+    mem_mngr->CreateBackendWithUrl<BackendT>(
+        hipc::MemoryBackendId::Get(0),
+        mem_mngr->GetDefaultBackendSize(), shm_url);
     mem_mngr->CreateAllocator<AllocT>(
-      shm_url, alloc_id, 0, std::forward<Args>(args)...);
+        hipc::MemoryBackendId::Get(0), alloc_id,
+        0, std::forward<Args>(args)...);
   }
 #pragma omp barrier
 
@@ -202,10 +204,11 @@ void Posttest() {
   int rank = omp_get_thread_num();
 #pragma omp barrier
   if (rank == 0) {
-    allocator_id_t alloc_id(0, minor);
+    AllocatorId alloc_id(0, minor);
     HERMES_MEMORY_MANAGER->UnregisterAllocator(
       alloc_id);
-    HERMES_MEMORY_MANAGER->DestroyBackend(shm_url);
+    HERMES_MEMORY_MANAGER->DestroyBackend(
+        hipc::MemoryBackendId::Get(0));
     minor += 1;
   }
 # pragma omp barrier

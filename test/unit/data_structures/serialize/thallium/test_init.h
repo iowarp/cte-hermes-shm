@@ -22,14 +22,14 @@
 using hshm::ipc::PosixShmMmap;
 using hshm::ipc::MemoryBackendType;
 using hshm::ipc::MemoryBackend;
-using hshm::ipc::allocator_id_t;
+using hshm::ipc::AllocatorId;
 using hshm::ipc::AllocatorType;
 using hshm::ipc::Allocator;
 using hshm::ipc::Pointer;
 
 using hshm::ipc::MemoryBackendType;
 using hshm::ipc::MemoryBackend;
-using hshm::ipc::allocator_id_t;
+using hshm::ipc::AllocatorId;
 using hshm::ipc::AllocatorType;
 using hshm::ipc::Allocator;
 using hshm::ipc::MemoryManager;
@@ -38,20 +38,20 @@ using hshm::ipc::Pointer;
 namespace thallium {
 class Constants {
  public:
-  static inline const char *kServerName = "ofi+sockets://127.0.0.1:8080";
-  static inline const char *kTestString = "012344823723642364723874623";
+  CLS_CONST char *kServerName = "ofi+sockets://127.0.0.1:8080";
+  CLS_CONST char *kTestString = "012344823723642364723874623";
 
   /** Test cases */
-  static inline const char *kStringTest0 = "kStringTest0";
-  static inline const char *kStringTestLarge = "kStringTestLarge";
-  static inline const char *kCharbufTest0 = "kCharbufTest0";
-  static inline const char *kCharbufTestLarge = "kCharbufTestLarge";
-  static inline const char *kVecOfInt0Test = "kVecOfInt0Test";
-  static inline const char *kVecOfIntLargeTest = "kVecOfIntLargeTest";
-  static inline const char *kVecOfString0Test = "kVecOfString0Test";
-  static inline const char *kVecOfStringLargeTest = "kVecOfStringLargeTest";
-  static inline const char *kBitfieldTest = "kBitfieldTest";
-  static inline const char *kShmArTest = "kShmArTest";
+  CLS_CONST char *kStringTest0 = "kStringTest0";
+  CLS_CONST char *kStringTestLarge = "kStringTestLarge";
+  CLS_CONST char *kCharbufTest0 = "kCharbufTest0";
+  CLS_CONST char *kCharbufTestLarge = "kCharbufTestLarge";
+  CLS_CONST char *kVecOfInt0Test = "kVecOfInt0Test";
+  CLS_CONST char *kVecOfIntLargeTest = "kVecOfIntLargeTest";
+  CLS_CONST char *kVecOfString0Test = "kVecOfString0Test";
+  CLS_CONST char *kVecOfStringLargeTest = "kVecOfStringLargeTest";
+  CLS_CONST char *kBitfieldTest = "kBitfieldTest";
+  CLS_CONST char *kShmArTest = "kShmArTest";
 };
 }  // namespace thallium
 using tcnst = thallium::Constants;
@@ -63,19 +63,20 @@ using thallium::request;
 template<typename AllocT>
 void ServerPretest() {
   std::string shm_url = "test_serializers";
-  allocator_id_t alloc_id(0, 1);
+  AllocatorId alloc_id(0, 1);
   auto mem_mngr = HERMES_MEMORY_MANAGER;
   mem_mngr->UnregisterAllocator(alloc_id);
-  mem_mngr->UnregisterBackend(shm_url);
+  mem_mngr->UnregisterBackend(hipc::MemoryBackendId::GetRoot());
   mem_mngr->CreateBackend<PosixShmMmap>(
-    MEGABYTES(100), shm_url);
-  mem_mngr->CreateAllocator<AllocT>(shm_url, alloc_id, 0);
+      hipc::MemoryBackendId::Get(0), MEGABYTES(100), shm_url);
+  mem_mngr->CreateAllocator<AllocT>(
+      hipc::MemoryBackendId::Get(0), alloc_id, 0);
 }
 
 template<typename AllocT>
 void ClientPretest() {
   std::string shm_url = "test_serializers";
-  allocator_id_t alloc_id(0, 1);
+  AllocatorId alloc_id(0, 1);
   auto mem_mngr = HERMES_MEMORY_MANAGER;
   mem_mngr->AttachBackend(MemoryBackendType::kPosixShmMmap, shm_url);
 }

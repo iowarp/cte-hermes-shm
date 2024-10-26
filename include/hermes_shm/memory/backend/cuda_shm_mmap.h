@@ -37,10 +37,13 @@ namespace hshm::ipc {
 class CudaShmMmap : public PosixShmMmap {
  public:
   /** Initialize shared memory */
-  bool shm_init(size_t size, const hshm::chararr &url, int device) {
+  bool shm_init(const MemoryBackendId &backend_id,
+                size_t size,
+                const hshm::chararr &url,
+                int device) {
     cudaDeviceSynchronize();
     cudaSetDevice(device);
-    bool ret = PosixShmMmap::shm_init(size, url);
+    bool ret = PosixShmMmap::shm_init(id, size, url);
     if (!ret) {
       return false;
     }

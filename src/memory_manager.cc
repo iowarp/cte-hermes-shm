@@ -22,20 +22,29 @@
 
 namespace hshm::ipc {
 
-typedef hipc::unordered_map<hshm::chararr, MemoryBackend*> BACKEND_MAP_T;
-
 /** Create the root allocator */
 HSHM_CROSS_FUN
 MemoryManager::MemoryManager() {
 #ifndef __CUDA_ARCH__
+  Init();
+#endif
+}
 
+/** Initialize memory manager */
+HSHM_CROSS_FUN
+void MemoryManager::Init() {
   // System info
   HERMES_SYSTEM_INFO->RefreshInfo();
+
+  // Initialize tables
+  memset(backends_, 0, sizeof(backends_));
+  memset(allocators_, 0, sizeof(allocators_));
 
   // Root backend
   ArrayBackend *root_backend = (ArrayBackend*)root_backend_space_;
   Allocator::ConstructObj(*root_backend);
-  root_backend->shm_init(KILOBYTES(16), "", root_alloc_data_);
+  root_backend->shm_init(MemoryBackendId::GetRoot(),
+                         KILOBYTES(16), root_alloc_data_);
   root_backend->Own();
   root_backend_ = root_backend;
 
@@ -52,10 +61,7 @@ MemoryManager::MemoryManager() {
   default_allocator_ = root_alloc_;
 
   // Other allocators
-  memset(allocators_, 0, sizeof(allocators_));
   RegisterAllocator(root_alloc_);
-  backends_ = (void*)root_alloc_->NewObj<BACKEND_MAP_T>();
-#endif
 }
 
 /** Get the root allocator */
@@ -82,7 +88,7 @@ MemoryBackend* MemoryManager::AttachBackend(MemoryBackendType type,
                                             const hshm::chararr &url) {
 #ifndef __CUDA_ARCH__
   auto backend = MemoryBackendFactory::shm_deserialize(type, url);
-  RegisterBackend(url, backend);
+  RegisterBackend(backend->header_->id_, backend);
   ScanBackends();
   backend->Disown();
   return backend;
@@ -95,7 +101,7 @@ MemoryBackend* MemoryManager::AttachBackend(MemoryBackendType type,
 HSHM_CROSS_FUN
 MemoryBackend* MemoryManager::AttachBackend(MemoryBackend *other) {
   MemoryBackend *backend = MemoryBackendFactory::shm_attach(other);
-  RegisterBackend(backend->header_->url_, backend);
+  RegisterBackend(backend->header_->id_, backend);
   ScanBackends();
   backend->Disown();
   return backend;
@@ -111,13 +117,12 @@ MemoryBackend* MemoryManager::AttachBackend(MemoryBackend *other) {
  * */
 HSHM_CROSS_FUN
 MemoryBackend* MemoryManager::RegisterBackend(
-    const hshm::chararr &url,
+    const MemoryBackendId &backend_id,
     MemoryBackend *backend) {
-  BACKEND_MAP_T &backends = *(BACKEND_MAP_T*)backends_;
-  if (GetBackend(url)) {
+  if (GetBackend(backend_id)) {
     HERMES_THROW_ERROR(MEMORY_BACKEND_REPEATED);
   }
-  backends.emplace(url, backend);
+  backends_[backend_id.id_] = backend;
   return backend;
 }
 
@@ -127,9 +132,8 @@ MemoryBackend* MemoryManager::RegisterBackend(
 HSHM_CROSS_FUN
 void MemoryManager::ScanBackends() {
 #ifndef __CUDA_ARCH__
-  BACKEND_MAP_T &backends = *(BACKEND_MAP_T*)backends_;
-  for (hipc::pair<hshm::chararr, MemoryBackend*> &backend_info : backends) {
-    auto alloc = AllocatorFactory::shm_deserialize(backend_info.GetSecond());
+  for (int i = 0; i < MAX_BACKENDS; ++i) {
+    auto alloc = AllocatorFactory::shm_deserialize(backends_[i]);
     RegisterAllocator(alloc);
   }
 #endif
@@ -140,36 +144,26 @@ void MemoryManager::ScanBackends() {
  * Returns a pointer to a backend that has already been attached.
  * */
 HSHM_CROSS_FUN
-MemoryBackend* MemoryManager::GetBackend(const hshm::chararr &url) {
-  BACKEND_MAP_T &backends = *(BACKEND_MAP_T*)backends_;
-  auto iter = backends.find(url);
-  if (iter == backends.end()) {
-    return nullptr;
-  }
-  return *(*iter).second_;
+MemoryBackend* MemoryManager::GetBackend(const MemoryBackendId &backend_id) {
+  return backends_[backend_id.id_];
 }
 
 /**
  * Unregister backend
  * */
 HSHM_CROSS_FUN
-void MemoryManager::UnregisterBackend(const hshm::chararr &url) {
-#ifndef __CUDA_ARCH__
-  BACKEND_MAP_T &backends = *(BACKEND_MAP_T*)backends_;
-  backends.erase(url);
-#endif
+void MemoryManager::UnregisterBackend(const MemoryBackendId &backend_id) {
+  backends_[backend_id.id_] = nullptr;
 }
 
 /**
  * Destroy backend
  * */
 HSHM_CROSS_FUN
-void MemoryManager::DestroyBackend(const hshm::chararr &url) {
-#ifndef __CUDA_ARCH__
-  auto backend = GetBackend(url);
+void MemoryManager::DestroyBackend(const MemoryBackendId &backend_id) {
+  auto backend = GetBackend(backend_id);
   backend->Own();
-  UnregisterBackend(url);
-#endif
+  UnregisterBackend(backend_id);
 }
 
 /**
@@ -188,6 +182,9 @@ void MemoryManager::AttachAllocator(Allocator *alloc) {
  * */
 HSHM_CROSS_FUN
 Allocator* MemoryManager::RegisterAllocator(Allocator *alloc) {
+  if (alloc == nullptr) {
+    return nullptr;
+  }
   if (default_allocator_ == nullptr ||
       default_allocator_ == root_alloc_ ||
       default_allocator_->GetId() == alloc->GetId()) {
@@ -206,7 +203,7 @@ Allocator* MemoryManager::RegisterAllocator(Allocator *alloc) {
  * Destroys an allocator
  * */
 HSHM_CROSS_FUN
-void MemoryManager::UnregisterAllocator(allocator_id_t alloc_id) {
+void MemoryManager::UnregisterAllocator(AllocatorId alloc_id) {
   if (alloc_id == default_allocator_->GetId()) {
     default_allocator_ = root_alloc_;
   }
@@ -216,7 +213,7 @@ void MemoryManager::UnregisterAllocator(allocator_id_t alloc_id) {
 /**
  * Locates an allocator of a particular id
  * */
-HSHM_CROSS_FUN Allocator* MemoryManager::GetAllocator(allocator_id_t alloc_id) {
+HSHM_CROSS_FUN Allocator* MemoryManager::GetAllocator(AllocatorId alloc_id) {
   return allocators_[alloc_id.ToIndex()];
 }
 

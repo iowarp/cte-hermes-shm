@@ -17,7 +17,7 @@
 
 using hshm::ipc::MemoryBackendType;
 using hshm::ipc::MemoryBackend;
-using hshm::ipc::allocator_id_t;
+using hshm::ipc::AllocatorId;
 using hshm::ipc::AllocatorType;
 using hshm::ipc::Allocator;
 using hshm::ipc::MemoryManager;
@@ -34,7 +34,7 @@ using hshm::ipc::string;
 
 template<typename Key, typename Val>
 void UnorderedMapOpTest() {
-  Allocator *alloc = alloc_g;
+  Allocator *alloc = HERMES_MEMORY_MANAGER->GetDefaultAllocator();
   unordered_map<Key, Val> map(alloc, 5);
 
   // Insert 20 entries into the map (no growth trigger)
@@ -219,14 +219,14 @@ void UnorderedMapOpTest() {
 }
 
 TEST_CASE("UnorderedMapOfIntInt") {
-  Allocator *alloc = alloc_g;
+  Allocator *alloc = HERMES_MEMORY_MANAGER->GetDefaultAllocator();
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
   UnorderedMapOpTest<int, int>();
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
 }
 
 TEST_CASE("UnorderedMapOfIntString") {
-  Allocator *alloc = alloc_g;
+  Allocator *alloc = HERMES_MEMORY_MANAGER->GetDefaultAllocator();
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
   UnorderedMapOpTest<int, string>();
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
@@ -234,14 +234,14 @@ TEST_CASE("UnorderedMapOfIntString") {
 
 
 TEST_CASE("UnorderedMapOfStringInt") {
-  Allocator *alloc = alloc_g;
+  Allocator *alloc = HERMES_MEMORY_MANAGER->GetDefaultAllocator();
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
   UnorderedMapOpTest<string, int>();
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
 }
 
 TEST_CASE("UnorderedMapOfStringString") {
-  Allocator *alloc = alloc_g;
+  Allocator *alloc = HERMES_MEMORY_MANAGER->GetDefaultAllocator();
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
   UnorderedMapOpTest<string, string>();
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);

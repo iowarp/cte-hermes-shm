@@ -98,7 +98,7 @@ struct ScalablePageAllocatorHeader : public AllocatorHeader {
   ScalablePageAllocatorHeader() = default;
 
   HSHM_CROSS_FUN
-  void Configure(allocator_id_t alloc_id,
+  void Configure(AllocatorId alloc_id,
                  size_t custom_header_size,
                  Allocator *alloc,
                  size_t buffer_size,
@@ -147,7 +147,7 @@ class ScalablePageAllocator : public Allocator {
    * Get the ID of this allocator from shared memory
    * */
   HSHM_CROSS_FUN
-  allocator_id_t &GetId() override {
+  AllocatorId &GetId() override {
     return header_->allocator_id_;
   }
 
@@ -155,7 +155,7 @@ class ScalablePageAllocator : public Allocator {
    * Initialize the allocator in shared memory
    * */
   HSHM_CROSS_FUN
-  void shm_init(allocator_id_t id,
+  void shm_init(AllocatorId id,
                 size_t custom_header_size,
                 char *buffer,
                 size_t buffer_size,
@@ -168,7 +168,7 @@ class ScalablePageAllocator : public Allocator {
     custom_header_ = reinterpret_cast<char*>(header_ + 1);
     size_t region_off = (custom_header_ - buffer_) + custom_header_size;
     size_t region_size = buffer_size_ - region_off;
-    allocator_id_t sub_id(id.bits_.major_, id.bits_.minor_ + 1);
+    AllocatorId sub_id(id.bits_.major_, id.bits_.minor_ + 1);
     alloc_.shm_init(sub_id, 0, buffer + region_off, region_size);
     HERMES_MEMORY_MANAGER->RegisterAllocator(&alloc_);
     header_->Configure(id, custom_header_size, &alloc_,

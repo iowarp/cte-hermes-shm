@@ -26,19 +26,19 @@ namespace hshm::ipc {
 /**
  * The identifier for an allocator
  * */
-union allocator_id_t {
+union AllocatorId {
   struct {
     uint32_t major_;  // Typically some sort of process id
     uint32_t minor_;  // Typically a process-local id
   } bits_;
   uint64_t int_;
 
-  HSHM_INLINE_CROSS_FUN allocator_id_t() = default;
+  HSHM_INLINE_CROSS_FUN AllocatorId() = default;
 
   /**
    * Constructor which sets major & minor
    * */
-  HSHM_INLINE_CROSS_FUN explicit allocator_id_t(uint32_t major, uint32_t minor) {
+  HSHM_INLINE_CROSS_FUN explicit AllocatorId(uint32_t major, uint32_t minor) {
     bits_.major_ = major;
     bits_.minor_ = minor;
   }
@@ -56,18 +56,18 @@ union allocator_id_t {
   HSHM_INLINE_CROSS_FUN bool IsNull() const { return int_ == 0; }
 
   /** Equality check */
-  HSHM_INLINE_CROSS_FUN bool operator==(const allocator_id_t &other) const {
+  HSHM_INLINE_CROSS_FUN bool operator==(const AllocatorId &other) const {
     return other.int_ == int_;
   }
 
   /** Inequality check */
-  HSHM_INLINE_CROSS_FUN bool operator!=(const allocator_id_t &other) const {
+  HSHM_INLINE_CROSS_FUN bool operator!=(const AllocatorId &other) const {
     return other.int_ != int_;
   }
 
   /** Get the null allocator */
-  HSHM_INLINE_CROSS_FUN static allocator_id_t GetNull() {
-    return allocator_id_t(0, 0);
+  HSHM_INLINE_CROSS_FUN static AllocatorId GetNull() {
+    return AllocatorId(0, 0);
   }
 
   /** To index */
@@ -83,7 +83,7 @@ union allocator_id_t {
   }
 };
 
-typedef uint32_t slot_id_t;  // Uniquely ids a MemoryBackend slot
+typedef AllocatorId allocator_id_t;
 
 /**
  * Stores an offset into a memory region. Assumes the developer knows
@@ -106,7 +106,7 @@ struct OffsetPointerBase {
   : off_(off.load()) {}
 
   /** Pointer constructor */
-  HSHM_INLINE_CROSS_FUN explicit OffsetPointerBase(allocator_id_t alloc_id,
+  HSHM_INLINE_CROSS_FUN explicit OffsetPointerBase(AllocatorId alloc_id,
                                                 size_t off)
   : off_(off) {
     (void) alloc_id;
@@ -238,18 +238,18 @@ using TypedAtomicOffsetPointer = AtomicOffsetPointer;
  * */
 template<bool ATOMIC = false>
 struct PointerBase {
-  allocator_id_t allocator_id_;     /// Allocator the pointer comes from
+  AllocatorId allocator_id_;     /// Allocator the pointer comes from
   OffsetPointerBase<ATOMIC> off_;   /// Offset within the allocator's slot
 
   /** Default constructor */
   HSHM_INLINE_CROSS_FUN PointerBase() = default;
 
   /** Full constructor */
-  HSHM_INLINE_CROSS_FUN explicit PointerBase(allocator_id_t id, size_t off)
+  HSHM_INLINE_CROSS_FUN explicit PointerBase(AllocatorId id, size_t off)
   : allocator_id_(id), off_(off) {}
 
   /** Full constructor using offset pointer */
-  HSHM_INLINE_CROSS_FUN explicit PointerBase(allocator_id_t id, OffsetPointer off)
+  HSHM_INLINE_CROSS_FUN explicit PointerBase(AllocatorId id, OffsetPointer off)
   : allocator_id_(id), off_(off) {}
 
   /** Copy constructor */
@@ -283,7 +283,7 @@ struct PointerBase {
 
   /** Get the null pointer */
   HSHM_INLINE_CROSS_FUN static PointerBase GetNull() {
-    static const PointerBase p(allocator_id_t::GetNull(),
+    static const PointerBase p(AllocatorId::GetNull(),
                                OffsetPointer::GetNull());
     return p;
   }
@@ -448,9 +448,9 @@ namespace std {
 
 /** Allocator ID hash */
 template <>
-struct hash<hshm::ipc::allocator_id_t> {
+struct hash<hshm::ipc::AllocatorId> {
   HSHM_INLINE_CROSS_FUN std::size_t operator()(
-    const hshm::ipc::allocator_id_t &key) const {
+    const hshm::ipc::AllocatorId &key) const {
     return hshm::hash<uint64_t>{}(key.int_);
   }
 };

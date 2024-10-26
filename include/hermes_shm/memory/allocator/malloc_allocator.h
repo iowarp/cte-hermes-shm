@@ -30,7 +30,7 @@ struct MallocAllocatorHeader : public AllocatorHeader {
   MallocAllocatorHeader() = default;
 
   HSHM_CROSS_FUN
-  void Configure(allocator_id_t alloc_id,
+  void Configure(AllocatorId alloc_id,
                  size_t custom_header_size) {
     AllocatorHeader::Configure(alloc_id, AllocatorType::kStackAllocator,
                                custom_header_size);
@@ -54,7 +54,7 @@ class MallocAllocator : public Allocator {
    * Get the ID of this allocator from shared memory
    * */
   HSHM_CROSS_FUN
-  allocator_id_t &GetId() override {
+  AllocatorId &GetId() override {
     return header_->allocator_id_;
   }
 
@@ -62,7 +62,7 @@ class MallocAllocator : public Allocator {
    * Initialize the allocator in shared memory
    * */
   HSHM_CROSS_FUN
-  void shm_init(allocator_id_t id,
+  void shm_init(AllocatorId id,
                 size_t custom_header_size,
                 size_t buffer_size)  {
     type_ = AllocatorType::kMallocAllocator;

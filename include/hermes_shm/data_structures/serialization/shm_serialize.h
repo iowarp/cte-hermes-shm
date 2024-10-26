@@ -27,7 +27,7 @@ class ShmSerializer {
   template<typename ...Args>
   HSHM_CROSS_FUN
   ShmSerializer(Allocator *alloc, Args&& ...args) : off_(0) {
-    size_t buf_size = sizeof(allocator_id_t) + shm_buf_size(
+    size_t buf_size = sizeof(AllocatorId) + shm_buf_size(
         std::forward<Args>(args)...);
     buf_ = alloc->AllocatePtr<char>(buf_size, p_);
     auto lambda = [this](auto i, auto &&arg) {

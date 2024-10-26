@@ -82,18 +82,19 @@ __global__ void mpsc_kernel(
     hipc::Allocator *alloc,
     hipc::mpsc_queue<int> *queue) {
   auto mem_mngr = HERMES_MEMORY_MANAGER;
+  mem_mngr->Init();
   mem_mngr->AttachBackend(backend);
-  hipc::uptr<hipc::unordered_map<hshm::chararr, int>> x;
+//  hipc::uptr<hipc::unordered_map<hshm::chararr, int>> x;
 //  mem_mngr->AttachAllocator(alloc);
 //  printf("%d %d",
 //         HERMES_MEMORY_MANAGER->GetDefaultAllocator() == alloc,
 //         HERMES_MEMORY_MANAGER->GetBackend(backend->header_->url_) == backend);
-  // queue->emplace(10);
+//   queue->emplace(10);
 }
 
 void mpsc_test() {
   hshm::chararr shm_url = "test_serializers";
-  hipc::allocator_id_t alloc_id(0, 1);
+  hipc::AllocatorId alloc_id(0, 1);
   auto mem_mngr = HERMES_MEMORY_MANAGER;
   mem_mngr->UnregisterAllocator(alloc_id);
   mem_mngr->UnregisterBackend(shm_url);
@@ -129,20 +130,6 @@ void atomic_test() {
   atomic_kernel<<<64, 64>>>(x);
   cudaDeviceSynchronize();
   printf("ATOMIC: %llu\n", x->load());
-}
-
-__global__ void vclass_kernel() {
-  hipc::StackAllocator realalloc;
-  hipc::Allocator *alloc = &realalloc;
-  HERMES_THREAD_MODEL->SetThreadModel(hshm::ThreadType::kCuda);
-  HERMES_SYSTEM_INFO->RefreshInfo();
-  // alloc->GetId();
-  // HERMES_MEMORY_MANAGER->RegisterAllocator(alloc);
-}
-
-void vclass_test() {
-  vclass_kernel<<<1, 1>>>();
-  printf("LONG LONG: %d\n", std::is_same_v<size_t, unsigned long long>);
 }
 
 int main() {

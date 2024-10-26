@@ -36,14 +36,14 @@ enum class AllocatorType {
  * */
 struct AllocatorHeader {
   AllocatorType allocator_type_;
-  allocator_id_t allocator_id_;
+  AllocatorId allocator_id_;
   size_t custom_header_size_;
 
   HSHM_CROSS_FUN
   AllocatorHeader() = default;
 
   HSHM_CROSS_FUN
-  void Configure(allocator_id_t allocator_id,
+  void Configure(AllocatorId allocator_id,
                  AllocatorType type,
                  size_t custom_header_size) {
     allocator_type_ = type;
@@ -83,7 +83,7 @@ class Allocator {
    * each allocator has its own arguments to this method. Though each
    * allocator must have "id" as its first argument.
    * */
-  // virtual void shm_init(allocator_id_t id, Args ...args) = 0;
+  // virtual void shm_init(AllocatorId id, Args ...args) = 0;
 
   /**
    * Deserialize allocator from a buffer.
@@ -187,7 +187,7 @@ class Allocator {
    * Get the allocator identifier
    * */
   HSHM_CROSS_FUN
-  virtual allocator_id_t &GetId() = 0;
+  virtual AllocatorId &GetId() = 0;
 
   /**
    * Get the amount of memory that was allocated, but not yet freed.

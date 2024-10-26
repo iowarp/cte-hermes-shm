@@ -17,7 +17,7 @@
 using hshm::ipc::string;
 
 void Testchararr() {
-  Allocator *alloc = alloc_g;
+  Allocator *alloc = HERMES_MEMORY_MANAGER->GetDefaultAllocator();
 
   PAGE_DIVIDE("Construct from malloc") {
     char *ptr = (char*)malloc(256);
@@ -202,7 +202,7 @@ void Testchararr() {
 }
 
 TEST_CASE("chararr") {
-  Allocator *alloc = alloc_g;
+  Allocator *alloc = HERMES_MEMORY_MANAGER->GetDefaultAllocator();
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
   Testchararr();
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);

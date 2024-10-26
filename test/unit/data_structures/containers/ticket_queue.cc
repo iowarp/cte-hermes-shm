@@ -22,14 +22,14 @@
  * */
 
 TEST_CASE("TestTicketStackInt") {
-  Allocator *alloc = alloc_g;
+  Allocator *alloc = HERMES_MEMORY_MANAGER->GetDefaultAllocator();
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
   ProduceThenConsume<hipc::ticket_stack<int>, int>(1, 1, 32, 32);
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
 }
 
 TEST_CASE("TestTicketStackIntMultiThreaded") {
-  Allocator *alloc = alloc_g;
+  Allocator *alloc = HERMES_MEMORY_MANAGER->GetDefaultAllocator();
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
   ProduceThenConsume<hipc::ticket_stack<int>, int>(8, 1, 8192, 8192 * 8);
   ProduceAndConsume<hipc::ticket_stack<int>, int>(8, 1, 8192, 64);
@@ -38,14 +38,14 @@ TEST_CASE("TestTicketStackIntMultiThreaded") {
 }
 
 TEST_CASE("TestTicketQueueInt") {
-  Allocator *alloc = alloc_g;
+  Allocator *alloc = HERMES_MEMORY_MANAGER->GetDefaultAllocator();
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
   ProduceThenConsume<hipc::ticket_queue<int>, int>(1, 1, 32, 32);
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
 }
 
 TEST_CASE("TestTicketQueueIntMultiThreaded") {
-  Allocator *alloc = alloc_g;
+  Allocator *alloc = HERMES_MEMORY_MANAGER->GetDefaultAllocator();
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
   ProduceAndConsume<hipc::ticket_queue<int>, int>(8, 1, 8192, 64);
   ProduceAndConsume<hipc::ticket_queue<int>, int>(8, 8, 8192, 64);
@@ -53,14 +53,14 @@ TEST_CASE("TestTicketQueueIntMultiThreaded") {
 }
 
 TEST_CASE("TestSplitTicketQueueInt") {
-  Allocator *alloc = alloc_g;
+  Allocator *alloc = HERMES_MEMORY_MANAGER->GetDefaultAllocator();
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
   ProduceThenConsume<hipc::split_ticket_queue<int>, int>(1, 1, 32, 32);
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
 }
 
 TEST_CASE("TestSplitTicketQueueIntMultiThreaded") {
-  Allocator *alloc = alloc_g;
+  Allocator *alloc = HERMES_MEMORY_MANAGER->GetDefaultAllocator();
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
   ProduceAndConsume<hipc::split_ticket_queue<int>, int>(8, 1, 8192, 64);
   ProduceAndConsume<hipc::split_ticket_queue<int>, int>(8, 8, 8192, 64);

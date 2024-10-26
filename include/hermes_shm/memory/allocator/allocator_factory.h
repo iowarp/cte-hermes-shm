@@ -28,7 +28,7 @@ class AllocatorFactory {
    * Create a new memory allocator
    * */
   template<typename AllocT, typename ...Args>
-  static Allocator* shm_init(allocator_id_t alloc_id,
+  static Allocator* shm_init(AllocatorId alloc_id,
                              size_t custom_header_size,
                              MemoryBackend *backend,
                              Args&& ...args) {
@@ -68,6 +68,9 @@ class AllocatorFactory {
    * Deserialize the allocator managing this backend.
    * */
   static Allocator* shm_deserialize(MemoryBackend *backend) {
+    if (backend == nullptr) {
+      return nullptr;
+    }
     auto header_ = reinterpret_cast<AllocatorHeader*>(backend->data_);
     switch (header_->allocator_type_) {
       // Stack Allocator

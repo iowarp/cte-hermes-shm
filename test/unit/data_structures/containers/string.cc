@@ -17,7 +17,7 @@
 using hshm::ipc::string;
 
 void TestString() {
-  Allocator *alloc = alloc_g;
+  Allocator *alloc = HERMES_MEMORY_MANAGER->GetDefaultAllocator();
 
   PAGE_DIVIDE("Test construction from const char*") {
     hipc::string text(alloc, "hello1");
@@ -70,7 +70,7 @@ void TestString() {
 }
 
 TEST_CASE("String") {
-  Allocator *alloc = alloc_g;
+  Allocator *alloc = HERMES_MEMORY_MANAGER->GetDefaultAllocator();
   REQUIRE(IS_SHM_ARCHIVEABLE(string));
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
   TestString();

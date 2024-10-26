@@ -20,7 +20,7 @@ TEST_CASE("BackendReserve") {
   PosixShmMmap b1;
 
   // Reserve + Map 8GB of memory
-  b1.shm_init(GIGABYTES(8), "shmem_test");
+  b1.shm_init(hipc::MemoryBackendId::Get(0), GIGABYTES(8), "shmem_test");
 
   // Set 2GB of SHMEM
   memset(b1.data_, 0, GIGABYTES(2));
