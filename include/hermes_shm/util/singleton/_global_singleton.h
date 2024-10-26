@@ -15,7 +15,7 @@
 
 #include <memory>
 #include "hermes_shm/constants/macros.h"
-#include "_easy_lockfree_singleton.h"
+#include "_easy_singleton.h"
 
 namespace hshm {
 
@@ -43,9 +43,8 @@ class GlobalSingleton {
 #define DEFINE_GLOBAL_SINGLETON_CC(T)\
   template<> T hshm::GlobalSingleton<T>::obj_ = T();
 #else
-#include "_easy_lockfree_singleton.h"
 template<typename T>
-using GlobalSingleton = EasyLockfreeSingleton<T>;
+using GlobalSingleton = EasySingleton<T>;
 #define DEFINE_GLOBAL_SINGLETON_CC(T)
 #endif
 

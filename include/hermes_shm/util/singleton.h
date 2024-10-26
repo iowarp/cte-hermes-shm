@@ -17,6 +17,6 @@
 #include "singleton/_easy_singleton.h"
 #include "singleton/_global_singleton.h"
 #include "singleton/_singleton.h"
-#include "singleton/_lockfree_singleton.h"
+#include "singleton/_easy_singleton.h"
 
 #endif  // HERMES_SHM_SINGLETON_H

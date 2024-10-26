@@ -18,9 +18,9 @@
 #include "hermes_shm/thread/thread_model/thread_model_factory.h"
 #include <hermes_shm/introspect/system_info.h>
 
-#include "hermes_shm/util/singleton/_lockfree_singleton.h"
+#include "hermes_shm/util/singleton/_easy_singleton.h"
 #define HERMES_THREAD_MODEL \
-  hshm::LockfreeSingleton<hshm::ThreadModelManager>::GetInstance()
+  hshm::Singleton<hshm::ThreadModelManager>::GetInstance()
 #define HERMES_THREAD_MODEL_T \
   hshm::ThreadModelManager*
 

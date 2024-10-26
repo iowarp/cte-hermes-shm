@@ -30,15 +30,16 @@ class AllocatorFactory {
   template<typename AllocT, typename ...Args>
   static Allocator* shm_init(AllocatorId alloc_id,
                              size_t custom_header_size,
-                             MemoryBackend *backend,
+                             char *buffer,
+                             size_t buffer_size,
                              Args&& ...args) {
     if constexpr(std::is_same_v<StackAllocator, AllocT>) {
       // StackAllocator
       auto alloc = HERMES_MEMORY_MANAGER->GetRootAllocator()->NewObj<StackAllocator>();
       alloc->shm_init(alloc_id,
                       custom_header_size,
-                      backend->data_,
-                      backend->data_size_,
+                      buffer,
+                      buffer_size,
                       std::forward<Args>(args)...);
       return alloc;
     } else if constexpr(std::is_same_v<MallocAllocator, AllocT>) {
@@ -46,7 +47,7 @@ class AllocatorFactory {
       auto alloc = HERMES_MEMORY_MANAGER->GetRootAllocator()->NewObj<MallocAllocator>();
       alloc->shm_init(alloc_id,
                       custom_header_size,
-                      backend->data_size_,
+                      buffer_size,
                       std::forward<Args>(args)...);
       return alloc;
     } else if constexpr(std::is_same_v<ScalablePageAllocator, AllocT>) {
@@ -54,8 +55,8 @@ class AllocatorFactory {
       auto alloc = HERMES_MEMORY_MANAGER->GetRootAllocator()->NewObj<ScalablePageAllocator>();
       alloc->shm_init(alloc_id,
                       custom_header_size,
-                      backend->data_,
-                      backend->data_size_,
+                      buffer,
+                      buffer_size,
                       std::forward<Args>(args)...);
       return alloc;
     } else {
@@ -65,33 +66,46 @@ class AllocatorFactory {
   }
 
   /**
+   * Create a new memory allocator
+   * */
+  template<typename AllocT, typename ...Args>
+  static Allocator* shm_init(AllocatorId alloc_id,
+                             size_t custom_header_size,
+                             MemoryBackend *backend,
+                             Args&& ...args) {
+    return shm_init<AllocT>(alloc_id,
+                            custom_header_size,
+                            backend->data_,
+                            backend->data_size_,
+                            std::forward<Args>(args)...);
+  }
+
+  /**
    * Deserialize the allocator managing this backend.
    * */
-  static Allocator* shm_deserialize(MemoryBackend *backend) {
-    if (backend == nullptr) {
-      return nullptr;
-    }
-    auto header_ = reinterpret_cast<AllocatorHeader*>(backend->data_);
+  HSHM_CROSS_FUN
+  static Allocator* shm_deserialize(char *buffer, size_t buffer_size) {
+    auto header_ = reinterpret_cast<AllocatorHeader*>(buffer);
     switch (header_->allocator_type_) {
       // Stack Allocator
       case AllocatorType::kStackAllocator: {
         auto alloc = HERMES_MEMORY_MANAGER->GetRootAllocator()->NewObj<StackAllocator>();
-        alloc->shm_deserialize(backend->data_,
-                               backend->data_size_);
+        alloc->shm_deserialize(buffer,
+                               buffer_size);
         return alloc;
       }
       // Malloc Allocator
       case AllocatorType::kMallocAllocator: {
         auto alloc = HERMES_MEMORY_MANAGER->GetRootAllocator()->NewObj<MallocAllocator>();
-        alloc->shm_deserialize(backend->data_,
-                               backend->data_size_);
+        alloc->shm_deserialize(buffer,
+                               buffer_size);
         return alloc;
       }
       // Scalable Page Allocator
       case AllocatorType::kScalablePageAllocator: {
         auto alloc = HERMES_MEMORY_MANAGER->GetRootAllocator()->NewObj<ScalablePageAllocator>();
-        alloc->shm_deserialize(backend->data_,
-                               backend->data_size_);
+        alloc->shm_deserialize(buffer,
+                               buffer_size);
         return alloc;
       }
       default: return nullptr;
@@ -99,37 +113,25 @@ class AllocatorFactory {
   }
 
   /**
+   * Deserialize the allocator managing this backend.
+   * */
+  HSHM_CROSS_FUN
+  static Allocator* shm_deserialize(MemoryBackend *backend) {
+    if (backend == nullptr) {
+      return nullptr;
+    }
+    return shm_deserialize(backend->data_, backend->data_size_);
+  }
+
+  /**
    * Attach the allocator
    * */
   HSHM_CROSS_FUN
   static Allocator* shm_attach(Allocator *other) {
-    Allocator *alloc = nullptr;
-    switch (other->type_) {
-      // Stack Allocator
-      case AllocatorType::kStackAllocator: {
-        alloc = hipc::make_mptr<StackAllocator>(
-            HERMES_MEMORY_MANAGER->GetRootAllocator(),
-            *(StackAllocator*)other).get();
-        break;
-      }
-
-      // Scalable Page Allocator
-      case AllocatorType::kScalablePageAllocator: {
-        alloc = hipc::make_mptr<ScalablePageAllocator>(
-            HERMES_MEMORY_MANAGER->GetRootAllocator(),
-            *(ScalablePageAllocator*)other).get();
-        break;
-      }
-
-      // Malloc Allocator
-      case AllocatorType::kMallocAllocator: {
-        alloc = hipc::make_mptr<MallocAllocator>(
-            HERMES_MEMORY_MANAGER->GetRootAllocator(),
-            *(MallocAllocator*)other).get();
-        break;
-      }
+    if (other == nullptr) {
+      return nullptr;
     }
-    return alloc;
+    return shm_deserialize(other->buffer_, other->buffer_size_);
   }
 };
 

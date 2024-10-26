@@ -145,6 +145,18 @@ class MemoryBackend {
     flags_.UnsetBits(MEMORY_BACKEND_OWNED);
   }
 
+  /** Get the ID of this backend */
+  HSHM_CROSS_FUN
+  MemoryBackendId& GetId() {
+    return header_->id_;
+  }
+
+  /** Get the ID of this backend */
+  HSHM_CROSS_FUN
+  const MemoryBackendId& GetId() const {
+    return header_->id_;
+  }
+
   /// Each allocator must define its own shm_init.
   // virtual bool shm_init(size_t size, ...) = 0;
   virtual bool shm_deserialize(const hshm::chararr &url) = 0;

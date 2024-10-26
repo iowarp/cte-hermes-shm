@@ -7,7 +7,7 @@
 #include "hermes_shm/memory/backend/cuda_shm_mmap.h"
 #include "hermes_shm/constants/macros.h"
 #include "hermes_shm/types/argpack.h"
-#include "hermes_shm/util/singleton/_easy_lockfree_singleton.h"
+#include "hermes_shm/util/singleton/_easy_easy_singleton.h"
 #include "hermes_shm/util/singleton/_global_singleton.h"
 #include "hermes_shm/types/atomic.h"
 #include "hermes_shm/thread/lock/mutex.h"
@@ -86,12 +86,9 @@ __global__ void mpsc_kernel(
   auto mem_mngr = HERMES_MEMORY_MANAGER;
   mem_mngr->Init();
   mem_mngr->AttachBackend(backend);
-//  hipc::uptr<hipc::unordered_map<hshm::chararr, int>> x;
-//  mem_mngr->AttachAllocator(alloc);
-//  printf("%d %d",
-//         HERMES_MEMORY_MANAGER->GetDefaultAllocator() == alloc,
-//         HERMES_MEMORY_MANAGER->GetBackend(backend->header_->url_) == backend);
-//   queue->emplace(10);
+  hipc::uptr<hipc::unordered_map<hshm::chararr, int>> x;
+  mem_mngr->AttachAllocator(alloc);
+  queue->emplace(10);
 }
 
 void mpsc_test() {
@@ -104,6 +101,11 @@ void mpsc_test() {
       hipc::MemoryBackendId::Get(0), MEGABYTES(100), shm_url, 0);
   hipc::Allocator *alloc = mem_mngr->CreateAllocator<hipc::ScalablePageAllocator>(
       hipc::MemoryBackendId::Get(0), alloc_id, 0);
+
+  printf("%llu %u\n",
+         HERMES_MEMORY_MANAGER->GetDefaultAllocator()->GetId().bits_,
+         HERMES_MEMORY_MANAGER->GetBackend(backend->header_->id_)->GetId().id_);
+
   auto queue = hipc::make_uptr<hipc::mpsc_queue<int>>(alloc, 256 * 256);
   printf("GetSize: %lu\n", queue->GetSize());
   mpsc_kernel<<<1, 1>>>(

@@ -15,10 +15,7 @@
 
 #include <memory>
 #include "hermes_shm/constants/macros.h"
-#include "_easy_lockfree_singleton.h"
-#ifndef __CUDA_ARCH__
-#include "hermes_shm/thread/lock/mutex.h"
-#endif
+#include "hermes_shm/thread/lock/spin_lock.h"
 
 namespace hshm {
 
@@ -26,13 +23,13 @@ namespace hshm {
  * A class to represent singleton pattern
  * Does not require specific initialization of the static variable
  * */
-#ifndef __CUDA_ARCH__
-template<typename T>
-class EasySingleton {
+template<typename T, bool WithLock>
+class EasySingletonBase {
  protected:
   /** static instance. */
-  static T* obj_;
-  static hshm::Mutex lock_;
+  HSHM_CROSS_VAR static char data_[sizeof(T)];
+  HSHM_CROSS_VAR static T* obj_;
+  HSHM_CROSS_VAR static hshm::SpinLock lock_;
 
  public:
   /**
@@ -41,26 +38,40 @@ class EasySingleton {
    * @return instance of T
    */
   template<typename ...Args>
+  HSHM_CROSS_FUN
   static T* GetInstance(Args&& ...args) {
     if (obj_ == nullptr) {
-      hshm::ScopedMutex lock(lock_, 0);
-      if (obj_ == nullptr) {
-        obj_ = new T(std::forward<Args>(args)...);
+      if constexpr (WithLock) {
+        hshm::ScopedSpinLock lock(lock_, 0);
+        ConstructInstance(std::forward<Args>(args)...);
+      } else {
+        ConstructInstance(std::forward<Args>(args)...);
       }
     }
     return obj_;
   }
-};
-template <typename T>
-T* EasySingleton<T>::obj_ = nullptr;
-template <typename T>
-hshm::Mutex EasySingleton<T>::lock_ = hshm::Mutex();
-#else
-#include "_easy_lockfree_singleton.h"
-template<typename T>
-using EasySingleton = EasyLockfreeSingleton<T>;
-#endif
 
+  template<typename ...Args>
+  HSHM_CROSS_FUN
+  static void ConstructInstance(Args&& ...args) {
+    if (obj_ == nullptr) {
+      obj_ = (T *) data_;
+      new(obj_) T(std::forward<Args>(args)...);
+    }
+  }
+};
+template <typename T, bool WithLock>
+char EasySingletonBase<T, WithLock>::data_[sizeof(T)] = {0};
+template <typename T, bool WithLock>
+T* EasySingletonBase<T, WithLock>::obj_ = nullptr;
+template <typename T, bool WithLock>
+hshm::SpinLock EasySingletonBase<T, WithLock>::lock_ = hshm::SpinLock();
+
+template<typename T>
+using EasySingleton = EasySingletonBase<T, true>;
+
+template<typename T>
+using EasyLockfreeSingleton = EasySingletonBase<T, false>;
 
 }  // namespace hshm
 

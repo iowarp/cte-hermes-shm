@@ -99,7 +99,7 @@ class MemoryManager {
    * Attaches to an existing memory backend located.
    * */
   HSHM_CROSS_FUN
-  MemoryBackend* AttachBackend(MemoryBackend *backend);
+  MemoryBackend* AttachBackend(MemoryBackend *other);
 
   /**
    * Returns a pointer to a backend that has already been attached.
@@ -140,7 +140,7 @@ class MemoryManager {
    * the virtual function table is not compatible with SHM.
    * */
   HSHM_CROSS_FUN
-  void AttachAllocator(Allocator *alloc);
+  void AttachAllocator(Allocator *other);
 
 
   /**

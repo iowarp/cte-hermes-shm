@@ -173,8 +173,9 @@ void MemoryManager::DestroyBackend(const MemoryBackendId &backend_id) {
  * the virtual function table is not compatible with SHM.
  * */
 HSHM_CROSS_FUN
-void MemoryManager::AttachAllocator(Allocator *alloc) {
-  RegisterAllocator(AllocatorFactory::shm_attach(alloc));
+void MemoryManager::AttachAllocator(Allocator *other) {
+  Allocator *alloc = AllocatorFactory::shm_attach(other);
+  RegisterAllocator(alloc);
 }
 
 /**

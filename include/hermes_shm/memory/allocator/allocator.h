@@ -59,7 +59,7 @@ class Allocator {
  public:
   AllocatorType type_;
 
- protected:
+ public:
   char *buffer_;
   size_t buffer_size_;
   char *custom_header_;

@@ -81,6 +81,11 @@
 #define HSHM_HOST_FUN CUDA_HOST
 #define HSHM_GPU_FUN CUDA_DEVICE
 #define HSHM_CROSS_FUN CUDA_HOST_DEVICE
+#ifdef __CUDA_ARCH__
+#define HSHM_CROSS_VAR CUDA_DEVICE
+#else
+#define HSHM_CROSS_VAR
+#endif
 
 /** Macro for inline function */
 #define HSHM_INLINE_CROSS_FUN HSHM_ALWAYS_INLINE HSHM_CROSS_FUN
@@ -94,7 +99,7 @@
 #define UNMARK_FIRST_BIT(T, X) ((X) & ~MARK_FIRST_BIT_MASK(T))
 
 /** Class constant macro */
-#define CLS_CONST static inline constexpr
+#define CLS_CONST static inline constexpr const
 
 /** Class constant macro */
 #define GLOBAL_CONST static inline const

@@ -1,26 +1,25 @@
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- * Distributed under BSD 3-Clause license.                                   *
- * Copyright by The HDF Group.                                               *
- * Copyright by the Illinois Institute of Technology.                        *
- * All rights reserved.                                                      *
- *                                                                           *
- * This file is part of Hermes. The full Hermes copyright notice, including  *
- * terms governing use, modification, and redistribution, is contained in    *
- * the COPYING file, which can be found at the top directory. If you do not  *
- * have access to the file, you may request a copy from help@hdfgroup.org.   *
- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-
-
-#ifndef HERMES_THREAD_MUTEX_H_
-#define HERMES_THREAD_MUTEX_H_
-
 #include "hermes_shm/types/atomic.h"
 #include "hermes_shm/types/numbers.h"
+
+/**
+ * The EasySingleton used for the HERMES_THREAD_MODEL_MANAGER
+ * macro needs a SpinLock. This file specifically disables
+ * the yielding even being included.
+ * */
+#ifdef HERMES_MAKE_MUTEX
+// Make a mutex with HERMES_THREAD_MODEL_MANAGER->Yield()
 #include "hermes_shm/thread/thread_model_manager.h"
+#define MUTEX_CLASS_NAME Mutex
+#define SCOPED_MUTEX_CLASS_NAME ScopedMutex
+#else
+// Make a spinlock without HERMES_THREAD_MODEL_MANAGER->Yield()
+#define MUTEX_CLASS_NAME SpinLock
+#define SCOPED_MUTEX_CLASS_NAME ScopedSpinLock
+#endif
 
 namespace hshm {
 
-struct Mutex {
+struct MUTEX_CLASS_NAME {
   ipc::atomic<u32> lock_;
 #ifdef HERMES_DEBUG_LOCK
   u32 owner_;
@@ -28,11 +27,11 @@ struct Mutex {
 
   /** Default constructor */
   HSHM_INLINE_CROSS_FUN
-  Mutex() : lock_(0) {}
+  MUTEX_CLASS_NAME() : lock_(0) {}
 
   /** Copy constructor */
   HSHM_INLINE_CROSS_FUN
-  Mutex(const Mutex &other) {}
+  MUTEX_CLASS_NAME(const MUTEX_CLASS_NAME &other) {}
 
   /** Explicit initialization */
   HSHM_INLINE_CROSS_FUN
@@ -47,7 +46,9 @@ struct Mutex {
       for (int i = 0; i < 1; ++i) {
         if (TryLock(owner)) { return; }
       }
+#ifdef HERMES_MAKE_MUTEX
       HERMES_THREAD_MODEL->Yield();
+#endif
     } while (true);
   }
 
@@ -78,13 +79,13 @@ struct Mutex {
   }
 };
 
-struct ScopedMutex {
-  Mutex &lock_;
+struct SCOPED_MUTEX_CLASS_NAME {
+  MUTEX_CLASS_NAME &lock_;
   bool is_locked_;
 
   /** Acquire the mutex */
   HSHM_INLINE_CROSS_FUN explicit
-  ScopedMutex(Mutex &lock,
+  SCOPED_MUTEX_CLASS_NAME(MUTEX_CLASS_NAME &lock,
                           uint32_t owner)
       : lock_(lock), is_locked_(false) {
     Lock(owner);
@@ -92,7 +93,7 @@ struct ScopedMutex {
 
   /** Release the mutex */
   HSHM_INLINE_CROSS_FUN
-  ~ScopedMutex() {
+  ~SCOPED_MUTEX_CLASS_NAME() {
     Unlock();
   }
 
@@ -126,7 +127,5 @@ struct ScopedMutex {
 
 }  // namespace hshm
 
-#undef Mutex
-#undef ScopedMutex
-
-#endif  // HERMES_THREAD_MUTEX_H_
+#undef MUTEX_CLASS_NAME
+#undef SCOPED_MUTEX_CLASS_NAME

@@ -15,10 +15,7 @@
 
 #include <memory>
 #include "hermes_shm/constants/macros.h"
-#include "_easy_lockfree_singleton.h"
-#ifndef __CUDA_ARCH__
-#include "hermes_shm/thread/lock/mutex.h"
-#endif
+#include "_easy_singleton.h"
 
 namespace hshm {
 
@@ -31,30 +28,41 @@ namespace hshm {
 template<typename T>
 class Singleton {
  private:
-  static T *obj_;
-  static hshm::Mutex lock_;
+  /** static instance. */
+  HSHM_CROSS_VAR static char data_[sizeof(T)];
+  HSHM_CROSS_VAR static T* obj_;
+  HSHM_CROSS_VAR static hshm::SpinLock lock_;
 
  public:
   /** Get or create an instance of type T */
-  inline static T *GetInstance() {
+  template<typename ...Args>
+  inline static T *GetInstance(Args&& ...args) {
     if (!obj_) {
-      hshm::ScopedMutex lock(lock_, 0);
-      if (obj_ == nullptr) {
-        obj_ = new T();
-      }
+      hshm::ScopedSpinLock lock(lock_, 0);
+      ConstructInstance(std::forward<Args>(args)...);
     }
     return obj_;
+  }
+
+  /** Construct the instance */
+  template<typename ...Args>
+  HSHM_CROSS_FUN
+  static void ConstructInstance(Args&& ...args) {
+    if (obj_ == nullptr) {
+      obj_ = (T *) data_;
+      new(obj_) T(std::forward<Args>(args)...);
+    }
   }
 };
 
 #define DEFINE_SINGLETON_CC(T)\
+  template<> char hshm::Singleton<T>::data_[sizeof(T)] = {0}; \
   template<> T* hshm::Singleton<T>::obj_ = nullptr; \
-  template<> hshm::Mutex hshm::Singleton<T>::lock_ = hshm::Mutex();
+  template<> hshm::SpinLock hshm::Singleton<T>::lock_ = hshm::SpinLock();
 
 #else
-#include "_easy_lockfree_singleton.h"
 template<typename T>
-using Singleton = EasyLockfreeSingleton<T>;
+using Singleton = EasySingleton<T>;
 #define DEFINE_SINGLETON_CC(T)
 #endif
 
