@@ -62,6 +62,7 @@ void MemoryManager::Init() {
 
   // Other allocators
   RegisterAllocator(root_alloc_);
+  HERMES_THREAD_MODEL;
 }
 
 /** Get the root allocator */

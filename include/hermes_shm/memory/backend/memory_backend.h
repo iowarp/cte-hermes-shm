@@ -38,36 +38,46 @@ class MemoryBackendId {
  public:
   u32 id_;
 
+  HSHM_CROSS_FUN
   MemoryBackendId() = default;
 
+  HSHM_CROSS_FUN
   MemoryBackendId(u32 id) : id_(id) {}
 
+  HSHM_CROSS_FUN
   MemoryBackendId(const MemoryBackendId &other) : id_(other.id_) {}
 
+  HSHM_CROSS_FUN
   MemoryBackendId(MemoryBackendId &&other) noexcept : id_(other.id_) {}
 
+  HSHM_CROSS_FUN
   MemoryBackendId &operator=(const MemoryBackendId &other) {
     id_ = other.id_;
     return *this;
   }
 
+  HSHM_CROSS_FUN
   MemoryBackendId &operator=(MemoryBackendId &&other) noexcept {
     id_ = other.id_;
     return *this;
   }
 
+  HSHM_CROSS_FUN
   static MemoryBackendId GetRoot() {
     return {0};
   }
 
+  HSHM_CROSS_FUN
   static MemoryBackendId Get(u32 id) {
     return {id + 1};
   }
 
+  HSHM_CROSS_FUN
   bool operator==(const MemoryBackendId &other) const {
     return id_ == other.id_;
   }
 
+  HSHM_CROSS_FUN
   bool operator!=(const MemoryBackendId &other) const {
     return id_ != other.id_;
   }

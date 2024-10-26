@@ -54,7 +54,9 @@ void backend_test() {
 
   // Create a MyStruct instance and copy it to both host and device memory
   hshm::ipc::CudaShmMmap shm;
-  shm.shm_init(size, "shmem_test", 0);
+  shm.shm_init(
+      hipc::MemoryBackendId::Get(0),
+      size, "shmem_test", 0);
   MyStruct* shm_struct = (MyStruct*)shm.data_;
   shm_struct->x = 10;
   shm_struct->y = 3.14f;
@@ -97,11 +99,11 @@ void mpsc_test() {
   hipc::AllocatorId alloc_id(0, 1);
   auto mem_mngr = HERMES_MEMORY_MANAGER;
   mem_mngr->UnregisterAllocator(alloc_id);
-  mem_mngr->UnregisterBackend(shm_url);
+  mem_mngr->UnregisterBackend(hipc::MemoryBackendId::Get(0));
   auto *backend = mem_mngr->CreateBackend<hipc::CudaShmMmap>(
-    MEGABYTES(100), shm_url, 0);
+      hipc::MemoryBackendId::Get(0), MEGABYTES(100), shm_url, 0);
   hipc::Allocator *alloc = mem_mngr->CreateAllocator<hipc::ScalablePageAllocator>(
-    shm_url, alloc_id, 0);
+      hipc::MemoryBackendId::Get(0), alloc_id, 0);
   auto queue = hipc::make_uptr<hipc::mpsc_queue<int>>(alloc, 256 * 256);
   printf("GetSize: %lu\n", queue->GetSize());
   mpsc_kernel<<<1, 1>>>(

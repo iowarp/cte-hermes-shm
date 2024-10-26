@@ -43,7 +43,7 @@ class CudaShmMmap : public PosixShmMmap {
                 int device) {
     cudaDeviceSynchronize();
     cudaSetDevice(device);
-    bool ret = PosixShmMmap::shm_init(id, size, url);
+    bool ret = PosixShmMmap::shm_init(backend_id, size, url);
     if (!ret) {
       return false;
     }
