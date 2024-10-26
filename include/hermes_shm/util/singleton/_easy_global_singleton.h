@@ -39,7 +39,7 @@ template <typename T>
 T EasyGlobalSingleton<T>::obj_;
 #else
 template<typename T>
-using EasyGlobalSingleton = EasySingleton<T>;
+using EasyGlobalSingleton = EasyLockfreeSingleton<T>;
 #endif
 
 }  // namespace hshm

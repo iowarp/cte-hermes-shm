@@ -84,9 +84,7 @@ class MemoryManager {
    * @param backend the backend to register
    * */
   HSHM_CROSS_FUN
-  MemoryBackend* RegisterBackend(
-      const MemoryBackendId &backend_id,
-      MemoryBackend* backend);
+  MemoryBackend* RegisterBackend(MemoryBackend *backend);
 
   /**
    * Attaches to an existing memory backend located at \a url url.
@@ -94,12 +92,6 @@ class MemoryManager {
   HSHM_CROSS_FUN
   MemoryBackend* AttachBackend(MemoryBackendType type,
                                const hshm::chararr &url);
-
-  /**
-   * Attaches to an existing memory backend located.
-   * */
-  HSHM_CROSS_FUN
-  MemoryBackend* AttachBackend(MemoryBackend *other);
 
   /**
    * Returns a pointer to a backend that has already been attached.
@@ -123,7 +115,7 @@ class MemoryManager {
    * Scans all attached backends for new memory allocators.
    * */
   HSHM_CROSS_FUN
-  void ScanBackends();
+  void ScanBackends(bool find_allocs = true);
 
   /**
    * Create and register a memory allocator for a particular backend.
@@ -135,20 +127,11 @@ class MemoryManager {
                              Args&& ...args);
 
   /**
-   * Attaches an allocator that was previously allocated,
-   * but was stored in shared memory. This is needed because
-   * the virtual function table is not compatible with SHM.
-   * */
-  HSHM_CROSS_FUN
-  void AttachAllocator(Allocator *other);
-
-
-  /**
    * Registers an allocator. Used internally by ScanBackends, but may
    * also be used externally.
    * */
   HSHM_CROSS_FUN
-  Allocator* RegisterAllocator(Allocator *alloc);
+  Allocator* RegisterAllocator(Allocator *alloc, bool do_scan = true);
 
   /**
    * Destroys an allocator

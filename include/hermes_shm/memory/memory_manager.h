@@ -34,7 +34,7 @@ MemoryBackend* MemoryManager::CreateBackend(
     Args&& ...args) {
   auto backend = MemoryBackendFactory::shm_init<BackendT>(
       backend_id, size, std::forward<Args>(args)...);
-  RegisterBackend(backend_id, backend);
+  RegisterBackend(backend);
   backend->Own();
   return backend;
 }

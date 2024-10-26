@@ -18,7 +18,7 @@
 #include "hermes_shm/util/singleton/_singleton.h"
 
 #define HERMES_SYSTEM_INFO \
-  hshm::Singleton<hshm::SystemInfo>::GetInstance()
+  hshm::LockfreeSingleton<hshm::SystemInfo>::GetInstance()
 #define HERMES_SYSTEM_INFO_T hshm::SystemInfo*
 
 namespace hshm {

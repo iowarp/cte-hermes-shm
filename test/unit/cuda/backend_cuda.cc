@@ -7,7 +7,7 @@
 #include "hermes_shm/memory/backend/cuda_shm_mmap.h"
 #include "hermes_shm/constants/macros.h"
 #include "hermes_shm/types/argpack.h"
-#include "hermes_shm/util/singleton/_easy_easy_singleton.h"
+#include "hermes_shm/util/singleton/_easy_singleton.h"
 #include "hermes_shm/util/singleton/_global_singleton.h"
 #include "hermes_shm/types/atomic.h"
 #include "hermes_shm/thread/lock/mutex.h"
@@ -16,10 +16,6 @@
 #include <cassert>
 #include <hermes_shm/data_structures/ipc/mpsc_queue.h>
 #include <hermes_shm/data_structures/ipc/unordered_map.h>
-
-enum class TestMode {
-  kWrite
-};
 
 struct MyStruct {
   int x;
@@ -79,15 +75,7 @@ void backend_test() {
   shm.shm_destroy();
 }
 
-__global__ void mpsc_kernel(
-    hipc::MemoryBackend *backend,
-    hipc::Allocator *alloc,
-    hipc::mpsc_queue<int> *queue) {
-  auto mem_mngr = HERMES_MEMORY_MANAGER;
-  mem_mngr->Init();
-  mem_mngr->AttachBackend(backend);
-  hipc::uptr<hipc::unordered_map<hshm::chararr, int>> x;
-  mem_mngr->AttachAllocator(alloc);
+__global__ void mpsc_kernel(hipc::mpsc_queue<int> *queue) {
   queue->emplace(10);
 }
 
@@ -97,21 +85,14 @@ void mpsc_test() {
   auto mem_mngr = HERMES_MEMORY_MANAGER;
   mem_mngr->UnregisterAllocator(alloc_id);
   mem_mngr->UnregisterBackend(hipc::MemoryBackendId::Get(0));
-  auto *backend = mem_mngr->CreateBackend<hipc::CudaShmMmap>(
+  mem_mngr->CreateBackend<hipc::CudaShmMmap>(
       hipc::MemoryBackendId::Get(0), MEGABYTES(100), shm_url, 0);
-  hipc::Allocator *alloc = mem_mngr->CreateAllocator<hipc::ScalablePageAllocator>(
+  mem_mngr->CreateAllocator<hipc::ScalablePageAllocator>(
       hipc::MemoryBackendId::Get(0), alloc_id, 0);
 
-  printf("%llu %u\n",
-         HERMES_MEMORY_MANAGER->GetDefaultAllocator()->GetId().bits_,
-         HERMES_MEMORY_MANAGER->GetBackend(backend->header_->id_)->GetId().id_);
-
-  auto queue = hipc::make_uptr<hipc::mpsc_queue<int>>(alloc, 256 * 256);
+  auto queue = hipc::make_uptr<hipc::mpsc_queue<int>>(256 * 256);
   printf("GetSize: %lu\n", queue->GetSize());
-  mpsc_kernel<<<1, 1>>>(
-    backend,
-    alloc,
-    queue.get());
+  mpsc_kernel<<<1, 1>>>(queue.get());
   cudaDeviceSynchronize();
   printf("GetSize: %lu\n", queue->GetSize());
   int val, sum = 0;

@@ -26,11 +26,6 @@ namespace hshm {
 template<typename T, bool WithLock>
 class EasySingletonBase {
  protected:
-  /** static instance. */
-  HSHM_CROSS_VAR static char data_[sizeof(T)];
-  HSHM_CROSS_VAR static T* obj_;
-  HSHM_CROSS_VAR static hshm::SpinLock lock_;
-
  public:
   /**
    * Uses unique pointer to build a static global instance of variable.
@@ -40,12 +35,21 @@ class EasySingletonBase {
   template<typename ...Args>
   HSHM_CROSS_FUN
   static T* GetInstance(Args&& ...args) {
+    static char data_[sizeof(T)] = {0};
+    static char spinlock_data_[sizeof(hshm::SpinLock)] = {0};
+    static T* obj_ = nullptr;
+
     if (obj_ == nullptr) {
       if constexpr (WithLock) {
-        hshm::ScopedSpinLock lock(lock_, 0);
-        ConstructInstance(std::forward<Args>(args)...);
+        hshm::SpinLock *lock_ = (hshm::SpinLock *) spinlock_data_;
+        hshm::ScopedSpinLock lock(*lock_, 0);
+        ConstructInstance(
+            data_, obj_,
+            std::forward<Args>(args)...);
       } else {
-        ConstructInstance(std::forward<Args>(args)...);
+        ConstructInstance(
+            data_, obj_,
+            std::forward<Args>(args)...);
       }
     }
     return obj_;
@@ -53,19 +57,16 @@ class EasySingletonBase {
 
   template<typename ...Args>
   HSHM_CROSS_FUN
-  static void ConstructInstance(Args&& ...args) {
+  static void ConstructInstance(
+      char *data_,
+      T *obj_,
+      Args&& ...args) {
     if (obj_ == nullptr) {
+      new((T *) data_) T(std::forward<Args>(args)...);
       obj_ = (T *) data_;
-      new(obj_) T(std::forward<Args>(args)...);
     }
   }
 };
-template <typename T, bool WithLock>
-char EasySingletonBase<T, WithLock>::data_[sizeof(T)] = {0};
-template <typename T, bool WithLock>
-T* EasySingletonBase<T, WithLock>::obj_ = nullptr;
-template <typename T, bool WithLock>
-hshm::SpinLock EasySingletonBase<T, WithLock>::lock_ = hshm::SpinLock();
 
 template<typename T>
 using EasySingleton = EasySingletonBase<T, true>;

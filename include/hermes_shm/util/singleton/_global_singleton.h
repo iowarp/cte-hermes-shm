@@ -44,7 +44,7 @@ class GlobalSingleton {
   template<> T hshm::GlobalSingleton<T>::obj_ = T();
 #else
 template<typename T>
-using GlobalSingleton = EasySingleton<T>;
+using GlobalSingleton = EasyLockfreeSingleton<T>;
 #define DEFINE_GLOBAL_SINGLETON_CC(T)
 #endif
 

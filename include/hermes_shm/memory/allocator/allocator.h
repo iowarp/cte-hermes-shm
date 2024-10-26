@@ -206,7 +206,7 @@ class Allocator {
    * */
   template<typename T, typename PointerT = Pointer>
   HSHM_INLINE_CROSS_FUN T* AllocatePtr(size_t size,
-                                    PointerT &p, size_t alignment = 0) {
+                                       PointerT &p, size_t alignment = 0) {
     p = Allocate<PointerT>(size, alignment);
     if (p.IsNull()) { return nullptr; }
     return reinterpret_cast<T*>(buffer_ + p.off_.load());
@@ -268,7 +268,7 @@ class Allocator {
    * */
   template<typename T, typename PointerT = Pointer>
   HSHM_INLINE_CROSS_FUN T* ClearAllocatePtr(size_t size,
-                                         PointerT &p, size_t alignment = 0) {
+                                            PointerT &p, size_t alignment = 0) {
     p = Allocate<PointerT>(size, alignment);
     if (p.IsNull()) { return nullptr; }
     auto ptr = reinterpret_cast<T*>(buffer_ + p.off_.load());
@@ -334,7 +334,7 @@ class Allocator {
    * */
   template<typename T, typename PointerT = Pointer>
   HSHM_INLINE_CROSS_FUN T* ReallocatePtr(PointerT &p, size_t new_size,
-                                      bool &modified) {
+                                         bool &modified) {
     modified = Reallocate<PointerT>(p, new_size);
     return Convert<T>(p);
   }
@@ -538,7 +538,7 @@ class Allocator {
       typename PointerT = Pointer,
       typename ...Args>
   HSHM_INLINE_CROSS_FUN T* AllocateConstructObjs(size_t count,
-                                              PointerT &p, Args&& ...args) {
+                                                 PointerT &p, Args&& ...args) {
     T *ptr = AllocateObjs<T>(count, p);
     ConstructObjs<T>(ptr, 0, count, std::forward<Args>(args)...);
     return ptr;
@@ -691,9 +691,9 @@ class Allocator {
       typename PointerT = Pointer,
       typename ...Args>
   HSHM_INLINE_CROSS_FUN T* ReallocateConstructObjs(PointerT &p,
-                                                size_t old_count,
-                                                size_t new_count,
-                                                Args&& ...args) {
+                                                   size_t old_count,
+                                                   size_t new_count,
+                                                   Args&& ...args) {
     T *ptr = ReallocatePtr<T>(p, new_count * sizeof(T));
     ConstructObjs<T>(ptr, old_count, new_count, std::forward<Args>(args)...);
     return ptr;
@@ -799,8 +799,8 @@ class Allocator {
       typename ...Args>
   HSHM_INLINE_CROSS_FUN
   static void ConstructObjs(T *ptr,
-                size_t old_count,
-                size_t new_count, Args&& ...args) {
+                            size_t old_count,
+                            size_t new_count, Args&& ...args) {
     if (ptr == nullptr) { return; }
     for (size_t i = old_count; i < new_count; ++i) {
       ConstructObj<T>(*(ptr + i), std::forward<Args>(args)...);
@@ -886,8 +886,8 @@ class Allocator {
   HSHM_INLINE_CROSS_FUN PointerT Convert(const T *ptr) {
     if (ptr == nullptr) { return PointerT::GetNull(); }
     return PointerT(GetId(),
-                     reinterpret_cast<size_t>(ptr) -
-                         reinterpret_cast<size_t>(buffer_));
+                    reinterpret_cast<size_t>(ptr) -
+                        reinterpret_cast<size_t>(buffer_));
   }
 
   /**

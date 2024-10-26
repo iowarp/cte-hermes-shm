@@ -22,12 +22,15 @@
 
 namespace hshm::ipc {
 
+#ifdef HERMES_ENABLE_CUDA
+__global__ void Init() {
+}
+#endif
+
 /** Create the root allocator */
 HSHM_CROSS_FUN
 MemoryManager::MemoryManager() {
-#ifndef __CUDA_ARCH__
   Init();
-#endif
 }
 
 /** Initialize memory manager */
@@ -62,7 +65,6 @@ void MemoryManager::Init() {
 
   // Other allocators
   RegisterAllocator(root_alloc_);
-  HERMES_THREAD_MODEL;
 }
 
 /** Get the root allocator */
@@ -88,24 +90,12 @@ HSHM_CROSS_FUN
 MemoryBackend* MemoryManager::AttachBackend(MemoryBackendType type,
                                             const hshm::chararr &url) {
 #ifndef __CUDA_ARCH__
-  auto backend = MemoryBackendFactory::shm_deserialize(type, url);
-  RegisterBackend(backend->header_->id_, backend);
+  MemoryBackend *backend = MemoryBackendFactory::shm_deserialize(type, url);
+  RegisterBackend(backend);
   ScanBackends();
   backend->Disown();
   return backend;
 #endif
-}
-
-/**
- * Attaches to an existing memory backend.
- * */
-HSHM_CROSS_FUN
-MemoryBackend* MemoryManager::AttachBackend(MemoryBackend *other) {
-  MemoryBackend *backend = MemoryBackendFactory::shm_attach(other);
-  RegisterBackend(backend->header_->id_, backend);
-  ScanBackends();
-  backend->Disown();
-  return backend;
 }
 
 /**
@@ -118,28 +108,74 @@ MemoryBackend* MemoryManager::AttachBackend(MemoryBackend *other) {
  * */
 HSHM_CROSS_FUN
 MemoryBackend* MemoryManager::RegisterBackend(
-    const MemoryBackendId &backend_id,
     MemoryBackend *backend) {
-  if (GetBackend(backend_id)) {
+  if (GetBackend(backend->GetId())) {
     HERMES_THROW_ERROR(MEMORY_BACKEND_REPEATED);
   }
-  backends_[backend_id.id_] = backend;
+  backends_[backend->GetId().id_] = backend;
   return backend;
 }
+
+#ifdef HERMES_ENABLE_CUDA
+template<typename BackendT>
+__global__ void AttachBackendKernel(BackendT *backend) {
+  HERMES_MEMORY_MANAGER;
+  HERMES_THREAD_MODEL;
+  HERMES_SYSTEM_INFO;
+  new (backend) BackendT();
+  HERMES_MEMORY_MANAGER->RegisterBackend(backend);
+}
+
+/** Check if a backend is cuda-compatible */
+void AllocateCudaBackend(int dev, MemoryBackend *other) {
+  cudaSetDevice(dev);
+  switch(other->header_->type_) {
+    case MemoryBackendType::kCudaMalloc: {
+      CudaMalloc *backend;
+      cudaMallocManaged(&backend, sizeof(CudaMalloc));
+      memcpy(backend, other, sizeof(CudaMalloc));
+      AttachBackendKernel<<<1, 1>>>(backend);
+    }
+    case MemoryBackendType::kCudaShmMmap: {
+      CudaShmMmap *backend;
+      cudaMallocManaged(&backend, sizeof(CudaMalloc));
+      memcpy(backend, other, sizeof(CudaShmMmap));
+      AttachBackendKernel<<<1, 1>>>(backend);
+    }
+    default: {
+      break;
+    }
+  }
+}
+#endif
 
 /**
  * Scans all attached backends for new memory allocators.
  * */
 HSHM_CROSS_FUN
-void MemoryManager::ScanBackends() {
-#ifndef __CUDA_ARCH__
-  for (int i = 0; i < MAX_BACKENDS; ++i) {
-    auto alloc = AllocatorFactory::shm_deserialize(backends_[i]);
-    RegisterAllocator(alloc);
-  }
+void MemoryManager::ScanBackends(bool find_allocs) {
+#if defined(HERMES_ENABLE_CUDA) && !defined(__CUDA_ARCH__)
+  int num_gpus = 0;
+  cudaGetDeviceCount(&num_gpus);
 #endif
-}
 
+  for (int i = 0; i < MAX_BACKENDS; ++i) {
+    MemoryBackend *backend = backends_[i];
+    if (backend == nullptr || backend->IsScanned()) {
+      continue;
+    }
+    backend->SetScanned();
+    if (find_allocs) {
+      Allocator *alloc = AllocatorFactory::shm_deserialize(backend);
+      RegisterAllocator(alloc, false);
+    }
+#if defined(HERMES_ENABLE_CUDA) && !defined(__CUDA_ARCH__)
+    for (int dev = 0; dev < num_gpus; ++dev) {
+      AllocateCudaBackend(dev, backend);
+    }
+#endif
+  }
+}
 
 /**
  * Returns a pointer to a backend that has already been attached.
@@ -168,22 +204,11 @@ void MemoryManager::DestroyBackend(const MemoryBackendId &backend_id) {
 }
 
 /**
- * Attaches an allocator that was previously allocated,
- * but was stored in shared memory. This is needed because
- * the virtual function table is not compatible with SHM.
- * */
-HSHM_CROSS_FUN
-void MemoryManager::AttachAllocator(Allocator *other) {
-  Allocator *alloc = AllocatorFactory::shm_attach(other);
-  RegisterAllocator(alloc);
-}
-
-/**
  * Registers an allocator. Used internally by ScanBackends, but may
  * also be used externally.
  * */
 HSHM_CROSS_FUN
-Allocator* MemoryManager::RegisterAllocator(Allocator *alloc) {
+Allocator* MemoryManager::RegisterAllocator(Allocator *alloc, bool do_scan) {
   if (alloc == nullptr) {
     return nullptr;
   }
@@ -198,6 +223,9 @@ Allocator* MemoryManager::RegisterAllocator(Allocator *alloc) {
     HERMES_THROW_ERROR(TOO_MANY_ALLOCATORS);
   }
   allocators_[idx] = alloc;
+  if (do_scan) {
+    ScanBackends(false);
+  }
   return alloc;
 }
 
@@ -236,5 +264,6 @@ HSHM_CROSS_FUN
 void MemoryManager::SetDefaultAllocator(Allocator *alloc) {
   default_allocator_ = alloc;
 }
+
 
 }  // namespace hshm::ipc
