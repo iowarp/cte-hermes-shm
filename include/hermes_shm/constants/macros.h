@@ -102,10 +102,16 @@
 #define CLS_CONST static inline constexpr const
 
 /** Class constant macro */
-#define GLOBAL_CONST static inline const
+#define GLOBAL_CONST static inline const HSHM_CROSS_VAR
 
 namespace hshm {}
 namespace hshm::ipc {}
 namespace hipc = hshm::ipc;
+
+#ifndef __CUDA_ARCH__
+GLOBAL_CONST char *kCurrentDevice = "cpu";
+#else
+GLOBAL_CONST char *kCurrentDevice = "gpu";
+#endif
 
 #endif  // HERMES_MACROS_H

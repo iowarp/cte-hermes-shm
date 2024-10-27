@@ -170,7 +170,7 @@ class ScalablePageAllocator : public Allocator {
     size_t region_size = buffer_size_ - region_off;
     AllocatorId sub_id(id.bits_.major_, id.bits_.minor_ + 1);
     alloc_.shm_init(sub_id, 0, buffer + region_off, region_size);
-    HERMES_MEMORY_MANAGER->RegisterAllocator(&alloc_);
+    HERMES_MEMORY_MANAGER->RegisterSubAllocator(&alloc_);
     header_->Configure(id, custom_header_size, &alloc_,
                        buffer_size, coalesce_trigger, coalesce_window);
     vector<FreeListSetIpc> *free_lists = header_->free_lists_.get();
@@ -192,7 +192,7 @@ class ScalablePageAllocator : public Allocator {
     size_t region_off = (custom_header_ - buffer_) + header_->custom_header_size_;
     size_t region_size = buffer_size_ - region_off;
     alloc_.shm_deserialize(buffer + region_off, region_size);
-    HERMES_MEMORY_MANAGER->RegisterAllocator(&alloc_);
+    HERMES_MEMORY_MANAGER->RegisterSubAllocator(&alloc_);
     CacheFreeLists();
   }
 

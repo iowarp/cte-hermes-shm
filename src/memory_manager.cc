@@ -118,12 +118,13 @@ MemoryBackend* MemoryManager::RegisterBackend(
 
 #ifdef HERMES_ENABLE_CUDA
 template<typename BackendT>
-__global__ void AttachBackendKernel(BackendT *backend) {
+__global__ void AttachBackendKernel(BackendT *pack, BackendT *cpy) {
   HERMES_MEMORY_MANAGER;
   HERMES_THREAD_MODEL;
   HERMES_SYSTEM_INFO;
-  new (backend) BackendT();
-  HERMES_MEMORY_MANAGER->RegisterBackend(backend);
+  new (cpy) BackendT(*pack);
+  HERMES_MEMORY_MANAGER->RegisterBackend(cpy);
+  HERMES_MEMORY_MANAGER->ScanBackends();
 }
 
 /** Check if a backend is cuda-compatible */
@@ -131,16 +132,26 @@ void AllocateCudaBackend(int dev, MemoryBackend *other) {
   cudaSetDevice(dev);
   switch(other->header_->type_) {
     case MemoryBackendType::kCudaMalloc: {
-      CudaMalloc *backend;
-      cudaMallocManaged(&backend, sizeof(CudaMalloc));
-      memcpy(backend, other, sizeof(CudaMalloc));
-      AttachBackendKernel<<<1, 1>>>(backend);
+      CudaMalloc *pack, *cpy;
+      cudaMallocManaged(&pack, sizeof(CudaMalloc));
+      cudaMallocManaged(&cpy, sizeof(CudaMalloc));
+      memcpy((char*)pack, (char*)other, sizeof(CudaMalloc));
+      pack->UnsetScanned();
+      pack->Disown();
+      AttachBackendKernel<<<1, 1>>>(pack, cpy);
+      cudaDeviceSynchronize();
+      cudaFree(pack);
     }
     case MemoryBackendType::kCudaShmMmap: {
-      CudaShmMmap *backend;
-      cudaMallocManaged(&backend, sizeof(CudaMalloc));
-      memcpy(backend, other, sizeof(CudaShmMmap));
-      AttachBackendKernel<<<1, 1>>>(backend);
+      CudaShmMmap *pack, *cpy;
+      cudaMallocManaged(&pack, sizeof(CudaShmMmap));
+      cudaMallocManaged(&cpy, sizeof(CudaShmMmap));
+      memcpy((char*)pack, (char*)other, sizeof(CudaShmMmap));
+      pack->UnsetScanned();
+      pack->Disown();
+      AttachBackendKernel<<<1, 1>>>(pack, cpy);
+      cudaDeviceSynchronize();
+      cudaFree(pack);
     }
     default: {
       break;
@@ -158,7 +169,6 @@ void MemoryManager::ScanBackends(bool find_allocs) {
   int num_gpus = 0;
   cudaGetDeviceCount(&num_gpus);
 #endif
-
   for (int i = 0; i < MAX_BACKENDS; ++i) {
     MemoryBackend *backend = backends_[i];
     if (backend == nullptr || backend->IsScanned()) {
@@ -167,6 +177,9 @@ void MemoryManager::ScanBackends(bool find_allocs) {
     backend->SetScanned();
     if (find_allocs) {
       Allocator *alloc = AllocatorFactory::shm_deserialize(backend);
+      if (!alloc) {
+        continue;
+      }
       RegisterAllocator(alloc, false);
     }
 #if defined(HERMES_ENABLE_CUDA) && !defined(__CUDA_ARCH__)

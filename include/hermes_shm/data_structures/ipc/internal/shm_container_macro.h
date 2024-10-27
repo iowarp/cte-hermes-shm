@@ -49,8 +49,8 @@ HSHM_INLINE_CROSS_FUN hipc::Allocator* GetAllocator() const {\
 }\
 \
 /** Get the shared-memory allocator id */\
-HSHM_INLINE_CROSS_FUN hipc::AllocatorId& GetAllocatorId() const {\
-  return GetAllocator()->GetId();\
+HSHM_INLINE_CROSS_FUN const hipc::AllocatorId& GetAllocatorId() const {\
+  return alloc_id_;\
 }\
 
 #endif  // HERMES_DATA_STRUCTURES_INTERNAL_SHM_CONTAINER_MACRO_H_

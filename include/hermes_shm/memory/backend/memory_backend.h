@@ -88,6 +88,14 @@ struct MemoryBackendHeader {
   MemoryBackendType type_;
   MemoryBackendId id_;
   size_t data_size_;
+
+  HSHM_CROSS_FUN
+  void Print() const {
+    printf("(%s) MemoryBackendHeader: type: %d, id: %d, data_size: %lu\n",
+           kCurrentDevice,
+           static_cast<int>(type_),
+           id_.id_, data_size_);
+  }
 };
 
 #define MEMORY_BACKEND_INITIALIZED BIT_OPT(u32, 0)
@@ -174,6 +182,13 @@ class MemoryBackend {
   HSHM_CROSS_FUN
   const MemoryBackendId& GetId() const {
     return header_->id_;
+  }
+
+  HSHM_CROSS_FUN
+  void Print() const {
+    header_->Print();
+    printf("(%s) MemoryBackend: data: %p, data_size: %lu\n",
+           kCurrentDevice, data_, data_size_);
   }
 
   /// Each allocator must define its own shm_init.

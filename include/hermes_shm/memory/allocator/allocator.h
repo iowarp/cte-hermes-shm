@@ -65,6 +65,17 @@ class Allocator {
   char *custom_header_;
 
  public:
+  /** Print */
+  HSHM_CROSS_FUN
+  void Print() {
+    printf("(%s) Allocator: type: %d, id: %d.%d, custom_header: %p\n",
+           kCurrentDevice,
+           static_cast<int>(type_),
+           GetId().bits_.major_,
+           GetId().bits_.minor_,
+           custom_header_);
+  }
+
   /**
    * Constructor
    * */

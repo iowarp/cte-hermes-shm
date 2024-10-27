@@ -81,6 +81,13 @@ union AllocatorId {
   void serialize(Ar &ar) {
     ar &int_;
   }
+
+  /** Print */
+  HSHM_CROSS_FUN
+  void Print() const {
+    printf("(%s) Allocator ID: %u.%u\n",
+           kCurrentDevice, bits_.major_, bits_.minor_);
+  }
 };
 
 typedef AllocatorId allocator_id_t;

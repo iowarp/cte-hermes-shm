@@ -40,21 +40,14 @@ class SingletonBase {
     if (!obj_) {
       if constexpr (WithLock) {
         hshm::ScopedSpinLock lock(lock_, 0);
-        ConstructInstance(std::forward<Args>(args)...);
+        new((T *) data_) T(std::forward<Args>(args)...);
+        obj_ = (T *) data_;
       } else {
-        ConstructInstance(std::forward<Args>(args)...);
+        new((T *) data_) T(std::forward<Args>(args)...);
+        obj_ = (T *) data_;
       }
     }
     return obj_;
-  }
-
-  /** Construct the instance */
-  template<typename ...Args>
-  static void ConstructInstance(Args&& ...args) {
-    if (obj_ == nullptr) {
-      new((T *) data_) T(std::forward<Args>(args)...);
-      obj_ = (T *) data_;
-    }
   }
 };
 

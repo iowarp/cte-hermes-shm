@@ -134,6 +134,14 @@ class MemoryManager {
   Allocator* RegisterAllocator(Allocator *alloc, bool do_scan = true);
 
   /**
+   * Registers an internal allocator.
+   * */
+  HSHM_CROSS_FUN
+  Allocator* RegisterSubAllocator(Allocator *alloc) {
+    return RegisterAllocator(alloc, false);
+  }
+
+  /**
    * Destroys an allocator
    * */
   HSHM_CROSS_FUN
