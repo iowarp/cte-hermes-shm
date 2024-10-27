@@ -22,7 +22,7 @@
 namespace hshm::ipc {
 
 /** Forward declaration of mpsc_ptr_queue */
-template<typename T>
+template<typename T, typename AllocT = Allocator>
 class mpsc_ptr_queue;
 
 /**
@@ -30,13 +30,13 @@ class mpsc_ptr_queue;
  * Used as inputs to the HIPC_CONTAINER_TEMPLATE
  * */
 #define CLASS_NAME mpsc_ptr_queue
-#define TYPED_CLASS mpsc_ptr_queue<T>
+#define TYPED_CLASS mpsc_ptr_queue<T, AllocT>
 
 /**
  * A queue optimized for multiple producers (emplace) with a single
  * consumer (pop).
  * */
-template<typename T>
+template<typename T, typename AllocT>
 class mpsc_ptr_queue : public ShmContainer {
  public:
   HIPC_CONTAINER_TEMPLATE((CLASS_NAME), (TYPED_CLASS))
@@ -59,13 +59,13 @@ class mpsc_ptr_queue : public ShmContainer {
 
   /** SHM constructor. Default. */
   HSHM_CROSS_FUN
-  explicit mpsc_ptr_queue(Allocator *alloc,
+  explicit mpsc_ptr_queue(AllocT *alloc,
                           size_t depth = 1024) {
     shm_init(alloc, depth);
   }
 
   HSHM_INLINE_CROSS_FUN
-  void shm_init(Allocator *alloc,
+  void shm_init(AllocT *alloc,
                 size_t depth = 1024) {
     init_shm_container(alloc);
     HSHM_MAKE_AR(queue_, GetAllocator(), depth);
@@ -87,7 +87,7 @@ class mpsc_ptr_queue : public ShmContainer {
 
   /** SHM copy constructor */
   HSHM_CROSS_FUN
-  explicit mpsc_ptr_queue(Allocator *alloc,
+  explicit mpsc_ptr_queue(AllocT *alloc,
                           const mpsc_ptr_queue &other) {
     init_shm_container(alloc);
     SetNull();
@@ -124,7 +124,7 @@ class mpsc_ptr_queue : public ShmContainer {
 
   /** SHM move constructor. */
   HSHM_CROSS_FUN
-  mpsc_ptr_queue(Allocator *alloc,
+  mpsc_ptr_queue(AllocT *alloc,
                  mpsc_ptr_queue &&other) noexcept {
     shm_move_op<false>(alloc, std::move(other));
   }
@@ -141,7 +141,7 @@ class mpsc_ptr_queue : public ShmContainer {
   /** Base shm move operator */
   HSHM_CROSS_FUN
   template<bool IS_ASSIGN>
-  void shm_move_op(Allocator *alloc, mpsc_ptr_queue &&other) {
+  void shm_move_op(AllocT *alloc, mpsc_ptr_queue &&other) {
     if constexpr (IS_ASSIGN) {
       shm_destroy();
     } else {

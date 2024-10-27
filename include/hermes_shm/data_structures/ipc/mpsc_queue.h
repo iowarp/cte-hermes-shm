@@ -22,7 +22,7 @@
 namespace hshm::ipc {
 
 /** Forward declaration of mpsc_queue */
-template<typename T>
+template<typename T, typename AllocT = Allocator>
 class mpsc_queue;
 
 /**
@@ -30,13 +30,13 @@ class mpsc_queue;
  * Used as inputs to the HIPC_CONTAINER_TEMPLATE
  * */
 #define CLASS_NAME mpsc_queue
-#define TYPED_CLASS mpsc_queue<T>
+#define TYPED_CLASS mpsc_queue<T, AllocT>
 
 /**
  * A queue optimized for multiple producers (emplace) with a single
  * consumer (pop).
  * */
-template<typename T>
+template<typename T, typename AllocT>
 class mpsc_queue : public ShmContainer {
  public:
   HIPC_CONTAINER_TEMPLATE((CLASS_NAME), (TYPED_CLASS))
@@ -59,13 +59,13 @@ class mpsc_queue : public ShmContainer {
 
   /** SHM constructor. Default. */
   HSHM_CROSS_FUN
-  explicit mpsc_queue(Allocator *alloc, size_t depth = 1024) {
+  explicit mpsc_queue(AllocT *alloc, size_t depth = 1024) {
     shm_init(alloc, depth);
   }
 
   /** SHM Constructor */
   HSHM_CROSS_FUN
-  void shm_init(Allocator *alloc, size_t depth = 1024) {
+  void shm_init(AllocT *alloc, size_t depth = 1024) {
     init_shm_container(alloc);
     HSHM_MAKE_AR(queue_, GetAllocator(), depth);
     flags_.Clear();
@@ -78,7 +78,7 @@ class mpsc_queue : public ShmContainer {
 
   /** SHM copy constructor */
   HSHM_CROSS_FUN
-  explicit mpsc_queue(Allocator *alloc,
+  explicit mpsc_queue(AllocT *alloc,
                       const mpsc_queue &other) {
     init_shm_container(alloc);
     SetNull();
@@ -115,7 +115,7 @@ class mpsc_queue : public ShmContainer {
 
   /** SHM move constructor. */
   HSHM_CROSS_FUN
-  mpsc_queue(Allocator *alloc,
+  mpsc_queue(AllocT *alloc,
              mpsc_queue &&other) noexcept {
     shm_move_op<false>(alloc, other);
   }
@@ -132,7 +132,7 @@ class mpsc_queue : public ShmContainer {
   /** SHM move assignment operator. */
   template<bool IS_ASSIGN>
   HSHM_CROSS_FUN
-  void shm_move_op(Allocator *alloc, mpsc_queue &&other) noexcept {
+  void shm_move_op(AllocT *alloc, mpsc_queue &&other) noexcept {
     if constexpr (IS_ASSIGN) {
       shm_destroy();
     } else {

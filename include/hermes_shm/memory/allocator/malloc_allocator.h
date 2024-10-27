@@ -51,14 +51,6 @@ class MallocAllocator : public Allocator {
   : header_(nullptr) {}
 
   /**
-   * Get the ID of this allocator from shared memory
-   * */
-  HSHM_CROSS_FUN
-  AllocatorId &GetId() override {
-    return header_->allocator_id_;
-  }
-
-  /**
    * Initialize the allocator in shared memory
    * */
   HSHM_CROSS_FUN
@@ -66,6 +58,7 @@ class MallocAllocator : public Allocator {
                 size_t custom_header_size,
                 size_t buffer_size)  {
     type_ = AllocatorType::kMallocAllocator;
+    id_ = id;
     buffer_ = nullptr;
     buffer_size_ = buffer_size;
     header_ = reinterpret_cast<MallocAllocatorHeader*>(

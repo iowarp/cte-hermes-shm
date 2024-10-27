@@ -58,8 +58,7 @@ struct AllocatorHeader {
 class Allocator {
  public:
   AllocatorType type_;
-
- public:
+  AllocatorId id_;
   char *buffer_;
   size_t buffer_size_;
   char *custom_header_;
@@ -194,11 +193,17 @@ class Allocator {
   HSHM_CROSS_FUN
   virtual void FreeOffsetNoNullCheck(OffsetPointer p) = 0;
 
-  /**
-   * Get the allocator identifier
-   * */
+  /** Get the allocator identifier */
   HSHM_CROSS_FUN
-  virtual AllocatorId &GetId() = 0;
+  AllocatorId& GetId()  {
+    return id_;
+  }
+
+  /** Get the allocator identifier (const) */
+  HSHM_CROSS_FUN
+  const AllocatorId& GetId() const {
+    return id_;
+  }
 
   /**
    * Get the amount of memory that was allocated, but not yet freed.

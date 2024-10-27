@@ -19,7 +19,7 @@
 namespace hshm::ipc {
 
 /** forward declaration for string */
-template<typename FirstT, typename SecondT>
+template<typename FirstT, typename SecondT, typename AllocT = Allocator>
 class pair;
 
 /**
@@ -27,12 +27,12 @@ class pair;
 * Used as inputs to the HIPC_CONTAINER_TEMPLATE
 * */
 #define CLASS_NAME pair
-#define TYPED_CLASS pair<FirstT, SecondT>
+#define TYPED_CLASS pair<FirstT, SecondT, AllocT>
 
 /**
 * A pair of two objects.
 * */
-template<typename FirstT, typename SecondT>
+template<typename FirstT, typename SecondT, typename AllocT>
 class pair : public ShmContainer {
  public:
   /**====================================
@@ -55,13 +55,13 @@ class pair : public ShmContainer {
 
   /** SHM constructor. Default. */
   HSHM_CROSS_FUN
-  explicit pair(Allocator *alloc) {
+  explicit pair(AllocT *alloc) {
     shm_init(alloc);
   }
 
   /** SHM constructor */
   HSHM_CROSS_FUN
-  void shm_init(Allocator *alloc) {
+  void shm_init(AllocT *alloc) {
     init_shm_container(alloc);
     HSHM_MAKE_AR0(first_, GetAllocator())
     HSHM_MAKE_AR0(second_, GetAllocator())
@@ -83,7 +83,7 @@ class pair : public ShmContainer {
 
   /** SHM constructor. Move parameters. */
   HSHM_CROSS_FUN
-  explicit pair(Allocator *alloc,
+  explicit pair(AllocT *alloc,
                 FirstT &&first, SecondT &&second) {
     init_shm_container(alloc);
     HSHM_MAKE_AR(first_, GetAllocator(),
@@ -102,7 +102,7 @@ class pair : public ShmContainer {
 
   /** SHM constructor. Copy parameters. */
   HSHM_CROSS_FUN
-  explicit pair(Allocator *alloc,
+  explicit pair(AllocT *alloc,
                 const FirstT &first, const SecondT &second) {
     init_shm_container(alloc);
     HSHM_MAKE_AR(first_, GetAllocator(), first)
@@ -125,7 +125,7 @@ class pair : public ShmContainer {
   /** SHM constructor. Piecewise emplace. */
   template<typename FirstArgPackT, typename SecondArgPackT>
   HSHM_CROSS_FUN
-  explicit pair(Allocator *alloc,
+  explicit pair(AllocT *alloc,
                 PiecewiseConstruct &&hint,
                 FirstArgPackT &&first,
                 SecondArgPackT &&second) {
@@ -149,7 +149,7 @@ class pair : public ShmContainer {
 
   /** SHM copy constructor. From pair. */
   HSHM_CROSS_FUN
-  explicit pair(Allocator *alloc, const pair &other) {
+  explicit pair(AllocT *alloc, const pair &other) {
     init_shm_container(alloc);
     shm_strong_copy_construct(other);
   }
@@ -199,7 +199,7 @@ class pair : public ShmContainer {
 
   /** SHM move constructor. From pair. */
   HSHM_CROSS_FUN
-  explicit pair(Allocator *alloc, pair &&other) {
+  explicit pair(AllocT *alloc, pair &&other) {
     init_shm_container(alloc);
     if (GetAllocator() == other.GetAllocator()) {
       HSHM_MAKE_AR(first_, GetAllocator(),

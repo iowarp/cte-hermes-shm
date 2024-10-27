@@ -23,7 +23,7 @@
 namespace hshm::ipc {
 
 /** forward pointer for list */
-template<typename T>
+template<typename T, typename AllocT = Allocator>
 class list;
 
 /** represents an object within a list */
@@ -37,11 +37,11 @@ struct list_entry {
 /**
  * The list iterator
  * */
-template<typename T>
+template<typename T, typename AllocT>
 struct list_iterator_templ {
  public:
   /**< A shm reference to the containing list object. */
-  list<T> *list_;
+  list<T, AllocT> *list_;
   /**< A pointer to the entry in shared memory */
   list_entry<T> *entry_;
   /**< The offset of the entry in the shared-memory allocator */
@@ -53,7 +53,7 @@ struct list_iterator_templ {
 
   /** Construct an iterator  */
   HSHM_CROSS_FUN
-  explicit list_iterator_templ(list<T> &list,
+  explicit list_iterator_templ(list<T, AllocT> &list,
                                list_entry<T> *entry,
                                OffsetPointer entry_ptr)
     : list_(&list), entry_(entry), entry_ptr_(entry_ptr) {}
@@ -197,12 +197,12 @@ struct list_iterator_templ {
  * Used as inputs to the HIPC_CONTAINER_TEMPLATE
  * */
 #define CLASS_NAME list
-#define TYPED_CLASS list<T>
+#define TYPED_CLASS list<T, AllocT>
 
 /**
  * Doubly linked list implementation
  * */
-template<typename T>
+template<typename T, typename AllocT>
 class list : public ShmContainer {
  public:
   HIPC_CONTAINER_TEMPLATE((CLASS_NAME), (TYPED_CLASS))
@@ -215,9 +215,9 @@ class list : public ShmContainer {
    * ===================================*/
 
   /** forward iterator typedef */
-  typedef list_iterator_templ<T> iterator_t;
+  typedef list_iterator_templ<T, AllocT> iterator_t;
   /** const forward iterator typedef */
-  typedef list_iterator_templ<T> citerator_t;
+  typedef list_iterator_templ<T, AllocT> citerator_t;
 
  public:
   /**====================================
@@ -233,7 +233,7 @@ class list : public ShmContainer {
 
   /** SHM constructor. Default. */
   HSHM_CROSS_FUN
-  explicit list(Allocator *alloc) {
+  explicit list(AllocT *alloc) {
     init_shm_container(alloc);
     SetNull();
   }
@@ -252,7 +252,7 @@ class list : public ShmContainer {
 
   /** SHM copy constructor */
   HSHM_CROSS_FUN
-  explicit list(Allocator *alloc,
+  explicit list(AllocT *alloc,
                 const list &other) {
     init_shm_container(alloc);
     SetNull();
@@ -271,7 +271,7 @@ class list : public ShmContainer {
 
   /** SHM copy constructor. From std::list */
   HSHM_CROSS_FUN
-  explicit list(Allocator *alloc,
+  explicit list(AllocT *alloc,
                 std::list<T> &other) {
     init_shm_container(alloc);
     SetNull();
@@ -309,7 +309,7 @@ class list : public ShmContainer {
 
   /** SHM move constructor. */
   HSHM_CROSS_FUN
-  list(Allocator *alloc, list &&other) noexcept {
+  list(AllocT *alloc, list &&other) noexcept {
     shm_move_op<false>(alloc, std::move(other));
   }
 
@@ -325,7 +325,7 @@ class list : public ShmContainer {
   /** SHM move base */
   template<bool IS_ASSIGN>
   HSHM_CROSS_FUN
-  void shm_move_op(Allocator *alloc, list &&other) {
+  void shm_move_op(AllocT *alloc, list &&other) {
     if constexpr (IS_ASSIGN) {
       shm_destroy();
     } else {
@@ -547,14 +547,14 @@ class list : public ShmContainer {
   template <typename Ar>
   HSHM_CROSS_FUN
   void save(Ar &ar) const {
-    save_list<Ar, hipc::list<T>, T>(ar, *this);
+    save_list<Ar, hipc::list<T, AllocT>, T>(ar, *this);
   }
 
   /** Deserialize */
   template <typename Ar>
   HSHM_CROSS_FUN
   void load(Ar &ar) {
-    load_list<Ar, hipc::list<T>, T>(ar, *this);
+    load_list<Ar, hipc::list<T, AllocT>, T>(ar, *this);
   }
 
  private:

@@ -19,7 +19,7 @@
 namespace hshm::ipc {
 
 /** forward pointer for iqueue */
-template<typename T>
+template<typename T, typename AllocT = Allocator>
 class iqueue;
 
 /** represents an object within a iqueue */
@@ -30,11 +30,11 @@ struct iqueue_entry {
 /**
  * The iqueue iterator
  * */
-template<typename T>
+template<typename T, typename AllocT>
 struct iqueue_iterator_templ {
  public:
   /**< A shm reference to the containing iqueue object. */
-  iqueue<T> *iqueue_;
+  iqueue<T, AllocT> *iqueue_;
   /**< A pointer to the entry in shared memory */
   iqueue_entry *entry_;
   /**< A pointer to the entry prior to this one */
@@ -46,7 +46,7 @@ struct iqueue_iterator_templ {
 
   /** Construct begin iterator  */
   HSHM_CROSS_FUN
-  explicit iqueue_iterator_templ(iqueue<T> &iqueue,
+  explicit iqueue_iterator_templ(iqueue<T, AllocT> &iqueue,
                                  iqueue_entry *entry)
     : iqueue_(&iqueue), entry_(entry), prior_entry_(nullptr) {}
 
@@ -154,12 +154,12 @@ struct iqueue_iterator_templ {
  * Used as inputs to the HIPC_CONTAINER_TEMPLATE
  * */
 #define CLASS_NAME iqueue
-#define TYPED_CLASS iqueue<T>
+#define TYPED_CLASS iqueue<T, AllocT>
 
 /**
  * Doubly linked iqueue implementation
  * */
-template<typename T>
+template<typename T, typename AllocT>
 class iqueue : public ShmContainer {
  public:
   HIPC_CONTAINER_TEMPLATE((CLASS_NAME), (TYPED_CLASS))
@@ -171,9 +171,9 @@ class iqueue : public ShmContainer {
    * ===================================*/
 
   /** forward iterator typedef */
-  typedef iqueue_iterator_templ<T> iterator_t;
+  typedef iqueue_iterator_templ<T, AllocT> iterator_t;
   /** const forward iterator typedef */
-  typedef iqueue_iterator_templ<T> citerator_t;
+  typedef iqueue_iterator_templ<T, AllocT> citerator_t;
 
  public:
   /**====================================
@@ -188,13 +188,13 @@ class iqueue : public ShmContainer {
 
   /** SHM constructor. Default. */
   HSHM_CROSS_FUN
-  explicit iqueue(Allocator *alloc) {
+  explicit iqueue(AllocT *alloc) {
     shm_init(alloc);
   }
 
   /** SHM constructor. Default. */
   HSHM_CROSS_FUN
-  void shm_init(Allocator *alloc) {
+  void shm_init(AllocT *alloc) {
     init_shm_container(alloc);
     length_ = 0;
     head_ptr_.SetNull();
@@ -213,7 +213,7 @@ class iqueue : public ShmContainer {
 
   /** SHM copy constructor */
   HSHM_CROSS_FUN
-  explicit iqueue(Allocator *alloc,
+  explicit iqueue(AllocT *alloc,
                   const iqueue &other) {
     init_shm_container(alloc);
     shm_strong_copy_op(other);
@@ -249,7 +249,7 @@ class iqueue : public ShmContainer {
 
   /** SHM move constructor. */
   HSHM_CROSS_FUN
-  iqueue(Allocator *alloc, iqueue &&other) noexcept {
+  iqueue(AllocT *alloc, iqueue &&other) noexcept {
     init_shm_container(alloc);
     if (GetAllocator() == other.GetAllocator()) {
       memcpy((void*)this, (void*)&other, sizeof(*this));
@@ -325,7 +325,7 @@ class iqueue : public ShmContainer {
 
   /** Dequeue the element at the iterator position */
   HSHM_CROSS_FUN
-  T* dequeue(iqueue_iterator_templ<T> pos) {
+  T* dequeue(iterator_t pos) {
     if (pos.prior_entry_ == nullptr) {
       return dequeue();
     }

@@ -23,7 +23,7 @@
 namespace hshm::ipc {
 
 /** Forward declaration of spsc_queue_templ */
-template<typename T, bool EXTENSIBLE>
+template<typename T, bool EXTENSIBLE, typename AllocT = Allocator>
 class spsc_queue_templ;
 
 /**
@@ -37,11 +37,11 @@ class spsc_queue_templ;
  * A queue optimized for multiple producers (emplace) with a single
  * consumer (pop).
  * */
-template<typename T, bool EXTENSIBLE>
+template<typename T, bool EXTENSIBLE, typename AllocT>
 class spsc_queue_templ : public ShmContainer {
  public:
   HIPC_CONTAINER_TEMPLATE((CLASS_NAME), (TYPED_CLASS))
-  ShmArchive<vector<T>> queue_;
+  ShmArchive<vector<T, AllocT>> queue_;
   qtok_id tail_;
   qtok_id head_;
 
@@ -58,13 +58,13 @@ class spsc_queue_templ : public ShmContainer {
 
   /** SHM constructor. Default. */
   HSHM_CROSS_FUN
-  explicit spsc_queue_templ(Allocator *alloc, size_t depth = 1024) {
+  explicit spsc_queue_templ(AllocT *alloc, size_t depth = 1024) {
     shm_init(alloc, depth);
   }
 
   /** SHM constructor. */
   HSHM_CROSS_FUN
-  void shm_init(Allocator *alloc, size_t depth = 1024) {
+  void shm_init(AllocT *alloc, size_t depth = 1024) {
     init_shm_container(alloc);
     HSHM_MAKE_AR(queue_, GetAllocator(), depth)
     SetNull();
@@ -84,7 +84,7 @@ class spsc_queue_templ : public ShmContainer {
 
   /** SHM copy constructor */
   HSHM_CROSS_FUN
-  explicit spsc_queue_templ(Allocator *alloc,
+  explicit spsc_queue_templ(AllocT *alloc,
                             const spsc_queue_templ &other) {
     init_shm_container(alloc);
     SetNull();
@@ -121,7 +121,7 @@ class spsc_queue_templ : public ShmContainer {
 
   /** SHM move constructor. */
   HSHM_CROSS_FUN
-  spsc_queue_templ(Allocator *alloc,
+  spsc_queue_templ(AllocT *alloc,
                    spsc_queue_templ &&other) noexcept {
     shm_move_op<false>(alloc, std::move(other));
   }
@@ -138,7 +138,7 @@ class spsc_queue_templ : public ShmContainer {
   /** SHM move assignment operator. */
   template<bool IS_ASSIGN>
   HSHM_CROSS_FUN
-  void shm_move_op(Allocator *alloc, spsc_queue_templ &&other) noexcept {
+  void shm_move_op(AllocT *alloc, spsc_queue_templ &&other) noexcept {
     if constexpr (IS_ASSIGN) {
       shm_destroy();
     } else {

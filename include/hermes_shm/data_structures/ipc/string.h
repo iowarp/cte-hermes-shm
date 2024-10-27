@@ -22,7 +22,7 @@
 namespace hshm::ipc {
 
 /** forward declaration for string */
-template<size_t SSO>
+template<size_t SSO, typename AllocT = Allocator>
 class string_templ;
 
 /**
@@ -30,7 +30,7 @@ class string_templ;
  * Used as inputs to the HIPC_CONTAINER_TEMPLATE
  * */
 #define CLASS_NAME string_templ
-#define TYPED_CLASS string_templ<SSO>
+#define TYPED_CLASS string_templ<SSO, AllocT>
 
 /** string shared-memory header */
 template<size_t SSO>
@@ -54,7 +54,7 @@ struct ShmHeader<string_templ<SSO>> {
 /**
  * A string of characters.
  * */
-template<size_t SSO>
+template<size_t SSO, typename AllocT>
 class string_templ : public ShmContainer {
  public:
   HIPC_CONTAINER_TEMPLATE((CLASS_NAME), (TYPED_CLASS))
@@ -78,7 +78,7 @@ class string_templ : public ShmContainer {
 
   /** SHM Constructor. Default. */
   HSHM_CROSS_FUN
-  explicit string_templ(Allocator *alloc) {
+  explicit string_templ(AllocT *alloc) {
     init_shm_container(alloc);
     SetNull();
   }
@@ -96,7 +96,7 @@ class string_templ : public ShmContainer {
 
   /** SHM Constructor. Just allocate space. */
   HSHM_CROSS_FUN
-  explicit string_templ(Allocator *alloc,
+  explicit string_templ(AllocT *alloc,
                         size_t length) {
     init_shm_container(alloc);
     _create_str(length);
@@ -115,7 +115,7 @@ class string_templ : public ShmContainer {
 
   /** SHM Constructor. From const char* */
   HSHM_CROSS_FUN
-  explicit string_templ(Allocator *alloc,
+  explicit string_templ(AllocT *alloc,
                         const char *text) {
     shm_strong_copy_op<false, false>(
           alloc, text, 0);
@@ -130,7 +130,7 @@ class string_templ : public ShmContainer {
 
   /** SHM Constructor. From const char* and size */
   HSHM_CROSS_FUN
-  explicit string_templ(Allocator *alloc,
+  explicit string_templ(AllocT *alloc,
                         const char *text, size_t length) {
     shm_strong_copy_op<false, true>(
       alloc, text, length);
@@ -145,7 +145,7 @@ class string_templ : public ShmContainer {
 
   /** SHM copy constructor. From string_templ. */
   HSHM_CROSS_FUN
-  explicit string_templ(Allocator *alloc,
+  explicit string_templ(AllocT *alloc,
                         const string_templ &other) {
     shm_strong_copy_op<false, true>(
             alloc, other.data(), other.size());
@@ -170,7 +170,7 @@ class string_templ : public ShmContainer {
 
   /** SHM Constructor. From std::string */
   HSHM_CROSS_FUN
-  explicit string_templ(Allocator *alloc,
+  explicit string_templ(AllocT *alloc,
                         const std::string &other) {
     shm_strong_copy_op<false, true>(
       alloc, other.data(), other.size());
@@ -186,7 +186,7 @@ class string_templ : public ShmContainer {
 
   /** Strong copy operation */
   template<bool IS_ASSIGN, bool HAS_LENGTH>
-  void shm_strong_copy_op(Allocator *alloc,
+  void shm_strong_copy_op(AllocT *alloc,
                           const char *text,
                           size_t length) {
     if constexpr (IS_ASSIGN) {
@@ -222,7 +222,7 @@ class string_templ : public ShmContainer {
 
   /** SHM move constructor. */
   HSHM_CROSS_FUN
-  string_templ(Allocator *alloc, string_templ &&other) {
+  string_templ(AllocT *alloc, string_templ &&other) {
     shm_move_op<false>(alloc, std::move(other));
   }
 
@@ -238,7 +238,7 @@ class string_templ : public ShmContainer {
   /** SHM move operator. */
   template<bool IS_ASSIGN>
   HSHM_CROSS_FUN
-  void shm_move_op(Allocator *alloc, string_templ &&other) noexcept {
+  void shm_move_op(AllocT *alloc, string_templ &&other) noexcept {
     if constexpr (IS_ASSIGN) {
       shm_destroy();
     } else {

@@ -21,7 +21,7 @@
 namespace hshm::ipc {
 
 /** Forward declaration of split_ticket_queue */
-template<typename T>
+template<typename T, typename AllocT = Allocator>
 class split_ticket_queue;
 
 /**
@@ -29,17 +29,17 @@ class split_ticket_queue;
  * Used as inputs to the HIPC_CONTAINER_TEMPLATE
  * */
 #define CLASS_NAME split_ticket_queue
-#define TYPED_CLASS split_ticket_queue<T>
+#define TYPED_CLASS split_ticket_queue<T, AllocT>
 
 /**
  * A MPMC queue for allocating tickets. Handles concurrency
  * without blocking.
  * */
-template<typename T>
+template<typename T, typename AllocT>
 class split_ticket_queue : public ShmContainer {
  public:
   HIPC_CONTAINER_TEMPLATE((CLASS_NAME), (TYPED_CLASS))
-  ShmArchive<vector<ticket_queue<T>>> splits_;
+  ShmArchive<vector<ticket_queue<T, AllocT>>> splits_;
   hipc::atomic<hshm::min_i32> rr_tail_, rr_head_;
 
  public:
@@ -57,14 +57,14 @@ class split_ticket_queue : public ShmContainer {
 
   /** SHM constructor. Default. */
   HSHM_CROSS_FUN
-  explicit split_ticket_queue(Allocator *alloc,
+  explicit split_ticket_queue(AllocT *alloc,
                               size_t depth_per_split = 1024,
                               size_t split = 0) {
     shm_init(alloc, depth_per_split, split);
   }
 
   /** SHM constructor */
-  void shm_init(Allocator *alloc,
+  void shm_init(AllocT *alloc,
                 size_t depth_per_split = 1024,
                 size_t split = 0) {
     init_shm_container(alloc);
@@ -89,7 +89,7 @@ class split_ticket_queue : public ShmContainer {
 
   /** SHM copy constructor */
   HSHM_CROSS_FUN
-  explicit split_ticket_queue(Allocator *alloc,
+  explicit split_ticket_queue(AllocT *alloc,
                               const split_ticket_queue &other) {
     init_shm_container(alloc);
     SetNull();
@@ -124,7 +124,7 @@ class split_ticket_queue : public ShmContainer {
 
   /** SHM move constructor. */
   HSHM_CROSS_FUN
-  split_ticket_queue(Allocator *alloc,
+  split_ticket_queue(AllocT *alloc,
                      split_ticket_queue &&other) noexcept {
     shm_move_op<false>(alloc, std::move(other));
   }
@@ -141,7 +141,7 @@ class split_ticket_queue : public ShmContainer {
   /** SHM move assignment operator. */
   template<bool IS_ASSIGN>
   HSHM_CROSS_FUN
-  void shm_move_op(Allocator *alloc, split_ticket_queue &&other) noexcept {
+  void shm_move_op(AllocT *alloc, split_ticket_queue &&other) noexcept {
     if constexpr (IS_ASSIGN) {
       shm_destroy();
     } else {

@@ -22,16 +22,16 @@
 namespace hshm::ipc {
 
 /** forward pointer for vector */
-template<typename T>
+template<typename T, typename AllocT = Allocator>
 class vector;
 
 /**
  * The vector iterator implementation
  * */
-template<typename T, bool FORWARD_ITER>
+template<typename T, bool FORWARD_ITER, typename AllocT>
 struct vector_iterator_templ {
  public:
-  vector<T> *vec_;
+  vector<T, AllocT> *vec_;
   off64_t i_;
 
   /** Default constructor */
@@ -39,11 +39,11 @@ struct vector_iterator_templ {
 
   /** Construct an iterator (called from vector class) */
   template<typename SizeT>
-  HSHM_INLINE_CROSS_FUN explicit vector_iterator_templ(vector<T> *vec, SizeT i)
+  HSHM_INLINE_CROSS_FUN explicit vector_iterator_templ(vector<T, AllocT> *vec, SizeT i)
   : vec_(vec), i_(static_cast<off64_t>(i)) {}
 
   /** Construct an iterator (called from iterator) */
-  HSHM_INLINE_CROSS_FUN explicit vector_iterator_templ(vector<T> *vec, off64_t i)
+  HSHM_INLINE_CROSS_FUN explicit vector_iterator_templ(vector<T, AllocT> *vec, off64_t i)
   : vec_(vec), i_(i) {}
 
   /** Copy constructor */
@@ -211,12 +211,12 @@ struct vector_iterator_templ {
  * Used as inputs to the HIPC_CONTAINER_TEMPLATE
  * */
 #define CLASS_NAME vector
-#define TYPED_CLASS vector<T>
+#define TYPED_CLASS vector<T, AllocT>
 
 /**
  * The vector class
  * */
-template<typename T>
+template<typename T, typename AllocT>
 class vector : public ShmContainer {
  public:
   HIPC_CONTAINER_TEMPLATE((CLASS_NAME), (TYPED_CLASS))
@@ -227,13 +227,13 @@ class vector : public ShmContainer {
    * ===================================*/
 
   /** forwrard iterator */
-  typedef vector_iterator_templ<T, true>  iterator_t;
+  typedef vector_iterator_templ<T, true, AllocT>  iterator_t;
   /** reverse iterator */
-  typedef vector_iterator_templ<T, false> riterator_t;
+  typedef vector_iterator_templ<T, false, AllocT> riterator_t;
   /** const iterator */
-  typedef vector_iterator_templ<T, true>  citerator_t;
+  typedef vector_iterator_templ<T, true, AllocT>  citerator_t;
   /** const reverse iterator */
-  typedef vector_iterator_templ<T, false> criterator_t;
+  typedef vector_iterator_templ<T, false, AllocT> criterator_t;
 
  public:
   /**====================================
@@ -256,7 +256,7 @@ class vector : public ShmContainer {
 
   /** SHM constructor. Default. */
   HSHM_CROSS_FUN
-  explicit vector(Allocator *alloc) {
+  explicit vector(AllocT *alloc) {
     init_shm_container(alloc);
     SetNull();
   }
@@ -272,14 +272,14 @@ class vector : public ShmContainer {
   /** SHM constructor. Resize + construct. */
   template<typename ...Args>
   HSHM_CROSS_FUN
-  explicit vector(Allocator *alloc, size_t length, Args&& ...args) {
+  explicit vector(AllocT *alloc, size_t length, Args&& ...args) {
     shm_init(alloc, length, std::forward<Args>(args)...);
   }
 
   /** Constructor */
   template<typename ...Args>
   HSHM_CROSS_FUN
-  void shm_init(Allocator *alloc, size_t length, Args&& ...args) {
+  void shm_init(AllocT *alloc, size_t length, Args&& ...args) {
     init_shm_container(alloc);
     SetNull();
     resize(length, std::forward<Args>(args)...);
@@ -294,15 +294,15 @@ class vector : public ShmContainer {
   explicit vector(const vector &other) {
     init_shm_container(other.GetAllocator());
     SetNull();
-    shm_strong_copy_main<vector<T>>(other);
+    shm_strong_copy_main<vector<T, AllocT>>(other);
   }
 
   /** SHM copy constructor. From vector. */
   HSHM_CROSS_FUN
-  explicit vector(Allocator *alloc, const vector &other) {
+  explicit vector(AllocT *alloc, const vector &other) {
     init_shm_container(alloc);
     SetNull();
-    shm_strong_copy_main<vector<T>>(other);
+    shm_strong_copy_main<vector<T, AllocT>>(other);
   }
 
   /** SHM copy assignment operator. From vector. */
@@ -325,7 +325,7 @@ class vector : public ShmContainer {
 
   /** SHM copy constructor. From std::vector */
   HSHM_CROSS_FUN
-  explicit vector(Allocator *alloc, const std::vector<T> &other) {
+  explicit vector(AllocT *alloc, const std::vector<T> &other) {
     init_shm_container(alloc);
     SetNull();
     shm_strong_copy_main<std::vector<T>>(other);
@@ -371,7 +371,7 @@ class vector : public ShmContainer {
 
   /** SHM move constructor. */
   HSHM_CROSS_FUN
-  vector(Allocator *alloc, vector &&other) {
+  vector(AllocT *alloc, vector &&other) {
     shm_move_op<false>(alloc, std::move(other));
   }
 
@@ -387,7 +387,7 @@ class vector : public ShmContainer {
   /** SHM move assignment operator. */
   template<bool IS_ASSIGN>
   HSHM_CROSS_FUN
-  void shm_move_op(Allocator *alloc, vector &&other) noexcept {
+  void shm_move_op(AllocT *alloc, vector &&other) noexcept {
     if constexpr (IS_ASSIGN) {
       shm_destroy();
     } else {
@@ -745,14 +745,14 @@ class vector : public ShmContainer {
   template <typename Ar>
   HSHM_CROSS_FUN
   void save(Ar &ar) const {
-    save_vec<Ar, hipc::vector<T>, T>(ar, *this);
+    save_vec<Ar, hipc::vector<T, AllocT>, T>(ar, *this);
   }
 
   /** Lets Thallium know how to deserialize an hipc::vector. */
   template <typename Ar>
   HSHM_CROSS_FUN
   void load(Ar &ar) {
-    load_vec<Ar, hipc::vector<T>, T>(ar, *this);
+    load_vec<Ar, hipc::vector<T, AllocT>, T>(ar, *this);
   }
 };
 

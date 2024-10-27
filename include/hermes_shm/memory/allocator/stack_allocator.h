@@ -54,14 +54,6 @@ class StackAllocator : public Allocator {
   : header_(nullptr) {}
 
   /**
-   * Get the ID of this allocator from shared memory
-   * */
-  HSHM_CROSS_FUN
-  AllocatorId &GetId() override {
-    return header_->allocator_id_;
-  }
-
-  /**
    * Initialize the allocator in shared memory
    * */
   HSHM_CROSS_FUN
@@ -70,6 +62,7 @@ class StackAllocator : public Allocator {
                 char *buffer,
                 size_t buffer_size) {
     type_ = AllocatorType::kStackAllocator;
+    id_ = id;
     buffer_ = buffer;
     buffer_size_ = buffer_size;
     header_ = reinterpret_cast<StackAllocatorHeader*>(buffer_);
@@ -89,6 +82,8 @@ class StackAllocator : public Allocator {
     buffer_ = buffer;
     buffer_size_ = buffer_size;
     header_ = reinterpret_cast<StackAllocatorHeader*>(buffer_);
+    type_ = header_->allocator_type_;
+    id_ = header_->allocator_id_;
     custom_header_ = reinterpret_cast<char*>(header_ + 1);
     heap_ = &header_->heap_;
   }
