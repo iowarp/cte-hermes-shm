@@ -21,7 +21,7 @@
 namespace hshm::ipc {
 
 /** Forward declaration of split_ticket_queue */
-template<typename T, typename AllocT = Allocator>
+template<typename T, typename AllocT = HSHM_DEFAULT_ALLOC>
 class split_ticket_queue;
 
 /**

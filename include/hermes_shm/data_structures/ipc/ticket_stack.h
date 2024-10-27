@@ -22,7 +22,7 @@
 namespace hshm::ipc {
 
 /** Forward declaration of ticket_stack */
-template<typename T, typename AllocT = Allocator>
+template<typename T, typename AllocT = HSHM_DEFAULT_ALLOC>
 class ticket_stack;
 
 /**

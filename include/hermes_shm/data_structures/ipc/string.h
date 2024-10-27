@@ -22,7 +22,7 @@
 namespace hshm::ipc {
 
 /** forward declaration for string */
-template<size_t SSO, typename AllocT = Allocator>
+template<size_t SSO, typename AllocT = HSHM_DEFAULT_ALLOC>
 class string_templ;
 
 /**

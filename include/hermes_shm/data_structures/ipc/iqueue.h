@@ -19,7 +19,7 @@
 namespace hshm::ipc {
 
 /** forward pointer for iqueue */
-template<typename T, typename AllocT = Allocator>
+template<typename T, typename AllocT = HSHM_DEFAULT_ALLOC>
 class iqueue;
 
 /** represents an object within a iqueue */

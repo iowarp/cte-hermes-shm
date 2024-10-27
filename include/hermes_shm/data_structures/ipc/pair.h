@@ -19,7 +19,7 @@
 namespace hshm::ipc {
 
 /** forward declaration for string */
-template<typename FirstT, typename SecondT, typename AllocT = Allocator>
+template<typename FirstT, typename SecondT, typename AllocT = HSHM_DEFAULT_ALLOC>
 class pair;
 
 /**

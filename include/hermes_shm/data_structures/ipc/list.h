@@ -23,7 +23,7 @@
 namespace hshm::ipc {
 
 /** forward pointer for list */
-template<typename T, typename AllocT = Allocator>
+template<typename T, typename AllocT = HSHM_DEFAULT_ALLOC>
 class list;
 
 /** represents an object within a list */

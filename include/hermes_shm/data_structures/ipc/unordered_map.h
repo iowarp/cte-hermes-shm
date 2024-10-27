@@ -24,7 +24,7 @@
 namespace hshm::ipc {
 
 /** forward pointer for unordered_map */
-template<typename Key, typename T, typename AllocT = Allocator, class Hash = hshm::hash<Key>>
+template<typename Key, typename T, typename AllocT = HSHM_DEFAULT_ALLOC, class Hash = hshm::hash<Key>>
 class unordered_map;
 
 /**

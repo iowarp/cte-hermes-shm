@@ -23,7 +23,7 @@
 namespace hshm::ipc {
 
 /** Forward declaration of spsc_queue_templ */
-template<typename T, bool EXTENSIBLE, typename AllocT = Allocator>
+template<typename T, bool EXTENSIBLE, typename AllocT = HSHM_DEFAULT_ALLOC>
 class spsc_queue_templ;
 
 /**

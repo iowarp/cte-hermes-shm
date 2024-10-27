@@ -21,7 +21,7 @@
 namespace hshm::ipc {
 
 /** forward pointer for slist */
-template<typename T, typename AllocT = Allocator>
+template<typename T, typename AllocT = HSHM_DEFAULT_ALLOC>
 class slist;
 
 /** represents an object within a slist */

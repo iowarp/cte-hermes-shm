@@ -22,7 +22,7 @@
 namespace hshm::ipc {
 
 /** Forward declaration of mpsc_queue */
-template<typename T, typename AllocT = Allocator>
+template<typename T, typename AllocT = HSHM_DEFAULT_ALLOC>
 class mpsc_queue;
 
 /**

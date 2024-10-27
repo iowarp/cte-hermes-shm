@@ -114,4 +114,8 @@ GLOBAL_CONST char *kCurrentDevice = "cpu";
 GLOBAL_CONST char *kCurrentDevice = "gpu";
 #endif
 
+#ifndef HSHM_DEFAULT_ALLOC
+#define HSHM_DEFAULT_ALLOC Allocator
+#endif
+
 #endif  // HERMES_MACROS_H

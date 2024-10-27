@@ -22,7 +22,7 @@
 namespace hshm::ipc {
 
 /** forward pointer for vector */
-template<typename T, typename AllocT = Allocator>
+template<typename T, typename AllocT = HSHM_DEFAULT_ALLOC>
 class vector;
 
 /**
