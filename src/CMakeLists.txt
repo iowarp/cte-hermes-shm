@@ -17,11 +17,8 @@ set(CMAKE_CXX_STANDARD 17)
 set (SOURCE_FILES
         memory_manager.cc
         thread_model_manager.cc
-        thread_factory.cc
+        # thread_factory.cc
         data_structure_singleton.cc
-        ../include/hermes_shm/memory/backend/cuda_malloc.h
-        ../include/hermes_shm/thread/lock/mutex_base.h
-        ../include/hermes_shm/thread/lock/spin_lock.h
 )
 if (BUILD_SHARED_LIBS)
     message("Building dynamic library")

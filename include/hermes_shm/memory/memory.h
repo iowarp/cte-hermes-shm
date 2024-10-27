@@ -20,6 +20,7 @@
 #include <hermes_shm/types/atomic.h>
 #include <hermes_shm/constants/macros.h>
 #include <hermes_shm/data_structures/containers/hash.h>
+#include <cstdio>
 
 namespace hshm::ipc {
 

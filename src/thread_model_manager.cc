@@ -11,6 +11,7 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include "hermes_shm/thread/thread_model_manager.h"
+#include "hermes_shm/thread/thread_model/thread_model_factory.h"
 #include "hermes_shm/util/logging.h"
 
 namespace hshm {
@@ -19,7 +20,8 @@ namespace hshm {
 HSHM_CROSS_FUN
 void ThreadModelManager::SetThreadModel(ThreadType type) {
   type_ = type;
-  thread_static_ = thread_model::ThreadFactory::Get(type);
+  static_assert(sizeof(thread_model::Pthread) <= 64, "Thread static data too small");
+  thread_static_ = thread_model::ThreadFactory::Get(thread_static_data_, type);
   if (thread_static_ == nullptr) {
     HELOG(kFatal, "Could not load the threading model");
   }

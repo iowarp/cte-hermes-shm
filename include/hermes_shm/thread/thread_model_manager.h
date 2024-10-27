@@ -15,7 +15,6 @@
 #define HERMES_THREAD_THREAD_MANAGER_H_
 
 #include "hermes_shm/thread/thread_model/thread_model.h"
-#include "hermes_shm/thread/thread_model/thread_model_factory.h"
 #include <hermes_shm/introspect/system_info.h>
 
 #include "hermes_shm/util/singleton/_easy_singleton.h"
@@ -28,6 +27,7 @@ namespace hshm {
 
 class ThreadModelManager {
  public:
+  char thread_static_data_[64]; /**< Static data for the thread model */
   ThreadType type_; /**< The type of threads used in this program */
   thread_model::ThreadModel *thread_static_; /**< Functions static to all threads */
 
