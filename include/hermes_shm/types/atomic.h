@@ -15,6 +15,7 @@
 
 #include <atomic>
 #include <hermes_shm/constants/macros.h>
+#include <type_traits>
 #include "numbers.h"
 #ifdef HERMES_ENABLE_CUDA
 #include <cuda/atomic>
@@ -387,6 +388,9 @@ using atomic = std_atomic<T>;
 template<typename T>
 using atomic = cuda_atomic<T>;
 #endif
+
+template<typename T, bool is_atomic>
+using opt_atomic = typename std::conditional<is_atomic, atomic<T>, nonatomic<T>>::type;
 
 }  // namespace hshm::ipc
 
