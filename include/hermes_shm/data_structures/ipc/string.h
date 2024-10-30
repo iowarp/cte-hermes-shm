@@ -22,7 +22,7 @@
 namespace hshm::ipc {
 
 /** forward declaration for string */
-template<size_t SSO, typename AllocT = HSHM_DEFAULT_ALLOC>
+template<size_t SSO, HSHM_CLASS_TEMPL_WITH_DEFAULTS>
 class string_templ;
 
 /**
@@ -30,31 +30,12 @@ class string_templ;
  * Used as inputs to the HIPC_CONTAINER_TEMPLATE
  * */
 #define CLASS_NAME string_templ
-#define TYPED_CLASS string_templ<SSO, AllocT>
-
-/** string shared-memory header */
-template<size_t SSO>
-struct ShmHeader<string_templ<SSO>> {
-  HIPC_CONTAINER_HEADER_TEMPLATE(ShmHeader)
-  size_t length_;
-  char sso_[SSO];
-  Pointer text_;
-
-  /** Strong copy operation */
-  HSHM_CROSS_FUN
-  void strong_copy(const ShmHeader &other) {
-    length_ = other.length_;
-    text_ = other.text_;
-    if (length_ < SSO) {
-      memcpy(sso_, other.sso_, other.length_ + 1);
-    }
-  }
-};
+#define TYPED_CLASS string_templ<SSO, HSHM_CLASS_TEMPL_ARGS>
 
 /**
  * A string of characters.
  * */
-template<size_t SSO, typename AllocT>
+template<size_t SSO, HSHM_CLASS_TEMPL>
 class string_templ : public ShmContainer {
  public:
   HIPC_CONTAINER_TEMPLATE((CLASS_NAME), (TYPED_CLASS))

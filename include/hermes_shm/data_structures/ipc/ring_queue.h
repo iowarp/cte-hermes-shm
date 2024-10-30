@@ -20,7 +20,7 @@ template<
     bool IsPushAtomic,
     bool IsPopAtomic,
     bool IsFixedSize,
-    typename AllocT = HSHM_DEFAULT_ALLOC>
+    HSHM_CLASS_TEMPL_WITH_DEFAULTS>
 class ring_queue_base;
 
 /**
@@ -29,7 +29,7 @@ class ring_queue_base;
  * */
 #define CLASS_NAME ring_queue_base
 #define TYPED_CLASS \
-  ring_queue_base<T, IsPushAtomic, IsPopAtomic, IsFixedSize, AllocT>
+  ring_queue_base<T, IsPushAtomic, IsPopAtomic, IsFixedSize, HSHM_CLASS_TEMPL_ARGS>
 
 #define PAIR_OR_POINTER
 
@@ -42,11 +42,11 @@ template<
     bool IsPushAtomic,
     bool IsPopAtomic,
     bool IsFixedSize,
-    typename AllocT>
+    HSHM_CLASS_TEMPL>
 class ring_queue_base : public ShmContainer {
  public:
  HIPC_CONTAINER_TEMPLATE((CLASS_NAME), (TYPED_CLASS))
-  ShmArchive<vector<pair<bitfield32_t, T>>> queue_;
+  ShmArchive<vector<pair<bitfield32_t, T, HSHM_CLASS_TEMPL_ARGS>>> queue_;
   hipc::opt_atomic<qtok_id, IsPushAtomic> tail_;
   hipc::opt_atomic<qtok_id, IsPopAtomic> head_;
   bitfield32_t flags_;
@@ -129,7 +129,7 @@ class ring_queue_base : public ShmContainer {
   HSHM_CROSS_FUN
   ring_queue_base& operator=(ring_queue_base &&other) noexcept {
     if (this != &other) {
-      shm_move_op<true>(other.GetAllocator(), other);
+      shm_move_op<true>(other.GetAllocator(), std::move(other));
     }
     return *this;
   }
@@ -320,17 +320,17 @@ class ring_queue_base : public ShmContainer {
   }
 };
 
-template<typename T, typename AllocT = HSHM_DEFAULT_ALLOC>
-using mpsc_queue = ring_queue_base<T, true, false, false, AllocT>;
+template<typename T, HSHM_CLASS_TEMPL_WITH_DEFAULTS>
+using mpsc_queue = ring_queue_base<T, true, false, false, HSHM_CLASS_TEMPL_ARGS>;
 
-template<typename T, typename AllocT = HSHM_DEFAULT_ALLOC>
-using fixed_spsc_queue = ring_queue_base<T, false, false, true, AllocT>;
+template<typename T, HSHM_CLASS_TEMPL_WITH_DEFAULTS>
+using fixed_spsc_queue = ring_queue_base<T, false, false, true, HSHM_CLASS_TEMPL_ARGS>;
 
-template<typename T, typename AllocT = HSHM_DEFAULT_ALLOC>
-using fixed_mpmc_queue = ring_queue_base<T, true, true, true, AllocT>;
+template<typename T, HSHM_CLASS_TEMPL_WITH_DEFAULTS>
+using fixed_mpmc_queue = ring_queue_base<T, true, true, true, HSHM_CLASS_TEMPL_ARGS>;
 
-template<typename T, typename AllocT = HSHM_DEFAULT_ALLOC>
-using spsc_queue = ring_queue_base<T, false, false, false, AllocT>;
+template<typename T, HSHM_CLASS_TEMPL_WITH_DEFAULTS>
+using spsc_queue = ring_queue_base<T, false, false, false, HSHM_CLASS_TEMPL_ARGS>;
 
 }  // namespace hshm::ipc
 

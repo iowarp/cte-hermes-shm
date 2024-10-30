@@ -19,7 +19,7 @@
 namespace hshm::ipc {
 
 /** forward declaration for string */
-template<typename FirstT, typename SecondT, typename AllocT = HSHM_DEFAULT_ALLOC>
+template<typename FirstT, typename SecondT, HSHM_CLASS_TEMPL_WITH_DEFAULTS>
 class pair;
 
 /**
@@ -27,12 +27,12 @@ class pair;
 * Used as inputs to the HIPC_CONTAINER_TEMPLATE
 * */
 #define CLASS_NAME pair
-#define TYPED_CLASS pair<FirstT, SecondT, AllocT>
+#define TYPED_CLASS pair<FirstT, SecondT, HSHM_CLASS_TEMPL_ARGS>
 
 /**
 * A pair of two objects.
 * */
-template<typename FirstT, typename SecondT, typename AllocT>
+template<typename FirstT, typename SecondT, HSHM_CLASS_TEMPL>
 class pair : public ShmContainer {
  public:
   /**====================================

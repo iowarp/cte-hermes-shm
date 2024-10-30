@@ -19,7 +19,7 @@
 namespace hshm::ipc {
 
 /** forward pointer for iqueue */
-template<typename T, typename AllocT = HSHM_DEFAULT_ALLOC>
+template<typename T, HSHM_CLASS_TEMPL_WITH_DEFAULTS>
 class iqueue;
 
 /** represents an object within a iqueue */
@@ -30,11 +30,11 @@ struct iqueue_entry {
 /**
  * The iqueue iterator
  * */
-template<typename T, typename AllocT>
+template<typename T, HSHM_CLASS_TEMPL>
 struct iqueue_iterator_templ {
  public:
   /**< A shm reference to the containing iqueue object. */
-  iqueue<T, AllocT> *iqueue_;
+  iqueue<T, HSHM_CLASS_TEMPL_ARGS> *iqueue_;
   /**< A pointer to the entry in shared memory */
   iqueue_entry *entry_;
   /**< A pointer to the entry prior to this one */
@@ -46,7 +46,7 @@ struct iqueue_iterator_templ {
 
   /** Construct begin iterator  */
   HSHM_CROSS_FUN
-  explicit iqueue_iterator_templ(iqueue<T, AllocT> &iqueue,
+  explicit iqueue_iterator_templ(iqueue<T, HSHM_CLASS_TEMPL_ARGS> &iqueue,
                                  iqueue_entry *entry)
     : iqueue_(&iqueue), entry_(entry), prior_entry_(nullptr) {}
 
@@ -154,12 +154,12 @@ struct iqueue_iterator_templ {
  * Used as inputs to the HIPC_CONTAINER_TEMPLATE
  * */
 #define CLASS_NAME iqueue
-#define TYPED_CLASS iqueue<T, AllocT>
+#define TYPED_CLASS iqueue<T, HSHM_CLASS_TEMPL_ARGS>
 
 /**
  * Doubly linked iqueue implementation
  * */
-template<typename T, typename AllocT>
+template<typename T, HSHM_CLASS_TEMPL>
 class iqueue : public ShmContainer {
  public:
   HIPC_CONTAINER_TEMPLATE((CLASS_NAME), (TYPED_CLASS))
@@ -171,9 +171,9 @@ class iqueue : public ShmContainer {
    * ===================================*/
 
   /** forward iterator typedef */
-  typedef iqueue_iterator_templ<T, AllocT> iterator_t;
+  typedef iqueue_iterator_templ<T, HSHM_CLASS_TEMPL_ARGS> iterator_t;
   /** const forward iterator typedef */
-  typedef iqueue_iterator_templ<T, AllocT> citerator_t;
+  typedef iqueue_iterator_templ<T, HSHM_CLASS_TEMPL_ARGS> citerator_t;
 
  public:
   /**====================================

@@ -920,6 +920,14 @@ class Allocator {
   }
 };
 
+typedef u64 ThreadLocalId;
+
+template<typename AllocT>
+struct ThreadLocalAllocator {
+  ThreadLocalId tls_;
+  AllocT *alloc_;
+};
+
 }  // namespace hshm::ipc
 
 #endif  // HERMES_MEMORY_ALLOCATOR_ALLOCATOR_H_

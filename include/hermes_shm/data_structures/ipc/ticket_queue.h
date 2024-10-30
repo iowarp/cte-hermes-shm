@@ -21,7 +21,7 @@
 namespace hshm::ipc {
 
 /** Forward declaration of ticket_queue */
-template<typename T, typename AllocT = HSHM_DEFAULT_ALLOC>
+template<typename T, HSHM_CLASS_TEMPL_WITH_DEFAULTS>
 class ticket_queue;
 
 /**
@@ -29,13 +29,13 @@ class ticket_queue;
  * Used as inputs to the HIPC_CONTAINER_TEMPLATE
  * */
 #define CLASS_NAME ticket_queue
-#define TYPED_CLASS ticket_queue<T, AllocT>
+#define TYPED_CLASS ticket_queue<T, HSHM_CLASS_TEMPL_ARGS>
 
 /**
  * A MPMC queue for allocating tickets. Handles concurrency
  * without blocking.
  * */
-template<typename T, typename AllocT>
+template<typename T, HSHM_CLASS_TEMPL>
 class ticket_queue : public ShmContainer {
  public:
   HIPC_CONTAINER_TEMPLATE((CLASS_NAME), (TYPED_CLASS))

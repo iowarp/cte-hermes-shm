@@ -24,22 +24,22 @@
 namespace hshm::ipc {
 
 /** forward pointer for unordered_map */
-template<typename Key, typename T, typename AllocT = HSHM_DEFAULT_ALLOC, class Hash = hshm::hash<Key>>
+template<typename Key, typename T, class Hash = hshm::hash<Key>, HSHM_CLASS_TEMPL_WITH_DEFAULTS>
 class unordered_map;
 
 /**
  * The unordered map iterator (bucket_iter, slist_iter)
  * */
-template<typename Key, typename T, typename AllocT, class Hash>
+template<typename Key, typename T, class Hash, HSHM_CLASS_TEMPL>
 struct unordered_map_iterator {
  public:
-  using COLLISION_T = hipc::pair<Key, T, AllocT>;
-  using BUCKET_T = hipc::slist<COLLISION_T, AllocT>;
-  using BUCKET_VEC_T = hipc::vector<BUCKET_T, AllocT>;
-  using COLLISION_LIST_T = hipc::slist<COLLISION_T, AllocT>;
+  using COLLISION_T = hipc::pair<Key, T, HSHM_CLASS_TEMPL_ARGS>;
+  using BUCKET_T = hipc::slist<COLLISION_T, HSHM_CLASS_TEMPL_ARGS>;
+  using BUCKET_VEC_T = hipc::vector<BUCKET_T, HSHM_CLASS_TEMPL_ARGS>;
+  using COLLISION_LIST_T = hipc::slist<COLLISION_T, HSHM_CLASS_TEMPL_ARGS>;
 
  public:
-  unordered_map<Key, T, AllocT, Hash> *map_;
+  unordered_map<Key, T, Hash, HSHM_CLASS_TEMPL_ARGS> *map_;
   typename BUCKET_VEC_T::iterator_t bucket_;
   typename COLLISION_LIST_T::iterator_t collision_;
 
@@ -48,7 +48,7 @@ struct unordered_map_iterator {
 
   /** Construct the iterator  */
   HSHM_INLINE_CROSS_FUN explicit unordered_map_iterator(
-    unordered_map<Key, T, AllocT, Hash> &map)
+    unordered_map<Key, T, Hash, HSHM_CLASS_TEMPL_ARGS> &map)
   : map_(&map) {}
 
   /** Copy constructor  */
@@ -155,12 +155,12 @@ struct unordered_map_iterator {
  * */
 
 #define CLASS_NAME unordered_map
-#define TYPED_CLASS unordered_map<Key, T, AllocT, Hash>
+#define TYPED_CLASS unordered_map<Key, T, Hash, HSHM_CLASS_TEMPL_ARGS>
 
 /**
  * The unordered map implementation
  * */
-template<typename Key, typename T, typename AllocT, class Hash>
+template<typename Key, typename T, class Hash, HSHM_CLASS_TEMPL>
 class unordered_map : public ShmContainer {
  public:
   HIPC_CONTAINER_TEMPLATE((CLASS_NAME), (TYPED_CLASS))
@@ -168,11 +168,11 @@ class unordered_map : public ShmContainer {
   /**====================================
    * Typedefs
    * ===================================*/
-  typedef unordered_map_iterator<Key, T, AllocT, Hash> iterator_t;
+  typedef unordered_map_iterator<Key, T, Hash, HSHM_CLASS_TEMPL_ARGS> iterator_t;
   friend iterator_t;
-  using COLLISION_T = hipc::pair<Key, T, AllocT>;
-  using BUCKET_T = hipc::slist<COLLISION_T, AllocT>;
-  using BUCKET_VEC_T = hipc::vector<BUCKET_T, AllocT>;
+  using COLLISION_T = hipc::pair<Key, T, HSHM_CLASS_TEMPL_ARGS>;
+  using BUCKET_T = hipc::slist<COLLISION_T, HSHM_CLASS_TEMPL_ARGS>;
+  using BUCKET_VEC_T = hipc::vector<BUCKET_T, HSHM_CLASS_TEMPL_ARGS>;
 
   /**====================================
    * Variables
@@ -278,7 +278,7 @@ class unordered_map : public ShmContainer {
     GetBuckets().resize(num_buckets);
     max_capacity_ = other.max_capacity_;
     growth_ = other.growth_;
-    for (hipc::pair<Key, T, AllocT> &entry : other) {
+    for (hipc::pair<Key, T, HSHM_CLASS_TEMPL_ARGS> &entry : other) {
       emplace_templ<false, true>(
         entry.GetKey(), entry.GetVal());
     }

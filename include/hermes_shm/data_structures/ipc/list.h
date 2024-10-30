@@ -23,7 +23,7 @@
 namespace hshm::ipc {
 
 /** forward pointer for list */
-template<typename T, typename AllocT = HSHM_DEFAULT_ALLOC>
+template<typename T, HSHM_CLASS_TEMPL_WITH_DEFAULTS>
 class list;
 
 /** represents an object within a list */
@@ -37,11 +37,11 @@ struct list_entry {
 /**
  * The list iterator
  * */
-template<typename T, typename AllocT>
+template<typename T, HSHM_CLASS_TEMPL>
 struct list_iterator_templ {
  public:
   /**< A shm reference to the containing list object. */
-  list<T, AllocT> *list_;
+  list<T, HSHM_CLASS_TEMPL_ARGS> *list_;
   /**< A pointer to the entry in shared memory */
   list_entry<T> *entry_;
   /**< The offset of the entry in the shared-memory allocator */
@@ -53,7 +53,7 @@ struct list_iterator_templ {
 
   /** Construct an iterator  */
   HSHM_CROSS_FUN
-  explicit list_iterator_templ(list<T, AllocT> &list,
+  explicit list_iterator_templ(list<T, HSHM_CLASS_TEMPL_ARGS> &list,
                                list_entry<T> *entry,
                                OffsetPointer entry_ptr)
     : list_(&list), entry_(entry), entry_ptr_(entry_ptr) {}
@@ -197,12 +197,12 @@ struct list_iterator_templ {
  * Used as inputs to the HIPC_CONTAINER_TEMPLATE
  * */
 #define CLASS_NAME list
-#define TYPED_CLASS list<T, AllocT>
+#define TYPED_CLASS list<T, HSHM_CLASS_TEMPL_ARGS>
 
 /**
  * Doubly linked list implementation
  * */
-template<typename T, typename AllocT>
+template<typename T, HSHM_CLASS_TEMPL>
 class list : public ShmContainer {
  public:
   HIPC_CONTAINER_TEMPLATE((CLASS_NAME), (TYPED_CLASS))
@@ -215,9 +215,9 @@ class list : public ShmContainer {
    * ===================================*/
 
   /** forward iterator typedef */
-  typedef list_iterator_templ<T, AllocT> iterator_t;
+  typedef list_iterator_templ<T, HSHM_CLASS_TEMPL_ARGS> iterator_t;
   /** const forward iterator typedef */
-  typedef list_iterator_templ<T, AllocT> citerator_t;
+  typedef list_iterator_templ<T, HSHM_CLASS_TEMPL_ARGS> citerator_t;
 
  public:
   /**====================================
@@ -547,14 +547,14 @@ class list : public ShmContainer {
   template <typename Ar>
   HSHM_CROSS_FUN
   void save(Ar &ar) const {
-    save_list<Ar, hipc::list<T, AllocT>, T>(ar, *this);
+    save_list<Ar, hipc::list<T, HSHM_CLASS_TEMPL_ARGS>, T>(ar, *this);
   }
 
   /** Deserialize */
   template <typename Ar>
   HSHM_CROSS_FUN
   void load(Ar &ar) {
-    load_list<Ar, hipc::list<T, AllocT>, T>(ar, *this);
+    load_list<Ar, hipc::list<T, HSHM_CLASS_TEMPL_ARGS>, T>(ar, *this);
   }
 
  private:

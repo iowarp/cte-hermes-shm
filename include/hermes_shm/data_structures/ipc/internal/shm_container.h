@@ -16,7 +16,6 @@
 
 #include "hermes_shm/memory/memory_manager_.h"
 #include "hermes_shm/constants/macros.h"
-#include "shm_container_macro.h"
 #include "shm_macros.h"
 
 namespace hshm::ipc {
@@ -25,50 +24,102 @@ namespace hshm::ipc {
 template<typename T>
 struct ShmHeader;
 
-/** The ShmHeader used for base containers */
-#define HIPC_CONTAINER_HEADER_TEMPLATE(HEADER_NAME)\
-  /** Default constructor */\
-  HSHM_CROSS_FUN TYPE_UNWRAP(HEADER_NAME)() = default;\
-  \
-  /** Copy constructor */\
-  HSHM_CROSS_FUN TYPE_UNWRAP(HEADER_NAME)(const TYPE_UNWRAP(HEADER_NAME) &other) {\
-    strong_copy(other);\
-  }\
-  \
-  /** Copy assignment operator */\
-  HSHM_CROSS_FUN TYPE_UNWRAP(HEADER_NAME)& operator=(const TYPE_UNWRAP(HEADER_NAME) &other) {\
-    if (this != &other) {\
-      strong_copy(other);\
-    }\
-    return *this;\
-  }\
-\
-  /** Move constructor */\
-  HSHM_CROSS_FUN TYPE_UNWRAP(HEADER_NAME)(TYPE_UNWRAP(HEADER_NAME) &&other) {\
-    strong_copy(other);\
-  }\
-  \
-  /** Move operator */\
-  HSHM_CROSS_FUN TYPE_UNWRAP(HEADER_NAME)& operator=(TYPE_UNWRAP(HEADER_NAME) &&other) {\
-    if (this != &other) {\
-      strong_copy(other);\
-    }\
-    return *this;\
-  }
-
-/** The ShmHeader used for wrapper containers */
-struct ShmWrapperHeader {};
-
 /**
  * ShmContainers all have a header, which is stored in
  * shared memory as a TypedPointer.
  * */
 class ShmContainer {};
 
+/**
+ * Flags for ShmContainer classes
+ * */
+#define HSHM_CLASS_TEMPL_WITH_DEFAULTS \
+  typename AllocT = HSHM_DEFAULT_ALLOC, bool IsPrivate = false
+#define HSHM_CLASS_TEMPL \
+  typename AllocT, bool IsPrivate
+#define HSHM_CLASS_TEMPL_ARGS \
+  AllocT, IsPrivate
+#define HSHM_ALLOCATOR_INFO \
+  typename std::conditional<IsPrivate, \
+                   AllocT, \
+                   hipc::AllocatorId>::type
+
+/** The ShmHeader used for wrapper containers */
+struct ShmWrapperHeader {};
+
 /** Typed nullptr */
 template<typename T>
 HSHM_INLINE_CROSS_FUN static T* typed_nullptr() {
   return reinterpret_cast<T*>(NULL);
+}
+
+/**
+ * The main container template macro
+ * */
+#define HIPC_CONTAINER_TEMPLATE(CLASS_NAME,TYPED_CLASS) \
+public:\
+/**====================================\
+ * Variables & Types\
+ * ===================================*/\
+HSHM_ALLOCATOR_INFO alloc_info_;\
+\
+/**====================================\
+ * Constructors\
+ * ===================================*/\
+/** Initialize container */\
+HSHM_CROSS_FUN void init_shm_container(AllocT *alloc) {\
+  if constexpr (!IsPrivate) {\
+    alloc_info_ = alloc->GetId();\
+  } else {\
+    alloc_info_ = alloc;\
+  }\
+}\
+\
+/**====================================\
+ * Destructor\
+ * ===================================*/\
+/** Destructor. */\
+HSHM_INLINE_CROSS_FUN ~TYPE_UNWRAP(CLASS_NAME)() {\
+  shm_destroy();\
+}\
+\
+/** Destruction operation */\
+HSHM_INLINE_CROSS_FUN void shm_destroy() {\
+  if (IsNull()) { return; }\
+  shm_destroy_main();\
+  SetNull();\
+}\
+\
+/**====================================\
+ * Header Operations\
+ * ===================================*/\
+\
+/** Get a typed pointer to the object */\
+template<typename POINTER_T>\
+HSHM_INLINE_CROSS_FUN POINTER_T GetShmPointer() const {\
+  return GetAllocator()->template Convert<TYPE_UNWRAP(TYPED_CLASS), POINTER_T>(this);\
+}\
+\
+/**====================================\
+ * Query Operations\
+ * ===================================*/\
+\
+/** Get the allocator for this container */\
+HSHM_INLINE_CROSS_FUN AllocT* GetAllocator() const {\
+  if constexpr (!IsPrivate) {\
+    return (AllocT*)HERMES_MEMORY_MANAGER->GetAllocator(alloc_info_);\
+  } else {\
+    return alloc_info_;\
+  }\
+}\
+\
+/** Get the shared-memory allocator id */\
+HSHM_INLINE_CROSS_FUN const hipc::AllocatorId& GetAllocatorId() const {\
+  if constexpr (!IsPrivate) {\
+    return alloc_info_;\
+  } else {\
+    return GetAllocator()->GetId();\
+  }\
 }
 
 }  // namespace hshm::ipc
