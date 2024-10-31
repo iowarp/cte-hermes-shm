@@ -252,7 +252,7 @@ class string_templ : public ShmContainer {
   /** Destroy the shared-memory data. */
   HSHM_INLINE_CROSS_FUN void shm_destroy_main() {
     if (size() >= SSO) {
-      GetAllocator()->Free(ThreadId::GetNull(), text_);
+      GetAllocator()->Free(GetThreadId(), text_);
     }
   }
 
@@ -315,7 +315,7 @@ class string_templ : public ShmContainer {
       _create_str(new_size);
     } else if (new_size > size()) {
       GetAllocator()->template Reallocate<Pointer>(
-          hshm::ThreadId::GetNull(), text_, new_size);
+          GetThreadId(), text_, new_size);
       length_ = new_size;
     } else {
       length_ = new_size;
@@ -369,7 +369,7 @@ class string_templ : public ShmContainer {
       // NOTE(llogan): less than and not equal because length doesn't
       // account for trailing 0.
     } else {
-      text_ = GetAllocator()->Allocate(ThreadId::GetNull(), length + 1);
+      text_ = GetAllocator()->Allocate(GetThreadId(), length + 1);
     }
     length_ = length;
   }

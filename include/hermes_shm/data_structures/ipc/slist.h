@@ -467,7 +467,7 @@ class slist : public ShmContainer {
     while (pos != last) {
       auto next = pos + 1;
       HSHM_DESTROY_AR(pos.entry_->data_)
-      GetAllocator()->Free(ThreadId::GetNull(), pos.entry_ptr_);
+      GetAllocator()->Free(GetThreadId(), pos.entry_ptr_);
       --length_;
       pos = next;
     }
@@ -585,7 +585,7 @@ class slist : public ShmContainer {
   slist_entry<T, HSHM_CLASS_TEMPL_ARGS>* _create_entry(OffsetPointer &p, Args&& ...args) {
     auto entry = GetAllocator()->template
       AllocateObjs<slist_entry<T, HSHM_CLASS_TEMPL_ARGS>>(
-        hshm::ThreadId::GetNull(), 1, p);
+        GetThreadId(), 1, p);
     HSHM_MAKE_AR(entry->data_, GetAllocator(), std::forward<Args>(args)...)
     return entry;
   }

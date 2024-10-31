@@ -100,6 +100,15 @@ class ShmContainerExample : public hipc::ShmContainer {
       return GetAllocator()->GetId();
     }
   }
+
+  /** Get the shared-memory allocator id */
+  HSHM_INLINE_CROSS_FUN const hshm::ThreadId& GetThreadId() const {
+    if constexpr (!(HSHM_FLAGS & hipc::ShmFlag::kIsPrivate)) {
+      return hshm::ThreadId::GetNull();
+    } else {
+      return alloc_info_.tls_;
+    }
+  }
 };
 
 }  // namespace hshm::ipc

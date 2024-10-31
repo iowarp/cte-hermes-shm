@@ -75,7 +75,18 @@ HSHM_CROSS_FUN void init_shm_container(AllocT *alloc) {\
   if constexpr (!(HSHM_FLAGS & hipc::ShmFlag::kIsPrivate)) {\
     alloc_info_ = alloc->GetId();\
   } else {\
-    alloc_info_ = alloc;\
+    alloc_info_.alloc_ = alloc;\
+    alloc_info_.tls_ = hshm::ThreadId::GetNull();\
+  }\
+}\
+\
+/** Initialize container (thread-local) */\
+HSHM_CROSS_FUN void init_shm_container(const hshm::ThreadId &tid, AllocT *alloc) {\
+  if constexpr (!(HSHM_FLAGS & hipc::ShmFlag::kIsPrivate)) {\
+    alloc_info_ = alloc->GetId();\
+  } else {\
+    alloc_info_.alloc_ = alloc;\
+    alloc_info_.tls_ = tid;\
   }\
 }\
 \
@@ -115,7 +126,7 @@ HSHM_INLINE_CROSS_FUN AllocT* GetAllocator() const {\
   if constexpr (!(HSHM_FLAGS & hipc::ShmFlag::kIsPrivate)) {\
     return (AllocT*)HERMES_MEMORY_MANAGER->GetAllocator(alloc_info_);\
   } else {\
-    return alloc_info_;\
+    return alloc_info_.alloc_;\
   }\
 }\
 \
@@ -125,6 +136,15 @@ HSHM_INLINE_CROSS_FUN const hipc::AllocatorId& GetAllocatorId() const {\
     return alloc_info_;\
   } else {\
     return GetAllocator()->GetId();\
+  }\
+}\
+\
+/** Get the shared-memory allocator id */\
+HSHM_INLINE_CROSS_FUN hshm::ThreadId GetThreadId() const {\
+  if constexpr (!(HSHM_FLAGS & hipc::ShmFlag::kIsPrivate)) {\
+    return hshm::ThreadId::GetNull();\
+  } else {\
+    return alloc_info_.tls_;\
   }\
 }
 

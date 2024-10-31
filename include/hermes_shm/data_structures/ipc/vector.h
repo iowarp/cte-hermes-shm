@@ -248,7 +248,10 @@ class vector : public ShmContainer {
    * ===================================*/
 
   /** Get thread-local reference */
-  vector<T, AllocT, hipc::ShmFlag::kIsThreadLocal> GetThreadLocal(const ThreadId &tid) {
+  vector<T, AllocT, hipc::ShmFlag::kIsThreadLocal>
+  GetThreadLocal(const ThreadId &tid) {
+    return vector<T, AllocT, hipc::ShmFlag::kIsThreadLocal>(
+      *this, tid, GetAllocator());
   }
 
   /** SHM constructor. Thread-local. */
@@ -421,21 +424,24 @@ class vector : public ShmContainer {
    * ===================================*/
 
   /** Check if null */
-  HSHM_INLINE_CROSS_FUN bool IsNull() const {
+  HSHM_INLINE_CROSS_FUN
+  bool IsNull() const {
     return vec_ptr_.IsNull();
   }
 
   /** Make null */
-  HSHM_INLINE_CROSS_FUN void SetNull() {
+  HSHM_INLINE_CROSS_FUN
+  void SetNull() {
     length_ = 0;
     max_length_ = 0;
     vec_ptr_.SetNull();
   }
 
   /** Destroy all shared memory allocated by the vector */
-  HSHM_INLINE_CROSS_FUN void shm_destroy_main() {
+  HSHM_INLINE_CROSS_FUN
+  void shm_destroy_main() {
     erase(begin(), end());
-    GetAllocator()->Free(ThreadId::GetNull(), vec_ptr_);
+    GetAllocator()->Free(GetThreadId(), vec_ptr_);
   }
 
   /**====================================
@@ -445,7 +451,8 @@ class vector : public ShmContainer {
   /**
    * Convert to std::vector
    * */
-  HSHM_INLINE_CROSS_FUN std::vector<T> vec() {
+  HSHM_INLINE_HOST_FUN
+  std::vector<T> vec() {
     std::vector<T> v;
     v.reserve(size());
     for (T& entry : *this) {
@@ -462,7 +469,8 @@ class vector : public ShmContainer {
    * @param args the arguments to construct
    * */
   template<typename ...Args>
-  HSHM_INLINE_CROSS_FUN void reserve(size_t length, Args&& ...args) {
+  HSHM_INLINE_CROSS_FUN
+  void reserve(size_t length, Args&& ...args) {
     if (length == 0) { return; }
     grow_vector(data_ar(), length, false, std::forward<Args>(args)...);
   }
@@ -487,22 +495,38 @@ class vector : public ShmContainer {
   }
 
   /** Index the vector at position i */
-  HSHM_INLINE_CROSS_FUN T& operator[](const size_t i) {
+  HSHM_INLINE_CROSS_FUN
+  T& operator[](const size_t i) {
       return data_ar()[i].get_ref();
   }
 
   /** Index the vector at position i */
-  HSHM_INLINE_CROSS_FUN const T& operator[](const size_t i) const {
+  HSHM_INLINE_CROSS_FUN
+  const T& operator[](const size_t i) const {
     return data_ar()[i].get_ref();
   }
 
   /** Get first element of vector */
-  HSHM_INLINE_CROSS_FUN T& front() {
+  HSHM_INLINE_CROSS_FUN
+  T& front() {
     return (*this)[0];
   }
 
   /** Get last element of vector */
-  HSHM_INLINE_CROSS_FUN T& back() {
+  HSHM_INLINE_CROSS_FUN
+  T& back() {
+    return (*this)[size() - 1];
+  }
+
+  /** Get first element of vector */
+  HSHM_INLINE_CROSS_FUN
+  const T& front() const {
+    return (*this)[0];
+  }
+
+  /** Get last element of vector */
+  HSHM_INLINE_CROSS_FUN
+  const T& back() const {
     return (*this)[size() - 1];
   }
 
@@ -521,7 +545,8 @@ class vector : public ShmContainer {
 
   /** Construct an element in the front of the vector */
   template<typename ...Args>
-  HSHM_INLINE_CROSS_FUN void emplace_front(Args&& ...args) {
+  HSHM_INLINE_CROSS_FUN
+  void emplace_front(Args&& ...args) {
     emplace(begin(), std::forward<Args>(args)...);
   }
 
@@ -545,7 +570,8 @@ class vector : public ShmContainer {
 
   /** Replace an element at a position */
   template<typename ...Args>
-  HSHM_INLINE_CROSS_FUN void replace(iterator_t pos, Args&&... args) {
+  HSHM_INLINE_CROSS_FUN
+  void replace(iterator_t pos, Args&&... args) {
     if (pos.is_end()) {
       return;
     }
@@ -556,14 +582,16 @@ class vector : public ShmContainer {
   }
 
   /** Delete the element at \a pos position */
-  HSHM_INLINE_CROSS_FUN void erase(iterator_t pos) {
+  HSHM_INLINE_CROSS_FUN
+  void erase(iterator_t pos) {
     if (pos.is_end()) return;
     shift_left(pos, 1);
     length_ -= 1;
   }
 
   /** Delete elements between first and last  */
-  HSHM_INLINE_CROSS_FUN void erase(iterator_t first, iterator_t last) {
+  HSHM_INLINE_CROSS_FUN
+  void erase(iterator_t first, iterator_t last) {
     size_t last_i;
     if (first.is_end()) return;
     if (last.is_end()) {
@@ -578,13 +606,15 @@ class vector : public ShmContainer {
   }
 
   /** Delete all elements from the vector */
-  HSHM_INLINE_CROSS_FUN void clear() {
+  HSHM_INLINE_CROSS_FUN
+  void clear() {
     erase(begin(), end());
   }
 
   /** Get the size of the vector */
   template<typename SizeT = size_t>
-  HSHM_INLINE_CROSS_FUN SizeT size() const {
+  HSHM_INLINE_CROSS_FUN
+  SizeT size() const {
     return static_cast<SizeT>(length_);
   }
 
@@ -641,20 +671,20 @@ class vector : public ShmContainer {
       // Use reallocate for well-behaved objects
       new_vec = GetAllocator()->template
         ReallocateObjs<ShmArchive<T>>(
-            hshm::ThreadId::GetNull(), vec_ptr_, max_length);
+            GetThreadId(), vec_ptr_, max_length);
     } else {
       // Use std::move for unpredictable objects
       OffsetPointer new_p;
       new_vec = GetAllocator()->template
         AllocateObjs<ShmArchive<T>>(
-          hshm::ThreadId::GetNull(), max_length, new_p);
+          GetThreadId(), max_length, new_p);
       for (size_t i = 0; i < length_; ++i) {
         T& old_entry = (*this)[i];
         HSHM_MAKE_AR(new_vec[i], GetAllocator(),
                      std::move(old_entry))
       }
       if (!vec_ptr_.IsNull()) {
-        GetAllocator()->Free(ThreadId::GetNull(), vec_ptr_);
+        GetAllocator()->Free(GetThreadId(), vec_ptr_);
       }
       vec_ptr_ = new_p;
     }
