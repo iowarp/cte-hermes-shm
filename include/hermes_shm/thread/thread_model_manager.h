@@ -54,7 +54,7 @@ class ThreadModelManager {
   void Yield();
 
   /** Call GetTid */
-  tid_t GetTid();
+  ThreadId GetTid();
 };
 
 /** A unique identifier of this thread across processes */

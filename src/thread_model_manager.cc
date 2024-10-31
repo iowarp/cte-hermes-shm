@@ -40,7 +40,7 @@ void ThreadModelManager::Yield() {
 }
 
 /** Call GetTid */
-tid_t ThreadModelManager::GetTid() {
+ThreadId ThreadModelManager::GetTid() {
   return thread_static_->GetTid();
 }
 

@@ -248,7 +248,17 @@ class vector : public ShmContainer {
    * ===================================*/
 
   /** Get thread-local reference */
-  vector<T, AllocT, true> GetThreadLocal(const ThreadLocalId &id) {
+  vector<T, AllocT, hipc::ShmFlag::kIsThreadLocal> GetThreadLocal(const ThreadId &tid) {
+  }
+
+  /** SHM constructor. Thread-local. */
+  template<ShmFlagField OTHER_FLAGS>
+  explicit vector(const vector<T, AllocT, OTHER_FLAGS> &other,
+                  const ThreadId &tid, AllocT *alloc) {
+    init_shm_container(tid, alloc);
+    vec_ptr_ = other.vec_ptr_;
+    max_length_ = other.max_length_;
+    length_ = other.length_;
   }
 
   /** SHM constructor. Default. */

@@ -12,7 +12,17 @@ HSHM_CROSS_FUN void init_shm_container(AllocT *alloc) {
   if constexpr (!(HSHM_FLAGS & hipc::ShmFlag::kIsPrivate)) {
     alloc_info_ = alloc->GetId();
   } else {
+    alloc_info_.alloc_ = alloc;
+  }
+}
+
+/** Initialize container */
+HSHM_CROSS_FUN void init_shm_container(const hshm::ThreadId &tid, AllocT *alloc) {
+  if constexpr (!(HSHM_FLAGS & hipc::ShmFlag::kIsPrivate)) {
+    alloc_info_ = alloc->GetId();
+  } else {
     alloc_info_ = alloc;
+    alloc_info_.tls_ = tid;
   }
 }
 
@@ -21,7 +31,7 @@ HSHM_CROSS_FUN void init_shm_container(AllocT *alloc) {
  * ===================================*/
 /** Destructor. */
 HSHM_INLINE_CROSS_FUN ~TYPE_UNWRAP(CLASS_NAME)() {
-  if constexpr (!(HSHM_FLAGS & hipc::ShmFlag::kIsDestructable)) {
+  if constexpr ((HSHM_FLAGS & hipc::ShmFlag::kIsUndestructable)) {
     shm_destroy();
   }
 }

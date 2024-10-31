@@ -37,7 +37,18 @@ class ShmContainerExample : public hipc::ShmContainer {
     if constexpr (!(HSHM_FLAGS & hipc::ShmFlag::kIsPrivate)) {
       alloc_info_ = alloc->GetId();
     } else {
-      alloc_info_ = alloc;
+      alloc_info_.alloc_ = alloc;
+      alloc_info_.tls_ = hshm::ThreadId::GetNull();
+    }
+  }
+
+  /** Initialize container (thread-local) */
+  HSHM_CROSS_FUN void init_shm_container(const hshm::ThreadId &tid, AllocT *alloc) {
+    if constexpr (!(HSHM_FLAGS & hipc::ShmFlag::kIsPrivate)) {
+      alloc_info_ = alloc->GetId();
+    } else {
+      alloc_info_.alloc_ = alloc;
+      alloc_info_.tls_ = tid;
     }
   }
 
@@ -46,7 +57,7 @@ class ShmContainerExample : public hipc::ShmContainer {
    * ===================================*/
   /** Destructor. */
   HSHM_INLINE_CROSS_FUN ~TYPE_UNWRAP(CLASS_NAME)() {
-    if constexpr (!(HSHM_FLAGS & hipc::ShmFlag::kIsDestructable)) {
+    if constexpr ((HSHM_FLAGS & hipc::ShmFlag::kIsUndestructable)) {
       shm_destroy();
     }
   }
@@ -77,7 +88,7 @@ class ShmContainerExample : public hipc::ShmContainer {
     if constexpr (!(HSHM_FLAGS & hipc::ShmFlag::kIsPrivate)) {
       return (AllocT*)HERMES_MEMORY_MANAGER->GetAllocator(alloc_info_);
     } else {
-      return alloc_info_;
+      return alloc_info_.alloc_;
     }
   }
 

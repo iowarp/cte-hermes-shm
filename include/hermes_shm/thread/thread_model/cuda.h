@@ -43,8 +43,8 @@ class Cuda : public ThreadModel {
   }
 
   /** Get the TID of the current thread */
-  tid_t GetTid() override {
-    return 0;
+  ThreadId GetTid() override {
+    return ThreadId::GetNull();
   }
 };
 

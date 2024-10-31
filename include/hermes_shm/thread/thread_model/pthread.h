@@ -46,9 +46,9 @@ class Pthread : public ThreadModel {
   }
 
   /** Get the TID of the current thread */
-  tid_t GetTid() override {
-    return (tid_t)omp_get_thread_num();
-    // return static_cast<tid_t>(pthread_self());
+  ThreadId GetTid() override {
+    return ThreadId{(hshm::u64)omp_get_thread_num()};
+    // return static_cast<ThreadId>(pthread_self());
   }
 };
 

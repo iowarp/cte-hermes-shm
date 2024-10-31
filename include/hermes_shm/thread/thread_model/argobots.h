@@ -54,12 +54,12 @@ class Argobots : public ThreadModel {
   }
 
   /** Get the TID of the current thread */
-  tid_t GetTid() override {
+  ThreadId GetTid() override {
     ABT_thread thread;
     ABT_thread_id tid;
     ABT_thread_self(&thread);
     ABT_thread_get_id(thread, &tid);
-    return (tid_t)tid;
+    return ThreadId{tid};
   }
 };
 

@@ -18,6 +18,7 @@
 #include <memory>
 #include <atomic>
 #include "hermes_shm/types/bitfield.h"
+#include "hermes_shm/types/numbers.h"
 
 namespace hshm {
 
@@ -28,9 +29,6 @@ enum class ThreadType {
   kArgobots,
   kCuda
 };
-
-/** Used to represent tid */
-typedef uint64_t tid_t;
 
 }  // namespace hshm
 
@@ -47,7 +45,7 @@ class ThreadModel {
   virtual void Yield() = 0;
 
   /** Get the TID of the current thread */
-  virtual tid_t GetTid() = 0;
+  virtual ThreadId GetTid() = 0;
 };
 
 }  // namespace hshm::thread_model

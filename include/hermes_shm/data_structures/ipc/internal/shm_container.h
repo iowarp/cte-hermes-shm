@@ -30,24 +30,25 @@ class ShmContainer {};
 /**
  * Flags
  * */
+typedef u32 ShmFlagField;
 struct ShmFlag {
   CLS_CONST u32 kIsPrivate = BIT_OPT(u32, 0);
-  CLS_CONST u32 kIsDestructable = BIT_OPT(u32, 0);
+  CLS_CONST u32 kIsUndestructable = BIT_OPT(u32, 1);
+  CLS_CONST u32 kIsThreadLocal = kIsPrivate | kIsUndestructable;
 };
-typedef bitfield32_t ShmFlags;
 
 /**
  * Flags for ShmContainer classes
  * */
 #define HSHM_CLASS_TEMPL_WITH_DEFAULTS \
-  typename AllocT = HSHM_DEFAULT_ALLOC, u32 HSHM_FLAGS = 0
+  typename AllocT = HSHM_DEFAULT_ALLOC, ShmFlagField HSHM_FLAGS = 0
 #define HSHM_CLASS_TEMPL \
-  typename AllocT, u32 HSHM_FLAGS
+  typename AllocT, ShmFlagField HSHM_FLAGS
 #define HSHM_CLASS_TEMPL_ARGS \
   AllocT, HSHM_FLAGS
 #define HSHM_ALLOCATOR_INFO \
   typename std::conditional<HSHM_FLAGS & hipc::ShmFlag::kIsPrivate, \
-                   AllocT, \
+                   hipc::ThreadLocalAllocator<AllocT>, \
                    hipc::AllocatorId>::type
 
 /** Typed nullptr */
@@ -83,7 +84,7 @@ HSHM_CROSS_FUN void init_shm_container(AllocT *alloc) {\
  * ===================================*/\
 /** Destructor. */\
 HSHM_INLINE_CROSS_FUN ~TYPE_UNWRAP(CLASS_NAME)() {\
-  if constexpr (!(HSHM_FLAGS & hipc::ShmFlag::kIsDestructable)) {\
+  if constexpr ((HSHM_FLAGS & hipc::ShmFlag::kIsUndestructable)) {\
     shm_destroy();\
   }\
 }\

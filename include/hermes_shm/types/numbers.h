@@ -38,6 +38,46 @@ typedef unsigned reg_uint; /**< Unsigned int */
 typedef long long big_int; /**< Long long */
 typedef unsigned long long big_uint; /**< Unsigned long long */
 
+struct ThreadId {
+  hshm::u64 tid_;
+
+  ThreadId() = default;
+
+  explicit ThreadId(hshm::u64 tid) : tid_(tid) {}
+
+  static ThreadId GetNull() {
+    return ThreadId{(hshm::u64)-1};
+  }
+
+  void SetNull() {
+    tid_ = (hshm::u64)-1;
+  }
+
+  bool operator==(const ThreadId &other) const {
+    return tid_ == other.tid_;
+  }
+
+  bool operator!=(const ThreadId &other) const {
+    return tid_ != other.tid_;
+  }
+
+  bool operator<(const ThreadId &other) const {
+    return tid_ < other.tid_;
+  }
+
+  bool operator>(const ThreadId &other) const {
+    return tid_ > other.tid_;
+  }
+
+  bool operator<=(const ThreadId &other) const {
+    return tid_ <= other.tid_;
+  }
+
+  bool operator>=(const ThreadId &other) const {
+    return tid_ >= other.tid_;
+  }
+};
+
 #ifndef HERMES_ENABLE_CUDA
 typedef i16 min_i16;
 typedef i32 min_i32;
