@@ -63,8 +63,9 @@ class AllocatorTestSuite {
   void AllocateAndFreeFixedSize(size_t count, size_t size) {
     StartTimer();
     for (size_t i = 0; i < count; ++i) {
-      Pointer p = alloc_->Allocate(size);
-      alloc_->Free(p);
+      Pointer p = alloc_->Allocate(
+          hshm::ThreadId::GetNull(), size);
+      alloc_->Free(hshm::ThreadId::GetNull(), p);
     }
     StopTimer();
 
@@ -76,10 +77,11 @@ class AllocatorTestSuite {
     StartTimer();
     std::vector<Pointer> cache(count);
     for (size_t i = 0; i < count; ++i) {
-      cache[i] = alloc_->Allocate(size);
+      cache[i] = alloc_->Allocate(
+          hshm::ThreadId::GetNull(), size);
     }
     for (size_t i = 0; i < count; ++i) {
-      alloc_->Free(cache[i]);
+      alloc_->Free(hshm::ThreadId::GetNull(), cache[i]);
     }
     StopTimer();
 
@@ -111,10 +113,10 @@ class AllocatorTestSuite {
     for (size_t w = 0; w < num_windows; ++w) {
       for (size_t i = 0; i < sizes_.size(); ++i) {
         auto &size = sizes_[i];
-        window[i] = alloc_->Allocate(size);
+        window[i] = alloc_->Allocate(hshm::ThreadId::GetNull(), size);
       }
       for (size_t i = 0; i < sizes_.size(); ++i) {
-        alloc_->Free(window[i]);
+        alloc_->Free(hshm::ThreadId::GetNull(), window[i]);
       }
     }
     StopTimer();

@@ -61,10 +61,12 @@ class smart_ptr_base {
     OffsetPointer p;
     if constexpr(IS_SHM_ARCHIVEABLE(T)) {
       obj_ = alloc_->template AllocateConstructObjs<T>(
-        1, p, alloc, std::forward<Args>(args)...);
+          hshm::ThreadId::GetNull(), 1, p, alloc,
+          std::forward<Args>(args)...);
     } else {
       obj_ = alloc_->template AllocateConstructObjs<T>(
-        1, p, std::forward<Args>(args)...);
+          hshm::ThreadId::GetNull(), 1, p,
+          std::forward<Args>(args)...);
     }
     if constexpr(unique) {
       flags_.SetBits(POINTER_IS_OWNED);
@@ -85,7 +87,8 @@ class smart_ptr_base {
     if constexpr(IS_SHM_ARCHIVEABLE(T)) {
       obj_->shm_destroy();
     }
-    alloc_->template FreeDestructObjs<T>(obj_, 1);
+    alloc_->template FreeDestructObjs<T>(
+        hshm::ThreadId::GetNull(), obj_, 1);
   }
 
   /**====================================

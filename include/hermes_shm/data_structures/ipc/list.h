@@ -443,7 +443,7 @@ class list : public ShmContainer {
     while (pos != last) {
       auto next = pos + 1;
       HSHM_DESTROY_AR(pos.entry_->data_)
-      GetAllocator()->Free(pos.entry_ptr_);
+      GetAllocator()->Free(ThreadId::GetNull(), pos.entry_ptr_);
       --length_;
       pos = next;
     }
@@ -562,7 +562,7 @@ class list : public ShmContainer {
   HSHM_INLINE_CROSS_FUN list_entry<T>* _create_entry(
     OffsetPointer &p, Args&& ...args) {
     auto entry = GetAllocator()->template
-      AllocateObjs<list_entry<T>>(1, p);
+      AllocateObjs<list_entry<T>>(hshm::ThreadId::GetNull(), 1, p);
     HSHM_MAKE_AR(entry->data_, GetAllocator(), std::forward<Args>(args)...)
     return entry;
   }

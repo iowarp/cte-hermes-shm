@@ -57,7 +57,8 @@ TEST_CASE("MemoryManager") {
   if (rank == 0) {
     std::cout << "Allocating pages (rank 0)" << std::endl;
     hipc::Allocator *alloc = mem_mngr->GetAllocator(alloc_id);
-    char *page = alloc->AllocatePtr<char>(page_size);
+    char *page = alloc->AllocatePtr<char>(
+        hshm::ThreadId::GetNull(), page_size);
     memset(page, nonce, page_size);
     auto header = alloc->GetCustomHeader<SimpleHeader>();
     hipc::Pointer p1 = mem_mngr->Convert<void>(alloc_id, page);

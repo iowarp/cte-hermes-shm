@@ -33,13 +33,14 @@ void MpiPageAllocationTest(Allocator *alloc, size_t count) {
   for (size_t w = 0; w < num_windows; ++w) {
     for (size_t i = 0; i < window_length; ++i) {
       window[i].size = uni(rng);
-      window[i].data = alloc->AllocatePtr<char>(window[i].size,
-                                                window[i].ptr);
+      window[i].data = alloc->AllocatePtr<char>(
+          hshm::ThreadId::GetNull(),
+          window[i].size, window[i].ptr);
       memset(window[i].data, (char)i, window[i].size);
     }
     for (size_t i = 0; i < window_length; ++i) {
       VerifyBuffer(window[i].data, window[i].size, (char)i);
-      alloc->Free(window[i].ptr);
+      alloc->Free(hshm::ThreadId::GetNull(), window[i].ptr);
     }
   }
   MPI_Barrier(MPI_COMM_WORLD);

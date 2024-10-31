@@ -435,7 +435,7 @@ class vector : public ShmContainer {
   /** Destroy all shared memory allocated by the vector */
   HSHM_INLINE_CROSS_FUN void shm_destroy_main() {
     erase(begin(), end());
-    GetAllocator()->Free(vec_ptr_);
+    GetAllocator()->Free(ThreadId::GetNull(), vec_ptr_);
   }
 
   /**====================================
@@ -640,19 +640,21 @@ class vector : public ShmContainer {
     if constexpr(std::is_pod<T>() && !IS_SHM_ARCHIVEABLE(T)) {
       // Use reallocate for well-behaved objects
       new_vec = GetAllocator()->template
-        ReallocateObjs<ShmArchive<T>>(vec_ptr_, max_length);
+        ReallocateObjs<ShmArchive<T>>(
+            hshm::ThreadId::GetNull(), vec_ptr_, max_length);
     } else {
       // Use std::move for unpredictable objects
       OffsetPointer new_p;
       new_vec = GetAllocator()->template
-        AllocateObjs<ShmArchive<T>>(max_length, new_p);
+        AllocateObjs<ShmArchive<T>>(
+          hshm::ThreadId::GetNull(), max_length, new_p);
       for (size_t i = 0; i < length_; ++i) {
         T& old_entry = (*this)[i];
         HSHM_MAKE_AR(new_vec[i], GetAllocator(),
                      std::move(old_entry))
       }
       if (!vec_ptr_.IsNull()) {
-        GetAllocator()->Free(vec_ptr_);
+        GetAllocator()->Free(ThreadId::GetNull(), vec_ptr_);
       }
       vec_ptr_ = new_p;
     }

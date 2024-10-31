@@ -159,9 +159,11 @@ struct charbuf {
       alloc_ = HERMES_MEMORY_MANAGER->GetDefaultAllocator();
     }
     if (destructable_) {
-      data_ = alloc_->ReallocatePtr<char>(data_, new_size);
+      data_ = alloc_->ReallocatePtr<char>(
+          ThreadId::GetNull(), data_, new_size);
     } else {
-      data_ = alloc_->AllocatePtr<char>(new_size);
+      data_ = alloc_->AllocatePtr<char>(
+          ThreadId::GetNull(), new_size);
     }
     destructable_ = true;
     size_ = new_size;
@@ -262,7 +264,8 @@ struct charbuf {
       return false;
     }
     alloc_ = alloc;
-    data_ = alloc->AllocatePtr<char>(size, p);
+    data_ = alloc->AllocatePtr<char>(
+        hshm::ThreadId::GetNull(), size, p);
     size_ = size;
     total_size_ = size;
     destructable_ = true;
@@ -272,7 +275,7 @@ struct charbuf {
   /** Explicitly free the charbuf */
   HSHM_CROSS_FUN void Free() {
     if (destructable_ && data_ && total_size_) {
-      alloc_->FreePtr<char>(data_);
+      alloc_->FreePtr<char>(hshm::ThreadId::GetNull(), data_);
     }
   }
 };

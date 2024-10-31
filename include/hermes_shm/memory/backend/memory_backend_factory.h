@@ -28,8 +28,9 @@
 namespace hshm::ipc {
 
 #define HSHM_CREATE_BACKEND(T) \
-  if constexpr(std::is_same_v<T, BackendT>) {\
-    auto backend = HERMES_MEMORY_MANAGER->GetRootAllocator()->NewObj<T>();\
+  if constexpr(std::is_same_v<T, BackendT>) { \
+    auto alloc = HERMES_MEMORY_MANAGER->GetRootAllocator();\
+    auto backend = alloc->NewObj<T>(hshm::ThreadId::GetNull());\
     if (!backend->shm_init(backend_id, size, std::forward<Args>(args)...)) {\
       HERMES_THROW_ERROR(MEMORY_BACKEND_CREATE_FAILED);\
     }\
@@ -38,7 +39,8 @@ namespace hshm::ipc {
 
 #define HSHM_DESERIALIZE_BACKEND(T)\
   case MemoryBackendType::k##T: {\
-    auto backend = HERMES_MEMORY_MANAGER->GetRootAllocator()->NewObj<PosixShmMmap>();\
+    auto alloc = HERMES_MEMORY_MANAGER->GetRootAllocator();\
+    auto backend = alloc->NewObj<T>(hshm::ThreadId::GetNull());\
     if (!backend->shm_deserialize(url)) {\
       HERMES_THROW_ERROR(MEMORY_BACKEND_NOT_FOUND);\
     }\
@@ -88,28 +90,38 @@ class MemoryBackendFactory {
     switch (backend->header_->type_) {
       // Posix Mmap
       case MemoryBackendType::kPosixMmap: {
-        return HERMES_MEMORY_MANAGER->GetRootAllocator()->NewObjLocal<PosixMmap>(*(PosixMmap*)backend).ptr_;
+        return HERMES_MEMORY_MANAGER->GetRootAllocator()->
+          NewObjLocal<PosixMmap>(ThreadId::GetNull(),
+                                 *(PosixMmap*)backend).ptr_;
       }
 
         // Malloc
       case MemoryBackendType::kMallocBackend: {
-        return HERMES_MEMORY_MANAGER->GetRootAllocator()->NewObjLocal<MallocBackend>(*(MallocBackend*)backend).ptr_;
+        return HERMES_MEMORY_MANAGER->GetRootAllocator()->
+        NewObjLocal<MallocBackend>(ThreadId::GetNull(),
+                                   *(MallocBackend*)backend).ptr_;
       }
 
         // Array
       case MemoryBackendType::kArrayBackend: {
-        return HERMES_MEMORY_MANAGER->GetRootAllocator()->NewObjLocal<ArrayBackend>(*(ArrayBackend*)backend).ptr_;
+        return HERMES_MEMORY_MANAGER->GetRootAllocator()->
+          NewObjLocal<ArrayBackend>(ThreadId::GetNull(),
+                                    *(ArrayBackend*)backend).ptr_;
       }
 
 #ifdef HERMES_ENABLE_CUDA
         // Cuda Malloc
       case MemoryBackendType::kCudaMalloc: {
-        return HERMES_MEMORY_MANAGER->GetRootAllocator()->NewObjLocal<CudaMalloc>(*(CudaMalloc*)backend).ptr_;
+        return HERMES_MEMORY_MANAGER->GetRootAllocator()->
+          NewObjLocal<CudaMalloc>(ThreadId::GetNull(),
+                                  *(CudaMalloc*)backend).ptr_;
       }
 
         // Cuda Shm Mmap
       case MemoryBackendType::kCudaShmMmap: {
-        return HERMES_MEMORY_MANAGER->GetRootAllocator()->NewObjLocal<CudaShmMmap>(*(CudaShmMmap*)backend).ptr_;
+        return HERMES_MEMORY_MANAGER->GetRootAllocator()->
+          NewObjLocal<CudaShmMmap>(ThreadId::GetNull(),
+                                   *(CudaShmMmap*)backend).ptr_;
       }
 #endif
 

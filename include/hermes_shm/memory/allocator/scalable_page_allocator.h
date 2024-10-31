@@ -126,7 +126,8 @@ class ScalablePageAllocator : public Allocator {
    * memory larger than the page size.
    * */
   HSHM_CROSS_FUN
-  OffsetPointer AllocateOffset(size_t size) override {
+  OffsetPointer AllocateOffset(const hshm::ThreadId &tid,
+                               size_t size) override {
     MpPage *page = nullptr;
     size_t exp;
     size_t size_mp = RoundUp(size + sizeof(MpPage), exp);
@@ -139,7 +140,7 @@ class ScalablePageAllocator : public Allocator {
 
     // Case 3: Allocate from stack if no page found
     if (page == nullptr) {
-      auto off = alloc_.AllocateOffset(size_mp);
+      auto off = alloc_.AllocateOffset(ThreadId::GetNull(), size_mp);
       if (!off.IsNull()) {
         page = alloc_.Convert<MpPage>(off - sizeof(MpPage));
       }
@@ -165,7 +166,9 @@ class ScalablePageAllocator : public Allocator {
    * alignment.
    * */
   HSHM_CROSS_FUN
-  OffsetPointer AlignedAllocateOffset(size_t size, size_t alignment) override {
+  OffsetPointer AlignedAllocateOffset(const hshm::ThreadId &tid,
+                                      size_t size,
+                                      size_t alignment) override {
     HERMES_THROW_ERROR(NOT_IMPLEMENTED, "AlignedAllocateOffset");
   }
 
@@ -176,13 +179,14 @@ class ScalablePageAllocator : public Allocator {
    * */
   HSHM_CROSS_FUN
   OffsetPointer ReallocateOffsetNoNullCheck(
-    OffsetPointer p, size_t new_size) override {
+      const hshm::ThreadId &tid,
+      OffsetPointer p, size_t new_size) override {
     OffsetPointer new_p;
-    void *ptr = AllocatePtr<void*, OffsetPointer>(new_size, new_p);
+    void *ptr = AllocatePtr<void*, OffsetPointer>(tid, new_size, new_p);
     MpPage *hdr = Convert<MpPage>(p - sizeof(MpPage));
     void *old = (void*)(hdr + 1);
     memcpy(ptr, old, hdr->page_size_ - sizeof(MpPage));
-    FreeOffsetNoNullCheck(p);
+    FreeOffsetNoNullCheck(ThreadId::GetNull(), p);
     return new_p;
   }
 
@@ -190,7 +194,8 @@ class ScalablePageAllocator : public Allocator {
    * Free \a ptr pointer. Null check is performed elsewhere.
    * */
   HSHM_CROSS_FUN
-  void FreeOffsetNoNullCheck(OffsetPointer p) override {
+  void FreeOffsetNoNullCheck(const hshm::ThreadId &tid,
+                             OffsetPointer p) override {
     // Mark as free
     auto hdr_offset = p - sizeof(MpPage);
     auto hdr = Convert<MpPage>(hdr_offset);

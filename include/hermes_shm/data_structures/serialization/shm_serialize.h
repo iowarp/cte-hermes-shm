@@ -29,7 +29,8 @@ class ShmSerializer {
   ShmSerializer(Allocator *alloc, Args&& ...args) : off_(0) {
     size_t buf_size = sizeof(AllocatorId) + shm_buf_size(
         std::forward<Args>(args)...);
-    buf_ = alloc->AllocatePtr<char>(buf_size, p_);
+    buf_ = alloc->AllocatePtr<char>(
+        hshm::ThreadId::GetNull(), buf_size, p_);
     auto lambda = [this](auto i, auto &&arg) {
       if constexpr(IS_SHM_ARCHIVEABLE(NOREF)) {
         OffsetPointer p = arg.template GetShmPointer<OffsetPointer>();

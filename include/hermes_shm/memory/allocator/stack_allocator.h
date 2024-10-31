@@ -93,7 +93,8 @@ class StackAllocator : public Allocator {
    * memory larger than the page size.
    * */
   HSHM_CROSS_FUN
-  OffsetPointer AllocateOffset(size_t size) override {
+  OffsetPointer AllocateOffset(const hshm::ThreadId &tid,
+                               size_t size) override {
     size += sizeof(MpPage);
     OffsetPointer p = heap_->AllocateOffset(size);
     auto hdr = Convert<MpPage>(p);
@@ -109,7 +110,8 @@ class StackAllocator : public Allocator {
    * alignment.
    * */
   HSHM_CROSS_FUN
-  OffsetPointer AlignedAllocateOffset(size_t size, size_t alignment) override {
+  OffsetPointer AlignedAllocateOffset(const hshm::ThreadId &tid,
+                                      size_t size, size_t alignment) override {
     HERMES_THROW_ERROR(NOT_IMPLEMENTED, "AlignedAllocateOffset");
   }
 
@@ -120,14 +122,15 @@ class StackAllocator : public Allocator {
    * */
   HSHM_CROSS_FUN
   OffsetPointer ReallocateOffsetNoNullCheck(
-    OffsetPointer p, size_t new_size) override {
+      const hshm::ThreadId &tid,
+      OffsetPointer p, size_t new_size) override {
     OffsetPointer new_p;
     void *src = Convert<void>(p);
     auto hdr = Convert<MpPage>(p - sizeof(MpPage));
     size_t old_size = hdr->page_size_ - sizeof(MpPage);
-    void *dst = AllocatePtr<void, OffsetPointer>(new_size, new_p);
+    void *dst = AllocatePtr<void, OffsetPointer>(tid, new_size, new_p);
     memcpy((void*)dst, (void*)src, old_size);
-    Free(p);
+    Free(ThreadId::GetNull(), p);
     return new_p;
   }
 
@@ -135,7 +138,8 @@ class StackAllocator : public Allocator {
    * Free \a ptr pointer. Null check is performed elsewhere.
    * */
   HSHM_CROSS_FUN
-  void FreeOffsetNoNullCheck(OffsetPointer p) override {
+  void FreeOffsetNoNullCheck(const hshm::ThreadId &tid,
+                             OffsetPointer p) override {
     auto hdr = Convert<MpPage>(p - sizeof(MpPage));
     if (!hdr->IsAllocated()) {
       HERMES_THROW_ERROR(DOUBLE_FREE);

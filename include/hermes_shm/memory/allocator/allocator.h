@@ -103,7 +103,8 @@ class Allocator {
    * Allocate a region of memory of \a size size
    * */
   HSHM_CROSS_FUN
-  virtual OffsetPointer AllocateOffset(size_t size) = 0;
+  virtual OffsetPointer AllocateOffset(
+      const ThreadId &tid, size_t size) = 0;
 
   /**
    * Allocate a region of memory of \a size size
@@ -111,8 +112,10 @@ class Allocator {
    * alignment is not 0.
    * */
   HSHM_CROSS_FUN
-  virtual OffsetPointer AlignedAllocateOffset(size_t size,
-                                              size_t alignment) = 0;
+  virtual OffsetPointer AlignedAllocateOffset(
+      const ThreadId &tid,
+      size_t size,
+      size_t alignment) = 0;
 
   /**
    * Reallocate \a pointer to \a new_size new size.
@@ -121,15 +124,19 @@ class Allocator {
    * @return true if p was modified.
    * */
   HSHM_CROSS_FUN
-  virtual OffsetPointer ReallocateOffsetNoNullCheck(OffsetPointer p,
-                                                    size_t new_size) = 0;
+  virtual OffsetPointer ReallocateOffsetNoNullCheck(
+      const ThreadId &tid,
+      OffsetPointer p,
+      size_t new_size) = 0;
 
 
   /**
    * Free the memory pointed to by \a ptr Pointer
    * */
   HSHM_CROSS_FUN
-  virtual void FreeOffsetNoNullCheck(OffsetPointer p) = 0;
+  virtual void FreeOffsetNoNullCheck(
+      const ThreadId &tid,
+      OffsetPointer p) = 0;
 
   /** Get the allocator identifier */
   HSHM_CROSS_FUN
@@ -159,8 +166,8 @@ class Allocator {
    * */
   template<typename PointerT = Pointer>
   HSHM_INLINE_CROSS_FUN
-  PointerT Allocate(size_t size) {
-    return PointerT(GetId(), AllocateOffset(size).load());
+  PointerT Allocate(const ThreadId &tid, size_t size) {
+    return PointerT(GetId(), AllocateOffset(tid, size).load());
   }
 
   /**
@@ -168,8 +175,10 @@ class Allocator {
    * */
   template<typename PointerT = Pointer>
   HSHM_INLINE_CROSS_FUN
-  PointerT AlignedAllocate(size_t size, size_t alignment) {
-    return PointerT(GetId(), AlignedAllocateOffset(size, alignment).load());
+  PointerT AlignedAllocate(const ThreadId &tid,
+                           size_t size, size_t alignment) {
+    return PointerT(
+        GetId(), AlignedAllocateOffset(tid, size, alignment).load());
   }
 
   /**
@@ -179,11 +188,12 @@ class Allocator {
    * */
   template<typename PointerT = Pointer>
   HSHM_INLINE_CROSS_FUN
-  PointerT Allocate(size_t size, size_t alignment) {
+  PointerT Allocate(const ThreadId &tid,
+                    size_t size, size_t alignment) {
     if (alignment == 0) {
-      return Allocate<PointerT>(size);
+      return Allocate<PointerT>(tid, size);
     } else {
-      return AlignedAllocate<PointerT>(size, alignment);
+      return AlignedAllocate<PointerT>(tid, size, alignment);
     }
   }
 
@@ -195,13 +205,14 @@ class Allocator {
    * */
   template<typename PointerT = Pointer>
   HSHM_INLINE_CROSS_FUN
-  bool Reallocate(PointerT &p, size_t new_size) {
+  bool Reallocate(const ThreadId &tid,
+                  PointerT &p, size_t new_size) {
     if (p.IsNull()) {
-      p = Allocate<PointerT>(new_size);
+      p = Allocate<PointerT>(tid, new_size);
       return true;
     }
-    auto new_p = ReallocateOffsetNoNullCheck(p.ToOffsetPointer(),
-                                             new_size);
+    auto new_p = ReallocateOffsetNoNullCheck(
+        tid, p.ToOffsetPointer(), new_size);
     bool ret = new_p == p.ToOffsetPointer();
     p.off_ = new_p.load();
     return ret;
@@ -212,11 +223,11 @@ class Allocator {
    * */
   template<typename PointerT = Pointer>
   HSHM_INLINE_CROSS_FUN
-  void Free(PointerT &p) {
+  void Free(const ThreadId &tid, PointerT &p) {
     if (p.IsNull()) {
       HERMES_THROW_ERROR(INVALID_FREE);
     }
-    FreeOffsetNoNullCheck(OffsetPointer(p.off_.load()));
+    FreeOffsetNoNullCheck(tid, OffsetPointer(p.off_.load()));
   }
 
   /**====================================
@@ -228,9 +239,13 @@ class Allocator {
  * pointer and a process-specific pointer.
  * */
   template<typename T, typename PointerT = Pointer>
-  HSHM_INLINE_CROSS_FUN T* AllocatePtr(size_t size,
-                                       PointerT &p, size_t alignment = 0) {
-    p = Allocate<PointerT>(size, alignment);
+  HSHM_INLINE_CROSS_FUN
+  T* AllocatePtr(
+      const ThreadId &tid,
+      size_t size,
+      PointerT &p,
+      size_t alignment = 0) {
+    p = Allocate<PointerT>(tid, size, alignment);
     if (p.IsNull()) { return nullptr; }
     return reinterpret_cast<T*>(buffer_ + p.off_.load());
   }
@@ -239,9 +254,11 @@ class Allocator {
    * Allocate a pointer of \a size size
    * */
   template<typename T, typename PointerT = Pointer>
-  HSHM_INLINE_CROSS_FUN T* AllocatePtr(size_t size, size_t alignment = 0) {
+  HSHM_INLINE_CROSS_FUN T* AllocatePtr(
+      const ThreadId &tid,
+      size_t size, size_t alignment = 0) {
     PointerT p;
-    return AllocatePtr<T, PointerT>(size, p, alignment);
+    return AllocatePtr<T, PointerT>(tid, size, p, alignment);
   }
 
   /**
@@ -250,9 +267,11 @@ class Allocator {
  * */
   template<typename T, typename PointerT = Pointer>
   HSHM_INLINE_CROSS_FUN
-  T* ClearAllocatePtr(size_t size,
-                      PointerT &p, size_t alignment = 0) {
-    p = Allocate<PointerT>(size, alignment);
+  T* ClearAllocatePtr(const ThreadId &tid,
+                      size_t size,
+                      PointerT &p,
+                      size_t alignment = 0) {
+    p = Allocate<PointerT>(tid, size, alignment);
     if (p.IsNull()) { return nullptr; }
     auto ptr = reinterpret_cast<T*>(buffer_ + p.off_.load());
     if (ptr) {
@@ -265,9 +284,12 @@ class Allocator {
    * Allocate a pointer of \a size size
    * */
   template<typename T, typename PointerT = Pointer>
-  HSHM_INLINE_CROSS_FUN T* ClearAllocatePtr(size_t size, size_t alignment = 0) {
+  HSHM_INLINE_CROSS_FUN T* ClearAllocatePtr(
+      const ThreadId &tid,
+      size_t size,
+      size_t alignment = 0) {
     PointerT p;
-    return ClearAllocatePtr<T, PointerT>(size, p, alignment);
+    return ClearAllocatePtr<T, PointerT>(tid, size, p, alignment);
   }
 
   /**
@@ -279,9 +301,12 @@ class Allocator {
  * @return A process-specific pointer
  * */
   template<typename T, typename PointerT = Pointer>
-  HSHM_INLINE_CROSS_FUN T* ReallocatePtr(PointerT &p, size_t new_size,
-                                         bool &modified) {
-    modified = Reallocate<PointerT>(p, new_size);
+  HSHM_INLINE_CROSS_FUN
+  T* ReallocatePtr(const ThreadId &tid,
+                   PointerT &p,
+                   size_t new_size,
+                   bool &modified) {
+    modified = Reallocate<PointerT>(tid, p, new_size);
     return Convert<T>(p);
   }
 
@@ -293,8 +318,10 @@ class Allocator {
    * @return A process-specific pointer
    * */
   template<typename T, typename PointerT = Pointer>
-  HSHM_INLINE_CROSS_FUN T* ReallocatePtr(PointerT &p, size_t new_size) {
-    Reallocate<PointerT>(p, new_size);
+  HSHM_INLINE_CROSS_FUN T* ReallocatePtr(
+      const ThreadId &tid,
+      PointerT &p, size_t new_size) {
+    Reallocate<PointerT>(tid, p, new_size);
     return Convert<T>(p);
   }
 
@@ -306,20 +333,24 @@ class Allocator {
    * @return A process-specific pointer
    * */
   template<typename T>
-  HSHM_INLINE_CROSS_FUN T* ReallocatePtr(T *old_ptr, size_t new_size) {
+  HSHM_INLINE_CROSS_FUN
+  T* ReallocatePtr(
+      const ThreadId &tid,
+      T *old_ptr, size_t new_size) {
     OffsetPointer p = Convert<T, OffsetPointer>(old_ptr);
-    return ReallocatePtr<T, OffsetPointer>(p, new_size);
+    return ReallocatePtr<T, OffsetPointer>(tid, p, new_size);
   }
 
   /**
    * Free the memory pointed to by \a ptr Pointer
    * */
   template<typename T = void>
-  HSHM_INLINE_CROSS_FUN void FreePtr(T *ptr) {
+  HSHM_INLINE_CROSS_FUN
+  void FreePtr(const ThreadId &tid, T *ptr) {
     if (ptr == nullptr) {
       HERMES_THROW_ERROR(INVALID_FREE);
     }
-    FreeOffsetNoNullCheck(Convert<T, OffsetPointer>(ptr));
+    FreeOffsetNoNullCheck(tid, Convert<T, OffsetPointer>(ptr));
   }
 
   /**====================================
@@ -333,9 +364,10 @@ class Allocator {
   template<typename T, typename PointerT = Pointer>
   HSHM_INLINE_CROSS_FUN
   LPointer<T, PointerT>
-  AllocateLocalPtr(size_t size, size_t alignment = 0) {
+  AllocateLocalPtr(const ThreadId &tid,
+                   size_t size, size_t alignment = 0) {
     LPointer<T, PointerT> p;
-    p.ptr_ = AllocatePtr<T, PointerT>(size, p.shm_, alignment);
+    p.ptr_ = AllocatePtr<T, PointerT>(tid, size, p.shm_, alignment);
     return p;
   }
 
@@ -345,9 +377,10 @@ class Allocator {
   template<typename T, typename PointerT = Pointer>
   HSHM_INLINE_CROSS_FUN
   LPointer<T, PointerT>
-  ClearAllocateLocalPtr(size_t size, size_t alignment = 0) {
+  ClearAllocateLocalPtr(const ThreadId &tid,
+                        size_t size, size_t alignment = 0) {
     LPointer<T, PointerT> p;
-    p.ptr_ = ClearAllocatePtr<T, PointerT>(size, p.shm_, alignment);
+    p.ptr_ = ClearAllocatePtr<T, PointerT>(tid, size, p.shm_, alignment);
     return p;
   }
 
@@ -361,8 +394,9 @@ class Allocator {
   template<typename T, typename PointerT = Pointer>
   HSHM_INLINE_CROSS_FUN
   LPointer<T, PointerT>
-  ReallocateLocalPtr(LPointer<T, PointerT> &p, size_t new_size) {
-    Reallocate<PointerT>(p.shm_, new_size);
+  ReallocateLocalPtr(const ThreadId &tid,
+                     LPointer<T, PointerT> &p, size_t new_size) {
+    Reallocate<PointerT>(tid, p.shm_, new_size);
     p.ptr_ = Convert<T>(p.shm_);
     return p;
   }
@@ -371,11 +405,13 @@ class Allocator {
    * Free the memory pointed to by \a ptr Pointer
    * */
   template<typename T = void, typename PointerT = Pointer>
-  HSHM_INLINE_CROSS_FUN void FreeLocalPtr(LPointer<T, PointerT> &ptr) {
+  HSHM_INLINE_CROSS_FUN
+  void FreeLocalPtr(const ThreadId &tid,
+                    LPointer<T, PointerT> &ptr) {
     if (ptr.ptr_ == nullptr) {
       HERMES_THROW_ERROR(INVALID_FREE);
     }
-    FreeOffsetNoNullCheck(ptr.shm_.ToOffsetPointer());
+    FreeOffsetNoNullCheck(tid, ptr.shm_.ToOffsetPointer());
   }
 
   /**====================================
@@ -389,9 +425,10 @@ class Allocator {
   template<typename T, typename PointerT = Pointer>
   HSHM_INLINE_CROSS_FUN
   Array<PointerT>
-  AllocateArray(size_t size, size_t alignment = 0) {
+  AllocateArray(const ThreadId &tid,
+                size_t size, size_t alignment = 0) {
     Array<PointerT> p;
-    p.shm_ = Allocate<PointerT>(size, alignment);
+    p.shm_ = Allocate<PointerT>(tid, size, alignment);
     p.size_ = size;
     return p;
   }
@@ -402,9 +439,10 @@ class Allocator {
   template<typename T, typename PointerT = Pointer>
   HSHM_INLINE_CROSS_FUN
   Array<PointerT> ClearAllocateArray(
+      const ThreadId &tid,
       size_t size, size_t alignment = 0) {
     Array<PointerT> p;
-    ClearAllocatePtr<T, PointerT>(size, p.shm_, alignment);
+    ClearAllocatePtr<T, PointerT>(tid, size, p.shm_, alignment);
     p.size_ = size;
     return p;
   }
@@ -419,8 +457,9 @@ class Allocator {
   template<typename T, typename PointerT = Pointer>
   HSHM_INLINE_CROSS_FUN
   Array<PointerT>
-  ReallocateArray(Array<PointerT> &p, size_t new_size) {
-    Reallocate<PointerT>(p.shm_, new_size);
+  ReallocateArray(const ThreadId &tid,
+                  Array<PointerT> &p, size_t new_size) {
+    Reallocate<PointerT>(tid, p.shm_, new_size);
     p.size_ = new_size;
     return p;
   }
@@ -429,11 +468,13 @@ class Allocator {
    * Free the memory pointed to by \a ptr Pointer
    * */
   template<typename T = void, typename PointerT = Pointer>
-  HSHM_INLINE_CROSS_FUN void FreeArray(Array<PointerT> &ptr) {
+  HSHM_INLINE_CROSS_FUN
+  void FreeArray(const ThreadId &tid,
+                 Array<PointerT> &ptr) {
     if (ptr.shm_.IsNull()) {
       HERMES_THROW_ERROR(INVALID_FREE);
     }
-    FreeOffsetNoNullCheck(ptr.shm_.ToOffsetPointer());
+    FreeOffsetNoNullCheck(tid, ptr.shm_.ToOffsetPointer());
   }
 
   /**====================================
@@ -447,9 +488,10 @@ class Allocator {
   template<typename T, typename PointerT = Pointer>
   HSHM_INLINE_CROSS_FUN
   LArray<T, PointerT>
-  AllocateLocalArray(size_t size, size_t alignment = 0) {
+  AllocateLocalArray(const ThreadId &tid,
+                     size_t size, size_t alignment = 0) {
     LArray<T, PointerT> p;
-    p.ptr_ = AllocatePtr<T, PointerT>(size, p.shm_, alignment);
+    p.ptr_ = AllocatePtr<T, PointerT>(tid, size, p.shm_, alignment);
     p.size_ = size;
     return p;
   }
@@ -460,9 +502,10 @@ class Allocator {
   template<typename T, typename PointerT = Pointer>
   HSHM_INLINE_CROSS_FUN
   LArray<T, PointerT>
-  ClearAllocateLocalArray(size_t size, size_t alignment = 0) {
+  ClearAllocateLocalArray(const ThreadId &tid,
+                          size_t size, size_t alignment = 0) {
     LArray<T, PointerT> p;
-    p.ptr_ = ClearAllocatePtr<T, PointerT>(size, p.shm_, alignment);
+    p.ptr_ = ClearAllocatePtr<T, PointerT>(tid, size, p.shm_, alignment);
     p.size_ = size;
     return p;
   }
@@ -476,9 +519,11 @@ class Allocator {
    * */
   template<typename T, typename PointerT = Pointer>
   HSHM_INLINE_CROSS_FUN
-  LArray<T, PointerT> ReallocateLocalArray(LArray<T, PointerT> &p,
-                                           size_t new_size) {
-    Reallocate<PointerT>(p.shm_, new_size);
+  LArray<T, PointerT> ReallocateLocalArray(
+      const ThreadId &tid,
+      LArray<T, PointerT> &p,
+      size_t new_size) {
+    Reallocate<PointerT>(tid, p.shm_, new_size);
     p.ptr_ = Convert<T>(p.shm_);
     p.size_ = new_size;
     return p;
@@ -489,11 +534,12 @@ class Allocator {
    * */
   template<typename T = void, typename PointerT = Pointer>
   HSHM_INLINE_CROSS_FUN
-  void FreeLocalArray(LArray<T, PointerT> &ptr) {
+  void FreeLocalArray(const ThreadId &tid,
+                      LArray<T, PointerT> &ptr) {
     if (ptr.ptr_ == nullptr) {
       HERMES_THROW_ERROR(INVALID_FREE);
     }
-    FreeOffsetNoNullCheck(ptr.shm_.ToOffsetPointer());
+    FreeOffsetNoNullCheck(tid, ptr.shm_.ToOffsetPointer());
   }
 
   /**====================================
@@ -503,57 +549,47 @@ class Allocator {
   /**
    * Allocate an array of objects (but don't construct).
    *
+   * @param count the number of objects to allocate
+   * @param p process-independent pointer (output)
    * @return A process-specific pointer
    * */
-  template<typename T>
+  template<typename T, typename PointerT = Pointer>
   HSHM_INLINE_CROSS_FUN
-  T* AllocateObjs(size_t count) {
-    OffsetPointer p;
-    return AllocateObjs<T>(count, p);
+  T* AllocateObjs(const ThreadId &tid,
+                  size_t count, PointerT &p) {
+    return AllocatePtr<T>(tid, count * sizeof(T), p);
   }
 
   /**
    * Allocate an array of objects (but don't construct).
    *
-   * @param count the number of objects to allocate
-   * @param p process-independent pointer (output)
    * @return A process-specific pointer
    * */
-  template<typename T, typename PointerT = Pointer>
+  template<typename T>
   HSHM_INLINE_CROSS_FUN
-  T* AllocateObjs(size_t count, PointerT &p) {
-    return AllocatePtr<T>(count * sizeof(T), p);
+  T* AllocateObjs(const ThreadId &tid, size_t count) {
+    OffsetPointer p;
+    return AllocateObjs<T>(tid, count, p);
   }
 
   /**
-   * Allocate an array of objects and memset to 0.
+   * Allocate and construct an array of objects
    *
    * @param count the number of objects to allocate
    * @param p process-independent pointer (output)
+   * @param args parameters to construct object of type T
    * @return A process-specific pointer
    * */
-  template<typename T, typename PointerT = Pointer>
-  HSHM_INLINE_CROSS_FUN
-  T* ClearAllocateObjs(size_t count, PointerT &p) {
-    return ClearAllocatePtr<T>(count * sizeof(T), p);
-  }
-
-  /**
- * Allocate and construct an array of objects
- *
- * @param count the number of objects to allocate
- * @param p process-independent pointer (output)
- * @param args parameters to construct object of type T
- * @return A process-specific pointer
- * */
   template<
       typename T,
       typename PointerT = Pointer,
       typename ...Args>
   HSHM_INLINE_CROSS_FUN
-  T* AllocateConstructObjs(size_t count,
-                           PointerT &p, Args&& ...args) {
-    T *ptr = AllocateObjs<T>(count, p);
+  T* AllocateConstructObjs(
+      const ThreadId &tid,
+      size_t count,
+      PointerT &p, Args&& ...args) {
+    T *ptr = AllocateObjs<T>(tid, count, p);
     ConstructObjs<T>(ptr, 0, count, std::forward<Args>(args)...);
     return ptr;
   }
@@ -570,10 +606,11 @@ class Allocator {
       typename T,
       typename ...Args>
   HSHM_INLINE_CROSS_FUN
-  T* AllocateConstructObjs(size_t count, Args&& ...args) {
+  T* AllocateConstructObjs(const ThreadId &tid,
+                           size_t count, Args&& ...args) {
     OffsetPointer p;
     return AllocateConstructObjs<T, OffsetPointer>(
-        count, p, std::forward<Args>(args)...);
+        tid, count, p, std::forward<Args>(args)...);
   }
 
   /** Allocate + construct an array of objects */
@@ -582,8 +619,10 @@ class Allocator {
       typename PointerT = Pointer,
       typename ...Args>
   HSHM_INLINE_CROSS_FUN
-  T* NewObjs(size_t count, PointerT &p, Args&& ...args) {
-    return AllocateConstructObjs<T>(count, p, std::forward<Args>(args)...);
+  T* NewObjs(const ThreadId &tid, size_t count,
+             PointerT &p, Args&& ...args) {
+    return AllocateConstructObjs<T>(tid, count, p,
+                                    std::forward<Args>(args)...);
   }
 
   /** Allocate + construct an array of objects */
@@ -591,9 +630,10 @@ class Allocator {
       typename T,
       typename ...Args>
   HSHM_INLINE_CROSS_FUN
-  T* NewObjs(size_t count, Args&& ...args) {
+  T* NewObjs(const ThreadId &tid, size_t count,
+             Args&& ...args) {
     OffsetPointer p;
-    return NewObjs<T>(count, p, std::forward<Args>(args)...);
+    return NewObjs<T>(tid, count, p, std::forward<Args>(args)...);
   }
 
   /** Allocate + construct a single object */
@@ -602,8 +642,8 @@ class Allocator {
       typename PointerT = Pointer,
       typename ...Args>
   HSHM_INLINE_CROSS_FUN
-  T* NewObj(PointerT &p, Args&& ...args) {
-    return NewObjs<T>(1, p, std::forward<Args>(args)...);
+  T* NewObj(const ThreadId &tid, PointerT &p, Args&& ...args) {
+    return NewObjs<T>(tid, 1, p, std::forward<Args>(args)...);
   }
 
   /** Allocate + construct a single object */
@@ -611,9 +651,9 @@ class Allocator {
       typename T,
       typename ...Args>
   HSHM_INLINE_CROSS_FUN
-  T* NewObj(Args&& ...args) {
+  T* NewObj(const ThreadId &tid, Args&& ...args) {
     OffsetPointer p;
-    return NewObj<T>(p, std::forward<Args>(args)...);
+    return NewObj<T>(tid, p, std::forward<Args>(args)...);
   }
 
   /**
@@ -626,8 +666,10 @@ class Allocator {
    * @return A process-specific pointer
    * */
   template<typename T, typename PointerT = Pointer>
-  HSHM_INLINE_CROSS_FUN T* ReallocateObjs(PointerT &p, size_t new_count) {
-    T *ptr = ReallocatePtr<T>(p, new_count * sizeof(T));
+  HSHM_INLINE_CROSS_FUN
+  T* ReallocateObjs(const ThreadId &tid,
+                    PointerT &p, size_t new_count) {
+    T *ptr = ReallocatePtr<T>(tid, p, new_count * sizeof(T));
     return ptr;
   }
 
@@ -646,13 +688,45 @@ class Allocator {
       typename T,
       typename PointerT = Pointer,
       typename ...Args>
-  HSHM_INLINE_CROSS_FUN T* ReallocateConstructObjs(PointerT &p,
-                                                   size_t old_count,
-                                                   size_t new_count,
-                                                   Args&& ...args) {
-    T *ptr = ReallocatePtr<T>(p, new_count * sizeof(T));
+  HSHM_INLINE_CROSS_FUN
+  T* ReallocateConstructObjs(const ThreadId &tid,
+                             PointerT &p,
+                             size_t old_count,
+                             size_t new_count,
+                             Args&& ...args) {
+    T *ptr = ReallocatePtr<T>(tid, p, new_count * sizeof(T));
     ConstructObjs<T>(ptr, old_count, new_count, std::forward<Args>(args)...);
     return ptr;
+  }
+
+  /**
+ * Free + destruct objects
+ * */
+  template <typename T>
+  HSHM_INLINE_CROSS_FUN
+  void FreeDestructObjs(const ThreadId &tid, T *ptr, size_t count) {
+    DestructObjs<T>(ptr, count);
+    auto p = Convert<T, OffsetPointer>(ptr);
+    Free(tid, p);
+  }
+
+
+  /**
+   * Free + destruct objects
+   * */
+  template <typename T>
+  HSHM_INLINE_CROSS_FUN
+  void DelObjs(const ThreadId &tid, T *ptr, size_t count) {
+    FreeDestructObjs<T>(tid, ptr, count);
+  }
+
+
+  /**
+   * Free + destruct an object
+   * */
+  template <typename T>
+  HSHM_INLINE_CROSS_FUN void DelObj(const ThreadId &tid, T *ptr) {
+    FreeDestructObjs<T>(tid, ptr, 1);
   }
 
   /**====================================
@@ -666,24 +740,10 @@ class Allocator {
    * */
   template<typename T, typename PointerT = Pointer>
   HSHM_INLINE_CROSS_FUN
-  LPointer<T, PointerT> AllocateObjsLocal(size_t count) {
+  LPointer<T, PointerT>
+  AllocateObjsLocal(const ThreadId &tid, size_t count) {
     LPointer<T, PointerT> p;
-    p.ptr_ = AllocateObjs<T>(count, p.shm_);
-    return p;
-  }
-
-  /**
-   * Allocate an array of objects and memset to 0.
-   *
-   * @param count the number of objects to allocate
-   * @param p process-independent pointer (output)
-   * @return An LPointer
-   * */
-  template<typename T, typename PointerT = Pointer>
-  HSHM_INLINE_CROSS_FUN
-  LPointer<T, PointerT> ClearAllocateObjsLocal(size_t count) {
-    LPointer<T, PointerT> p;
-    p.ptr_ = ClearAllocateObjs(count, p.shm_);
+    p.ptr_ = AllocateObjs<T>(tid, count, p.shm_);
     return p;
   }
 
@@ -700,10 +760,13 @@ class Allocator {
       typename PointerT = Pointer,
       typename ...Args>
   HSHM_INLINE_CROSS_FUN
-  LPointer<T, PointerT> AllocateConstructObjsLocal(size_t count, Args&& ...args) {
+  LPointer<T, PointerT>
+  AllocateConstructObjsLocal(const ThreadId &tid,
+                             size_t count,
+                             Args&& ...args) {
     LPointer<T, PointerT> p;
     p.ptr_ = AllocateConstructObjs<T, OffsetPointer>(
-        count, p.shm_, std::forward<Args>(args)...);
+        tid, count, p.shm_, std::forward<Args>(args)...);
     return p;
   }
 
@@ -713,9 +776,10 @@ class Allocator {
       typename PointerT = Pointer,
       typename ...Args>
   HSHM_INLINE_CROSS_FUN
-  LPointer<T, PointerT> NewObjsLocal(size_t count, Args&& ...args) {
+  LPointer<T, PointerT>
+  NewObjsLocal(const ThreadId &tid, size_t count, Args&& ...args) {
     LPointer<T, PointerT> p;
-    p.ptr_ = NewObjs<T>(count, p.shm_, std::forward<Args>(args)...);
+    p.ptr_ = NewObjs<T>(tid, count, p.shm_, std::forward<Args>(args)...);
     return p;
   }
 
@@ -725,9 +789,9 @@ class Allocator {
       typename PointerT = Pointer,
       typename ...Args>
   HSHM_INLINE_CROSS_FUN
-  LPointer<T, PointerT> NewObjLocal(Args&& ...args) {
+  LPointer<T, PointerT> NewObjLocal(const ThreadId &tid, Args&& ...args) {
     LPointer<T, PointerT> p;
-    p.ptr_ = NewObj<T>(p.shm_, std::forward<Args>(args)...);
+    p.ptr_ = NewObj<T>(tid, p.shm_, std::forward<Args>(args)...);
     return p;
   }
 
@@ -741,9 +805,11 @@ class Allocator {
    * @return A process-specific pointer
    * */
   template<typename T, typename PointerT = Pointer>
-  HSHM_INLINE_CROSS_FUN void
-  ReallocateObjsLocal(LPointer<T, PointerT> &p, size_t new_count) {
-    p.ptr_ = ReallocatePtr<T>(p.shm_, new_count * sizeof(T));
+  HSHM_INLINE_CROSS_FUN
+  void ReallocateObjsLocal(const ThreadId &tid,
+                           LPointer<T, PointerT> &p,
+                           size_t new_count) {
+    p.ptr_ = ReallocatePtr<T>(tid, p.shm_, new_count * sizeof(T));
   }
 
   /**
@@ -761,70 +827,45 @@ class Allocator {
       typename T,
       typename PointerT = Pointer,
       typename ...Args>
-  HSHM_INLINE_CROSS_FUN void
-  ReallocateConstructObjsLocal(LPointer<T, PointerT> &p,
-                               size_t old_count,
-                               size_t new_count,
-                               Args&& ...args) {
-    p.ptr_ = ReallocateConstructObjs<T>(p.shm_, old_count, new_count,
+  HSHM_INLINE_CROSS_FUN
+  void ReallocateConstructObjsLocal(const ThreadId &tid,
+                                    LPointer<T, PointerT> &p,
+                                    size_t old_count,
+                                    size_t new_count,
+                                    Args&& ...args) {
+    p.ptr_ = ReallocateConstructObjs<T>(tid, p.shm_, old_count, new_count,
                                         std::forward<Args>(args)...);
   }
 
-  /**====================================
-  * Object Deallocators
-  * ===================================*/
-
-  /**
-   * Free + destruct objects
-   * */
-  template <typename T>
-  HSHM_INLINE_CROSS_FUN void FreeDestructObjs(T *ptr, size_t count) {
-    DestructObjs<T>(ptr, count);
-    auto p = Convert<T, OffsetPointer>(ptr);
-    Free(p);
-  }
-
   /**
    * Free + destruct objects
    * */
   template <typename T, typename PointerT>
-  HSHM_INLINE_CROSS_FUN void
-  FreeDestructObjsLocal(LPointer<T, PointerT> &p, size_t count) {
+  HSHM_INLINE_CROSS_FUN
+  void FreeDestructObjsLocal(const ThreadId &tid,
+                             LPointer<T, PointerT> &p, size_t count) {
     DestructObjs<T>(p.ptr_, count);
-    Free(p.shm_);
-  }
-
-  /**
-   * Free + destruct objects
-   * */
-  template <typename T>
-  HSHM_INLINE_CROSS_FUN void DelObjs(T *ptr, size_t count) {
-    FreeDestructObjs<T>(ptr, count);
+    Free(tid, p.shm_);
   }
 
   /**
    * Free + destruct objects
    * */
   template <typename T, typename PointerT>
-  HSHM_INLINE_CROSS_FUN void
-  DelObjsLocal(LPointer<T, PointerT> &p, size_t count) {
-    FreeDestructObjsLocal<T>(p, count);
-  }
-
-  /**
-   * Free + destruct an object
-   * */
-  template <typename T>
-  HSHM_INLINE_CROSS_FUN void DelObj(T *ptr) {
-    FreeDestructObjs<T>(ptr, 1);
+  HSHM_INLINE_CROSS_FUN
+  void DelObjsLocal(const ThreadId &tid,
+                    LPointer<T, PointerT> &p, size_t count) {
+    FreeDestructObjsLocal<T>(tid, p, count);
   }
 
   /**
    * Free + destruct an object
    * */
   template <typename T, typename PointerT>
-  HSHM_INLINE_CROSS_FUN void DelObjLocal(LPointer<T, PointerT> &p) {
-    FreeDestructObjsLocal<T>(p, 1);
+  HSHM_INLINE_CROSS_FUN
+  void DelObjLocal(const ThreadId &tid,
+                   LPointer<T, PointerT> &p) {
+    FreeDestructObjsLocal<T>(tid, p, 1);
   }
 
 

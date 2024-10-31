@@ -20,7 +20,8 @@ using hshm::ipc::Allocator;
 /** Allocate SIZE bytes of memory. */
 void* malloc(size_t size) {
   auto alloc = HERMES_MEMORY_MANAGER->GetDefaultAllocator();
-  return alloc->AllocatePtr<void>(size);
+  return alloc->AllocatePtr<void>(
+      hshm::ThreadId::GetNull(), size);
 }
 
 /** Allocate NMEMB elements of SIZE bytes each, all initialized to 0. */
@@ -36,7 +37,8 @@ void* calloc(size_t nmemb, size_t size) {
 void* realloc(void *ptr, size_t size) {
   Pointer p = HERMES_MEMORY_MANAGER->Convert(ptr);
   auto alloc = HERMES_MEMORY_MANAGER->GetAllocator(p.allocator_id_);
-  return alloc->AllocatePtr<void>(size);
+  return alloc->AllocatePtr<void>(
+      hshm::ThreadId::GetNull(), size);
 }
 
 /**

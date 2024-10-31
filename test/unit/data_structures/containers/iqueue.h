@@ -34,7 +34,7 @@ class IqueueTestSuite {
     for (size_t i = 0; i < count; ++i) {
       hipc::OffsetPointer p;
       auto page = alloc_->template
-        AllocateConstructObjs<T>(1, p);
+        AllocateConstructObjs<T>(hshm::ThreadId::GetNull(), 1, p);
       page->page_size_ = count - i - 1;
       obj_.enqueue(page);
     }
@@ -99,7 +99,7 @@ class IqueueTestSuite {
     }
     obj_.clear();
     for (T *page : tmp) {
-      alloc_->FreePtr(page);
+      alloc_->FreePtr(hshm::ThreadId::GetNull(), page);
     }
     REQUIRE(obj_.size() == 0);
   }

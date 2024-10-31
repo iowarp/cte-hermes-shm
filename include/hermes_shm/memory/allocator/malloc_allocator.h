@@ -81,7 +81,8 @@ class MallocAllocator : public Allocator {
    * memory larger than the page size.
    * */
   HSHM_CROSS_FUN
-  OffsetPointer AllocateOffset(size_t size) override {
+  OffsetPointer AllocateOffset(const hshm::ThreadId &tid,
+                               size_t size) override {
     auto page = reinterpret_cast<MallocPage*>(
         malloc(sizeof(MallocPage) + size));
     page->page_size_ = size;
@@ -94,7 +95,8 @@ class MallocAllocator : public Allocator {
    * alignment.
    * */
   HSHM_CROSS_FUN
-  OffsetPointer AlignedAllocateOffset(size_t size, size_t alignment) override {
+  OffsetPointer AlignedAllocateOffset(const hshm::ThreadId &tid,
+                                      size_t size, size_t alignment) override {
 #ifndef __CUDA_ARCH__
     auto page = reinterpret_cast<MallocPage*>(
         aligned_alloc(alignment, sizeof(MallocPage) + size));
@@ -112,7 +114,8 @@ class MallocAllocator : public Allocator {
    * @return whether or not the pointer p was changed
    * */
   HSHM_CROSS_FUN
-  OffsetPointer ReallocateOffsetNoNullCheck(OffsetPointer p,
+  OffsetPointer ReallocateOffsetNoNullCheck(const hshm::ThreadId &tid,
+                                            OffsetPointer p,
                                             size_t new_size) override {
 #ifndef __CUDA_ARCH__
     // Get the input page
@@ -136,7 +139,8 @@ class MallocAllocator : public Allocator {
    * Free \a ptr pointer. Null check is performed elsewhere.
    * */
   HSHM_CROSS_FUN
-  void FreeOffsetNoNullCheck(OffsetPointer p) override {
+  void FreeOffsetNoNullCheck(const hshm::ThreadId &tid,
+                             OffsetPointer p) override {
     auto page = reinterpret_cast<MallocPage*>(
         p.off_.load() - sizeof(MallocPage));
     header_->total_alloc_size_ -= page->page_size_;
