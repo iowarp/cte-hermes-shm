@@ -20,10 +20,6 @@
 
 namespace hshm::ipc {
 
-/** The shared-memory header used for data structures */
-template<typename T>
-struct ShmHeader;
-
 /**
  * ShmContainers all have a header, which is stored in
  * shared memory as a TypedPointer.
@@ -43,9 +39,6 @@ class ShmContainer {};
   typename std::conditional<IsPrivate, \
                    AllocT, \
                    hipc::AllocatorId>::type
-
-/** The ShmHeader used for wrapper containers */
-struct ShmWrapperHeader {};
 
 /** Typed nullptr */
 template<typename T>
