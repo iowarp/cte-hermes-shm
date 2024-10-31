@@ -9,7 +9,7 @@ HSHM_ALLOCATOR_INFO alloc_info_;
  * ===================================*/
 /** Initialize container */
 HSHM_CROSS_FUN void init_shm_container(AllocT *alloc) {
-  if constexpr (!IsPrivate) {
+  if constexpr (!(HSHM_FLAGS & hipc::ShmFlag::kIsPrivate)) {
     alloc_info_ = alloc->GetId();
   } else {
     alloc_info_ = alloc;
@@ -21,7 +21,9 @@ HSHM_CROSS_FUN void init_shm_container(AllocT *alloc) {
  * ===================================*/
 /** Destructor. */
 HSHM_INLINE_CROSS_FUN ~TYPE_UNWRAP(CLASS_NAME)() {
-  shm_destroy();
+  if constexpr (!(HSHM_FLAGS & hipc::ShmFlag::kIsDestructable)) {
+    shm_destroy();
+  }
 }
 
 /** Destruction operation */
@@ -47,7 +49,7 @@ HSHM_INLINE_CROSS_FUN POINTER_T GetShmPointer() const {
 
 /** Get the allocator for this container */
 HSHM_INLINE_CROSS_FUN AllocT* GetAllocator() const {
-  if constexpr (!IsPrivate) {
+  if constexpr (!(HSHM_FLAGS & hipc::ShmFlag::kIsPrivate)) {
     return (AllocT*)HERMES_MEMORY_MANAGER->GetAllocator(alloc_info_);
   } else {
     return alloc_info_;
@@ -56,7 +58,7 @@ HSHM_INLINE_CROSS_FUN AllocT* GetAllocator() const {
 
 /** Get the shared-memory allocator id */
 HSHM_INLINE_CROSS_FUN const hipc::AllocatorId& GetAllocatorId() const {
-  if constexpr (!IsPrivate) {
+  if constexpr (!(HSHM_FLAGS & hipc::ShmFlag::kIsPrivate)) {
     return alloc_info_;
   } else {
     return GetAllocator()->GetId();

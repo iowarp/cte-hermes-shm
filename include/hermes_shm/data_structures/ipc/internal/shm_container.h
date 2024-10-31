@@ -16,6 +16,7 @@
 
 #include "hermes_shm/memory/memory_manager_.h"
 #include "hermes_shm/constants/macros.h"
+#include "hermes_shm/types/bitfield.h"
 #include "shm_macros.h"
 
 namespace hshm::ipc {
@@ -27,16 +28,25 @@ namespace hshm::ipc {
 class ShmContainer {};
 
 /**
+ * Flags
+ * */
+struct ShmFlag {
+  CLS_CONST u32 kIsPrivate = BIT_OPT(u32, 0);
+  CLS_CONST u32 kIsDestructable = BIT_OPT(u32, 0);
+};
+typedef bitfield32_t ShmFlags;
+
+/**
  * Flags for ShmContainer classes
  * */
 #define HSHM_CLASS_TEMPL_WITH_DEFAULTS \
-  typename AllocT = HSHM_DEFAULT_ALLOC, bool IsPrivate = false
+  typename AllocT = HSHM_DEFAULT_ALLOC, u32 HSHM_FLAGS = 0
 #define HSHM_CLASS_TEMPL \
-  typename AllocT, bool IsPrivate
+  typename AllocT, u32 HSHM_FLAGS
 #define HSHM_CLASS_TEMPL_ARGS \
-  AllocT, IsPrivate
+  AllocT, HSHM_FLAGS
 #define HSHM_ALLOCATOR_INFO \
-  typename std::conditional<IsPrivate, \
+  typename std::conditional<HSHM_FLAGS & hipc::ShmFlag::kIsPrivate, \
                    AllocT, \
                    hipc::AllocatorId>::type
 
@@ -61,7 +71,7 @@ HSHM_ALLOCATOR_INFO alloc_info_;\
  * ===================================*/\
 /** Initialize container */\
 HSHM_CROSS_FUN void init_shm_container(AllocT *alloc) {\
-  if constexpr (!IsPrivate) {\
+  if constexpr (!(HSHM_FLAGS & hipc::ShmFlag::kIsPrivate)) {\
     alloc_info_ = alloc->GetId();\
   } else {\
     alloc_info_ = alloc;\
@@ -73,7 +83,9 @@ HSHM_CROSS_FUN void init_shm_container(AllocT *alloc) {\
  * ===================================*/\
 /** Destructor. */\
 HSHM_INLINE_CROSS_FUN ~TYPE_UNWRAP(CLASS_NAME)() {\
-  shm_destroy();\
+  if constexpr (!(HSHM_FLAGS & hipc::ShmFlag::kIsDestructable)) {\
+    shm_destroy();\
+  }\
 }\
 \
 /** Destruction operation */\
@@ -99,7 +111,7 @@ HSHM_INLINE_CROSS_FUN POINTER_T GetShmPointer() const {\
 \
 /** Get the allocator for this container */\
 HSHM_INLINE_CROSS_FUN AllocT* GetAllocator() const {\
-  if constexpr (!IsPrivate) {\
+  if constexpr (!(HSHM_FLAGS & hipc::ShmFlag::kIsPrivate)) {\
     return (AllocT*)HERMES_MEMORY_MANAGER->GetAllocator(alloc_info_);\
   } else {\
     return alloc_info_;\
@@ -108,7 +120,7 @@ HSHM_INLINE_CROSS_FUN AllocT* GetAllocator() const {\
 \
 /** Get the shared-memory allocator id */\
 HSHM_INLINE_CROSS_FUN const hipc::AllocatorId& GetAllocatorId() const {\
-  if constexpr (!IsPrivate) {\
+  if constexpr (!(HSHM_FLAGS & hipc::ShmFlag::kIsPrivate)) {\
     return alloc_info_;\
   } else {\
     return GetAllocator()->GetId();\

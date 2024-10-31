@@ -247,6 +247,10 @@ class vector : public ShmContainer {
    * Default Constructor
    * ===================================*/
 
+  /** Get thread-local reference */
+  vector<T, AllocT, true> GetThreadLocal(const ThreadLocalId &id) {
+  }
+
   /** SHM constructor. Default. */
   HSHM_CROSS_FUN
   explicit vector() {
