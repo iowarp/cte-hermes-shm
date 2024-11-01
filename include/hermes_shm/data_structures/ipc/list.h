@@ -94,7 +94,7 @@ struct list_iterator_templ {
   list_iterator_templ& operator++() {
     if (is_end()) { return *this; }
     entry_ptr_ = entry_->next_ptr_;
-    entry_ = list_->GetAllocator()->template
+    entry_ = list_->GetTlsAllocator()->template
       Convert<list_entry<T>>(entry_->next_ptr_);
     return *this;
   }
@@ -104,7 +104,7 @@ struct list_iterator_templ {
   list_iterator_templ& operator--() {
     if (is_end() || is_begin()) { return *this; }
     entry_ptr_ = entry_->prior_ptr_;
-    entry_ = list_->GetAllocator()->template
+    entry_ = list_->GetTlsAllocator()->template
       Convert<list_entry<T>>(entry_->prior_ptr_);
     return *this;
   }
@@ -233,7 +233,7 @@ class list : public ShmContainer {
 
   /** SHM constructor. Default. */
   HSHM_CROSS_FUN
-  explicit list(AllocT *alloc) {
+  explicit list(const hipc::TlsAllocator<AllocT> &alloc) {
     init_shm_container(alloc);
     SetNull();
   }
@@ -245,14 +245,14 @@ class list : public ShmContainer {
   /** Copy constructor */
   HSHM_CROSS_FUN
   explicit list(const list &other) {
-    init_shm_container(other.GetAllocator());
+    init_shm_container(other.GetTlsAllocator());
     SetNull();
     shm_strong_copy_op<list>(other);
   }
 
   /** SHM copy constructor */
   HSHM_CROSS_FUN
-  explicit list(AllocT *alloc,
+  explicit list(const hipc::TlsAllocator<AllocT> &alloc,
                 const list &other) {
     init_shm_container(alloc);
     SetNull();
@@ -271,7 +271,7 @@ class list : public ShmContainer {
 
   /** SHM copy constructor. From std::list */
   HSHM_CROSS_FUN
-  explicit list(AllocT *alloc,
+  explicit list(const hipc::TlsAllocator<AllocT> &alloc,
                 std::list<T> &other) {
     init_shm_container(alloc);
     SetNull();
@@ -304,12 +304,12 @@ class list : public ShmContainer {
   /** Move constructor. */
   HSHM_CROSS_FUN
   list(list &&other) noexcept {
-    shm_move_op<false>(other.GetAllocator(), std::move(other));
+    shm_move_op<false>(other.GetTlsAllocator(), std::move(other));
   }
 
   /** SHM move constructor. */
   HSHM_CROSS_FUN
-  list(AllocT *alloc, list &&other) noexcept {
+  list(const hipc::TlsAllocator<AllocT> &alloc, list &&other) noexcept {
     shm_move_op<false>(alloc, std::move(other));
   }
 
@@ -317,7 +317,7 @@ class list : public ShmContainer {
   HSHM_CROSS_FUN
   list& operator=(list &&other) noexcept {
     if (this != &other) {
-      shm_move_op<true>(GetAllocator(), std::move(other));
+      shm_move_op<true>(GetTlsAllocator(), std::move(other));
     }
     return *this;
   }
@@ -325,13 +325,13 @@ class list : public ShmContainer {
   /** SHM move base */
   template<bool IS_ASSIGN>
   HSHM_CROSS_FUN
-  void shm_move_op(AllocT *alloc, list &&other) {
+  void shm_move_op(const hipc::TlsAllocator<AllocT> &alloc, list &&other) {
     if constexpr (IS_ASSIGN) {
       shm_destroy();
     } else {
       init_shm_container(alloc);
     }
-    if (GetAllocator() == other.GetAllocator()) {
+    if (GetTlsAllocator() == other.GetTlsAllocator()) {
       memcpy((void *) this, (void *) &other, sizeof(*this));
       other.SetNull();
     } else {
@@ -396,21 +396,21 @@ class list : public ShmContainer {
     } else if (pos.is_begin()) {
       entry->prior_ptr_.SetNull();
       entry->next_ptr_ = head_ptr_;
-      auto head = GetAllocator()->template
+      auto head = GetTlsAllocator()->template
         Convert<list_entry<T>>(tail_ptr_);
       head->prior_ptr_ = entry_ptr;
       head_ptr_ = entry_ptr;
     } else if (pos.is_end()) {
       entry->prior_ptr_ = tail_ptr_;
       entry->next_ptr_.SetNull();
-      auto tail = GetAllocator()->template
+      auto tail = GetTlsAllocator()->template
         Convert<list_entry<T>>(tail_ptr_);
       tail->next_ptr_ = entry_ptr;
       tail_ptr_ = entry_ptr;
     } else {
-      auto next = GetAllocator()->template
+      auto next = GetTlsAllocator()->template
         Convert<list_entry<T>>(pos.entry_->next_ptr_);
-      auto prior = GetAllocator()->template
+      auto prior = GetTlsAllocator()->template
         Convert<list_entry<T>>(pos.entry_->prior_ptr_);
       entry->next_ptr_ = pos.entry_->next_ptr_;
       entry->prior_ptr_ = pos.entry_->prior_ptr_;
@@ -443,7 +443,7 @@ class list : public ShmContainer {
     while (pos != last) {
       auto next = pos + 1;
       HSHM_DESTROY_AR(pos.entry_->data_)
-      GetAllocator()->Free(GetThreadId(), pos.entry_ptr_);
+      GetTlsAllocator()->Free(GetThreadId(), pos.entry_ptr_);
       --length_;
       pos = next;
     }
@@ -451,7 +451,7 @@ class list : public ShmContainer {
     if (first_prior_ptr.IsNull()) {
       head_ptr_ = last.entry_ptr_;
     } else {
-      auto first_prior = GetAllocator()->template
+      auto first_prior = GetTlsAllocator()->template
         Convert<list_entry<T>>(first_prior_ptr);
       first_prior->next_ptr_ = last.entry_ptr_;
     }
@@ -501,7 +501,7 @@ class list : public ShmContainer {
   HSHM_CROSS_FUN
   iterator_t begin() {
     if (size() == 0) { return end(); }
-    auto head = GetAllocator()->template
+    auto head = GetTlsAllocator()->template
       Convert<list_entry<T>>(head_ptr_);
     return iterator_t(*this,
       head, head_ptr_);
@@ -511,7 +511,7 @@ class list : public ShmContainer {
   HSHM_CROSS_FUN
   iterator_t last() {
     if (size() == 0) { return end(); }
-    auto tail = GetAllocator()->template
+    auto tail = GetTlsAllocator()->template
       Convert<list_entry<T>>(tail_ptr_);
     return iterator_t(*this, tail, tail_ptr_);
   }
@@ -526,7 +526,7 @@ class list : public ShmContainer {
   HSHM_CROSS_FUN
   citerator_t cbegin() const {
     if (size() == 0) { return cend(); }
-    auto head = GetAllocator()->template
+    auto head = GetTlsAllocator()->template
       Convert<list_entry<T>>(head_ptr_);
     return citerator_t(const_cast<list&>(*this),
                        head, head_ptr_);
@@ -561,9 +561,9 @@ class list : public ShmContainer {
   template<typename ...Args>
   HSHM_INLINE_CROSS_FUN list_entry<T>* _create_entry(
     OffsetPointer &p, Args&& ...args) {
-    auto entry = GetAllocator()->template
+    auto entry = GetTlsAllocator()->template
       AllocateObjs<list_entry<T>>(GetThreadId(), 1, p);
-    HSHM_MAKE_AR(entry->data_, GetAllocator(), std::forward<Args>(args)...)
+    HSHM_MAKE_AR(entry->data_, GetTlsAllocator(), std::forward<Args>(args)...)
     return entry;
   }
 };

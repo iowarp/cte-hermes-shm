@@ -257,7 +257,7 @@ class vector : public ShmContainer {
   /** SHM constructor. Thread-local. */
   template<ShmFlagField OTHER_FLAGS>
   explicit vector(const vector<T, AllocT, OTHER_FLAGS> &other,
-                  const ThreadId &tid, AllocT *alloc) {
+                  const ThreadId &tid, const hipc::TlsAllocator<AllocT> &alloc) {
     init_shm_container(tid, alloc);
     vec_ptr_ = other.vec_ptr_;
     max_length_ = other.max_length_;
@@ -273,7 +273,7 @@ class vector : public ShmContainer {
 
   /** SHM constructor. Default. */
   HSHM_CROSS_FUN
-  explicit vector(AllocT *alloc) {
+  explicit vector(const hipc::TlsAllocator<AllocT> &alloc) {
     init_shm_container(alloc);
     SetNull();
   }
@@ -289,15 +289,16 @@ class vector : public ShmContainer {
   /** SHM constructor. Resize + construct. */
   template<typename ...Args>
   HSHM_CROSS_FUN
-  explicit vector(AllocT *alloc, size_t length, Args&& ...args) {
+  explicit vector(const hipc::TlsAllocator<AllocT> &alloc, size_t length, Args&& ...args) {
     shm_init(alloc, length, std::forward<Args>(args)...);
   }
 
   /** Constructor */
   template<typename ...Args>
   HSHM_CROSS_FUN
-  void shm_init(AllocT *alloc, size_t length, Args&& ...args) {
-    init_shm_container(alloc);
+  void shm_init(const TlsAllocator<AllocT> &tls_alloc,
+                size_t length, Args&& ...args) {
+    init_shm_container(tls_alloc);
     SetNull();
     resize(length, std::forward<Args>(args)...);
   }
@@ -309,14 +310,14 @@ class vector : public ShmContainer {
   /** Copy constructor. From vector. */
   HSHM_CROSS_FUN
   explicit vector(const vector &other) {
-    init_shm_container(other.GetAllocator());
+    init_shm_container(other.GetTlsAllocator());
     SetNull();
     shm_strong_copy_main<vector<T, HSHM_CLASS_TEMPL_ARGS>>(other);
   }
 
   /** SHM copy constructor. From vector. */
   HSHM_CROSS_FUN
-  explicit vector(AllocT *alloc, const vector &other) {
+  explicit vector(const hipc::TlsAllocator<AllocT> &alloc, const vector &other) {
     init_shm_container(alloc);
     SetNull();
     shm_strong_copy_main<vector<T, HSHM_CLASS_TEMPL_ARGS>>(other);
@@ -335,14 +336,14 @@ class vector : public ShmContainer {
   /** Copy constructor. From std::vector */
   HSHM_CROSS_FUN
   explicit vector(const std::vector<T> &other) {
-    init_shm_container(other.GetAllocator());
+    init_shm_container(other.GetTlsAllocator());
     SetNull();
     shm_strong_copy_main<std::vector<T>>(other);
   }
 
   /** SHM copy constructor. From std::vector */
   HSHM_CROSS_FUN
-  explicit vector(AllocT *alloc, const std::vector<T> &other) {
+  explicit vector(const hipc::TlsAllocator<AllocT> &alloc, const std::vector<T> &other) {
     init_shm_container(alloc);
     SetNull();
     shm_strong_copy_main<std::vector<T>>(other);
@@ -366,11 +367,7 @@ class vector : public ShmContainer {
       length_ = other.size();
     } else {
       for (auto iter = other.cbegin(); iter != other.cend(); ++iter) {
-        if constexpr(IS_SHM_ARCHIVEABLE(VectorT)) {
-          emplace_back((*iter));
-        } else {
-          emplace_back((*iter));
-        }
+        emplace_back((*iter));
       }
     }
   }
@@ -388,7 +385,7 @@ class vector : public ShmContainer {
 
   /** SHM move constructor. */
   HSHM_CROSS_FUN
-  vector(AllocT *alloc, vector &&other) {
+  vector(const hipc::TlsAllocator<AllocT> &alloc, vector &&other) {
     shm_move_op<false>(alloc, std::move(other));
   }
 
@@ -396,7 +393,7 @@ class vector : public ShmContainer {
   HSHM_CROSS_FUN
   vector& operator=(vector &&other) noexcept {
     if (this != &other) {
-      shm_move_op<true>(other.GetAllocator(), std::move(other));
+      shm_move_op<true>(other.GetTlsAllocator(), std::move(other));
     }
     return *this;
   }
@@ -404,13 +401,13 @@ class vector : public ShmContainer {
   /** SHM move assignment operator. */
   template<bool IS_ASSIGN>
   HSHM_CROSS_FUN
-  void shm_move_op(AllocT *alloc, vector &&other) noexcept {
+  void shm_move_op(const hipc::TlsAllocator<AllocT> &alloc, vector &&other) noexcept {
     if constexpr (IS_ASSIGN) {
       shm_destroy();
     } else {
       init_shm_container(alloc);
     }
-    if (GetAllocator() == other.GetAllocator()) {
+    if (GetTlsAllocator() == other.GetTlsAllocator()) {
       memcpy((void *) this, (void *) &other, sizeof(*this));
       other.SetNull();
     } else {
@@ -441,7 +438,7 @@ class vector : public ShmContainer {
   HSHM_INLINE_CROSS_FUN
   void shm_destroy_main() {
     erase(begin(), end());
-    GetAllocator()->Free(GetThreadId(), vec_ptr_);
+    GetTlsAllocator()->Free(GetThreadId(), vec_ptr_);
   }
 
   /**====================================
@@ -538,7 +535,7 @@ class vector : public ShmContainer {
     if (length_ == max_length_) {
       vec = grow_vector(vec, 0, false);
     }
-    HSHM_MAKE_AR(vec[length_], GetAllocator(),
+    HSHM_MAKE_AR(vec[length_], GetTlsAllocator(),
                  std::forward<Args>(args)...)
     ++length_;
   }
@@ -563,7 +560,7 @@ class vector : public ShmContainer {
       vec = grow_vector(vec, 0, false);
     }
     shift_right(pos);
-    HSHM_MAKE_AR(vec[pos.i_], GetAllocator(),
+    HSHM_MAKE_AR(vec[pos.i_], GetTlsAllocator(),
                  std::forward<Args>(args)...)
     ++length_;
   }
@@ -577,7 +574,7 @@ class vector : public ShmContainer {
     }
     ShmArchive<T> *vec = data_ar();
     hipc::Allocator::DestructObj((*this)[pos.i_]);
-    HSHM_MAKE_AR(vec[pos.i_], GetAllocator(),
+    HSHM_MAKE_AR(vec[pos.i_], GetTlsAllocator(),
                  std::forward<Args>(args)...)
   }
 
@@ -630,12 +627,12 @@ class vector : public ShmContainer {
 
   /** Retreives a pointer to the internal array */
   HSHM_INLINE_CROSS_FUN ShmArchive<T>* data_ar() {
-    return GetAllocator()->template Convert<ShmArchive<T>>(vec_ptr_);
+    return GetTlsAllocator()->template Convert<ShmArchive<T>>(vec_ptr_);
   }
 
   /** Retreives a pointer to the array */
   HSHM_INLINE_CROSS_FUN ShmArchive<T>* data_ar() const {
-    return GetAllocator()->template Convert<ShmArchive<T>>(vec_ptr_);
+    return GetTlsAllocator()->template Convert<ShmArchive<T>>(vec_ptr_);
   }
 
   /**====================================
@@ -669,33 +666,33 @@ class vector : public ShmContainer {
     ShmArchive<T> *new_vec;
     if constexpr(std::is_pod<T>() && !IS_SHM_ARCHIVEABLE(T)) {
       // Use reallocate for well-behaved objects
-      new_vec = GetAllocator()->template
+      new_vec = GetTlsAllocator()->template
         ReallocateObjs<ShmArchive<T>>(
             GetThreadId(), vec_ptr_, max_length);
     } else {
       // Use std::move for unpredictable objects
       OffsetPointer new_p;
-      new_vec = GetAllocator()->template
+      new_vec = GetTlsAllocator()->template
         AllocateObjs<ShmArchive<T>>(
           GetThreadId(), max_length, new_p);
       for (size_t i = 0; i < length_; ++i) {
         T& old_entry = (*this)[i];
-        HSHM_MAKE_AR(new_vec[i], GetAllocator(),
+        HSHM_MAKE_AR(new_vec[i], GetTlsAllocator(),
                      std::move(old_entry))
       }
       if (!vec_ptr_.IsNull()) {
-        GetAllocator()->Free(GetThreadId(), vec_ptr_);
+        GetTlsAllocator()->Free(GetThreadId(), vec_ptr_);
       }
       vec_ptr_ = new_p;
     }
     if (new_vec == nullptr) {
       HERMES_THROW_ERROR(OUT_OF_MEMORY,
                          max_length * sizeof(ShmArchive<T>),
-                         GetAllocator()->GetCurrentlyAllocatedSize());
+                         GetTlsAllocator()->GetCurrentlyAllocatedSize());
     }
     if (resize) {
       for (size_t i = length_; i < max_length; ++i) {
-        HSHM_MAKE_AR(new_vec[i], GetAllocator(),
+        HSHM_MAKE_AR(new_vec[i], GetTlsAllocator(),
                      std::forward<Args>(args)...)
       }
     }

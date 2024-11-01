@@ -48,7 +48,7 @@ struct ShmFlag {
   AllocT, HSHM_FLAGS
 #define HSHM_ALLOCATOR_INFO \
   typename std::conditional<HSHM_FLAGS & hipc::ShmFlag::kIsPrivate, \
-                   hipc::ThreadLocalAllocator<AllocT>, \
+                   hipc::TlsAllocator<AllocT>, \
                    hipc::AllocatorId>::type
 
 /** Typed nullptr */
@@ -61,91 +61,111 @@ HSHM_INLINE_CROSS_FUN static T* typed_nullptr() {
  * The main container template macro
  * */
 #define HIPC_CONTAINER_TEMPLATE(CLASS_NAME,TYPED_CLASS) \
-public:\
-/**====================================\
- * Variables & Types\
- * ===================================*/\
-HSHM_ALLOCATOR_INFO alloc_info_;\
-\
-/**====================================\
- * Constructors\
- * ===================================*/\
-/** Initialize container */\
-HSHM_CROSS_FUN void init_shm_container(AllocT *alloc) {\
-  if constexpr (!(HSHM_FLAGS & hipc::ShmFlag::kIsPrivate)) {\
-    alloc_info_ = alloc->GetId();\
-  } else {\
-    alloc_info_.alloc_ = alloc;\
-    alloc_info_.tls_ = hshm::ThreadId::GetNull();\
-  }\
-}\
-\
-/** Initialize container (thread-local) */\
-HSHM_CROSS_FUN void init_shm_container(const hshm::ThreadId &tid, AllocT *alloc) {\
-  if constexpr (!(HSHM_FLAGS & hipc::ShmFlag::kIsPrivate)) {\
-    alloc_info_ = alloc->GetId();\
-  } else {\
-    alloc_info_.alloc_ = alloc;\
-    alloc_info_.tls_ = tid;\
-  }\
-}\
-\
-/**====================================\
- * Destructor\
- * ===================================*/\
-/** Destructor. */\
-HSHM_INLINE_CROSS_FUN ~TYPE_UNWRAP(CLASS_NAME)() {\
-  if constexpr ((HSHM_FLAGS & hipc::ShmFlag::kIsUndestructable)) {\
-    shm_destroy();\
-  }\
-}\
-\
-/** Destruction operation */\
-HSHM_INLINE_CROSS_FUN void shm_destroy() {\
-  if (IsNull()) { return; }\
-  shm_destroy_main();\
-  SetNull();\
-}\
-\
-/**====================================\
- * Header Operations\
- * ===================================*/\
-\
-/** Get a typed pointer to the object */\
-template<typename POINTER_T>\
-HSHM_INLINE_CROSS_FUN POINTER_T GetShmPointer() const {\
-  return GetAllocator()->template Convert<TYPE_UNWRAP(TYPED_CLASS), POINTER_T>(this);\
-}\
-\
-/**====================================\
- * Query Operations\
- * ===================================*/\
-\
-/** Get the allocator for this container */\
-HSHM_INLINE_CROSS_FUN AllocT* GetAllocator() const {\
-  if constexpr (!(HSHM_FLAGS & hipc::ShmFlag::kIsPrivate)) {\
-    return (AllocT*)HERMES_MEMORY_MANAGER->GetAllocator(alloc_info_);\
-  } else {\
-    return alloc_info_.alloc_;\
-  }\
-}\
-\
-/** Get the shared-memory allocator id */\
-HSHM_INLINE_CROSS_FUN const hipc::AllocatorId& GetAllocatorId() const {\
-  if constexpr (!(HSHM_FLAGS & hipc::ShmFlag::kIsPrivate)) {\
-    return alloc_info_;\
-  } else {\
-    return GetAllocator()->GetId();\
-  }\
-}\
-\
-/** Get the shared-memory allocator id */\
-HSHM_INLINE_CROSS_FUN hshm::ThreadId GetThreadId() const {\
-  if constexpr (!(HSHM_FLAGS & hipc::ShmFlag::kIsPrivate)) {\
-    return hshm::ThreadId::GetNull();\
-  } else {\
-    return alloc_info_.tls_;\
-  }\
+public: \
+/**==================================== \
+ * Variables & Types \
+ * ===================================*/ \
+HSHM_ALLOCATOR_INFO alloc_info_; \
+ \
+/**==================================== \
+ * Constructors \
+ * ===================================*/ \
+/** Initialize container */ \
+HSHM_CROSS_FUN \
+void init_shm_container(AllocT *alloc) { \
+  if constexpr (!(HSHM_FLAGS & hipc::ShmFlag::kIsPrivate)) { \
+    alloc_info_ = alloc->GetId(); \
+  } else { \
+    alloc_info_.alloc_ = alloc; \
+    alloc_info_.tls_ = hshm::ThreadId::GetNull(); \
+  } \
+} \
+ \
+/** Initialize container (thread-local) */ \
+HSHM_CROSS_FUN \
+void init_shm_container(const hshm::ThreadId &tid, AllocT *alloc) { \
+  if constexpr (!(HSHM_FLAGS & hipc::ShmFlag::kIsPrivate)) { \
+    alloc_info_ = alloc->GetId(); \
+  } else { \
+    alloc_info_.alloc_ = alloc; \
+    alloc_info_.tls_ = tid; \
+  } \
+} \
+ \
+/** Initialize container (thread-local) */ \
+HSHM_CROSS_FUN \
+void init_shm_container(const hipc::TlsAllocator<AllocT> &tls_alloc) { \
+  init_shm_container(tls_alloc.tls_, tls_alloc.alloc_); \
+} \
+ \
+/**==================================== \
+ * Destructor \
+ * ===================================*/ \
+/** Destructor. */ \
+HSHM_INLINE_CROSS_FUN \
+~TYPE_UNWRAP(CLASS_NAME)() { \
+  if constexpr ((HSHM_FLAGS & hipc::ShmFlag::kIsUndestructable)) { \
+    shm_destroy(); \
+  } \
+} \
+ \
+/** Destruction operation */ \
+HSHM_INLINE_CROSS_FUN \
+void shm_destroy() { \
+  if (IsNull()) { return; } \
+  shm_destroy_main(); \
+  SetNull(); \
+} \
+ \
+/**==================================== \
+ * Header Operations \
+ * ===================================*/ \
+ \
+/** Get a typed pointer to the object */ \
+template<typename POINTER_T> \
+HSHM_INLINE_CROSS_FUN \
+    POINTER_T GetShmPointer() const { \
+  return GetAllocator()->template Convert<TYPE_UNWRAP(TYPED_CLASS), POINTER_T>(this); \
+} \
+ \
+/**==================================== \
+ * Query Operations \
+ * ===================================*/ \
+ \
+/** Get the allocator for this container */ \
+HSHM_INLINE_CROSS_FUN \
+    AllocT* GetAllocator() const { \
+  if constexpr (!(HSHM_FLAGS & hipc::ShmFlag::kIsPrivate)) { \
+    return (AllocT*)HERMES_MEMORY_MANAGER->GetAllocator(alloc_info_); \
+  } else { \
+    return alloc_info_.alloc_; \
+  } \
+} \
+ \
+/** Get the shared-memory allocator id */ \
+HSHM_INLINE_CROSS_FUN \
+const hipc::AllocatorId& GetAllocatorId() const { \
+  if constexpr (!(HSHM_FLAGS & hipc::ShmFlag::kIsPrivate)) { \
+    return alloc_info_; \
+  } else { \
+    return GetAllocator()->GetId(); \
+  } \
+} \
+ \
+/** Get the shared-memory allocator id */ \
+HSHM_INLINE_CROSS_FUN \
+    hshm::ThreadId GetThreadId() const { \
+  if constexpr (!(HSHM_FLAGS & hipc::ShmFlag::kIsPrivate)) { \
+    return hshm::ThreadId::GetNull(); \
+  } else { \
+    return alloc_info_.tls_; \
+  } \
+} \
+ \
+/** Get the shared-memory allocator id */ \
+HSHM_INLINE_CROSS_FUN \
+    hipc::TlsAllocator<AllocT> GetTlsAllocator() const { \
+  return hipc::TlsAllocator<AllocT>{GetThreadId(), GetAllocator()}; \
 }
 
 }  // namespace hshm::ipc

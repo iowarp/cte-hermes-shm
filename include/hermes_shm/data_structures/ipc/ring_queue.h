@@ -64,15 +64,15 @@ class ring_queue_base : public ShmContainer {
 
   /** SHM constructor. Default. */
   HSHM_CROSS_FUN
-  explicit ring_queue_base(AllocT *alloc, size_t depth = 1024) {
+  explicit ring_queue_base(const hipc::TlsAllocator<AllocT> &alloc, size_t depth = 1024) {
     shm_init(alloc, depth);
   }
 
   /** SHM Constructor */
   HSHM_CROSS_FUN
-  void shm_init(AllocT *alloc, size_t depth = 1024) {
+  void shm_init(const hipc::TlsAllocator<AllocT> &alloc, size_t depth = 1024) {
     init_shm_container(alloc);
-    HSHM_MAKE_AR(queue_, GetAllocator(), depth);
+    HSHM_MAKE_AR(queue_, GetTlsAllocator(), depth);
     flags_.Clear();
     SetNull();
   }
@@ -83,8 +83,9 @@ class ring_queue_base : public ShmContainer {
 
   /** SHM copy constructor */
   HSHM_CROSS_FUN
-  explicit ring_queue_base(AllocT *alloc,
-                      const ring_queue_base &other) {
+  explicit ring_queue_base(
+      const hipc::TlsAllocator<AllocT> &alloc,
+      const ring_queue_base &other) {
     init_shm_container(alloc);
     SetNull();
     shm_strong_copy_op(other);
@@ -115,12 +116,12 @@ class ring_queue_base : public ShmContainer {
   /** Move constructor. */
   HSHM_CROSS_FUN
   ring_queue_base(ring_queue_base &&other) noexcept {
-    shm_move_op<false>(other.GetAllocator(), other);
+    shm_move_op<false>(other.GetTlsAllocator(), other);
   }
 
   /** SHM move constructor. */
   HSHM_CROSS_FUN
-  ring_queue_base(AllocT *alloc,
+  ring_queue_base(const hipc::TlsAllocator<AllocT> &alloc,
              ring_queue_base &&other) noexcept {
     shm_move_op<false>(alloc, other);
   }
@@ -129,7 +130,7 @@ class ring_queue_base : public ShmContainer {
   HSHM_CROSS_FUN
   ring_queue_base& operator=(ring_queue_base &&other) noexcept {
     if (this != &other) {
-      shm_move_op<true>(other.GetAllocator(), std::move(other));
+      shm_move_op<true>(other.GetTlsAllocator(), std::move(other));
     }
     return *this;
   }
@@ -137,13 +138,13 @@ class ring_queue_base : public ShmContainer {
   /** SHM move assignment operator. */
   template<bool IS_ASSIGN>
   HSHM_CROSS_FUN
-  void shm_move_op(AllocT *alloc, ring_queue_base &&other) noexcept {
+  void shm_move_op(const hipc::TlsAllocator<AllocT> &alloc, ring_queue_base &&other) noexcept {
     if constexpr (IS_ASSIGN) {
       shm_destroy();
     } else {
       init_shm_container(alloc);
     }
-    if (GetAllocator() == other.GetAllocator()) {
+    if (GetTlsAllocator() == other.GetTlsAllocator()) {
       head_ = other.head_.load();
       tail_ = other.tail_.load();
       (*queue_) = std::move(*other.queue_);

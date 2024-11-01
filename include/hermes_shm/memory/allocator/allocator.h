@@ -1003,12 +1003,48 @@ class Allocator {
   }
 };
 
-typedef u64 ThreadLocalId;
-
+/**
+ * Allocator with thread-local storage identifier
+ * */
 template<typename AllocT>
-struct ThreadLocalAllocator {
-  ThreadLocalId tls_;
+struct TlsAllocator {
+  ThreadId tls_;
   AllocT *alloc_;
+
+  /** Default constructor */
+  HSHM_INLINE_CROSS_FUN
+  TlsAllocator() = default;
+
+  /** Allocator-only constructor */
+  HSHM_INLINE_CROSS_FUN
+  TlsAllocator(AllocT *alloc) : alloc_(alloc), tls_(ThreadId::GetNull()) {}
+
+  /** Allocator and thread identifier constructor */
+  HSHM_INLINE_CROSS_FUN
+  TlsAllocator(AllocT *alloc, const ThreadId &tls)
+  : alloc_(alloc), tls_(tls) {}
+
+  /** Allocator and thread identifier constructor */
+  HSHM_INLINE_CROSS_FUN
+  TlsAllocator(const ThreadId &tls, AllocT *alloc)
+  : alloc_(alloc), tls_(tls) {}
+
+  /** Arrow operator */
+  HSHM_INLINE_CROSS_FUN AllocT* operator->() {
+    return alloc_;
+  }
+
+  /** Equality operator */
+  HSHM_INLINE_CROSS_FUN
+  bool operator==(const TlsAllocator &rhs) const {
+    return alloc_ == rhs.alloc_;
+  }
+
+  /** Inequality operator */
+  HSHM_INLINE_CROSS_FUN
+  bool operator!=(const TlsAllocator &rhs) const {
+    return alloc_ != rhs.alloc_;
+  }
 };
 
 }  // namespace hshm::ipc

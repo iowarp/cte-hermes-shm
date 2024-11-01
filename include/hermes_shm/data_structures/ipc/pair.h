@@ -55,16 +55,16 @@ class pair : public ShmContainer {
 
   /** SHM constructor. Default. */
   HSHM_CROSS_FUN
-  explicit pair(AllocT *alloc) {
+  explicit pair(const hipc::TlsAllocator<AllocT> &alloc) {
     shm_init(alloc);
   }
 
   /** SHM constructor */
   HSHM_CROSS_FUN
-  void shm_init(AllocT *alloc) {
+  void shm_init(const hipc::TlsAllocator<AllocT> &alloc) {
     init_shm_container(alloc);
-    HSHM_MAKE_AR0(first_, GetAllocator())
-    HSHM_MAKE_AR0(second_, GetAllocator())
+    HSHM_MAKE_AR0(first_, GetTlsAllocator())
+    HSHM_MAKE_AR0(second_, GetTlsAllocator())
   }
 
   /**====================================
@@ -74,21 +74,21 @@ class pair : public ShmContainer {
   /** Constructor. Move parameters. */
   HSHM_CROSS_FUN
   explicit pair(FirstT &&first, SecondT &&second) {
-    init_shm_container(first.GetAllocator());
-    HSHM_MAKE_AR(first_, GetAllocator(),
+    init_shm_container(first.GetTlsAllocator());
+    HSHM_MAKE_AR(first_, GetTlsAllocator(),
                  std::forward<FirstT>(first))
-    HSHM_MAKE_AR(second_, GetAllocator(),
+    HSHM_MAKE_AR(second_, GetTlsAllocator(),
                  std::forward<SecondT>(second))
   }
 
   /** SHM constructor. Move parameters. */
   HSHM_CROSS_FUN
-  explicit pair(AllocT *alloc,
+  explicit pair(const hipc::TlsAllocator<AllocT> &alloc,
                 FirstT &&first, SecondT &&second) {
     init_shm_container(alloc);
-    HSHM_MAKE_AR(first_, GetAllocator(),
+    HSHM_MAKE_AR(first_, GetTlsAllocator(),
                  std::forward<FirstT>(first))
-    HSHM_MAKE_AR(second_, GetAllocator(),
+    HSHM_MAKE_AR(second_, GetTlsAllocator(),
                  std::forward<SecondT>(second))
   }
 
@@ -96,17 +96,17 @@ class pair : public ShmContainer {
   HSHM_CROSS_FUN
   explicit pair(const FirstT &first, const SecondT &second) {
     init_shm_container(HERMES_MEMORY_MANAGER->GetDefaultAllocator());
-    HSHM_MAKE_AR(first_, GetAllocator(), first)
-    HSHM_MAKE_AR(second_, GetAllocator(), second)
+    HSHM_MAKE_AR(first_, GetTlsAllocator(), first)
+    HSHM_MAKE_AR(second_, GetTlsAllocator(), second)
   }
 
   /** SHM constructor. Copy parameters. */
   HSHM_CROSS_FUN
-  explicit pair(AllocT *alloc,
+  explicit pair(const hipc::TlsAllocator<AllocT> &alloc,
                 const FirstT &first, const SecondT &second) {
     init_shm_container(alloc);
-    HSHM_MAKE_AR(first_, GetAllocator(), first)
-    HSHM_MAKE_AR(second_, GetAllocator(), second)
+    HSHM_MAKE_AR(first_, GetTlsAllocator(), first)
+    HSHM_MAKE_AR(second_, GetTlsAllocator(), second)
   }
 
   /** SHM constructor. Piecewise emplace. */
@@ -116,23 +116,23 @@ class pair : public ShmContainer {
                 FirstArgPackT &&first,
                 SecondArgPackT &&second) {
     init_shm_container(HERMES_MEMORY_MANAGER->GetDefaultAllocator());
-    HSHM_MAKE_AR_PW(first_, GetAllocator(),
+    HSHM_MAKE_AR_PW(first_, GetTlsAllocator(),
                     std::forward<FirstArgPackT>(first))
-    HSHM_MAKE_AR_PW(second_, GetAllocator(),
+    HSHM_MAKE_AR_PW(second_, GetTlsAllocator(),
                     std::forward<SecondArgPackT>(second))
   }
 
   /** SHM constructor. Piecewise emplace. */
   template<typename FirstArgPackT, typename SecondArgPackT>
   HSHM_CROSS_FUN
-  explicit pair(AllocT *alloc,
+  explicit pair(const hipc::TlsAllocator<AllocT> &alloc,
                 PiecewiseConstruct &&hint,
                 FirstArgPackT &&first,
                 SecondArgPackT &&second) {
     init_shm_container(alloc);
-    HSHM_MAKE_AR_PW(first_, GetAllocator(),
+    HSHM_MAKE_AR_PW(first_, GetTlsAllocator(),
                     std::forward<FirstArgPackT>(first))
-    HSHM_MAKE_AR_PW(second_, GetAllocator(),
+    HSHM_MAKE_AR_PW(second_, GetTlsAllocator(),
                     std::forward<SecondArgPackT>(second))
   }
 
@@ -143,13 +143,13 @@ class pair : public ShmContainer {
   /** Copy constructor. From pair. */
   HSHM_CROSS_FUN
   explicit pair(const pair &other) {
-    init_shm_container(other.GetAllocator());
+    init_shm_container(other.GetTlsAllocator());
     shm_strong_copy_construct(other);
   }
 
   /** SHM copy constructor. From pair. */
   HSHM_CROSS_FUN
-  explicit pair(AllocT *alloc, const pair &other) {
+  explicit pair(const hipc::TlsAllocator<AllocT> &alloc, const pair &other) {
     init_shm_container(alloc);
     shm_strong_copy_construct(other);
   }
@@ -157,8 +157,8 @@ class pair : public ShmContainer {
   /** SHM copy constructor main */
   HSHM_CROSS_FUN
   void shm_strong_copy_construct(const pair &other) {
-    HSHM_MAKE_AR(first_, GetAllocator(), *other.first_)
-    HSHM_MAKE_AR(second_, GetAllocator(), *other.second_)
+    HSHM_MAKE_AR(first_, GetTlsAllocator(), *other.first_)
+    HSHM_MAKE_AR(second_, GetTlsAllocator(), *other.second_)
   }
 
   /** SHM copy assignment operator. From pair. */
@@ -185,11 +185,11 @@ class pair : public ShmContainer {
   /** SHM move constructor. From pair. */
   HSHM_CROSS_FUN
   explicit pair(pair &&other) {
-    init_shm_container(other.GetAllocator());
-    if (GetAllocator() == other.GetAllocator()) {
-      HSHM_MAKE_AR(first_, other.first_->GetAllocator(),
+    init_shm_container(other.GetTlsAllocator());
+    if (GetTlsAllocator() == other.GetTlsAllocator()) {
+      HSHM_MAKE_AR(first_, other.first_->GetTlsAllocator(),
                    std::forward<FirstT>(*other.first_))
-      HSHM_MAKE_AR(second_, other.second_->GetAllocator(),
+      HSHM_MAKE_AR(second_, other.second_->GetTlsAllocator(),
                    std::forward<SecondT>(*other.second_))
     } else {
       shm_strong_copy_construct(other);
@@ -199,12 +199,12 @@ class pair : public ShmContainer {
 
   /** SHM move constructor. From pair. */
   HSHM_CROSS_FUN
-  explicit pair(AllocT *alloc, pair &&other) {
+  explicit pair(const hipc::TlsAllocator<AllocT> &alloc, pair &&other) {
     init_shm_container(alloc);
-    if (GetAllocator() == other.GetAllocator()) {
-      HSHM_MAKE_AR(first_, GetAllocator(),
+    if (GetTlsAllocator() == other.GetTlsAllocator()) {
+      HSHM_MAKE_AR(first_, GetTlsAllocator(),
                    std::forward<FirstT>(*other.first_))
-      HSHM_MAKE_AR(second_, GetAllocator(),
+      HSHM_MAKE_AR(second_, GetTlsAllocator(),
                    std::forward<SecondT>(*other.second_))
     } else {
       shm_strong_copy_construct(other);
@@ -217,7 +217,7 @@ class pair : public ShmContainer {
   pair& operator=(pair &&other) noexcept {
     if (this != &other) {
       shm_destroy();
-      if (GetAllocator() == other.GetAllocator()) {
+      if (GetTlsAllocator() == other.GetTlsAllocator()) {
         (*first_) = std::move(*other.first_);
         (*second_) = std::move(*other.second_);
         other.SetNull();

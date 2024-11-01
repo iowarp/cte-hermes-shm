@@ -87,7 +87,7 @@ struct iqueue_iterator_templ {
   iqueue_iterator_templ& operator++() {
     if (is_end()) { return *this; }
     prior_entry_ = entry_;
-    entry_ = iqueue_->GetAllocator()->template
+    entry_ = iqueue_->GetTlsAllocator()->template
       Convert<iqueue_entry>(entry_->next_ptr_);
     return *this;
   }
@@ -188,13 +188,13 @@ class iqueue : public ShmContainer {
 
   /** SHM constructor. Default. */
   HSHM_CROSS_FUN
-  explicit iqueue(AllocT *alloc) {
+  explicit iqueue(const hipc::TlsAllocator<AllocT> &alloc) {
     shm_init(alloc);
   }
 
   /** SHM constructor. Default. */
   HSHM_CROSS_FUN
-  void shm_init(AllocT *alloc) {
+  void shm_init(const hipc::TlsAllocator<AllocT> &alloc) {
     init_shm_container(alloc);
     length_ = 0;
     head_ptr_.SetNull();
@@ -213,7 +213,7 @@ class iqueue : public ShmContainer {
 
   /** SHM copy constructor */
   HSHM_CROSS_FUN
-  explicit iqueue(AllocT *alloc,
+  explicit iqueue(const hipc::TlsAllocator<AllocT> &alloc,
                   const iqueue &other) {
     init_shm_container(alloc);
     shm_strong_copy_op(other);
@@ -242,16 +242,16 @@ class iqueue : public ShmContainer {
   /** Move constructor. */
   HSHM_CROSS_FUN
   iqueue(iqueue &&other) noexcept {
-    init_shm_container(other.GetAllocator());
+    init_shm_container(other.GetTlsAllocator());
     memcpy((void*)this, (void*)&other, sizeof(*this));
     other.SetNull();
   }
 
   /** SHM move constructor. */
   HSHM_CROSS_FUN
-  iqueue(AllocT *alloc, iqueue &&other) noexcept {
+  iqueue(const hipc::TlsAllocator<AllocT> &alloc, iqueue &&other) noexcept {
     init_shm_container(alloc);
-    if (GetAllocator() == other.GetAllocator()) {
+    if (GetTlsAllocator() == other.GetTlsAllocator()) {
       memcpy((void*)this, (void*)&other, sizeof(*this));
       other.SetNull();
     } else {
@@ -305,7 +305,7 @@ class iqueue : public ShmContainer {
   /** Construct an element at \a pos position in the iqueue */
   HSHM_CROSS_FUN
   void enqueue(T *entry) {
-    OffsetPointer entry_ptr = GetAllocator()->
+    OffsetPointer entry_ptr = GetTlsAllocator()->
       template Convert<T, OffsetPointer>(entry);
     reinterpret_cast<iqueue_entry*>(entry)->next_ptr_ = head_ptr_;
     head_ptr_ = entry_ptr;
@@ -316,7 +316,7 @@ class iqueue : public ShmContainer {
   HSHM_CROSS_FUN
   T* dequeue() {
     if (size() == 0) { return nullptr; }
-    auto entry = GetAllocator()->
+    auto entry = GetTlsAllocator()->
       template Convert<iqueue_entry>(head_ptr_);
     head_ptr_ = entry->next_ptr_;
     --length_;
@@ -341,7 +341,7 @@ class iqueue : public ShmContainer {
   HSHM_CROSS_FUN
   T* peek() {
     if (size() == 0) { return nullptr; }
-    auto entry = GetAllocator()->
+    auto entry = GetTlsAllocator()->
       template Convert<iqueue_entry>(head_ptr_);
     return reinterpret_cast<T*>(entry);
   }
@@ -368,7 +368,7 @@ class iqueue : public ShmContainer {
   HSHM_CROSS_FUN
   iterator_t begin() {
     if (size() == 0) { return end(); }
-    auto head = GetAllocator()->template
+    auto head = GetTlsAllocator()->template
       Convert<iqueue_entry>(head_ptr_);
     return iterator_t(*this, head);
   }
@@ -383,7 +383,7 @@ class iqueue : public ShmContainer {
   HSHM_CROSS_FUN
   citerator_t cbegin() const {
     if (size() == 0) { return cend(); }
-    auto head = GetAllocator()->template
+    auto head = GetTlsAllocator()->template
       Convert<iqueue_entry>(head_ptr_);
     return citerator_t(const_cast<iqueue&>(*this), head);
   }

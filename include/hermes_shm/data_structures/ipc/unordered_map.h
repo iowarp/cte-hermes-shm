@@ -213,7 +213,7 @@ class unordered_map : public ShmContainer {
    * @param growth the multiplier to grow the bucket vector size
    * */
   HSHM_CROSS_FUN
-  explicit unordered_map(AllocT *alloc,
+  explicit unordered_map(const hipc::TlsAllocator<AllocT> &alloc,
                          int num_buckets = 20,
                          RealNumber max_capacity = RealNumber(4, 5),
                          RealNumber growth = RealNumber(5, 4)) {
@@ -222,12 +222,12 @@ class unordered_map : public ShmContainer {
 
   /** SHM constructor. */
   HSHM_CROSS_FUN
-  void shm_init(AllocT *alloc,
+  void shm_init(const hipc::TlsAllocator<AllocT> &alloc,
                 int num_buckets = 20,
                 RealNumber max_capacity = RealNumber(4, 5),
                 RealNumber growth = RealNumber(5, 4)) {
     init_shm_container(alloc);
-    HSHM_MAKE_AR(buckets_, GetAllocator(), num_buckets)
+    HSHM_MAKE_AR(buckets_, GetTlsAllocator(), num_buckets)
     max_capacity_ = max_capacity;
     growth_ = growth;
     length_ = 0;
@@ -247,7 +247,7 @@ class unordered_map : public ShmContainer {
 
   /** SHM copy constructor */
   HSHM_CROSS_FUN
-  explicit unordered_map(AllocT *alloc,
+  explicit unordered_map(const hipc::TlsAllocator<AllocT> &alloc,
                          const unordered_map &other) {
     init_shm_container(alloc);
     shm_strong_copy_construct(other);
@@ -257,7 +257,7 @@ class unordered_map : public ShmContainer {
   HSHM_CROSS_FUN
   void shm_strong_copy_construct(const unordered_map &other) {
     SetNull();
-    HSHM_MAKE_AR(buckets_, GetAllocator(), other.GetBuckets())
+    HSHM_MAKE_AR(buckets_, GetTlsAllocator(), other.GetBuckets())
     shm_strong_copy_op(other);
   }
 
@@ -290,11 +290,11 @@ class unordered_map : public ShmContainer {
 
   /** Move constructor. */
   HSHM_INLINE_CROSS_FUN unordered_map(unordered_map &&other) noexcept {
-    shm_move_op<false>(other.GetAllocator(), std::move(other));
+    shm_move_op<false>(other.GetTlsAllocator(), std::move(other));
   }
 
   /** SHM move constructor. */
-  HSHM_INLINE_CROSS_FUN unordered_map(AllocT *alloc,
+  HSHM_INLINE_CROSS_FUN unordered_map(const hipc::TlsAllocator<AllocT> &alloc,
                                       unordered_map &&other) noexcept {
     shm_move_op<false>(alloc, std::move(other));
   }
@@ -303,7 +303,7 @@ class unordered_map : public ShmContainer {
   HSHM_CROSS_FUN
   unordered_map& operator=(unordered_map &&other) noexcept {
     if (this != &other) {
-      shm_move_op<true>(GetAllocator(), std::move(other));
+      shm_move_op<true>(GetTlsAllocator(), std::move(other));
     }
     return *this;
   }
@@ -311,17 +311,17 @@ class unordered_map : public ShmContainer {
   /** SHM move operator. */
   template<bool IS_ASSIGN>
   HSHM_CROSS_FUN
-  void shm_move_op(AllocT *alloc, unordered_map &&other) noexcept {
+  void shm_move_op(const hipc::TlsAllocator<AllocT> &alloc, unordered_map &&other) noexcept {
     if constexpr (IS_ASSIGN) {
       shm_destroy();
     } else {
       init_shm_container(alloc);
     }
-    if (GetAllocator() == other.GetAllocator()) {
+    if (GetTlsAllocator() == other.GetTlsAllocator()) {
       if constexpr (IS_ASSIGN) {
         GetBuckets() = std::move(other.GetBuckets());
       } else {
-        HSHM_MAKE_AR(buckets_, GetAllocator(), std::move(other.GetBuckets()));
+        HSHM_MAKE_AR(buckets_, GetTlsAllocator(), std::move(other.GetBuckets()));
       }
       max_capacity_ = other.max_capacity_;
       growth_ = other.growth_;
