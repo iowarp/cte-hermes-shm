@@ -81,7 +81,7 @@ class MallocAllocator : public Allocator {
    * memory larger than the page size.
    * */
   HSHM_CROSS_FUN
-  OffsetPointer AllocateOffset(const hshm::ThreadId &tid,
+  OffsetPointer AllocateOffset(hshm::ThreadId tid,
                                size_t size) override {
     auto page = reinterpret_cast<MallocPage*>(
         malloc(sizeof(MallocPage) + size));
@@ -139,7 +139,7 @@ class MallocAllocator : public Allocator {
    * Free \a ptr pointer. Null check is performed elsewhere.
    * */
   HSHM_CROSS_FUN
-  void FreeOffsetNoNullCheck(const hshm::ThreadId &tid,
+  void FreeOffsetNoNullCheck(hshm::ThreadId tid,
                              OffsetPointer p) override {
     auto page = reinterpret_cast<MallocPage*>(
         p.off_.load() - sizeof(MallocPage));
@@ -154,6 +154,13 @@ class MallocAllocator : public Allocator {
   HSHM_CROSS_FUN
   size_t GetCurrentlyAllocatedSize() override {
     return header_->total_alloc_size_.load();
+  }
+
+  /**
+   * Free a thread-local memory storage
+   * */
+  HSHM_CROSS_FUN
+  void FreeTls(ThreadId tid) override {
   }
 };
 

@@ -49,6 +49,10 @@ struct ThreadId {
     return ThreadId{(hshm::u64)-1};
   }
 
+  bool IsNull() const {
+    return tid_ == (hshm::u64)-1;
+  }
+
   void SetNull() {
     tid_ = (hshm::u64)-1;
   }

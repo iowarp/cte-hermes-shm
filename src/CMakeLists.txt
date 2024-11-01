@@ -17,10 +17,7 @@ set(CMAKE_CXX_STANDARD 17)
 set (SOURCE_FILES
         memory_manager.cc
         thread_model_manager.cc
-        # thread_factory.cc
         data_structure_singleton.cc
-        ../include/hermes_shm/data_structures/ipc/ring_queue.h
-        ../include/hermes_shm/data_structures/ipc/ring_ptr_queue.h
 )
 if (BUILD_SHARED_LIBS)
     message("Building dynamic library")

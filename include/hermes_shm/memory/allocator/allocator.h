@@ -104,7 +104,7 @@ class Allocator {
    * */
   HSHM_CROSS_FUN
   virtual OffsetPointer AllocateOffset(
-      const ThreadId &tid, size_t size) = 0;
+      ThreadId tid, size_t size) = 0;
 
   /**
    * Allocate a region of memory of \a size size
@@ -134,9 +134,13 @@ class Allocator {
    * Free the memory pointed to by \a ptr Pointer
    * */
   HSHM_CROSS_FUN
-  virtual void FreeOffsetNoNullCheck(
-      const ThreadId &tid,
-      OffsetPointer p) = 0;
+  virtual void FreeOffsetNoNullCheck(ThreadId tid, OffsetPointer p) = 0;
+
+  /**
+   * Free the memory pointed to by \a ptr Pointer
+   * */
+  HSHM_CROSS_FUN
+  virtual void FreeTls(ThreadId tid) = 0;
 
   /** Get the allocator identifier */
   HSHM_CROSS_FUN

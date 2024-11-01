@@ -19,14 +19,96 @@
 #include "hermes_shm/data_structures/ipc/pair.h"
 #include "hermes_shm/data_structures/ipc/vector.h"
 #include "hermes_shm/data_structures/ipc/list.h"
-#include "hermes_shm/data_structures/ipc/pair.h"
+#include "hermes_shm/data_structures/ipc/ring_queue.h"
 #include <hermes_shm/memory/allocator/stack_allocator.h>
+#include <cmath>
 #include "mp_page.h"
 
 namespace hshm::ipc {
 
-template<typename AllocT = StackAllocator>
+struct PageId {
+ public:
+  /** The power-of-two exponent of the minimum size that can be cached */
+  static const size_t min_cached_size_exp_ = 6;
+  /** The minimum size that can be cached directly (64 bytes) */
+  static const size_t min_cached_size_ =
+      (1 << min_cached_size_exp_) + sizeof(MpPage);
+  /** The power-of-two exponent of the minimum size that can be cached (16KB) */
+  static const size_t max_cached_size_exp_ = 24;
+  /** The maximum size that can be cached directly */
+  static const size_t max_cached_size_ =
+      (1 << max_cached_size_exp_) + sizeof(MpPage);
+  /** The number of well-defined caches */
+  static const size_t num_caches_ =
+      max_cached_size_exp_ - min_cached_size_exp_ + 1;
+  /** An arbitrary free list */
+  static const size_t num_free_lists_ = num_caches_ + 1;
+
+ public:
+  size_t orig_;
+  size_t round_;
+  size_t exp_;
+
+ public:
+  /** Round a number up to the nearest page size. */
+  HSHM_INLINE_CROSS_FUN
+  PageId(size_t size) {
+    orig_ = size;
+#ifndef __CUDA_ARCH__
+    exp_ = std::ceil(std::log2(size));
+#else
+    exp_ = ceil(log2(num));
+#endif
+    round_ = (1 << exp_) + sizeof(MpPage);
+    if (exp_ < min_cached_size_exp_) {
+      exp_ = min_cached_size_exp_;
+      round_ = min_cached_size_;
+    } else if (exp_ > max_cached_size_exp_) {
+      exp_ = max_cached_size_exp_;
+    } else {
+      exp_ -= min_cached_size_exp_;
+    }
+  }
+};
+
+class PageAllocator {
+ public:
+  hipc::iqueue<MpPage> free_lists_[PageId::num_free_lists_];
+
+ public:
+  PageAllocator() {}
+
+  MpPage* Allocate(const PageId &page_id) {
+    // Allocate small page size
+    if (page_id.exp_ < PageId::num_caches_) {
+      return free_lists_[page_id.exp_].dequeue();
+    }
+    // Allocate a large page size
+    size_t num_iter = free_lists_[PageId::num_caches_].size();
+    for (auto it = free_lists_[PageId::num_caches_].begin();
+         it != free_lists_[PageId::num_caches_].end(); ++it) {
+      MpPage *page = *it;
+      if (page->page_size_ >= page_id.round_) {
+        free_lists_[PageId::num_caches_].dequeue(it);
+        return page;
+      }
+    }
+    // No page was cached
+    return nullptr;
+  }
+
+  void Free(MpPage *page) {
+    PageId page_id(page->page_size_);
+    if (page_id.exp_ < PageId::num_caches_) {
+      free_lists_[page_id.exp_].enqueue(page);
+    } else {
+      free_lists_[PageId::num_caches_].enqueue(page);
+    }
+  }
+};
+
 struct ScalablePageAllocatorHeader : public AllocatorHeader {
+  hipc::ShmArchive<hipc::vector<PageAllocator>> tls_;
   hipc::atomic<hshm::min_u64> total_alloc_;
   size_t coalesce_trigger_;
   size_t coalesce_window_;
@@ -37,13 +119,14 @@ struct ScalablePageAllocatorHeader : public AllocatorHeader {
   HSHM_CROSS_FUN
   void Configure(AllocatorId alloc_id,
                  size_t custom_header_size,
-                 AllocT *alloc,
+                 StackAllocator *alloc,
                  size_t buffer_size,
                  RealNumber coalesce_trigger,
                  size_t coalesce_window) {
     AllocatorHeader::Configure(alloc_id,
                                AllocatorType::kScalablePageAllocator,
                                custom_header_size);
+    HSHM_MAKE_AR(tls_, alloc, (1<<20));
     total_alloc_ = 0;
     coalesce_trigger_ = (coalesce_trigger * buffer_size).as_int();
     coalesce_window_ = coalesce_window;
@@ -52,23 +135,8 @@ struct ScalablePageAllocatorHeader : public AllocatorHeader {
 
 class ScalablePageAllocator : public Allocator {
  private:
-  ScalablePageAllocatorHeader<> *header_;
+  ScalablePageAllocatorHeader *header_;
   StackAllocator alloc_;
-  /** The power-of-two exponent of the minimum size that can be cached */
-  static const size_t min_cached_size_exp_ = 6;
-  /** The minimum size that can be cached directly (64 bytes) */
-  static const size_t min_cached_size_ =
-    (1 << min_cached_size_exp_) + sizeof(MpPage);
-  /** The power-of-two exponent of the minimum size that can be cached (16KB) */
-  static const size_t max_cached_size_exp_ = 24;
-  /** The maximum size that can be cached directly */
-  static const size_t max_cached_size_ =
-    (1 << max_cached_size_exp_) + sizeof(MpPage);
-  /** The number of well-defined caches */
-  static const size_t num_caches_ =
-    max_cached_size_exp_ - min_cached_size_exp_ + 1;
-  /** An arbitrary free list */
-  static const size_t num_free_lists_ = num_caches_ + 1;
 
  public:
   /**
@@ -92,7 +160,7 @@ class ScalablePageAllocator : public Allocator {
     id_ = id;
     buffer_ = buffer;
     buffer_size_ = buffer_size;
-    header_ = reinterpret_cast<ScalablePageAllocatorHeader<>*>(buffer_);
+    header_ = reinterpret_cast<ScalablePageAllocatorHeader*>(buffer_);
     custom_header_ = reinterpret_cast<char*>(header_ + 1);
     size_t region_off = (custom_header_ - buffer_) + custom_header_size;
     size_t region_size = buffer_size_ - region_off;
@@ -111,7 +179,7 @@ class ScalablePageAllocator : public Allocator {
                        size_t buffer_size) override {
     buffer_ = buffer;
     buffer_size_ = buffer_size;
-    header_ = reinterpret_cast<ScalablePageAllocatorHeader<>*>(buffer_);
+    header_ = reinterpret_cast<ScalablePageAllocatorHeader*>(buffer_);
     type_ = header_->allocator_type_;
     id_ = header_->allocator_id_;
     custom_header_ = reinterpret_cast<char*>(header_ + 1);
@@ -126,21 +194,24 @@ class ScalablePageAllocator : public Allocator {
    * memory larger than the page size.
    * */
   HSHM_CROSS_FUN
-  OffsetPointer AllocateOffset(const hshm::ThreadId &tid,
+  OffsetPointer AllocateOffset(hshm::ThreadId tid,
                                size_t size) override {
     MpPage *page = nullptr;
-    size_t exp;
-    size_t size_mp = RoundUp(size + sizeof(MpPage), exp);
+    PageId page_id(size + sizeof(MpPage));
 
     // Case 1: Can we re-use an existing page?
-    // page = CheckLocalCaches(size_mp, exp);
+    if (tid.IsNull()) {
+      tid = HERMES_THREAD_MODEL->GetTid();
+    }
+    PageAllocator &page_alloc = (*header_->tls_)[tid.tid_];
+    page = page_alloc.Allocate(page_id);
 
     // Case 2: Coalesce if enough space is being wasted
     // if (page == nullptr) {}
 
-    // Case 3: Allocate from stack if no page found
+    // Case 3: Allocate from heap if no page found
     if (page == nullptr) {
-      auto off = alloc_.AllocateOffset(ThreadId::GetNull(), size_mp);
+      auto off = alloc_.AllocateOffset(tid, page_id.round_);
       if (!off.IsNull()) {
         page = alloc_.Convert<MpPage>(off - sizeof(MpPage));
       }
@@ -153,7 +224,7 @@ class ScalablePageAllocator : public Allocator {
     }
 
     // Mark as allocated
-    page->page_size_ = size_mp;
+    page->page_size_ = page_id.round_;
     header_->total_alloc_.fetch_add(page->page_size_);
     auto p = Convert<MpPage, OffsetPointer>(page);
     page->SetAllocated();
@@ -186,7 +257,7 @@ class ScalablePageAllocator : public Allocator {
     MpPage *hdr = Convert<MpPage>(p - sizeof(MpPage));
     void *old = (void*)(hdr + 1);
     memcpy(ptr, old, hdr->page_size_ - sizeof(MpPage));
-    FreeOffsetNoNullCheck(ThreadId::GetNull(), p);
+    FreeOffsetNoNullCheck(tid, p);
     return new_p;
   }
 
@@ -194,7 +265,7 @@ class ScalablePageAllocator : public Allocator {
    * Free \a ptr pointer. Null check is performed elsewhere.
    * */
   HSHM_CROSS_FUN
-  void FreeOffsetNoNullCheck(const hshm::ThreadId &tid,
+  void FreeOffsetNoNullCheck(hshm::ThreadId tid,
                              OffsetPointer p) override {
     // Mark as free
     auto hdr_offset = p - sizeof(MpPage);
@@ -204,8 +275,11 @@ class ScalablePageAllocator : public Allocator {
     }
     hdr->UnsetAllocated();
     header_->total_alloc_.fetch_sub(hdr->page_size_);
-    size_t exp;
-    RoundUp(hdr->page_size_, exp);
+    if (tid.IsNull()) {
+      tid = HERMES_THREAD_MODEL->GetTid();
+    }
+    PageAllocator &page_alloc = (*header_->tls_)[tid.tid_];
+    page_alloc.Free(hdr);
   }
 
   /**
@@ -217,19 +291,18 @@ class ScalablePageAllocator : public Allocator {
     return header_->total_alloc_.load();
   }
 
- private:
-  /** Round a number up to the nearest page size. */
-  HSHM_INLINE_CROSS_FUN size_t RoundUp(size_t num, size_t &exp) {
-    size_t round;
-    for (exp = 0; exp < num_caches_; ++exp) {
-      round = 1 << (exp + min_cached_size_exp_);
-      round += sizeof(MpPage);
-      if (num <= round) {
-        return round;
-      }
+  /**
+   * Free a thread-local memory storage
+   * */
+  HSHM_CROSS_FUN
+  void FreeTls(ThreadId tid) override {
+    if (tid.IsNull()) {
+      tid = HERMES_THREAD_MODEL->GetTid();
     }
-    return num;
   }
+
+ private:
+
 };
 
 }  // namespace hshm::ipc

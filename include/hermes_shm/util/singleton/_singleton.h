@@ -57,15 +57,15 @@ using Singleton = SingletonBase<T, true>;
 template<typename T>
 using LockfreeSingleton = SingletonBase<T, false>;
 
-#define DEFINE_SINGLETON_CC(T)\
-  template<> char hshm::SingletonBase<T, true>::data_[sizeof(T)] = {0}; \
-  template<> T* hshm::SingletonBase<T, true>::obj_ = nullptr; \
-  template<> hshm::SpinLock hshm::SingletonBase<T, true>::lock_ = hshm::SpinLock();
+#define DEFINE_SINGLETON_BASE_CC(T, WithLock)\
+  template<> char hshm::SingletonBase<T, WithLock>::data_[sizeof(T)] = {0}; \
+  template<> T* hshm::SingletonBase<T, WithLock>::obj_ = nullptr; \
+  template<> hshm::SpinLock hshm::SingletonBase<T, WithLock>::lock_ = hshm::SpinLock();
 
+#define DEFINE_SINGLETON_CC(T)\
+  DEFINE_SINGLETON_BASE_CC(T, true)
 #define DEFINE_LOCKFREE_SINGLETON_CC(T)\
-  template<> char hshm::SingletonBase<T, false>::data_[sizeof(T)] = {0}; \
-  template<> T* hshm::SingletonBase<T, false>::obj_ = nullptr; \
-  template<> hshm::SpinLock hshm::SingletonBase<T, false>::lock_ = hshm::SpinLock();
+  DEFINE_SINGLETON_BASE_CC(T, false)
 
 #else
 // Regular singleton replace
