@@ -177,7 +177,7 @@ class unordered_map : public ShmContainer {
   /**====================================
    * Variables
    * ===================================*/
-  ShmArchive<BUCKET_VEC_T> buckets_;
+  delay_ar<BUCKET_VEC_T> buckets_;
   RealNumber max_capacity_;
   RealNumber growth_;
   hipc::atomic<hshm::min_u64> length_;

@@ -43,7 +43,7 @@ template<
 class ring_ptr_queue_base : public ShmContainer {
  public:
   HIPC_CONTAINER_TEMPLATE((CLASS_NAME), (TYPED_CLASS))
-  ShmArchive<vector<T>> queue_;
+  delay_ar<vector<T>> queue_;
   hipc::opt_atomic<qtok_id, IsPushAtomic> tail_;
   hipc::opt_atomic<qtok_id, IsPopAtomic> head_;
   bitfield32_t flags_;

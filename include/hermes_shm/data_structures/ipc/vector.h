@@ -531,7 +531,7 @@ class vector : public ShmContainer {
   template<typename... Args>
   HSHM_CROSS_FUN
   void emplace_back(Args&& ...args) {
-    ShmArchive<T> *vec = data_ar();
+    delay_ar<T> *vec = data_ar();
     if (length_ == max_length_) {
       vec = grow_vector(vec, 0, false);
     }
@@ -555,7 +555,7 @@ class vector : public ShmContainer {
       emplace_back(std::forward<Args>(args)...);
       return;
     }
-    ShmArchive<T> *vec = data_ar();
+    delay_ar<T> *vec = data_ar();
     if (length_ == max_length_) {
       vec = grow_vector(vec, 0, false);
     }
@@ -572,7 +572,7 @@ class vector : public ShmContainer {
     if (pos.is_end()) {
       return;
     }
-    ShmArchive<T> *vec = data_ar();
+    delay_ar<T> *vec = data_ar();
     hipc::Allocator::DestructObj((*this)[pos.i_]);
     HSHM_MAKE_AR(vec[pos.i_], GetTlsAllocator(),
                  std::forward<Args>(args)...)
@@ -626,13 +626,13 @@ class vector : public ShmContainer {
   }
 
   /** Retreives a pointer to the internal array */
-  HSHM_INLINE_CROSS_FUN ShmArchive<T>* data_ar() {
-    return GetTlsAllocator()->template Convert<ShmArchive<T>>(vec_ptr_);
+  HSHM_INLINE_CROSS_FUN delay_ar<T>* data_ar() {
+    return GetTlsAllocator()->template Convert<delay_ar<T>>(vec_ptr_);
   }
 
   /** Retreives a pointer to the array */
-  HSHM_INLINE_CROSS_FUN ShmArchive<T>* data_ar() const {
-    return GetTlsAllocator()->template Convert<ShmArchive<T>>(vec_ptr_);
+  HSHM_INLINE_CROSS_FUN delay_ar<T>* data_ar() const {
+    return GetTlsAllocator()->template Convert<delay_ar<T>>(vec_ptr_);
   }
 
   /**====================================
@@ -649,7 +649,7 @@ class vector : public ShmContainer {
    * */
   template<typename ...Args>
   HSHM_CROSS_FUN
-  ShmArchive<T>* grow_vector(ShmArchive<T> *vec, size_t max_length,
+  delay_ar<T>* grow_vector(delay_ar<T> *vec, size_t max_length,
                              bool resize, Args&& ...args) {
     // Grow vector by 25%
     if (max_length == 0) {
@@ -663,17 +663,17 @@ class vector : public ShmContainer {
     }
 
     // Allocate new shared-memory vec
-    ShmArchive<T> *new_vec;
+    delay_ar<T> *new_vec;
     if constexpr(std::is_pod<T>() && !IS_SHM_ARCHIVEABLE(T)) {
       // Use reallocate for well-behaved objects
       new_vec = GetTlsAllocator()->template
-        ReallocateObjs<ShmArchive<T>>(
+        ReallocateObjs<delay_ar<T>>(
             GetThreadId(), vec_ptr_, max_length);
     } else {
       // Use std::move for unpredictable objects
       OffsetPointer new_p;
       new_vec = GetTlsAllocator()->template
-        AllocateObjs<ShmArchive<T>>(
+        AllocateObjs<delay_ar<T>>(
           GetThreadId(), max_length, new_p);
       for (size_t i = 0; i < length_; ++i) {
         T& old_entry = (*this)[i];
@@ -687,7 +687,7 @@ class vector : public ShmContainer {
     }
     if (new_vec == nullptr) {
       HERMES_THROW_ERROR(OUT_OF_MEMORY,
-                         max_length * sizeof(ShmArchive<T>),
+                         max_length * sizeof(delay_ar<T>),
                          GetTlsAllocator()->GetCurrentlyAllocatedSize());
     }
     if (resize) {
@@ -710,14 +710,14 @@ class vector : public ShmContainer {
    * @param count the amount to shift left by
    * */
   HSHM_INLINE_CROSS_FUN void shift_left(const iterator_t pos, size_t count = 1) {
-    ShmArchive<T> *vec = data_ar();
+    delay_ar<T> *vec = data_ar();
     for (size_t i = 0; i < count; ++i) {
       HSHM_DESTROY_AR(vec[pos.i_ + i])
     }
     auto dst = vec + pos.i_;
     auto src = dst + count;
     for (auto i = pos.i_ + count; i < size(); ++i) {
-      memcpy((void*)dst, (void*)src, sizeof(ShmArchive<T>));
+      memcpy((void*)dst, (void*)src, sizeof(delay_ar<T>));
       dst += 1; src += 1;
     }
   }
@@ -735,7 +735,7 @@ class vector : public ShmContainer {
     auto dst = src + count;
     auto sz = static_cast<off64_t>(size());
     for (auto i = sz - 1; i >= pos.i_; --i) {
-      memcpy((void*)dst, (void*)src, sizeof(ShmArchive<T>));
+      memcpy((void*)dst, (void*)src, sizeof(delay_ar<T>));
       dst -= 1; src -= 1;
     }
   }

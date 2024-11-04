@@ -322,7 +322,8 @@ class Allocator {
    * @return A process-specific pointer
    * */
   template<typename T, typename PointerT = Pointer>
-  HSHM_INLINE_CROSS_FUN T* ReallocatePtr(
+  HSHM_INLINE_CROSS_FUN
+  T* ReallocatePtr(
       const ThreadId &tid,
       PointerT &p, size_t new_size) {
     Reallocate<PointerT>(tid, p, new_size);
@@ -397,12 +398,11 @@ class Allocator {
    * */
   template<typename T, typename PointerT = Pointer>
   HSHM_INLINE_CROSS_FUN
-  LPointer<T, PointerT>
-  ReallocateLocalPtr(const ThreadId &tid,
+  bool ReallocateLocalPtr(const ThreadId &tid,
                      LPointer<T, PointerT> &p, size_t new_size) {
-    Reallocate<PointerT>(tid, p.shm_, new_size);
+    bool ret = Reallocate<PointerT>(tid, p.shm_, new_size);
     p.ptr_ = Convert<T>(p.shm_);
-    return p;
+    return ret;
   }
 
   /**
@@ -460,12 +460,11 @@ class Allocator {
    * */
   template<typename T, typename PointerT = Pointer>
   HSHM_INLINE_CROSS_FUN
-  Array<PointerT>
-  ReallocateArray(const ThreadId &tid,
-                  Array<PointerT> &p, size_t new_size) {
-    Reallocate<PointerT>(tid, p.shm_, new_size);
+  bool ReallocateArray(const ThreadId &tid,
+                       Array<PointerT> &p, size_t new_size) {
+    bool ret = Reallocate<PointerT>(tid, p.shm_, new_size);
     p.size_ = new_size;
-    return p;
+    return ret;
   }
 
   /**
@@ -523,14 +522,14 @@ class Allocator {
    * */
   template<typename T, typename PointerT = Pointer>
   HSHM_INLINE_CROSS_FUN
-  LArray<T, PointerT> ReallocateLocalArray(
+  bool ReallocateLocalArray(
       const ThreadId &tid,
       LArray<T, PointerT> &p,
       size_t new_size) {
-    Reallocate<PointerT>(tid, p.shm_, new_size);
+    bool ret = Reallocate<PointerT>(tid, p.shm_, new_size);
     p.ptr_ = Convert<T>(p.shm_);
     p.size_ = new_size;
-    return p;
+    return ret;
   }
 
   /**

@@ -177,12 +177,11 @@ TEST_CASE("LocalPointers") {
   REQUIRE(!p2.shm_.IsNull());
   REQUIRE(p2.ptr_ != nullptr);
   REQUIRE(*p2 == 0);
-  hipc::LPointer<char> p3 =
-      alloc->ReallocateLocalPtr<char>(hshm::ThreadId::GetNull(), p1, 256);
-  REQUIRE(!p3.shm_.IsNull());
-  REQUIRE(p3.ptr_ != nullptr);
+  alloc->ReallocateLocalPtr<char>(hshm::ThreadId::GetNull(), p1, 256);
+  REQUIRE(!p1.shm_.IsNull());
+  REQUIRE(p1.ptr_ != nullptr);
   alloc->FreeLocalPtr(hshm::ThreadId::GetNull(), p1);
-  alloc->FreeLocalPtr(hshm::ThreadId::GetNull(), p3);
+  alloc->FreeLocalPtr(hshm::ThreadId::GetNull(), p2);
 
   // OBJ API
   hipc::LPointer<std::vector<int>> p4 =
@@ -210,11 +209,10 @@ TEST_CASE("Arrays") {
   hipc::Array p2 = alloc->ClearAllocateArray<char>(
       hshm::ThreadId::GetNull(), 256);
   REQUIRE(!p2.shm_.IsNull());
-  hipc::Array p3 = alloc->ReallocateArray<char>(
+  alloc->ReallocateArray<char>(
       hshm::ThreadId::GetNull(), p1, 256);
-  REQUIRE(!p3.shm_.IsNull());
+  REQUIRE(!p1.shm_.IsNull());
   alloc->FreeArray(hshm::ThreadId::GetNull(), p1);
-  alloc->FreeArray(hshm::ThreadId::GetNull(), p3);
   Posttest();
 }
 
@@ -231,10 +229,9 @@ TEST_CASE("LocalArrays") {
   REQUIRE(!p2.shm_.IsNull());
   REQUIRE(p2.ptr_ != nullptr);
   REQUIRE(*p2 == 0);
-  hipc::LArray<char> p3 = alloc->ReallocateLocalArray<char>(
+  alloc->ReallocateLocalArray<char>(
       hshm::ThreadId::GetNull(), p1, 256);
-  REQUIRE(!p3.shm_.IsNull());
-  REQUIRE(p3.ptr_ != nullptr);
+  REQUIRE(!p1.shm_.IsNull());
+  REQUIRE(p1.ptr_ != nullptr);
   alloc->FreeLocalArray(hshm::ThreadId::GetNull(), p1);
-  alloc->FreeLocalArray(hshm::ThreadId::GetNull(), p3);
 }

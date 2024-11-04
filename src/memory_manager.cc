@@ -47,7 +47,8 @@ void MemoryManager::Init() {
   ArrayBackend *root_backend = (ArrayBackend*)root_backend_space_;
   Allocator::ConstructObj(*root_backend);
   root_backend->shm_init(MemoryBackendId::GetRoot(),
-                         KILOBYTES(16), root_alloc_data_);
+                         sizeof(root_alloc_data_),
+                         root_alloc_data_);
   root_backend->Own();
   root_backend_ = root_backend;
 
@@ -65,12 +66,6 @@ void MemoryManager::Init() {
 
   // Other allocators
   RegisterAllocator(root_alloc_);
-}
-
-/** Get the root allocator */
-HSHM_CROSS_FUN
-Allocator* MemoryManager::GetRootAllocator() {
-  return root_alloc_;
 }
 
 /** Default backend size */
@@ -96,24 +91,6 @@ MemoryBackend* MemoryManager::AttachBackend(MemoryBackendType type,
   backend->Disown();
   return backend;
 #endif
-}
-
-/**
- * Register a unique memory backend. Throws an exception if the backend
- * already exists. This is because unregistering a backend can cause
- * ramifications across allocators.
- *
- * @param url the backend's unique identifier
- * @param backend the backend to register
- * */
-HSHM_CROSS_FUN
-MemoryBackend* MemoryManager::RegisterBackend(
-    MemoryBackend *backend) {
-  if (GetBackend(backend->GetId())) {
-    HERMES_THROW_ERROR(MEMORY_BACKEND_REPEATED);
-  }
-  backends_[backend->GetId().id_] = backend;
-  return backend;
 }
 
 #ifdef HERMES_ENABLE_CUDA
@@ -191,32 +168,6 @@ void MemoryManager::ScanBackends(bool find_allocs) {
 }
 
 /**
- * Returns a pointer to a backend that has already been attached.
- * */
-HSHM_CROSS_FUN
-MemoryBackend* MemoryManager::GetBackend(const MemoryBackendId &backend_id) {
-  return backends_[backend_id.id_];
-}
-
-/**
- * Unregister backend
- * */
-HSHM_CROSS_FUN
-void MemoryManager::UnregisterBackend(const MemoryBackendId &backend_id) {
-  backends_[backend_id.id_] = nullptr;
-}
-
-/**
- * Destroy backend
- * */
-HSHM_CROSS_FUN
-void MemoryManager::DestroyBackend(const MemoryBackendId &backend_id) {
-  auto backend = GetBackend(backend_id);
-  backend->Own();
-  UnregisterBackend(backend_id);
-}
-
-/**
  * Registers an allocator. Used internally by ScanBackends, but may
  * also be used externally.
  * */
@@ -241,42 +192,5 @@ Allocator* MemoryManager::RegisterAllocator(Allocator *alloc, bool do_scan) {
   }
   return alloc;
 }
-
-/**
- * Destroys an allocator
- * */
-HSHM_CROSS_FUN
-void MemoryManager::UnregisterAllocator(AllocatorId alloc_id) {
-  if (alloc_id == default_allocator_->GetId()) {
-    default_allocator_ = root_alloc_;
-  }
-  allocators_[alloc_id.ToIndex()] = nullptr;
-}
-
-/**
- * Locates an allocator of a particular id
- * */
-HSHM_CROSS_FUN Allocator* MemoryManager::GetAllocator(AllocatorId alloc_id) {
-  return allocators_[alloc_id.ToIndex()];
-}
-
-/**
- * Gets the allocator used by default when no allocator is
- * used to construct an object.
- * */
-HSHM_CROSS_FUN
-Allocator* MemoryManager::GetDefaultAllocator() {
-  return reinterpret_cast<Allocator*>(default_allocator_);
-}
-
-/**
- * Sets the allocator used by default when no allocator is
- * used to construct an object.
- * */
-HSHM_CROSS_FUN
-void MemoryManager::SetDefaultAllocator(Allocator *alloc) {
-  default_allocator_ = alloc;
-}
-
 
 }  // namespace hshm::ipc

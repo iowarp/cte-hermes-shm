@@ -29,7 +29,7 @@ class MemoryManager {
   Allocator *default_allocator_;
   char root_backend_space_[64];
   char root_alloc_space_[64];
-  char root_alloc_data_[KILOBYTES(16)];
+  char root_alloc_data_[KILOBYTES(32)];
 
  public:
   /** Create the root allocator */
@@ -84,7 +84,14 @@ class MemoryManager {
    * @param backend the backend to register
    * */
   HSHM_CROSS_FUN
-  MemoryBackend* RegisterBackend(MemoryBackend *backend);
+  MemoryBackend* RegisterBackend(
+      MemoryBackend *backend) {
+    if (GetBackend(backend->GetId())) {
+      HERMES_THROW_ERROR(MEMORY_BACKEND_REPEATED);
+    }
+    backends_[backend->GetId().id_] = backend;
+    return backend;
+  }
 
   /**
    * Attaches to an existing memory backend located at \a url url.
@@ -97,19 +104,27 @@ class MemoryManager {
    * Returns a pointer to a backend that has already been attached.
    * */
   HSHM_CROSS_FUN
-  MemoryBackend* GetBackend(const MemoryBackendId &backend_id);
+  MemoryBackend* GetBackend(const MemoryBackendId &backend_id) {
+    return backends_[backend_id.id_];
+  }
 
   /**
    * Unregister backend
    * */
   HSHM_CROSS_FUN
-  void UnregisterBackend(const MemoryBackendId &backend_id);
+  void UnregisterBackend(const MemoryBackendId &backend_id) {
+    backends_[backend_id.id_] = nullptr;
+  }
 
   /**
    * Destroy backend
    * */
   HSHM_CROSS_FUN
-  void DestroyBackend(const MemoryBackendId &backend_id);
+  void DestroyBackend(const MemoryBackendId &backend_id) {
+    auto backend = GetBackend(backend_id);
+    backend->Own();
+    UnregisterBackend(backend_id);
+  }
 
   /**
    * Scans all attached backends for new memory allocators.
@@ -145,29 +160,42 @@ class MemoryManager {
    * Destroys an allocator
    * */
   HSHM_CROSS_FUN
-  void UnregisterAllocator(AllocatorId alloc_id);
+  void UnregisterAllocator(const AllocatorId &alloc_id) {
+    if (alloc_id == default_allocator_->GetId()) {
+      default_allocator_ = root_alloc_;
+    }
+    allocators_[alloc_id.ToIndex()] = nullptr;
+  }
 
   /**
    * Locates an allocator of a particular id
    * */
-  HSHM_CROSS_FUN Allocator* GetAllocator(AllocatorId alloc_id);
+  HSHM_CROSS_FUN Allocator* GetAllocator(const AllocatorId &alloc_id) {
+    return allocators_[alloc_id.ToIndex()];
+  }
 
   /**
    * Gets the allocator used for initializing other allocators.
    * */
-  HSHM_CROSS_FUN Allocator* GetRootAllocator();
+  HSHM_CROSS_FUN Allocator* GetRootAllocator() {
+    return root_alloc_;
+  }
 
   /**
    * Gets the allocator used by default when no allocator is
    * used to construct an object.
    * */
-  HSHM_CROSS_FUN Allocator* GetDefaultAllocator();
+  HSHM_CROSS_FUN Allocator* GetDefaultAllocator() {
+    return reinterpret_cast<Allocator*>(default_allocator_);
+  }
 
   /**
    * Sets the allocator used by default when no allocator is
    * used to construct an object.
    * */
-  HSHM_CROSS_FUN void SetDefaultAllocator(Allocator *alloc);
+  HSHM_CROSS_FUN void SetDefaultAllocator(Allocator *alloc) {
+    default_allocator_ = alloc;
+  }
 
   /**
    * Convert a process-independent pointer into a process-specific pointer.

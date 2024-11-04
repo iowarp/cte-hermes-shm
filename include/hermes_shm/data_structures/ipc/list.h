@@ -31,7 +31,7 @@ template<typename T>
 struct list_entry {
  public:
   OffsetPointer next_ptr_, prior_ptr_;
-  ShmArchive<T> data_;
+  delay_ar<T> data_;
 };
 
 /**

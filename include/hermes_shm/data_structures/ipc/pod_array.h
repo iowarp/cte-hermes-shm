@@ -26,8 +26,8 @@ template<typename T, int SO = sizeof(hipc::vector<T>) / sizeof(T) + 1>
 struct pod_array {
   int size_;
   union {
-    ShmArchive<T> cache_[SO];
-    ShmArchive<hipc::vector<T>> vec_;
+    delay_ar<T> cache_[SO];
+    delay_ar<hipc::vector<T>> vec_;
   };
 
   /** Default constructor */
@@ -75,7 +75,7 @@ struct pod_array {
 
   /** Get */
   HSHM_INLINE_CROSS_FUN
-  ShmArchive<T>* get() {
+  delay_ar<T>* get() {
     if (size_ > SO) {
       return vec_.get_ref().data_ar();
     }
@@ -84,7 +84,7 @@ struct pod_array {
 
   /** Get (const) */
   HSHM_INLINE_CROSS_FUN
-  const ShmArchive<T>* get() const {
+  const delay_ar<T>* get() const {
     if (size_ > SO) {
       return vec_.get_ref().data_ar();
     }

@@ -58,6 +58,11 @@ class ShmArchive {
     return reinterpret_cast<T*>(obj_);
   }
 
+  /** Pointer to internal object */
+  HSHM_CROSS_FUN T* get_dbg() {
+    return reinterpret_cast<T*>(obj_);
+  }
+
   /** Pointer to internal object (const) */
   HSHM_INLINE_CROSS_FUN const T* get() const {
     return reinterpret_cast<T*>(obj_);
@@ -107,14 +112,16 @@ class ShmArchive {
 
   /** Initialize */
   template<typename ...Args>
-  HSHM_INLINE_CROSS_FUN void shm_init(Args&& ...args) {
+  HSHM_INLINE_CROSS_FUN
+  void shm_init(Args&& ...args) {
     Allocator::ConstructObj<T>(get_ref(), std::forward<Args>(args)...);
   }
 
   /** Initialize piecewise */
   template<typename ArgPackT_1, typename ArgPackT_2>
-  HSHM_INLINE_CROSS_FUN void shm_init_piecewise(ArgPackT_1 &&args1,
-                                             ArgPackT_2 &&args2) {
+  HSHM_INLINE_CROSS_FUN
+  void shm_init_piecewise(ArgPackT_1 &&args1,
+                          ArgPackT_2 &&args2) {
     return hshm::PassArgPack::Call(
       MergeArgPacks::Merge(
         make_argpack(get_ref()),
@@ -189,6 +196,9 @@ void HSHM_CROSS_FUN load(Ar &ar, ShmArchive<T> &obj) {
   HSHM_MAKE_AR0(obj, HERMES_MEMORY_MANAGER->GetDefaultAllocator());
   ar & obj.get_ref();
 }
+
+template<typename T>
+using delay_ar = ShmArchive<T>;
 
 }  // namespace hshm::ipc
 

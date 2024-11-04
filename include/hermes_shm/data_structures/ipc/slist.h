@@ -29,7 +29,7 @@ template<typename T, HSHM_CLASS_TEMPL>
 struct slist_entry {
  public:
   OffsetPointer next_ptr_;
-  ShmArchive<T> data_;
+  delay_ar<T> data_;
 
   /** Constructor */
   template<typename ...Args>

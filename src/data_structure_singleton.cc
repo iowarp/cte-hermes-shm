@@ -17,6 +17,6 @@
 #include <hermes_shm/memory/memory_manager.h>
 DEFINE_GLOBAL_SINGLETON_CC(hshm::ipc::MemoryManager)
 #include <hermes_shm/introspect/system_info.h>
-DEFINE_SINGLETON_CC(hshm::SystemInfo)
+DEFINE_LOCKFREE_SINGLETON_CC(hshm::SystemInfo)
 #include <hermes_shm/thread/thread_model_manager.h>
 DEFINE_SINGLETON_CC(hshm::ThreadModelManager)

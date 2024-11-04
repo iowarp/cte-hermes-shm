@@ -53,7 +53,15 @@ class MemoryBackendFactory {
   template<typename BackendT, typename ...Args>
   static MemoryBackend* shm_init(
     const MemoryBackendId &backend_id, size_t size, Args ...args) {
-    HSHM_CREATE_BACKEND(PosixShmMmap)
+    // HSHM_CREATE_BACKEND(PosixShmMmap)
+    if constexpr(std::is_same_v<PosixShmMmap, BackendT>) {
+      auto alloc = HERMES_MEMORY_MANAGER->GetRootAllocator();
+      auto backend = alloc->NewObj<PosixShmMmap>(hshm::ThreadId::GetNull());
+      if (!backend->shm_init(backend_id, size, std::forward<Args>(args)...)) {
+        HERMES_THROW_ERROR(MEMORY_BACKEND_CREATE_FAILED);
+      }
+      return backend;
+    }
 #ifdef HERMES_ENABLE_CUDA
     HSHM_CREATE_BACKEND(CudaShmMmap)
     HSHM_CREATE_BACKEND(CudaMalloc)

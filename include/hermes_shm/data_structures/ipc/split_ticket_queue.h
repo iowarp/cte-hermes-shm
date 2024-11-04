@@ -39,7 +39,7 @@ template<typename T, HSHM_CLASS_TEMPL>
 class split_ticket_queue : public ShmContainer {
  public:
   HIPC_CONTAINER_TEMPLATE((CLASS_NAME), (TYPED_CLASS))
-  ShmArchive<vector<ticket_queue<T, HSHM_CLASS_TEMPL_ARGS>>> splits_;
+  delay_ar<vector<ticket_queue<T, HSHM_CLASS_TEMPL_ARGS>>> splits_;
   hipc::atomic<hshm::min_i32> rr_tail_, rr_head_;
 
  public:

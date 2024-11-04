@@ -107,6 +107,8 @@ endif()
 #------------------------------------------------------------------------------
 # External libraries
 #------------------------------------------------------------------------------
+# This is for compatability with SPACK
+SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 # Catch2
 find_package(Catch2 3.0.1 REQUIRED)

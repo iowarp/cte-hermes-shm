@@ -39,8 +39,8 @@ class pair : public ShmContainer {
    * Variables
    * ===================================*/
   HIPC_CONTAINER_TEMPLATE((CLASS_NAME), (TYPED_CLASS))
-  ShmArchive<FirstT> first_;
-  ShmArchive<SecondT> second_;
+  delay_ar<FirstT> first_;
+  delay_ar<SecondT> second_;
 
  public:
   /**====================================

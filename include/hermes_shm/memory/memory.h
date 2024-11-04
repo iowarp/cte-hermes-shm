@@ -72,7 +72,7 @@ union AllocatorId {
   }
 
   /** To index */
-  HSHM_INLINE_CROSS_FUN uint32_t ToIndex() {
+  HSHM_INLINE_CROSS_FUN uint32_t ToIndex() const {
     return bits_.major_ * 4 + bits_.minor_;
   }
 

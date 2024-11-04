@@ -24,7 +24,8 @@
 #define HERMES_ERROR_TYPE std::shared_ptr<hshm::Error>
 #define HERMES_ERROR_HANDLE_START() try {
 #define HERMES_ERROR_HANDLE_END() \
-  } catch(HERMES_ERROR_TYPE &err) { err->print(); exit(-1024); }
+  } catch(HERMES_ERROR_TYPE &err) { err->print(); exit(-1024); } \
+  catch (std::exception &e) { std::cerr << e.what() << std::endl; exit(-1024); }
 #define HERMES_ERROR_HANDLE_TRY try
 #define HERMES_ERROR_PTR err
 #define HERMES_ERROR_HANDLE_CATCH catch(HERMES_ERROR_TYPE &HERMES_ERROR_PTR)

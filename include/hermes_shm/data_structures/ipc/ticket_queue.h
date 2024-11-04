@@ -39,7 +39,7 @@ template<typename T, HSHM_CLASS_TEMPL>
 class ticket_queue : public ShmContainer {
  public:
   HIPC_CONTAINER_TEMPLATE((CLASS_NAME), (TYPED_CLASS))
-  ShmArchive<spsc_queue<T>> queue_;
+  delay_ar<spsc_queue<T>> queue_;
   hshm::Mutex lock_;
 
  public:
