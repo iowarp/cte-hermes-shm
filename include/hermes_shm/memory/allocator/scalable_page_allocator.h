@@ -120,7 +120,7 @@ class PageAllocator {
 };
 
 struct ScalablePageAllocatorHeader : public AllocatorHeader {
-  hipc::delay_ar<hipc::vector<PageAllocator>> tls_;
+  hipc::delay_ar<hipc::vector<PageAllocator>> ctx_;
   hipc::atomic<hshm::min_u64> total_alloc_;
   size_t coalesce_trigger_;
   size_t coalesce_window_;
@@ -138,7 +138,7 @@ struct ScalablePageAllocatorHeader : public AllocatorHeader {
     AllocatorHeader::Configure(alloc_id,
                                AllocatorType::kScalablePageAllocator,
                                custom_header_size);
-    HSHM_MAKE_AR(tls_, alloc, (1<<20), alloc);
+    HSHM_MAKE_AR(ctx_, alloc, (1<<20), alloc);
     total_alloc_ = 0;
     coalesce_trigger_ = (coalesce_trigger * buffer_size).as_int();
     coalesce_window_ = coalesce_window;
@@ -206,15 +206,16 @@ class ScalablePageAllocator : public Allocator {
    * memory larger than the page size.
    * */
   HSHM_CROSS_FUN
-  OffsetPointer AllocateOffset(hshm::ThreadId tid,
+  OffsetPointer AllocateOffset(const hipc::MemContext &ctx,
                                size_t size) override {
     PageId page_id(size + sizeof(MpPage));
 
     // Case 1: Can we re-use an existing page?
+    ThreadId tid = ctx.tls_;
     if (tid.IsNull()) {
       tid = HERMES_THREAD_MODEL->GetTid();
     }
-    PageAllocator &page_alloc = (*header_->tls_)[tid.tid_];
+    PageAllocator &page_alloc = (*header_->ctx_)[tid.tid_];
     MpPage *page = page_alloc.Allocate(page_id);
 
     // Case 2: Coalesce if enough space is being wasted
@@ -248,7 +249,7 @@ class ScalablePageAllocator : public Allocator {
    * alignment.
    * */
   HSHM_CROSS_FUN
-  OffsetPointer AlignedAllocateOffset(const hshm::ThreadId &tid,
+  OffsetPointer AlignedAllocateOffset(const hipc::MemContext &ctx,
                                       size_t size,
                                       size_t alignment) override {
     HERMES_THROW_ERROR(NOT_IMPLEMENTED, "AlignedAllocateOffset");
@@ -261,14 +262,14 @@ class ScalablePageAllocator : public Allocator {
    * */
   HSHM_CROSS_FUN
   OffsetPointer ReallocateOffsetNoNullCheck(
-      const hshm::ThreadId &tid,
+      const hipc::MemContext &ctx,
       OffsetPointer p, size_t new_size) override {
     LPointer<char, OffsetPointer> new_ptr =
-        AllocateLocalPtr<char, OffsetPointer>(tid, new_size);
+        AllocateLocalPtr<char, OffsetPointer>(ctx, new_size);
     char *old = Convert<char, OffsetPointer>(p);
     MpPage *old_hdr = (MpPage*)(old - sizeof(MpPage));
     memcpy(new_ptr.ptr_, old, old_hdr->page_size_ - sizeof(MpPage));
-    FreeOffsetNoNullCheck(tid, p);
+    FreeOffsetNoNullCheck(ctx.tls_, p);
     return new_ptr.shm_;
   }
 
@@ -276,7 +277,7 @@ class ScalablePageAllocator : public Allocator {
    * Free \a ptr pointer. Null check is performed elsewhere.
    * */
   HSHM_CROSS_FUN
-  void FreeOffsetNoNullCheck(hshm::ThreadId tid,
+  void FreeOffsetNoNullCheck(const hipc::MemContext &ctx,
                              OffsetPointer p) override {
     // Mark as free
     auto hdr_offset = p - sizeof(MpPage);
@@ -286,10 +287,11 @@ class ScalablePageAllocator : public Allocator {
     }
     hdr->UnsetAllocated();
     header_->total_alloc_.fetch_sub(hdr->page_size_);
+    ThreadId tid = ctx.tls_;
     if (tid.IsNull()) {
       tid = HERMES_THREAD_MODEL->GetTid();
     }
-    PageAllocator &page_alloc = (*header_->tls_)[tid.tid_];
+    PageAllocator &page_alloc = (*header_->ctx_)[tid.tid_];
     page_alloc.Free(hdr);
   }
 
@@ -306,14 +308,12 @@ class ScalablePageAllocator : public Allocator {
    * Free a thread-local memory storage
    * */
   HSHM_CROSS_FUN
-  void FreeTls(ThreadId tid) override {
+  void FreeTls(const MemContext &ctx) override {
+    ThreadId tid = ctx.tls_;
     if (tid.IsNull()) {
       tid = HERMES_THREAD_MODEL->GetTid();
     }
   }
-
- private:
-
 };
 
 }  // namespace hshm::ipc

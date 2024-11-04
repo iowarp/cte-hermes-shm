@@ -61,13 +61,13 @@ class ring_ptr_queue_base : public ShmContainer {
 
   /** SHM constructor. Default. */
   HSHM_CROSS_FUN
-  explicit ring_ptr_queue_base(const hipc::TlsAllocator<AllocT> &alloc,
+  explicit ring_ptr_queue_base(const hipc::CtxAllocator<AllocT> &alloc,
                           size_t depth = 1024) {
     shm_init(alloc, depth);
   }
 
   HSHM_INLINE_CROSS_FUN
-  void shm_init(const hipc::TlsAllocator<AllocT> &alloc,
+  void shm_init(const hipc::CtxAllocator<AllocT> &alloc,
                 size_t depth = 1024) {
     init_shm_container(alloc);
     HSHM_MAKE_AR(queue_, GetTlsAllocator(), depth);
@@ -89,7 +89,7 @@ class ring_ptr_queue_base : public ShmContainer {
 
   /** SHM copy constructor */
   HSHM_CROSS_FUN
-  explicit ring_ptr_queue_base(const hipc::TlsAllocator<AllocT> &alloc,
+  explicit ring_ptr_queue_base(const hipc::CtxAllocator<AllocT> &alloc,
                           const ring_ptr_queue_base &other) {
     init_shm_container(alloc);
     SetNull();
@@ -126,7 +126,7 @@ class ring_ptr_queue_base : public ShmContainer {
 
   /** SHM move constructor. */
   HSHM_CROSS_FUN
-  ring_ptr_queue_base(const hipc::TlsAllocator<AllocT> &alloc,
+  ring_ptr_queue_base(const hipc::CtxAllocator<AllocT> &alloc,
                  ring_ptr_queue_base &&other) noexcept {
     shm_move_op<false>(alloc, std::move(other));
   }
@@ -143,7 +143,7 @@ class ring_ptr_queue_base : public ShmContainer {
   /** Base shm move operator */
   template<bool IS_ASSIGN>
   HSHM_CROSS_FUN
-  void shm_move_op(const hipc::TlsAllocator<AllocT> &alloc, ring_ptr_queue_base &&other) {
+  void shm_move_op(const hipc::CtxAllocator<AllocT> &alloc, ring_ptr_queue_base &&other) {
     if constexpr (IS_ASSIGN) {
       shm_destroy();
     } else {

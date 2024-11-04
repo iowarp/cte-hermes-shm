@@ -14,25 +14,25 @@ void init_shm_container(AllocT *alloc) {
     alloc_info_ = alloc->GetId();
   } else {
     alloc_info_.alloc_ = alloc;
-    alloc_info_.tls_ = hshm::ThreadId::GetNull();
+    alloc_info_.ctx_ = hipc::MemContext();
   }
 }
 
 /** Initialize container (thread-local) */
 HSHM_CROSS_FUN
-void init_shm_container(const hshm::ThreadId &tid, AllocT *alloc) {
+void init_shm_container(const hipc::MemContext &ctx, AllocT *alloc) {
   if constexpr (!(HSHM_FLAGS & hipc::ShmFlag::kIsPrivate)) {
     alloc_info_ = alloc->GetId();
   } else {
     alloc_info_.alloc_ = alloc;
-    alloc_info_.tls_ = tid;
+    alloc_info_.ctx_ = ctx;
   }
 }
 
 /** Initialize container (thread-local) */
 HSHM_CROSS_FUN
-void init_shm_container(const hipc::TlsAllocator<AllocT> &tls_alloc) {
-  init_shm_container(tls_alloc.tls_, tls_alloc.alloc_);
+void init_shm_container(const hipc::CtxAllocator<AllocT> &tls_alloc) {
+  init_shm_container(tls_alloc.ctx_, tls_alloc.alloc_);
 }
 
 /**====================================
@@ -95,12 +95,12 @@ HSHM_INLINE_CROSS_FUN
   if constexpr (!(HSHM_FLAGS & hipc::ShmFlag::kIsPrivate)) {
     return hshm::ThreadId::GetNull();
   } else {
-    return alloc_info_.tls_;
+    return alloc_info_.ctx_;
   }
 }
 
 /** Get the shared-memory allocator id */
 HSHM_INLINE_CROSS_FUN
-    hipc::TlsAllocator<AllocT> GetTlsAllocator() const {
-  return hipc::TlsAllocator<AllocT>{GetThreadId(), GetAllocator()};
+    hipc::CtxAllocator<AllocT> GetTlsAllocator() const {
+  return hipc::CtxAllocator<AllocT>{GetThreadId(), GetAllocator()};
 }

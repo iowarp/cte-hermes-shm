@@ -93,7 +93,7 @@ class StackAllocator : public Allocator {
    * memory larger than the page size.
    * */
   HSHM_CROSS_FUN
-  OffsetPointer AllocateOffset(hshm::ThreadId tid,
+  OffsetPointer AllocateOffset(const hipc::MemContext &ctx,
                                size_t size) override {
     size += sizeof(MpPage);
     OffsetPointer p = heap_->AllocateOffset(size);
@@ -110,7 +110,7 @@ class StackAllocator : public Allocator {
    * alignment.
    * */
   HSHM_CROSS_FUN
-  OffsetPointer AlignedAllocateOffset(const hshm::ThreadId &tid,
+  OffsetPointer AlignedAllocateOffset(const hipc::MemContext &ctx,
                                       size_t size, size_t alignment) override {
     HERMES_THROW_ERROR(NOT_IMPLEMENTED, "AlignedAllocateOffset");
   }
@@ -122,13 +122,13 @@ class StackAllocator : public Allocator {
    * */
   HSHM_CROSS_FUN
   OffsetPointer ReallocateOffsetNoNullCheck(
-      const hshm::ThreadId &tid,
+      const hipc::MemContext &ctx,
       OffsetPointer p, size_t new_size) override {
     OffsetPointer new_p;
     void *src = Convert<void>(p);
     auto hdr = Convert<MpPage>(p - sizeof(MpPage));
     size_t old_size = hdr->page_size_ - sizeof(MpPage);
-    void *dst = AllocatePtr<void, OffsetPointer>(tid, new_size, new_p);
+    void *dst = AllocatePtr<void, OffsetPointer>(ctx, new_size, new_p);
     memcpy((void*)dst, (void*)src, old_size);
     Free(ThreadId::GetNull(), p);
     return new_p;
@@ -138,7 +138,7 @@ class StackAllocator : public Allocator {
    * Free \a ptr pointer. Null check is performed elsewhere.
    * */
   HSHM_CROSS_FUN
-  void FreeOffsetNoNullCheck(hshm::ThreadId tid,
+  void FreeOffsetNoNullCheck(const hipc::MemContext &ctx,
                              OffsetPointer p) override {
     auto hdr = Convert<MpPage>(p - sizeof(MpPage));
     if (!hdr->IsAllocated()) {
@@ -161,7 +161,7 @@ class StackAllocator : public Allocator {
    * Free a thread-local memory storage
    * */
   HSHM_CROSS_FUN
-  void FreeTls(ThreadId tid) override {
+  void FreeTls(const hipc::MemContext &ctx) override {
   }
 };
 

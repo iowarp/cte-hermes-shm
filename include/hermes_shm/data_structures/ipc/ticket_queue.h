@@ -55,13 +55,13 @@ class ticket_queue : public ShmContainer {
 
   /** SHM constructor. Default. */
   HSHM_CROSS_FUN
-  explicit ticket_queue(const hipc::TlsAllocator<AllocT> &alloc,
+  explicit ticket_queue(const hipc::CtxAllocator<AllocT> &alloc,
                         size_t depth = 1024) {
     shm_init(alloc, depth);
   }
 
   /** SHM Constructor. */
-  void shm_init(const hipc::TlsAllocator<AllocT> &alloc,
+  void shm_init(const hipc::CtxAllocator<AllocT> &alloc,
                 size_t depth = 1024) {
     init_shm_container(alloc);
     HSHM_MAKE_AR(queue_, GetTlsAllocator(), depth);
@@ -83,7 +83,7 @@ class ticket_queue : public ShmContainer {
 
   /** SHM copy constructor */
   HSHM_CROSS_FUN
-  explicit ticket_queue(const hipc::TlsAllocator<AllocT> &alloc,
+  explicit ticket_queue(const hipc::CtxAllocator<AllocT> &alloc,
                         const ticket_queue &other) {
     init_shm_container(alloc);
     SetNull();
@@ -118,7 +118,7 @@ class ticket_queue : public ShmContainer {
 
   /** SHM move constructor. */
   HSHM_CROSS_FUN
-  ticket_queue(const hipc::TlsAllocator<AllocT> &alloc,
+  ticket_queue(const hipc::CtxAllocator<AllocT> &alloc,
                ticket_queue &&other) noexcept {
     shm_move_op<false>(alloc, std::move(other));
   }
@@ -135,7 +135,7 @@ class ticket_queue : public ShmContainer {
   /** SHM move operator. */
   template<bool IS_ASSIGN>
   HSHM_CROSS_FUN
-  void shm_move_op(const hipc::TlsAllocator<AllocT> &alloc, ticket_queue &&other) noexcept {
+  void shm_move_op(const hipc::CtxAllocator<AllocT> &alloc, ticket_queue &&other) noexcept {
     if constexpr (IS_ASSIGN) {
       shm_destroy();
     } else {

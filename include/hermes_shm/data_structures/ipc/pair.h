@@ -55,13 +55,13 @@ class pair : public ShmContainer {
 
   /** SHM constructor. Default. */
   HSHM_CROSS_FUN
-  explicit pair(const hipc::TlsAllocator<AllocT> &alloc) {
+  explicit pair(const hipc::CtxAllocator<AllocT> &alloc) {
     shm_init(alloc);
   }
 
   /** SHM constructor */
   HSHM_CROSS_FUN
-  void shm_init(const hipc::TlsAllocator<AllocT> &alloc) {
+  void shm_init(const hipc::CtxAllocator<AllocT> &alloc) {
     init_shm_container(alloc);
     HSHM_MAKE_AR0(first_, GetTlsAllocator())
     HSHM_MAKE_AR0(second_, GetTlsAllocator())
@@ -83,7 +83,7 @@ class pair : public ShmContainer {
 
   /** SHM constructor. Move parameters. */
   HSHM_CROSS_FUN
-  explicit pair(const hipc::TlsAllocator<AllocT> &alloc,
+  explicit pair(const hipc::CtxAllocator<AllocT> &alloc,
                 FirstT &&first, SecondT &&second) {
     init_shm_container(alloc);
     HSHM_MAKE_AR(first_, GetTlsAllocator(),
@@ -102,7 +102,7 @@ class pair : public ShmContainer {
 
   /** SHM constructor. Copy parameters. */
   HSHM_CROSS_FUN
-  explicit pair(const hipc::TlsAllocator<AllocT> &alloc,
+  explicit pair(const hipc::CtxAllocator<AllocT> &alloc,
                 const FirstT &first, const SecondT &second) {
     init_shm_container(alloc);
     HSHM_MAKE_AR(first_, GetTlsAllocator(), first)
@@ -125,7 +125,7 @@ class pair : public ShmContainer {
   /** SHM constructor. Piecewise emplace. */
   template<typename FirstArgPackT, typename SecondArgPackT>
   HSHM_CROSS_FUN
-  explicit pair(const hipc::TlsAllocator<AllocT> &alloc,
+  explicit pair(const hipc::CtxAllocator<AllocT> &alloc,
                 PiecewiseConstruct &&hint,
                 FirstArgPackT &&first,
                 SecondArgPackT &&second) {
@@ -149,7 +149,7 @@ class pair : public ShmContainer {
 
   /** SHM copy constructor. From pair. */
   HSHM_CROSS_FUN
-  explicit pair(const hipc::TlsAllocator<AllocT> &alloc, const pair &other) {
+  explicit pair(const hipc::CtxAllocator<AllocT> &alloc, const pair &other) {
     init_shm_container(alloc);
     shm_strong_copy_construct(other);
   }
@@ -199,7 +199,7 @@ class pair : public ShmContainer {
 
   /** SHM move constructor. From pair. */
   HSHM_CROSS_FUN
-  explicit pair(const hipc::TlsAllocator<AllocT> &alloc, pair &&other) {
+  explicit pair(const hipc::CtxAllocator<AllocT> &alloc, pair &&other) {
     init_shm_container(alloc);
     if (GetTlsAllocator() == other.GetTlsAllocator()) {
       HSHM_MAKE_AR(first_, GetTlsAllocator(),

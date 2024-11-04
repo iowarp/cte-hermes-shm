@@ -188,13 +188,13 @@ class iqueue : public ShmContainer {
 
   /** SHM constructor. Default. */
   HSHM_CROSS_FUN
-  explicit iqueue(const hipc::TlsAllocator<AllocT> &alloc) {
+  explicit iqueue(const hipc::CtxAllocator<AllocT> &alloc) {
     shm_init(alloc);
   }
 
   /** SHM constructor. Default. */
   HSHM_CROSS_FUN
-  void shm_init(const hipc::TlsAllocator<AllocT> &alloc) {
+  void shm_init(const hipc::CtxAllocator<AllocT> &alloc) {
     init_shm_container(alloc);
     length_ = 0;
     head_ptr_.SetNull();
@@ -213,7 +213,7 @@ class iqueue : public ShmContainer {
 
   /** SHM copy constructor */
   HSHM_CROSS_FUN
-  explicit iqueue(const hipc::TlsAllocator<AllocT> &alloc,
+  explicit iqueue(const hipc::CtxAllocator<AllocT> &alloc,
                   const iqueue &other) {
     init_shm_container(alloc);
     shm_strong_copy_op(other);
@@ -249,7 +249,7 @@ class iqueue : public ShmContainer {
 
   /** SHM move constructor. */
   HSHM_CROSS_FUN
-  iqueue(const hipc::TlsAllocator<AllocT> &alloc, iqueue &&other) noexcept {
+  iqueue(const hipc::CtxAllocator<AllocT> &alloc, iqueue &&other) noexcept {
     init_shm_container(alloc);
     if (GetTlsAllocator() == other.GetTlsAllocator()) {
       memcpy((void*)this, (void*)&other, sizeof(*this));

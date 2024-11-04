@@ -34,7 +34,7 @@ struct slist_entry {
   /** Constructor */
   template<typename ...Args>
   HSHM_CROSS_FUN
-  explicit slist_entry(const hipc::TlsAllocator<AllocT> &alloc, Args&& ...args) {
+  explicit slist_entry(const hipc::CtxAllocator<AllocT> &alloc, Args&& ...args) {
     HSHM_MAKE_AR(data_, alloc, std::forward<Args>(args)...)
   }
 };
@@ -239,7 +239,7 @@ class slist : public ShmContainer {
 
   /** SHM constructor. Default. */
   HSHM_CROSS_FUN
-  explicit slist(const hipc::TlsAllocator<AllocT> &alloc) {
+  explicit slist(const hipc::CtxAllocator<AllocT> &alloc) {
     init_shm_container(alloc);
     SetNull();
   }
@@ -259,7 +259,7 @@ class slist : public ShmContainer {
 
   /** SHM copy constructor. From slist. */
   HSHM_CROSS_FUN
-  explicit slist(const hipc::TlsAllocator<AllocT> &alloc,
+  explicit slist(const hipc::CtxAllocator<AllocT> &alloc,
                  const slist &other) {
     init_shm_container(alloc);
     SetNull();
@@ -278,7 +278,7 @@ class slist : public ShmContainer {
 
   /** SHM copy constructor. From std::list */
   HSHM_CROSS_FUN
-  explicit slist(const hipc::TlsAllocator<AllocT> &alloc,
+  explicit slist(const hipc::CtxAllocator<AllocT> &alloc,
                  std::list<T> &other) {
     init_shm_container(alloc);
     SetNull();
@@ -324,7 +324,7 @@ class slist : public ShmContainer {
 
   /** SHM move constructor. From slist. */
   HSHM_CROSS_FUN
-  slist(const hipc::TlsAllocator<AllocT> &alloc, slist &&other) noexcept {
+  slist(const hipc::CtxAllocator<AllocT> &alloc, slist &&other) noexcept {
     shm_move_op<false>(alloc, std::move(other));
   }
 
@@ -340,7 +340,7 @@ class slist : public ShmContainer {
   /** SHM move operator. */
   template<bool IS_ASSIGN>
   HSHM_CROSS_FUN
-  void shm_move_op(const hipc::TlsAllocator<AllocT> &alloc, slist &&other) noexcept {
+  void shm_move_op(const hipc::CtxAllocator<AllocT> &alloc, slist &&other) noexcept {
     if constexpr (IS_ASSIGN) {
       shm_destroy();
     } else {

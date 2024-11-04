@@ -257,7 +257,7 @@ class vector : public ShmContainer {
   /** SHM constructor. Thread-local. */
   template<ShmFlagField OTHER_FLAGS>
   explicit vector(const vector<T, AllocT, OTHER_FLAGS> &other,
-                  const ThreadId &tid, const hipc::TlsAllocator<AllocT> &alloc) {
+                  const ThreadId &tid, const hipc::CtxAllocator<AllocT> &alloc) {
     init_shm_container(tid, alloc);
     vec_ptr_ = other.vec_ptr_;
     max_length_ = other.max_length_;
@@ -273,7 +273,7 @@ class vector : public ShmContainer {
 
   /** SHM constructor. Default. */
   HSHM_CROSS_FUN
-  explicit vector(const hipc::TlsAllocator<AllocT> &alloc) {
+  explicit vector(const hipc::CtxAllocator<AllocT> &alloc) {
     init_shm_container(alloc);
     SetNull();
   }
@@ -289,14 +289,14 @@ class vector : public ShmContainer {
   /** SHM constructor. Resize + construct. */
   template<typename ...Args>
   HSHM_CROSS_FUN
-  explicit vector(const hipc::TlsAllocator<AllocT> &alloc, size_t length, Args&& ...args) {
+  explicit vector(const hipc::CtxAllocator<AllocT> &alloc, size_t length, Args&& ...args) {
     shm_init(alloc, length, std::forward<Args>(args)...);
   }
 
   /** Constructor */
   template<typename ...Args>
   HSHM_CROSS_FUN
-  void shm_init(const TlsAllocator<AllocT> &tls_alloc,
+  void shm_init(const CtxAllocator<AllocT> &tls_alloc,
                 size_t length, Args&& ...args) {
     init_shm_container(tls_alloc);
     SetNull();
@@ -317,7 +317,7 @@ class vector : public ShmContainer {
 
   /** SHM copy constructor. From vector. */
   HSHM_CROSS_FUN
-  explicit vector(const hipc::TlsAllocator<AllocT> &alloc, const vector &other) {
+  explicit vector(const hipc::CtxAllocator<AllocT> &alloc, const vector &other) {
     init_shm_container(alloc);
     SetNull();
     shm_strong_copy_main<vector<T, HSHM_CLASS_TEMPL_ARGS>>(other);
@@ -343,7 +343,7 @@ class vector : public ShmContainer {
 
   /** SHM copy constructor. From std::vector */
   HSHM_CROSS_FUN
-  explicit vector(const hipc::TlsAllocator<AllocT> &alloc, const std::vector<T> &other) {
+  explicit vector(const hipc::CtxAllocator<AllocT> &alloc, const std::vector<T> &other) {
     init_shm_container(alloc);
     SetNull();
     shm_strong_copy_main<std::vector<T>>(other);
@@ -385,7 +385,7 @@ class vector : public ShmContainer {
 
   /** SHM move constructor. */
   HSHM_CROSS_FUN
-  vector(const hipc::TlsAllocator<AllocT> &alloc, vector &&other) {
+  vector(const hipc::CtxAllocator<AllocT> &alloc, vector &&other) {
     shm_move_op<false>(alloc, std::move(other));
   }
 
@@ -401,7 +401,7 @@ class vector : public ShmContainer {
   /** SHM move assignment operator. */
   template<bool IS_ASSIGN>
   HSHM_CROSS_FUN
-  void shm_move_op(const hipc::TlsAllocator<AllocT> &alloc, vector &&other) noexcept {
+  void shm_move_op(const hipc::CtxAllocator<AllocT> &alloc, vector &&other) noexcept {
     if constexpr (IS_ASSIGN) {
       shm_destroy();
     } else {
