@@ -20,13 +20,13 @@
 #include <omp.h>
 #include "hermes_shm/introspect/system_info.h"
 
-namespace hshm::thread_model {
+namespace hshm::thread {
 
 class Cuda : public ThreadModel {
  public:
   /** Default constructor */
-  HSHM_CROSS_FUN
-  Cuda() = default;
+  HSHM_INLINE_CROSS_FUN
+  Cuda() : ThreadModel(ThreadType::kCuda) {}
 
   /** Virtual destructor */
   HSHM_CROSS_FUN
@@ -42,12 +42,23 @@ class Cuda : public ThreadModel {
   void Yield() override {
   }
 
+  /** Create thread-local storage */
+  template<typename TLS>
+  HSHM_CROSS_FUN
+  bool CreateTls(ThreadLocalKey &key, TLS *data) {}
+
+  /** Get thread-local storage */
+  template<typename TLS>
+  HSHM_CROSS_FUN
+  TLS* GetTls(const ThreadLocalKey &key) {}
+
   /** Get the TID of the current thread */
+  HSHM_CROSS_FUN
   ThreadId GetTid() override {
     return ThreadId::GetNull();
   }
 };
 
-}  // namespace hshm::thread_model
+}  // namespace hshm::thread
 
 #endif  // HERMES_SHM_INCLUDE_HERMES_SHM_THREAD_CUDA_H__

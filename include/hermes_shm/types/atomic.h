@@ -150,7 +150,7 @@ struct nonatomic {
 };
 
 /** A wrapper for CUDA atomic operations */
-#ifdef __CUDA_ARCH__
+#ifdef HSHM_IS_GPU
 template<typename T>
 struct cuda_atomic {
   T x;
@@ -381,7 +381,7 @@ struct std_atomic {
   }
 };
 
-#ifndef __CUDA_ARCH__
+#ifdef HSHM_IS_HOST
 template<typename T>
 using atomic = std_atomic<T>;
 #else

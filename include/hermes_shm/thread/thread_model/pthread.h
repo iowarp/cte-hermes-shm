@@ -19,12 +19,13 @@
 #include <omp.h>
 #include "hermes_shm/introspect/system_info.h"
 
-namespace hshm::thread_model {
+namespace hshm::thread {
 
 class Pthread : public ThreadModel {
  public:
   /** Default constructor */
-  Pthread() = default;
+  HSHM_INLINE_CROSS_FUN
+  Pthread() : ThreadModel(ThreadType::kPthread) {}
 
   /** Virtual destructor */
   virtual ~Pthread() = default;
@@ -32,7 +33,7 @@ class Pthread : public ThreadModel {
   /** Yield the thread for a period of time */
   HSHM_CROSS_FUN
   void SleepForUs(size_t us) override {
-#ifndef __CUDA_ARCH__
+#ifdef HSHM_IS_HOST
     usleep(us);
 #endif
   }
@@ -40,8 +41,37 @@ class Pthread : public ThreadModel {
   /** Yield thread time slice */
   HSHM_CROSS_FUN
   void Yield() override {
-#ifndef __CUDA_ARCH__
+#ifdef HSHM_IS_HOST
     sched_yield();
+#endif
+  }
+
+  /** Create thread-local storage */
+  template<typename TLS>
+  HSHM_CROSS_FUN
+  bool CreateTls(ThreadLocalKey &key, TLS *data) {
+#ifdef HSHM_IS_HOST
+    int ret = pthread_key_create(&key.pthread_key_,
+                                 ThreadLocalData::destroy_wrap<TLS>);
+    if (ret != 0) {
+      return false;
+    }
+    pthread_setspecific(key.pthread_key_, data);
+    return true;
+#else
+    return false;
+#endif
+  }
+
+  /** Get thread-local storage */
+  template<typename TLS>
+  HSHM_CROSS_FUN
+  TLS* GetTls(const ThreadLocalKey &key) {
+#ifdef HSHM_IS_HOST
+    TLS *data = (TLS*)pthread_getspecific(key.pthread_key_);
+    return data;
+#else
+    return nullptr;
 #endif
   }
 
@@ -52,6 +82,6 @@ class Pthread : public ThreadModel {
   }
 };
 
-}  // namespace hshm::thread_model
+}  // namespace hshm::thread
 
 #endif  // HERMES_THREAD_PTHREAD_H_

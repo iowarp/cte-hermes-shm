@@ -97,7 +97,7 @@ class Logger {
  public:
   HSHM_CROSS_FUN
   Logger() {
-#ifndef __CUDA_ARCH__
+#ifdef HSHM_IS_HOST
     // exe_name_ = std::filesystem::path(exe_path_).filename().string();
     int verbosity = kDebug;
     auto verbosity_env = getenv("HERMES_LOG_VERBOSITY");
@@ -121,7 +121,7 @@ class Logger {
 
   HSHM_CROSS_FUN
   void SetVerbosity(int LOG_LEVEL) {
-#ifndef __CUDA_ARCH__
+#ifdef HSHM_IS_HOST
     verbosity_ = LOG_LEVEL;
     if (verbosity_ < 0) {
       verbosity_ = 0;
@@ -133,7 +133,7 @@ class Logger {
   HSHM_CROSS_FUN
   void Print(const char *fmt,
              Args&& ...args) {
-#ifndef __CUDA_ARCH__
+#ifdef HSHM_IS_HOST
     std::string out =
       hshm::Formatter::format(fmt, std::forward<Args>(args)...);
     std::cout << out;
@@ -151,7 +151,7 @@ class Logger {
                int line,
                const char *fmt,
                Args&& ...args) {
-#ifndef __CUDA_ARCH__
+#ifdef HSHM_IS_HOST
     if (LOG_LEVEL > verbosity_) { return; }
     std::string msg =
       hshm::Formatter::format(fmt, std::forward<Args>(args)...);
@@ -174,7 +174,7 @@ class Logger {
                 int line,
                 const char *fmt,
                 Args&& ...args) {
-#ifndef __CUDA_ARCH__
+#ifdef HSHM_IS_HOST
     if (LOG_LEVEL > verbosity_) { return; }
     std::string level;
     switch (LOG_LEVEL) {

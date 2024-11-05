@@ -16,6 +16,7 @@
 #include <cstdint>
 #include <hermes_shm/memory/memory.h>
 #include <hermes_shm/util/errors.h>
+#include "hermes_shm/thread/thread_model/thread_model.h"
 
 namespace hshm::ipc {
 
@@ -150,6 +151,12 @@ class Allocator {
    * */
   HSHM_CROSS_FUN
   virtual void FreeOffsetNoNullCheck(const MemContext &ctx, OffsetPointer p) = 0;
+
+  /**
+   * Create a globally-unique thread ID
+   * */
+  HSHM_CROSS_FUN
+  virtual void CreateTls(MemContext &ctx) = 0;
 
   /**
    * Free the memory pointed to by \a ptr Pointer
@@ -1064,6 +1071,52 @@ struct CtxAllocator {
     return alloc_ != rhs.alloc_;
   }
 };
+
+/**
+ * Scoped Allocator (thread-local)
+ * */
+template<typename AllocT>
+class ScopedCtxAllocator {
+ public:
+  CtxAllocator<AllocT> alloc_;
+
+ public:
+  ScopedCtxAllocator() {
+    alloc_->CreateTls(alloc_.ctx_);
+  }
+
+  ~ScopedCtxAllocator() {
+    alloc_->FreeTls(alloc_.ctx_);
+  }
+
+  /** Arrow operator */
+  HSHM_INLINE_CROSS_FUN
+  AllocT* operator->() {
+    return alloc_.alloc_;
+  }
+
+  /** Star operator */
+  HSHM_INLINE_CROSS_FUN
+  CtxAllocator<AllocT>& operator*() {
+    return alloc_;
+  }
+};
+
+/** Thread-local storage manager */
+template<typename AllocT>
+class TlsAllocatorInfo : public thread::ThreadLocalData {
+ public:
+  AllocT *alloc_;
+  ThreadId tls_;
+
+ public:
+  TlsAllocatorInfo() : alloc_(nullptr), tls_(ThreadId::GetNull()) {}
+
+  void destroy() {
+    alloc_->FreeTls(tls_);
+  }
+};
+
 
 }  // namespace hshm::ipc
 

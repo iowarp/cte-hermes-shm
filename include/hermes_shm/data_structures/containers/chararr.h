@@ -190,7 +190,7 @@ class chararr_templ {
 #undef HERMES_STR_CMP_OPERATOR
 };
 
-#ifndef __CUDA_ARCH__
+#ifdef HSHM_IS_HOST
 typedef chararr_templ<4096> chararr;
 #else
 typedef chararr_templ<32> chararr;

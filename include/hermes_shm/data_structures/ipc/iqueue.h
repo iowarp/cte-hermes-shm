@@ -312,6 +312,12 @@ class iqueue : public ShmContainer {
     ++length_;
   }
 
+  /** Wrapper for enqueue */
+  HSHM_INLINE_CROSS_FUN
+  void push(T *entry) {
+    enqueue(entry);
+  }
+
   /** Dequeue the first element */
   HSHM_CROSS_FUN
   T* dequeue() {
@@ -321,6 +327,12 @@ class iqueue : public ShmContainer {
     head_ptr_ = entry->next_ptr_;
     --length_;
     return reinterpret_cast<T*>(entry);
+  }
+
+  /** Wrapper for dequeue */
+  HSHM_INLINE_CROSS_FUN
+  T* pop() {
+    dequeue();
   }
 
   /** Dequeue the element at the iterator position */
@@ -335,6 +347,12 @@ class iqueue : public ShmContainer {
     prior_cast->next_ptr_ = pos_cast->next_ptr_;
     --length_;
     return reinterpret_cast<T*>(entry);
+  }
+
+  /** Wrapper for dequeue */
+  HSHM_INLINE_CROSS_FUN
+  T* pop(iterator_t pos) {
+    dequeue(pos);
   }
 
   /** Peek the first element of the queue */

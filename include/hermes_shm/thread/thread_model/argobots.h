@@ -20,13 +20,13 @@
 #include <omp.h>
 #include "hermes_shm/introspect/system_info.h"
 
-namespace hshm::thread_model {
+namespace hshm::thread {
 
 class Argobots : public ThreadModel {
  public:
   /** Default constructor */
-  HSHM_CROSS_FUN
-  Argobots() = default;
+  HSHM_INLINE_CROSS_FUN
+  Argobots() : ThreadModel(ThreadType::kArgobots) {}
 
   /** Virtual destructor */
   HSHM_CROSS_FUN
@@ -40,7 +40,7 @@ class Argobots : public ThreadModel {
      * tl::thread::self().sleep(*HERMES->rpc_.server_engine_,
                                HERMES->server_config_.borg_.blob_reorg_period_);
      */
-#ifndef __CUDA_ARCH__
+#ifdef HSHM_IS_HOST
     usleep(us);
 #endif
   }
@@ -48,21 +48,59 @@ class Argobots : public ThreadModel {
   /** Yield thread time slice */
   HSHM_CROSS_FUN
   void Yield() override {
-#ifndef __CUDA_ARCH__
+#ifdef HSHM_IS_HOST
     ABT_thread_yield();
 #endif
   }
 
+  /** Create thread-local storage */
+  template<typename TLS>
+  HSHM_CROSS_FUN
+  bool CreateTls(ThreadLocalKey &key, TLS *data) {
+#ifdef HSHM_IS_HOST
+    int ret = ABT_key_create(ThreadLocalData::template destroy_wrap<TLS>,
+                             &key.argobots_key_);
+    if (ret != ABT_SUCCESS) {
+      return false;
+    }
+    ret = ABT_key_set(key.argobots_key_, data);
+    if (ret != ABT_SUCCESS) {
+      return false;
+    }
+    return true;
+#else
+    return false;
+#endif
+  }
+
+  /** Get thread-local storage */
+  template<typename TLS>
+  HSHM_CROSS_FUN
+  TLS* GetTls(const ThreadLocalKey &key) {
+#ifdef HSHM_IS_HOST
+    TLS *data;
+    ABT_key_get(key.argobots_key_, (void **)&data);
+    return (TLS*)data;
+#else
+    return nullptr;
+#endif
+  }
+
   /** Get the TID of the current thread */
+  HSHM_CROSS_FUN
   ThreadId GetTid() override {
+#ifdef HSHM_IS_HOST
     ABT_thread thread;
     ABT_thread_id tid;
     ABT_thread_self(&thread);
     ABT_thread_get_id(thread, &tid);
     return ThreadId{tid};
+#else
+    return ThreadId{0};
+#endif
   }
 };
 
-}  // namespace hshm::thread_model
+}  // namespace hshm::thread
 
 #endif  // HERMES_SHM_INCLUDE_HERMES_SHM_THREAD_THALLIUM_H_

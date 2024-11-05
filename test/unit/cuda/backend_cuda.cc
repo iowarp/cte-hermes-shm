@@ -22,7 +22,7 @@ struct MyStruct {
   float y;
 
   __host__ __device__ int DoSomething() {
-#ifdef __CUDA_ARCH__
+#ifdef HSHM_IS_GPU
     return 25;
 #else
     return 10;

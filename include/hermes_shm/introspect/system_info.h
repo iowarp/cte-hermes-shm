@@ -33,7 +33,7 @@ struct SystemInfo {
 
   HSHM_CROSS_FUN
   void RefreshInfo() {
-#ifndef __CUDA_ARCH__
+#ifdef HSHM_IS_HOST
     pid_ = getpid();
     ncpu_ = get_nprocs_conf();
     page_size_ = getpagesize();

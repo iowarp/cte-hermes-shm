@@ -23,6 +23,7 @@
 #include <hermes_shm/memory/allocator/stack_allocator.h>
 #include <cmath>
 #include "mp_page.h"
+#include "hermes_shm/data_structures/ipc/ring_ptr_queue.h"
 
 namespace hshm::ipc {
 
@@ -57,7 +58,7 @@ struct PageId {
   HSHM_INLINE_CROSS_FUN
   PageId(size_t size) {
     orig_ = size;
-#ifndef __CUDA_ARCH__
+#ifdef HSHM_IS_HOST
     exp_ = std::ceil(std::log2(size - sizeof(MpPage)));
 #else
     exp_ = ceil(log2(num));
@@ -76,10 +77,13 @@ struct PageId {
   }
 };
 
+class ScalablePageAllocator;
+
 class PageAllocator {
  public:
   hipc::delay_ar<hipc::iqueue<MpPage, StackAllocator>>
     free_lists_[PageId::num_free_lists_];
+  TlsAllocatorInfo<ScalablePageAllocator> tls_;
 
  public:
   explicit PageAllocator(StackAllocator *alloc) {
@@ -90,6 +94,8 @@ class PageAllocator {
 
   PageAllocator(const PageAllocator &other) {}
   PageAllocator(PageAllocator &&other) {}
+
+
 
   MpPage* Allocate(const PageId &page_id) {
     // Allocate small page size
@@ -120,7 +126,9 @@ class PageAllocator {
 };
 
 struct ScalablePageAllocatorHeader : public AllocatorHeader {
-  hipc::delay_ar<hipc::vector<PageAllocator>> ctx_;
+  hipc::delay_ar<hipc::vector<PageAllocator, StackAllocator>> ctx_;
+  hipc::delay_ar<hipc::fixed_mpmc_ptr_queue<hshm::min_u64>> free_tids_;
+  hipc::atomic<hshm::min_u64> tid_heap_;
   hipc::atomic<hshm::min_u64> total_alloc_;
   size_t coalesce_trigger_;
   size_t coalesce_window_;
@@ -139,16 +147,31 @@ struct ScalablePageAllocatorHeader : public AllocatorHeader {
                                AllocatorType::kScalablePageAllocator,
                                custom_header_size);
     HSHM_MAKE_AR(ctx_, alloc, (1<<20), alloc);
+    HSHM_MAKE_AR(free_tids_, alloc, (1<<20));
     total_alloc_ = 0;
     coalesce_trigger_ = (coalesce_trigger * buffer_size).as_int();
     coalesce_window_ = coalesce_window;
+  }
+
+  hshm::ThreadId CreateTid() {
+    hshm::min_u64 tid = 0;
+    if (free_tids_->pop(tid).IsNull()) {
+      tid = tid_heap_.fetch_add(1);
+    }
+    return hshm::ThreadId(tid);
+  }
+
+  void FreeTid(hshm::ThreadId tid) {
+    free_tids_->emplace(tid.tid_);
   }
 };
 
 class ScalablePageAllocator : public Allocator {
  private:
+  typedef TlsAllocatorInfo<ScalablePageAllocator> TLS;
   ScalablePageAllocatorHeader *header_;
   StackAllocator alloc_;
+  thread::ThreadLocalKey tls_key_;
 
  public:
   /**
@@ -181,6 +204,7 @@ class ScalablePageAllocator : public Allocator {
     HERMES_MEMORY_MANAGER->RegisterSubAllocator(&alloc_);
     header_->Configure(id, custom_header_size, &alloc_,
                        buffer_size, coalesce_trigger, coalesce_window);
+    HERMES_THREAD_MODEL->CreateTls<TLS>(tls_key_, nullptr);
   }
 
   /**
@@ -199,6 +223,22 @@ class ScalablePageAllocator : public Allocator {
     size_t region_size = buffer_size_ - region_off;
     alloc_.shm_deserialize(buffer + region_off, region_size);
     HERMES_MEMORY_MANAGER->RegisterSubAllocator(&alloc_);
+    HERMES_THREAD_MODEL->CreateTls<TLS>(tls_key_, nullptr);
+  }
+
+  /** Get or create TID */
+  HSHM_CROSS_FUN
+  hshm::ThreadId GetOrCreateTid(const hipc::MemContext &ctx) {
+    hshm::ThreadId tid = ctx.tls_;
+    if (tid.IsNull()) {
+      TLS *tls = HERMES_THREAD_MODEL->GetTls<TLS>(tls_key_);
+      if (!tls) {
+        tid = header_->CreateTid();
+      } else {
+        tid = tls->tls_;
+      }
+    }
+    return tid;
   }
 
   /**
@@ -211,10 +251,7 @@ class ScalablePageAllocator : public Allocator {
     PageId page_id(size + sizeof(MpPage));
 
     // Case 1: Can we re-use an existing page?
-    ThreadId tid = ctx.tls_;
-    if (tid.IsNull()) {
-      tid = HERMES_THREAD_MODEL->GetTid();
-    }
+    ThreadId tid = GetOrCreateTid(ctx);
     PageAllocator &page_alloc = (*header_->ctx_)[tid.tid_];
     MpPage *page = page_alloc.Allocate(page_id);
 
@@ -287,10 +324,7 @@ class ScalablePageAllocator : public Allocator {
     }
     hdr->UnsetAllocated();
     header_->total_alloc_.fetch_sub(hdr->page_size_);
-    ThreadId tid = ctx.tls_;
-    if (tid.IsNull()) {
-      tid = HERMES_THREAD_MODEL->GetTid();
-    }
+    ThreadId tid = GetOrCreateTid(ctx);
     PageAllocator &page_alloc = (*header_->ctx_)[tid.tid_];
     page_alloc.Free(hdr);
   }
@@ -305,14 +339,23 @@ class ScalablePageAllocator : public Allocator {
   }
 
   /**
+   * Create a globally-unique thread ID
+   * */
+  HSHM_CROSS_FUN
+  void CreateTls(MemContext &ctx) override {
+    ctx.tls_ = GetOrCreateTid(ctx);
+  }
+
+  /**
    * Free a thread-local memory storage
    * */
   HSHM_CROSS_FUN
   void FreeTls(const MemContext &ctx) override {
-    ThreadId tid = ctx.tls_;
-    if (tid.IsNull()) {
-      tid = HERMES_THREAD_MODEL->GetTid();
+    ThreadId tid = GetOrCreateTid(ctx);
+    if (tid.IsNull()){
+      return;
     }
+    header_->FreeTid(tid);
   }
 };
 

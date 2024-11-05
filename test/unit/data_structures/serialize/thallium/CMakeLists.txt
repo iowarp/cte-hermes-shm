@@ -17,6 +17,8 @@ add_executable(test_thallium_server server.cc)
 add_dependencies(test_thallium_server
         hermes_shm_data_structures)
 target_link_libraries(test_thallium_server ${LIBS})
+target_compile_definitions(test_thallium_server PRIVATE
+        HSHM_DEFAULT_THREAD_MODEL=hshm::thread::Argobots)
 
 #------------------------------------------------------------------------------
 # Test Cases
@@ -28,6 +30,8 @@ add_executable(test_thallium_exec
 add_dependencies(test_thallium_exec
         hermes_shm_data_structures)
 target_link_libraries(test_thallium_exec ${LIBS})
+target_compile_definitions(test_thallium_server PRIVATE
+        HSHM_DEFAULT_THREAD_MODEL=hshm::thread::Argobots)
 
 add_test(NAME test_thallium COMMAND
         bash ${CMAKE_CURRENT_SOURCE_DIR}/test_thallium.sh

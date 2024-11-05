@@ -23,7 +23,7 @@ namespace hshm {
  * Makes a singleton. Constructs during initialization of program.
  * Does not require specific initialization of the static variable.
  * */
-#ifndef __CUDA_ARCH__
+#ifdef HSHM_IS_HOST
 template<typename T>
 class EasyGlobalSingleton {
  private:

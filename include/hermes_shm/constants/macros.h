@@ -76,15 +76,17 @@
 #define HSHM_ALWAYS_INLINE \
   inline __attribute__((always_inline))
 
-/** Macro for functions */
+/** Function decorators */
 #define HSHM_REG_FUN CUDA_HOST
 #define HSHM_HOST_FUN CUDA_HOST
 #define HSHM_GPU_FUN CUDA_DEVICE
 #define HSHM_CROSS_FUN CUDA_HOST_DEVICE
-#ifdef __CUDA_ARCH__
-#define HSHM_CROSS_VAR CUDA_DEVICE
+
+/** Function internals */
+#ifndef __CUDA_ARCH__
+#define HSHM_IS_HOST
 #else
-#define HSHM_CROSS_VAR
+#define HSHM_IS_GPU
 #endif
 
 /** Macro for inline function */
@@ -102,20 +104,32 @@
 #define CLS_CONST static inline constexpr const
 
 /** Class constant macro */
-#define GLOBAL_CONST static inline const HSHM_CROSS_VAR
+#define GLOBAL_CONST static inline const
 
+/** Namespace definitions */
 namespace hshm {}
 namespace hshm::ipc {}
 namespace hipc = hshm::ipc;
 
-#ifndef __CUDA_ARCH__
+/** The name of the current device */
+#ifdef HSHM_IS_HOST
 GLOBAL_CONST char *kCurrentDevice = "cpu";
 #else
 GLOBAL_CONST char *kCurrentDevice = "gpu";
 #endif
 
+/** Define the default allocator class */
 #ifndef HSHM_DEFAULT_ALLOC
 #define HSHM_DEFAULT_ALLOC hipc::Allocator
+#endif
+
+/** Define the default thread model class */
+#ifndef HSHM_DEFAULT_THREAD_MODEL
+#ifdef HSHM_IS_HOST
+#define HSHM_DEFAULT_THREAD_MODEL hshm::thread::Pthread
+#else
+#define HSHM_DEFAULT_THREAD_MODEL hshm::thread::Cuda
+#endif
 #endif
 
 #endif  // HERMES_MACROS_H

@@ -71,7 +71,7 @@ void MemoryManager::Init() {
 /** Default backend size */
 HSHM_CROSS_FUN
 size_t MemoryManager::GetDefaultBackendSize() {
-#ifndef __CUDA_ARCH__
+#ifdef HSHM_IS_HOST
   return HERMES_SYSTEM_INFO->ram_size_;
 #else
   // TODO(llogan)
@@ -84,7 +84,7 @@ size_t MemoryManager::GetDefaultBackendSize() {
 HSHM_CROSS_FUN
 MemoryBackend* MemoryManager::AttachBackend(MemoryBackendType type,
                                             const hshm::chararr &url) {
-#ifndef __CUDA_ARCH__
+#ifdef HSHM_IS_HOST
   MemoryBackend *backend = MemoryBackendFactory::shm_deserialize(type, url);
   RegisterBackend(backend);
   ScanBackends();
@@ -142,7 +142,7 @@ void AllocateCudaBackend(int dev, MemoryBackend *other) {
  * */
 HSHM_CROSS_FUN
 void MemoryManager::ScanBackends(bool find_allocs) {
-#if defined(HERMES_ENABLE_CUDA) && !defined(__CUDA_ARCH__)
+#if defined(HERMES_ENABLE_CUDA) && defined(HSHM_IS_HOST)
   int num_gpus = 0;
   cudaGetDeviceCount(&num_gpus);
 #endif
@@ -159,7 +159,7 @@ void MemoryManager::ScanBackends(bool find_allocs) {
       }
       RegisterAllocator(alloc, false);
     }
-#if defined(HERMES_ENABLE_CUDA) && !defined(__CUDA_ARCH__)
+#if defined(HERMES_ENABLE_CUDA) && defined(HSHM_IS_HOST)
     for (int dev = 0; dev < num_gpus; ++dev) {
       AllocateCudaBackend(dev, backend);
     }

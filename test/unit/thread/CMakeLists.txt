@@ -9,7 +9,6 @@ set(CMAKE_CXX_STANDARD 17)
 add_executable(test_thread_exec
         ${TEST_MAIN}/main.cc
         test_init.cc
-        test_thread.cc
         test_lock.cc)
 add_dependencies(test_thread_exec hermes_shm_data_structures)
 target_link_libraries(test_thread_exec

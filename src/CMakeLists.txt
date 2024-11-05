@@ -16,7 +16,6 @@ set(CMAKE_CXX_STANDARD 17)
 #-----------------------------------------------------------------------------
 set (SOURCE_FILES
         memory_manager.cc
-        thread_model_manager.cc
         data_structure_singleton.cc
 )
 if (BUILD_SHARED_LIBS)

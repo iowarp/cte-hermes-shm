@@ -158,6 +158,13 @@ class StackAllocator : public Allocator {
   }
 
   /**
+   * Create a globally-unique thread ID
+   * */
+  HSHM_CROSS_FUN
+  void CreateTls(MemContext &ctx) override {
+  }
+
+  /**
    * Free a thread-local memory storage
    * */
   HSHM_CROSS_FUN

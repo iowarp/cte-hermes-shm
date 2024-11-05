@@ -97,7 +97,7 @@ class MallocAllocator : public Allocator {
   HSHM_CROSS_FUN
   OffsetPointer AlignedAllocateOffset(const hipc::MemContext &ctx,
                                       size_t size, size_t alignment) override {
-#ifndef __CUDA_ARCH__
+#ifdef HSHM_IS_HOST
     auto page = reinterpret_cast<MallocPage*>(
         aligned_alloc(alignment, sizeof(MallocPage) + size));
     page->page_size_ = size;
@@ -117,7 +117,7 @@ class MallocAllocator : public Allocator {
   OffsetPointer ReallocateOffsetNoNullCheck(const hipc::MemContext &ctx,
                                             OffsetPointer p,
                                             size_t new_size) override {
-#ifndef __CUDA_ARCH__
+#ifdef HSHM_IS_HOST
     // Get the input page
     auto page = reinterpret_cast<MallocPage*>(
         p.off_.load() - sizeof(MallocPage));
@@ -154,6 +154,13 @@ class MallocAllocator : public Allocator {
   HSHM_CROSS_FUN
   size_t GetCurrentlyAllocatedSize() override {
     return header_->total_alloc_size_.load();
+  }
+
+  /**
+   * Create a globally-unique thread ID
+   * */
+  HSHM_CROSS_FUN
+  void CreateTls(MemContext &ctx) override {
   }
 
   /**

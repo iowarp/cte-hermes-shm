@@ -23,7 +23,7 @@ namespace hshm {
  * Makes a singleton. Constructs during initialization of program.
  * Requires user to define the static storage of obj_ in separate file.
  * */
-#ifndef __CUDA_ARCH__
+#ifdef HSHM_IS_HOST
 template<typename T>
 class GlobalSingleton {
  public:

@@ -57,22 +57,31 @@ class ring_queue_base : public ShmContainer {
    * ===================================*/
 
   /** Constructor. Default. */
+  template<typename ...Args>
   HSHM_CROSS_FUN
-  explicit ring_queue_base(size_t depth = 1024) {
-    shm_init(HERMES_MEMORY_MANAGER->GetDefaultAllocator(), depth);
+  explicit ring_queue_base(size_t depth = 1024, Args &&...args) {
+    shm_init(HERMES_MEMORY_MANAGER->GetDefaultAllocator(), depth,
+             std::forward<Args>(args)...);
   }
 
   /** SHM constructor. Default. */
+  template<typename ...Args>
   HSHM_CROSS_FUN
-  explicit ring_queue_base(const hipc::CtxAllocator<AllocT> &alloc, size_t depth = 1024) {
-    shm_init(alloc, depth);
+  explicit ring_queue_base(const hipc::CtxAllocator<AllocT> &alloc,
+                           size_t depth = 1024,
+                           Args &&...args) {
+    shm_init(alloc, depth, std::forward<Args>(args)...);
   }
 
   /** SHM Constructor */
+  template<typename ...Args>
   HSHM_CROSS_FUN
-  void shm_init(const hipc::CtxAllocator<AllocT> &alloc, size_t depth = 1024) {
+  void shm_init(const hipc::CtxAllocator<AllocT> &alloc,
+                size_t depth = 1024,
+                Args &&...args) {
     init_shm_container(alloc);
-    HSHM_MAKE_AR(queue_, GetTlsAllocator(), depth);
+    HSHM_MAKE_AR(queue_, GetTlsAllocator(), depth,
+                 std::forward<Args>(args)...);
     flags_.Clear();
     SetNull();
   }

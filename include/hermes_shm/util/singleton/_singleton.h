@@ -19,7 +19,7 @@
 
 namespace hshm {
 
-#ifndef __CUDA_ARCH__
+#ifdef HSHM_IS_HOST
 /**
  * Makes a singleton. Constructs the first time GetInstance is called.
  * Requires user to define the static storage of obj_ in separate file.
