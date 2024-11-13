@@ -30,7 +30,7 @@ class ticket_stack;
  * Used as inputs to the HIPC_CONTAINER_TEMPLATE
  * */
 #define CLASS_NAME ticket_stack
-#define TYPED_CLASS ticket_stack<T, HSHM_CLASS_TEMPL_ARGS>
+#define CLASS_NEW_ARGS T
 
 /**
  * A MPMC queue for allocating tickets. Handles concurrency
@@ -39,7 +39,7 @@ class ticket_stack;
 template<typename T, HSHM_CLASS_TEMPL>
 class ticket_stack : public ShmContainer {
  public:
-  HIPC_CONTAINER_TEMPLATE((CLASS_NAME), (TYPED_CLASS))
+  HIPC_CONTAINER_TEMPLATE((CLASS_NAME), (CLASS_NEW_ARGS))
   delay_ar<spsc_queue<T>> queue_;
   hshm::Mutex lock_;
 
@@ -197,7 +197,7 @@ class ticket_stack : public ShmContainer {
 
 }  // namespace hshm::ipc
 
-#undef TYPED_CLASS
+#undef CLASS_NEW_ARGS
 #undef CLASS_NAME
 
 #endif  // HERMES_SHM_INCLUDE_HERMES_SHM_DATA_STRUCTURES_IPC_TICKET_STACK_H_

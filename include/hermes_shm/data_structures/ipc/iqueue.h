@@ -154,7 +154,7 @@ struct iqueue_iterator_templ {
  * Used as inputs to the HIPC_CONTAINER_TEMPLATE
  * */
 #define CLASS_NAME iqueue
-#define TYPED_CLASS iqueue<T, HSHM_CLASS_TEMPL_ARGS>
+#define CLASS_NEW_ARGS T
 
 /**
  * Doubly linked iqueue implementation
@@ -162,7 +162,7 @@ struct iqueue_iterator_templ {
 template<typename T, HSHM_CLASS_TEMPL>
 class iqueue : public ShmContainer {
  public:
-  HIPC_CONTAINER_TEMPLATE((CLASS_NAME), (TYPED_CLASS))
+  HIPC_CONTAINER_TEMPLATE((CLASS_NAME), (CLASS_NEW_ARGS))
   OffsetPointer head_shm_, tail_shm_;
   size_t length_;
 
@@ -428,6 +428,6 @@ class iqueue : public ShmContainer {
 }  // namespace hshm::ipc
 
 #undef CLASS_NAME
-#undef TYPED_CLASS
+#undef CLASS_NEW_ARGS
 
 #endif  // HERMES_DATA_STRUCTURES_THREAD_UNSAFE_IQUEUE_H

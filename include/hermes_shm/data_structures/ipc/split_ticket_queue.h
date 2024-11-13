@@ -29,7 +29,7 @@ class split_ticket_queue;
  * Used as inputs to the HIPC_CONTAINER_TEMPLATE
  * */
 #define CLASS_NAME split_ticket_queue
-#define TYPED_CLASS split_ticket_queue<T, HSHM_CLASS_TEMPL_ARGS>
+#define CLASS_NEW_ARGS T
 
 /**
  * A MPMC queue for allocating tickets. Handles concurrency
@@ -38,7 +38,7 @@ class split_ticket_queue;
 template<typename T, HSHM_CLASS_TEMPL>
 class split_ticket_queue : public ShmContainer {
  public:
-  HIPC_CONTAINER_TEMPLATE((CLASS_NAME), (TYPED_CLASS))
+  HIPC_CONTAINER_TEMPLATE((CLASS_NAME), (CLASS_NEW_ARGS))
   delay_ar<vector<ticket_queue<T, HSHM_CLASS_TEMPL_ARGS>>> splits_;
   hipc::atomic<hshm::min_i32> rr_tail_, rr_head_;
 
@@ -224,7 +224,7 @@ class split_ticket_queue : public ShmContainer {
 
 }  // namespace hshm::ipc
 
-#undef TYPED_CLASS
+#undef CLASS_NEW_ARGS
 #undef CLASS_NAME
 
 #endif  // HERMES_SHM__DATA_STRUCTURES_IPC_SPLIT_TICKET_QUEUE_H_

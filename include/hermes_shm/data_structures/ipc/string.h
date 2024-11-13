@@ -30,7 +30,7 @@ class string_templ;
  * Used as inputs to the HIPC_CONTAINER_TEMPLATE
  * */
 #define CLASS_NAME string_templ
-#define TYPED_CLASS string_templ<SSO, HSHM_CLASS_TEMPL_ARGS>
+#define CLASS_NEW_ARGS SSO
 
 /**
  * A string of characters.
@@ -38,7 +38,7 @@ class string_templ;
 template<size_t SSO, HSHM_CLASS_TEMPL>
 class string_templ : public ShmContainer {
  public:
-  HIPC_CONTAINER_TEMPLATE((CLASS_NAME), (TYPED_CLASS))
+  HIPC_CONTAINER_TEMPLATE((CLASS_NAME), (CLASS_NEW_ARGS))
 
  public:
   size_t length_;
@@ -411,6 +411,6 @@ struct hash<hshm::ipc::string_templ<SSO>> {
 }  // namespace hshm
 
 #undef CLASS_NAME
-#undef TYPED_CLASS
+#undef CLASS_NEW_ARGS
 
 #endif  // HERMES_DATA_STRUCTURES_LOCKLESS_STRING_H_

@@ -27,7 +27,7 @@ class pair;
 * Used as inputs to the HIPC_CONTAINER_TEMPLATE
 * */
 #define CLASS_NAME pair
-#define TYPED_CLASS pair<FirstT, SecondT, HSHM_CLASS_TEMPL_ARGS>
+#define CLASS_NEW_ARGS FirstT, SecondT
 
 /**
 * A pair of two objects.
@@ -38,7 +38,7 @@ class pair : public ShmContainer {
   /**====================================
    * Variables
    * ===================================*/
-  HIPC_CONTAINER_TEMPLATE((CLASS_NAME), (TYPED_CLASS))
+  HIPC_CONTAINER_TEMPLATE((CLASS_NAME), (CLASS_NEW_ARGS))
   delay_ar<FirstT> first_;
   delay_ar<SecondT> second_;
 
@@ -277,7 +277,7 @@ class pair : public ShmContainer {
 };
 
 #undef CLASS_NAME
-#undef TYPED_CLASS
+#undef CLASS_NEW_ARGS
 
 }  // namespace hshm::ipc
 

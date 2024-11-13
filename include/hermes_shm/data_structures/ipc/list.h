@@ -197,7 +197,7 @@ struct list_iterator_templ {
  * Used as inputs to the HIPC_CONTAINER_TEMPLATE
  * */
 #define CLASS_NAME list
-#define TYPED_CLASS list<T, HSHM_CLASS_TEMPL_ARGS>
+#define CLASS_NEW_ARGS T
 
 /**
  * Doubly linked list implementation
@@ -205,7 +205,7 @@ struct list_iterator_templ {
 template<typename T, HSHM_CLASS_TEMPL>
 class list : public ShmContainer {
  public:
-  HIPC_CONTAINER_TEMPLATE((CLASS_NAME), (TYPED_CLASS))
+  HIPC_CONTAINER_TEMPLATE((CLASS_NAME), (CLASS_NEW_ARGS))
   OffsetPointer head_ptr_, tail_ptr_;
   size_t length_;
 
@@ -571,6 +571,6 @@ class list : public ShmContainer {
 }  // namespace hshm::ipc
 
 #undef CLASS_NAME
-#undef TYPED_CLASS
+#undef CLASS_NEW_ARGS
 
 #endif  // HERMES_DATA_STRUCTURES_THREAD_UNSAFE_LIST_H_

@@ -28,8 +28,8 @@ class ring_queue_base;
  * Used as inputs to the HIPC_CONTAINER_TEMPLATE
  * */
 #define CLASS_NAME ring_queue_base
-#define TYPED_CLASS \
-  ring_queue_base<T, IsPushAtomic, IsPopAtomic, IsFixedSize, HSHM_CLASS_TEMPL_ARGS>
+#define CLASS_NEW_ARGS \
+  T, IsPushAtomic, IsPopAtomic, IsFixedSize
 
 #define PAIR_OR_POINTER
 
@@ -45,7 +45,7 @@ template<
     HSHM_CLASS_TEMPL>
 class ring_queue_base : public ShmContainer {
  public:
- HIPC_CONTAINER_TEMPLATE((CLASS_NAME), (TYPED_CLASS))
+ HIPC_CONTAINER_TEMPLATE((CLASS_NAME), (CLASS_NEW_ARGS))
   delay_ar<vector<pair<bitfield32_t, T, HSHM_CLASS_TEMPL_ARGS>>> queue_;
   hipc::opt_atomic<qtok_id, IsPushAtomic> tail_;
   hipc::opt_atomic<qtok_id, IsPopAtomic> head_;
@@ -345,6 +345,6 @@ using spsc_queue = ring_queue_base<T, false, false, false, HSHM_CLASS_TEMPL_ARGS
 }  // namespace hshm::ipc
 
 #undef CLASS_NAME
-#undef TYPED_CLASS
+#undef CLASS_NEW_ARGS
 
 #endif  // HERMES_SHM_INCLUDE_HERMES_SHM_DATA_STRUCTURES_IPC_ring_queue_base_H_

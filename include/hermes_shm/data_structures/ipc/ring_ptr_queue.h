@@ -27,8 +27,8 @@ class ring_ptr_queue_base;
  * Used as inputs to the HIPC_CONTAINER_TEMPLATE
  * */
 #define CLASS_NAME ring_ptr_queue_base
-#define TYPED_CLASS \
-  ring_ptr_queue_base<T, IsPushAtomic, IsPopAtomic, IsFixedSize, HSHM_CLASS_TEMPL_ARGS>
+#define CLASS_NEW_ARGS \
+  T, IsPushAtomic, IsPopAtomic, IsFixedSize
 
 /**
  * A queue optimized for multiple producers (emplace) with a single
@@ -42,7 +42,7 @@ template<
     HSHM_CLASS_TEMPL>
 class ring_ptr_queue_base : public ShmContainer {
  public:
-  HIPC_CONTAINER_TEMPLATE((CLASS_NAME), (TYPED_CLASS))
+  HIPC_CONTAINER_TEMPLATE((CLASS_NAME), (CLASS_NEW_ARGS))
   delay_ar<vector<T, HSHM_CLASS_TEMPL_ARGS>> queue_;
   hipc::opt_atomic<qtok_id, IsPushAtomic> tail_;
   hipc::opt_atomic<qtok_id, IsPopAtomic> head_;
@@ -286,6 +286,6 @@ using spsc_ptr_queue = ring_ptr_queue_base<T, false, false, false, HSHM_CLASS_TE
 }  // namespace hshm::ipc
 
 #undef CLASS_NAME
-#undef TYPED_CLASS
+#undef CLASS_NEW_ARGS
 
 #endif  // HERMES_SHM_INCLUDE_HERMES_SHM_DATA_STRUCTURES_IPC_ring_ptr_queue_base_H_

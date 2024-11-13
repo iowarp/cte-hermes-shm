@@ -46,6 +46,8 @@ struct ShmFlag {
   typename AllocT, ShmFlagField HSHM_FLAGS
 #define HSHM_CLASS_TEMPL_ARGS \
   AllocT, HSHM_FLAGS
+#define HSHM_CLASS_TEMPL_TLS_ARGS \
+  AllocT, hipc::ShmFlag::kIsThreadLocal
 #define HSHM_ALLOCATOR_INFO \
   typename std::conditional<HSHM_FLAGS & hipc::ShmFlag::kIsPrivate, \
                    hipc::CtxAllocator<AllocT>, \
@@ -60,7 +62,7 @@ HSHM_INLINE_CROSS_FUN static T* typed_nullptr() {
 /**
  * The main container template macro
  * */
-#define HIPC_CONTAINER_TEMPLATE(CLASS_NAME,TYPED_CLASS) \
+#define HIPC_CONTAINER_TEMPLATE(CLASS_NAME,CLASS_NEW_ARGS) \
 public: \
 /**==================================== \
  * Variables & Types \
@@ -70,6 +72,24 @@ HSHM_ALLOCATOR_INFO alloc_info_; \
 /**==================================== \
  * Constructors \
  * ===================================*/ \
+/** Get thread-local reference */ \
+HSHM_CROSS_FUN \
+TYPE_UNWRAP(CLASS_NAME)<TYPE_UNWRAP(CLASS_NEW_ARGS), HSHM_CLASS_TEMPL_ARGS> \
+GetThreadLocal(const ThreadId &tid) { \
+  return TYPE_UNWRAP(CLASS_NAME)<TYPE_UNWRAP(CLASS_NEW_ARGS), HSHM_CLASS_TEMPL_ARGS>( \
+      *this, tid, GetAllocator()); \
+} \
+ \
+/** SHM constructor. Thread-local. */ \
+template<ShmFlagField OTHER_FLAGS> \
+HSHM_CROSS_FUN \
+explicit TYPE_UNWRAP(CLASS_NAME)( \
+    const TYPE_UNWRAP(CLASS_NAME)<TYPE_UNWRAP(CLASS_NEW_ARGS), AllocT, OTHER_FLAGS> &other, \
+const ThreadId &tid, const hipc::Allocator *alloc) { \
+memcpy(this, &other, sizeof(*this)); \
+init_shm_container(tid, alloc); \
+} \
+ \
 /** Initialize container */ \
 HSHM_CROSS_FUN \
 void init_shm_container(AllocT *alloc) { \
@@ -125,7 +145,9 @@ void shm_destroy() { \
 template<typename POINTER_T> \
 HSHM_INLINE_CROSS_FUN \
     POINTER_T GetShmPointer() const { \
-  return GetAllocator()->template Convert<TYPE_UNWRAP(TYPED_CLASS), POINTER_T>(this); \
+  return GetAllocator()->template \
+      Convert<TYPE_UNWRAP(CLASS_NAME)<TYPE_UNWRAP(CLASS_NEW_ARGS), HSHM_CLASS_TEMPL_ARGS>, \
+      POINTER_T>(this); \
 } \
  \
 /**==================================== \

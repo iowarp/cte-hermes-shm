@@ -7,6 +7,24 @@ HSHM_ALLOCATOR_INFO alloc_info_;
 /**====================================
  * Constructors
  * ===================================*/
+/** Get thread-local reference */
+HSHM_CROSS_FUN
+TYPE_UNWRAP(CLASS_NAME)<TYPE_UNWRAP(CLASS_NEW_ARGS), HSHM_CLASS_TEMPL_ARGS>
+GetThreadLocal(const ThreadId &tid) {
+  return TYPE_UNWRAP(CLASS_NAME)<TYPE_UNWRAP(CLASS_NEW_ARGS), HSHM_CLASS_TEMPL_ARGS>(
+      *this, tid, GetAllocator());
+}
+
+/** SHM constructor. Thread-local. */
+template<ShmFlagField OTHER_FLAGS>
+HSHM_CROSS_FUN
+explicit TYPE_UNWRAP(CLASS_NAME)(
+    const TYPE_UNWRAP(CLASS_NAME)<TYPE_UNWRAP(CLASS_NEW_ARGS), AllocT, OTHER_FLAGS> &other,
+const ThreadId &tid, const hipc::Allocator *alloc) {
+memcpy(this, &other, sizeof(*this));
+init_shm_container(tid, alloc);
+}
+
 /** Initialize container */
 HSHM_CROSS_FUN
 void init_shm_container(AllocT *alloc) {
@@ -62,7 +80,9 @@ void shm_destroy() {
 template<typename POINTER_T>
 HSHM_INLINE_CROSS_FUN
     POINTER_T GetShmPointer() const {
-  return GetAllocator()->template Convert<TYPE_UNWRAP(TYPED_CLASS), POINTER_T>(this);
+  return GetAllocator()->template
+      Convert<TYPE_UNWRAP(CLASS_NAME)<TYPE_UNWRAP(CLASS_NEW_ARGS), HSHM_CLASS_TEMPL_ARGS>,
+      POINTER_T>(this);
 }
 
 /**====================================

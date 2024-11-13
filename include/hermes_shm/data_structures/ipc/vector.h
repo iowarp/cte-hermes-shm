@@ -211,7 +211,7 @@ struct vector_iterator_templ {
  * Used as inputs to the HIPC_CONTAINER_TEMPLATE
  * */
 #define CLASS_NAME vector
-#define TYPED_CLASS vector<T, HSHM_CLASS_TEMPL_ARGS>
+#define CLASS_NEW_ARGS T
 
 /**
  * The vector class
@@ -219,7 +219,7 @@ struct vector_iterator_templ {
 template<typename T, HSHM_CLASS_TEMPL>
 class vector : public ShmContainer {
  public:
-  HIPC_CONTAINER_TEMPLATE((CLASS_NAME), (TYPED_CLASS))
+  HIPC_CONTAINER_TEMPLATE((CLASS_NAME), (CLASS_NEW_ARGS))
 
  public:
   /**====================================
@@ -246,23 +246,6 @@ class vector : public ShmContainer {
   /**====================================
    * Default Constructor
    * ===================================*/
-
-//  /** Get thread-local reference */
-//  vector<T, AllocT, hipc::ShmFlag::kIsThreadLocal>
-//  GetThreadLocal(const ThreadId &tid) {
-//    return vector<T, AllocT, hipc::ShmFlag::kIsThreadLocal>(
-//      *this, tid, GetAllocator());
-//  }
-//
-//  /** SHM constructor. Thread-local. */
-//  template<ShmFlagField OTHER_FLAGS>
-//  explicit vector(const vector<T, AllocT, OTHER_FLAGS> &other,
-//                  const ThreadId &tid, const hipc::CtxAllocator<AllocT> &alloc) {
-//    init_shm_container(tid, alloc);
-//    vec_ptr_ = other.vec_ptr_;
-//    max_length_ = other.max_length_;
-//    length_ = other.length_;
-//  }
 
   /** SHM constructor. Default. */
   HSHM_CROSS_FUN
@@ -802,6 +785,6 @@ class vector : public ShmContainer {
 }  // namespace hshm::ipc
 
 #undef CLASS_NAME
-#undef TYPED_CLASS
+#undef CLASS_NEW_ARGS
 
 #endif  // HERMES_DATA_STRUCTURES_LOCKLESS_VECTOR_H_

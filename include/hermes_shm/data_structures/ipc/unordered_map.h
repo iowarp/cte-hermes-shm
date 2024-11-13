@@ -155,7 +155,7 @@ struct unordered_map_iterator {
  * */
 
 #define CLASS_NAME unordered_map
-#define TYPED_CLASS unordered_map<Key, T, Hash, HSHM_CLASS_TEMPL_ARGS>
+#define CLASS_NEW_ARGS Key, T, Hash
 
 /**
  * The unordered map implementation
@@ -163,7 +163,7 @@ struct unordered_map_iterator {
 template<typename Key, typename T, class Hash, HSHM_CLASS_TEMPL>
 class unordered_map : public ShmContainer {
  public:
-  HIPC_CONTAINER_TEMPLATE((CLASS_NAME), (TYPED_CLASS))
+  HIPC_CONTAINER_TEMPLATE((CLASS_NAME), (CLASS_NEW_ARGS))
 
   /**====================================
    * Typedefs
@@ -580,6 +580,6 @@ class unordered_map : public ShmContainer {
 }  // namespace hshm::ipc
 
 #undef CLASS_NAME
-#undef TYPED_CLASS
+#undef CLASS_NEW_ARGS
 
 #endif  // HERMES_DATA_STRUCTURES_UNORDERED_MAP_H_
