@@ -70,8 +70,6 @@ class StackAllocator : public Allocator {
     size_t region_off = (custom_header_ - buffer_) + custom_header_size;
     size_t region_size = buffer_size_ - region_off;
     header_->Configure(id, custom_header_size, region_off, region_size);
-    memset(buffer_ + region_off, 0,
-           region_size < MEGABYTES(1) ? region_size : MEGABYTES(1));
     heap_ = &header_->heap_;
   }
 

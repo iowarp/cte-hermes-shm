@@ -143,8 +143,6 @@ struct ScalablePageAllocatorHeader : public AllocatorHeader {
   hipc::delay_ar<hipc::fixed_mpmc_ptr_queue<hshm::min_u64>> free_tids_;
   hipc::atomic<hshm::min_u64> tid_heap_;
   hipc::atomic<hshm::min_u64> total_alloc_;
-  size_t coalesce_trigger_;
-  size_t coalesce_window_;
 
   HSHM_CROSS_FUN
   ScalablePageAllocatorHeader() = default;
@@ -154,16 +152,13 @@ struct ScalablePageAllocatorHeader : public AllocatorHeader {
                  size_t custom_header_size,
                  StackAllocator *alloc,
                  size_t buffer_size,
-                 RealNumber coalesce_trigger,
-                 size_t coalesce_window) {
+                 size_t max_threads) {
     AllocatorHeader::Configure(alloc_id,
                                AllocatorType::kScalablePageAllocator,
                                custom_header_size);
-    HSHM_MAKE_AR(tls_, alloc, (1<<20), alloc);
-    HSHM_MAKE_AR(free_tids_, alloc, (1<<20));
+    HSHM_MAKE_AR(tls_, alloc, max_threads, alloc);
+    HSHM_MAKE_AR(free_tids_, alloc, max_threads);
     total_alloc_ = 0;
-    coalesce_trigger_ = (coalesce_trigger * buffer_size).as_int();
-    coalesce_window_ = coalesce_window;
   }
 
   HSHM_INLINE_CROSS_FUN
@@ -210,8 +205,7 @@ class ScalablePageAllocator : public Allocator {
                 size_t custom_header_size,
                 char *buffer,
                 size_t buffer_size,
-                RealNumber coalesce_trigger = RealNumber(1, 5),
-                size_t coalesce_window = MEGABYTES(1)) {
+                size_t max_threads = 1024) {
     type_ = AllocatorType::kScalablePageAllocator;
     id_ = id;
     buffer_ = buffer;
@@ -224,7 +218,7 @@ class ScalablePageAllocator : public Allocator {
     alloc_.shm_init(sub_id, 0, buffer + region_off, region_size);
     HERMES_MEMORY_MANAGER->RegisterSubAllocator(&alloc_);
     header_->Configure(id, custom_header_size, &alloc_,
-                       buffer_size, coalesce_trigger, coalesce_window);
+                       buffer_size, max_threads);
     HERMES_THREAD_MODEL->CreateTls<TLS>(tls_key_, nullptr);
     alloc_.Align();
   }
