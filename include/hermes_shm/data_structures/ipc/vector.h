@@ -247,22 +247,22 @@ class vector : public ShmContainer {
    * Default Constructor
    * ===================================*/
 
-  /** Get thread-local reference */
-  vector<T, AllocT, hipc::ShmFlag::kIsThreadLocal>
-  GetThreadLocal(const ThreadId &tid) {
-    return vector<T, AllocT, hipc::ShmFlag::kIsThreadLocal>(
-      *this, tid, GetAllocator());
-  }
-
-  /** SHM constructor. Thread-local. */
-  template<ShmFlagField OTHER_FLAGS>
-  explicit vector(const vector<T, AllocT, OTHER_FLAGS> &other,
-                  const ThreadId &tid, const hipc::CtxAllocator<AllocT> &alloc) {
-    init_shm_container(tid, alloc);
-    vec_ptr_ = other.vec_ptr_;
-    max_length_ = other.max_length_;
-    length_ = other.length_;
-  }
+//  /** Get thread-local reference */
+//  vector<T, AllocT, hipc::ShmFlag::kIsThreadLocal>
+//  GetThreadLocal(const ThreadId &tid) {
+//    return vector<T, AllocT, hipc::ShmFlag::kIsThreadLocal>(
+//      *this, tid, GetAllocator());
+//  }
+//
+//  /** SHM constructor. Thread-local. */
+//  template<ShmFlagField OTHER_FLAGS>
+//  explicit vector(const vector<T, AllocT, OTHER_FLAGS> &other,
+//                  const ThreadId &tid, const hipc::CtxAllocator<AllocT> &alloc) {
+//    init_shm_container(tid, alloc);
+//    vec_ptr_ = other.vec_ptr_;
+//    max_length_ = other.max_length_;
+//    length_ = other.length_;
+//  }
 
   /** SHM constructor. Default. */
   HSHM_CROSS_FUN

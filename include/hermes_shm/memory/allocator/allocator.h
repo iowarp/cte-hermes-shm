@@ -1146,8 +1146,10 @@ class TlsAllocatorInfo : public thread::ThreadLocalData {
   ThreadId tid_;
 
  public:
+  HSHM_CROSS_FUN
   TlsAllocatorInfo() : alloc_(nullptr), tid_(ThreadId::GetNull()) {}
 
+  HSHM_CROSS_FUN
   void destroy() {
     alloc_->FreeTls(tid_);
   }

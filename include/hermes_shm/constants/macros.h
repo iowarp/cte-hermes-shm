@@ -104,7 +104,7 @@
 #define CLS_CONST static inline constexpr const
 
 /** Class constant macro */
-#define GLOBAL_CONST static inline const
+#define GLOBAL_CONST inline const
 
 /** Namespace definitions */
 namespace hshm {}
@@ -113,9 +113,9 @@ namespace hipc = hshm::ipc;
 
 /** The name of the current device */
 #ifdef HSHM_IS_HOST
-GLOBAL_CONST char *kCurrentDevice = "cpu";
+#define kCurrentDevice "cpu"
 #else
-GLOBAL_CONST char *kCurrentDevice = "gpu";
+#define kCurrentDevice "gpu"
 #endif
 
 /** Define the default allocator class */

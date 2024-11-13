@@ -87,9 +87,12 @@ class Pthread : public ThreadModel {
   }
 
   /** Get the TID of the current thread */
+  HSHM_CROSS_FUN
   ThreadId GetTid() override {
+#ifdef HSHM_IS_HOST
     return ThreadId{(hshm::u64)omp_get_thread_num()};
     // return static_cast<ThreadId>(pthread_self());
+#endif
   }
 };
 

@@ -62,7 +62,7 @@ struct PageId {
 #ifdef HSHM_IS_HOST
     exp_ = std::ceil(std::log2(size - sizeof(MpPage)));
 #else
-    exp_ = ceil(log2(num));
+    exp_ = ceil(log2(size - sizeof(MpPage)));
 #endif
     round_ = (1 << exp_) + sizeof(MpPage);
     if (exp_ < min_cached_size_exp_) {
@@ -92,13 +92,17 @@ class PageAllocator {
   TLS tls_info_;
 
  public:
+  HSHM_INLINE_CROSS_FUN
   explicit PageAllocator(StackAllocator *alloc) {
     for (size_t i = 0; i < PageId::num_free_lists_; ++i) {
       HSHM_MAKE_AR0(free_lists_[i], alloc);
     }
   }
 
+  HSHM_INLINE_CROSS_FUN
   PageAllocator(const PageAllocator &other) {}
+
+  HSHM_INLINE_CROSS_FUN
   PageAllocator(PageAllocator &&other) {}
 
   HSHM_INLINE_CROSS_FUN
@@ -135,7 +139,6 @@ class PageAllocator {
 
 struct ScalablePageAllocatorHeader : public AllocatorHeader {
   typedef TlsAllocatorInfo<ScalablePageAllocator> TLS;
-  HeapAllocator heap_bins_[PageId::num_free_lists_];
   hipc::delay_ar<hipc::vector<PageAllocator, StackAllocator>> tls_;
   hipc::delay_ar<hipc::fixed_mpmc_ptr_queue<hshm::min_u64>> free_tids_;
   hipc::atomic<hshm::min_u64> tid_heap_;
@@ -163,6 +166,7 @@ struct ScalablePageAllocatorHeader : public AllocatorHeader {
     coalesce_window_ = coalesce_window;
   }
 
+  HSHM_INLINE_CROSS_FUN
   hshm::ThreadId CreateTid() {
     hshm::min_u64 tid = 0;
     if (free_tids_->pop(tid).IsNull()) {
@@ -171,10 +175,12 @@ struct ScalablePageAllocatorHeader : public AllocatorHeader {
     return hshm::ThreadId(tid);
   }
 
+  HSHM_INLINE_CROSS_FUN
   void FreeTid(hshm::ThreadId tid) {
     free_tids_->emplace(tid.tid_);
   }
 
+  HSHM_INLINE_CROSS_FUN
   TLS* GetTls(hshm::ThreadId tid) {
     return &(*tls_)[tid.tid_].tls_info_;
   }

@@ -100,6 +100,7 @@ class StackAllocator : public Allocator {
   }
 
   /** Align the memory to the next page boundary */
+  HSHM_CROSS_FUN
   void Align() {
     size_t off = heap_->heap_off_.load();
     size_t page_size = 4096;
