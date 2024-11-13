@@ -76,6 +76,7 @@ void backend_test() {
 }
 
 __global__ void mpsc_kernel(hipc::mpsc_queue<int> *queue) {
+  hipc::ScopedTlsAllocator<HSHM_DEFAULT_ALLOC> ctx_alloc(queue->GetCtxAllocator());
   queue->emplace(10);
 }
 

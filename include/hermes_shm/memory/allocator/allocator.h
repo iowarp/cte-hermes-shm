@@ -1100,15 +1100,18 @@ class ScopedTlsAllocator {
   CtxAllocator<AllocT> alloc_;
 
  public:
+  HSHM_INLINE_CROSS_FUN
   ScopedTlsAllocator(const MemContext &ctx, AllocT *alloc)
   : alloc_(ctx, alloc) {
     alloc_->CreateTls(alloc_.ctx_);
   }
 
+  HSHM_INLINE_CROSS_FUN
   ScopedTlsAllocator(const CtxAllocator<AllocT> &alloc) : alloc_(alloc) {
     alloc_->CreateTls(alloc_.ctx_);
   }
 
+  HSHM_INLINE_CROSS_FUN
   ~ScopedTlsAllocator() {
     alloc_->FreeTls(alloc_.ctx_);
   }
