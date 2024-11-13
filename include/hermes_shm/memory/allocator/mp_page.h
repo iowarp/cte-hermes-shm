@@ -17,7 +17,7 @@
 
 namespace hshm::ipc {
 
-struct MpPage {
+struct MpPage : public iqueue_entry {
   bitfield32_t flags_;  /**< Flags of the page (e.g., free/alloc) */
   /** Offset from the start of the page to the beginning of this header */
   uint32_t off_;

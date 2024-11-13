@@ -43,7 +43,7 @@ template<
 class ring_ptr_queue_base : public ShmContainer {
  public:
   HIPC_CONTAINER_TEMPLATE((CLASS_NAME), (TYPED_CLASS))
-  delay_ar<vector<T>> queue_;
+  delay_ar<vector<T, HSHM_CLASS_TEMPL_ARGS>> queue_;
   hipc::opt_atomic<qtok_id, IsPushAtomic> tail_;
   hipc::opt_atomic<qtok_id, IsPopAtomic> head_;
   bitfield32_t flags_;
@@ -70,7 +70,7 @@ class ring_ptr_queue_base : public ShmContainer {
   void shm_init(const hipc::CtxAllocator<AllocT> &alloc,
                 size_t depth = 1024) {
     init_shm_container(alloc);
-    HSHM_MAKE_AR(queue_, GetTlsAllocator(), depth);
+    HSHM_MAKE_AR(queue_, GetCtxAllocator(), depth);
     flags_.Clear();
     SetNull();
   }
@@ -82,7 +82,7 @@ class ring_ptr_queue_base : public ShmContainer {
   /** SHM copy constructor */
   HSHM_CROSS_FUN
   explicit ring_ptr_queue_base(const ring_ptr_queue_base &other) {
-    init_shm_container(other.GetTlsAllocator());
+    init_shm_container(other.GetCtxAllocator());
     SetNull();
     shm_strong_copy_op(other);
   }
@@ -121,7 +121,7 @@ class ring_ptr_queue_base : public ShmContainer {
   /** Move constructor. */
   HSHM_CROSS_FUN
   ring_ptr_queue_base(ring_ptr_queue_base &&other) noexcept {
-    shm_move_op<false>(other.GetTlsAllocator(), std::move(other));
+    shm_move_op<false>(other.GetCtxAllocator(), std::move(other));
   }
 
   /** SHM move constructor. */
@@ -135,7 +135,7 @@ class ring_ptr_queue_base : public ShmContainer {
   HSHM_CROSS_FUN
   ring_ptr_queue_base& operator=(ring_ptr_queue_base &&other) noexcept {
     if (this != &other) {
-      shm_move_op<true>(other.GetTlsAllocator(), std::move(other));
+      shm_move_op<true>(other.GetCtxAllocator(), std::move(other));
     }
     return *this;
   }
@@ -149,7 +149,7 @@ class ring_ptr_queue_base : public ShmContainer {
     } else {
       init_shm_container(alloc);
     }
-    if (GetTlsAllocator() == other.GetTlsAllocator()) {
+    if (GetCtxAllocator() == other.GetCtxAllocator()) {
       head_ = other.head_.load();
       tail_ = other.tail_.load();
       (*queue_) = std::move(*other.queue_);

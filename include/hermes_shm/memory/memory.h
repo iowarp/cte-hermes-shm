@@ -99,9 +99,7 @@ typedef AllocatorId allocator_id_t;
  * */
 template<bool ATOMIC = false>
 struct OffsetPointerBase {
-  typedef typename std::conditional<ATOMIC,
-    atomic<size_t>, nonatomic<size_t>>::type atomic_t;
-  atomic_t off_; /**< Offset within the allocator's slot */
+  hipc::opt_atomic<size_t, ATOMIC> off_; /**< Offset within the allocator's slot */
 
   /** Default constructor */
   HSHM_INLINE_CROSS_FUN OffsetPointerBase() = default;
@@ -110,7 +108,8 @@ struct OffsetPointerBase {
   HSHM_INLINE_CROSS_FUN explicit OffsetPointerBase(size_t off) : off_(off) {}
 
   /** Full constructor */
-  HSHM_INLINE_CROSS_FUN explicit OffsetPointerBase(atomic_t off)
+  HSHM_INLINE_CROSS_FUN explicit OffsetPointerBase(
+      hipc::opt_atomic<size_t, ATOMIC> off)
   : off_(off.load()) {}
 
   /** Pointer constructor */

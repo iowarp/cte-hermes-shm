@@ -310,7 +310,7 @@ class vector : public ShmContainer {
   /** Copy constructor. From vector. */
   HSHM_CROSS_FUN
   explicit vector(const vector &other) {
-    init_shm_container(other.GetTlsAllocator());
+    init_shm_container(other.GetCtxAllocator());
     SetNull();
     shm_strong_copy_main<vector<T, HSHM_CLASS_TEMPL_ARGS>>(other);
   }
@@ -336,7 +336,7 @@ class vector : public ShmContainer {
   /** Copy constructor. From std::vector */
   HSHM_CROSS_FUN
   explicit vector(const std::vector<T> &other) {
-    init_shm_container(other.GetTlsAllocator());
+    init_shm_container(other.GetCtxAllocator());
     SetNull();
     shm_strong_copy_main<std::vector<T>>(other);
   }
@@ -393,7 +393,7 @@ class vector : public ShmContainer {
   HSHM_CROSS_FUN
   vector& operator=(vector &&other) noexcept {
     if (this != &other) {
-      shm_move_op<true>(other.GetTlsAllocator(), std::move(other));
+      shm_move_op<true>(other.GetCtxAllocator(), std::move(other));
     }
     return *this;
   }
@@ -407,7 +407,7 @@ class vector : public ShmContainer {
     } else {
       init_shm_container(alloc);
     }
-    if (GetTlsAllocator() == other.GetTlsAllocator()) {
+    if (GetCtxAllocator() == other.GetCtxAllocator()) {
       memcpy((void *) this, (void *) &other, sizeof(*this));
       other.SetNull();
     } else {
@@ -438,7 +438,7 @@ class vector : public ShmContainer {
   HSHM_INLINE_CROSS_FUN
   void shm_destroy_main() {
     erase(begin(), end());
-    GetTlsAllocator()->Free(GetThreadId(), vec_ptr_);
+    GetCtxAllocator()->Free(GetThreadId(), vec_ptr_);
   }
 
   /**====================================
@@ -535,7 +535,7 @@ class vector : public ShmContainer {
     if (length_ == max_length_) {
       vec = grow_vector(vec, 0, false);
     }
-    HSHM_MAKE_AR(vec[length_], GetTlsAllocator(),
+    HSHM_MAKE_AR(vec[length_], GetCtxAllocator(),
                  std::forward<Args>(args)...)
     ++length_;
   }
@@ -560,7 +560,7 @@ class vector : public ShmContainer {
       vec = grow_vector(vec, 0, false);
     }
     shift_right(pos);
-    HSHM_MAKE_AR(vec[pos.i_], GetTlsAllocator(),
+    HSHM_MAKE_AR(vec[pos.i_], GetCtxAllocator(),
                  std::forward<Args>(args)...)
     ++length_;
   }
@@ -574,7 +574,7 @@ class vector : public ShmContainer {
     }
     delay_ar<T> *vec = data_ar();
     hipc::Allocator::DestructObj((*this)[pos.i_]);
-    HSHM_MAKE_AR(vec[pos.i_], GetTlsAllocator(),
+    HSHM_MAKE_AR(vec[pos.i_], GetCtxAllocator(),
                  std::forward<Args>(args)...)
   }
 
@@ -627,12 +627,12 @@ class vector : public ShmContainer {
 
   /** Retreives a pointer to the internal array */
   HSHM_INLINE_CROSS_FUN delay_ar<T>* data_ar() {
-    return GetTlsAllocator()->template Convert<delay_ar<T>>(vec_ptr_);
+    return GetCtxAllocator()->template Convert<delay_ar<T>>(vec_ptr_);
   }
 
   /** Retreives a pointer to the array */
   HSHM_INLINE_CROSS_FUN delay_ar<T>* data_ar() const {
-    return GetTlsAllocator()->template Convert<delay_ar<T>>(vec_ptr_);
+    return GetCtxAllocator()->template Convert<delay_ar<T>>(vec_ptr_);
   }
 
   /**====================================
@@ -666,33 +666,33 @@ class vector : public ShmContainer {
     delay_ar<T> *new_vec;
     if constexpr(std::is_pod<T>() && !IS_SHM_ARCHIVEABLE(T)) {
       // Use reallocate for well-behaved objects
-      new_vec = GetTlsAllocator()->template
+      new_vec = GetCtxAllocator()->template
         ReallocateObjs<delay_ar<T>>(
             GetThreadId(), vec_ptr_, max_length);
     } else {
       // Use std::move for unpredictable objects
       OffsetPointer new_p;
-      new_vec = GetTlsAllocator()->template
+      new_vec = GetCtxAllocator()->template
         AllocateObjs<delay_ar<T>>(
           GetThreadId(), max_length, new_p);
       for (size_t i = 0; i < length_; ++i) {
         T& old_entry = (*this)[i];
-        HSHM_MAKE_AR(new_vec[i], GetTlsAllocator(),
+        HSHM_MAKE_AR(new_vec[i], GetCtxAllocator(),
                      std::move(old_entry))
       }
       if (!vec_ptr_.IsNull()) {
-        GetTlsAllocator()->Free(GetThreadId(), vec_ptr_);
+        GetCtxAllocator()->Free(GetThreadId(), vec_ptr_);
       }
       vec_ptr_ = new_p;
     }
     if (new_vec == nullptr) {
       HERMES_THROW_ERROR(OUT_OF_MEMORY,
                          max_length * sizeof(delay_ar<T>),
-                         GetTlsAllocator()->GetCurrentlyAllocatedSize());
+                         GetCtxAllocator()->GetCurrentlyAllocatedSize());
     }
     if (resize) {
       for (size_t i = length_; i < max_length; ++i) {
-        HSHM_MAKE_AR(new_vec[i], GetTlsAllocator(),
+        HSHM_MAKE_AR(new_vec[i], GetCtxAllocator(),
                      std::forward<Args>(args)...)
       }
     }

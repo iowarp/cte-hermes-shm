@@ -63,11 +63,19 @@ class Argobots : public ThreadModel {
     if (ret != ABT_SUCCESS) {
       return false;
     }
-    ret = ABT_key_set(key.argobots_key_, data);
-    if (ret != ABT_SUCCESS) {
-      return false;
-    }
-    return true;
+    return SetTls(key, data);
+#else
+    return false;
+#endif
+  }
+
+  /** Create thread-local storage */
+  template<typename TLS>
+  HSHM_CROSS_FUN
+  bool SetTls(ThreadLocalKey &key, TLS *data) {
+#ifdef HSHM_IS_HOST
+    int ret = ABT_key_set(key.argobots_key_, data);
+    return ret == ABT_SUCCESS;
 #else
     return false;
 #endif

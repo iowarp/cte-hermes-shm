@@ -65,7 +65,7 @@ class ticket_stack : public ShmContainer {
   HSHM_CROSS_FUN
   void shm_init(const hipc::CtxAllocator<AllocT> &alloc, size_t depth = 1024) {
     init_shm_container(alloc);
-    HSHM_MAKE_AR(queue_, GetTlsAllocator(), depth);
+    HSHM_MAKE_AR(queue_, GetCtxAllocator(), depth);
     lock_.Init();
     SetNull();
   }
@@ -77,7 +77,7 @@ class ticket_stack : public ShmContainer {
   /** Copy constructor */
   HSHM_CROSS_FUN
   explicit ticket_stack(const ticket_stack &other) {
-    init_shm_container(other.GetTlsAllocator());
+    init_shm_container(other.GetCtxAllocator());
     SetNull();
     shm_strong_copy_op(other);
   }
@@ -114,7 +114,7 @@ class ticket_stack : public ShmContainer {
   /** Move constructor. */
   HSHM_CROSS_FUN
   ticket_stack(ticket_stack &&other) noexcept {
-    shm_move_op<false>(other.GetTlsAllocator(), std::move(other));
+    shm_move_op<false>(other.GetCtxAllocator(), std::move(other));
   }
 
   /** SHM move constructor. */
@@ -128,7 +128,7 @@ class ticket_stack : public ShmContainer {
   HSHM_CROSS_FUN
   ticket_stack& operator=(ticket_stack &&other) noexcept {
     if (this != &other) {
-      shm_move_op<true>(GetTlsAllocator(), std::move(other));
+      shm_move_op<true>(GetCtxAllocator(), std::move(other));
     }
     return *this;
   }
@@ -142,7 +142,7 @@ class ticket_stack : public ShmContainer {
     } else {
       init_shm_container(alloc);
     }
-    if (GetTlsAllocator() == other.GetTlsAllocator()) {
+    if (GetCtxAllocator() == other.GetCtxAllocator()) {
       (*queue_) = std::move(*other.queue_);
       other.SetNull();
     } else {

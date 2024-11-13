@@ -227,7 +227,7 @@ class unordered_map : public ShmContainer {
                 RealNumber max_capacity = RealNumber(4, 5),
                 RealNumber growth = RealNumber(5, 4)) {
     init_shm_container(alloc);
-    HSHM_MAKE_AR(buckets_, GetTlsAllocator(), num_buckets)
+    HSHM_MAKE_AR(buckets_, GetCtxAllocator(), num_buckets)
     max_capacity_ = max_capacity;
     growth_ = growth;
     length_ = 0;
@@ -257,7 +257,7 @@ class unordered_map : public ShmContainer {
   HSHM_CROSS_FUN
   void shm_strong_copy_construct(const unordered_map &other) {
     SetNull();
-    HSHM_MAKE_AR(buckets_, GetTlsAllocator(), other.GetBuckets())
+    HSHM_MAKE_AR(buckets_, GetCtxAllocator(), other.GetBuckets())
     shm_strong_copy_op(other);
   }
 
@@ -290,7 +290,7 @@ class unordered_map : public ShmContainer {
 
   /** Move constructor. */
   HSHM_INLINE_CROSS_FUN unordered_map(unordered_map &&other) noexcept {
-    shm_move_op<false>(other.GetTlsAllocator(), std::move(other));
+    shm_move_op<false>(other.GetCtxAllocator(), std::move(other));
   }
 
   /** SHM move constructor. */
@@ -303,7 +303,7 @@ class unordered_map : public ShmContainer {
   HSHM_CROSS_FUN
   unordered_map& operator=(unordered_map &&other) noexcept {
     if (this != &other) {
-      shm_move_op<true>(GetTlsAllocator(), std::move(other));
+      shm_move_op<true>(GetCtxAllocator(), std::move(other));
     }
     return *this;
   }
@@ -317,11 +317,11 @@ class unordered_map : public ShmContainer {
     } else {
       init_shm_container(alloc);
     }
-    if (GetTlsAllocator() == other.GetTlsAllocator()) {
+    if (GetCtxAllocator() == other.GetCtxAllocator()) {
       if constexpr (IS_ASSIGN) {
         GetBuckets() = std::move(other.GetBuckets());
       } else {
-        HSHM_MAKE_AR(buckets_, GetTlsAllocator(), std::move(other.GetBuckets()));
+        HSHM_MAKE_AR(buckets_, GetCtxAllocator(), std::move(other.GetBuckets()));
       }
       max_capacity_ = other.max_capacity_;
       growth_ = other.growth_;

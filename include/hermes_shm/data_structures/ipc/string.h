@@ -91,7 +91,7 @@ class string_templ : public ShmContainer {
   HSHM_CROSS_FUN
   explicit string_templ(const char *text) {
     shm_strong_copy_op<false, false>(
-          GetTlsAllocator(), text, 0);
+          GetCtxAllocator(), text, 0);
   }
 
   /** SHM Constructor. From const char* */
@@ -121,7 +121,7 @@ class string_templ : public ShmContainer {
   HSHM_CROSS_FUN
   explicit string_templ(const string_templ &other) {
     shm_strong_copy_op<false, true>(
-            other.GetTlsAllocator(), other.data(), other.size());
+            other.GetCtxAllocator(), other.data(), other.size());
   }
 
   /** SHM copy constructor. From string_templ. */
@@ -137,7 +137,7 @@ class string_templ : public ShmContainer {
   string_templ& operator=(const string_templ &other) {
     if (this != &other) {
       shm_strong_copy_op<true, true>(
-        GetTlsAllocator(), other.data(), other.size());
+        GetCtxAllocator(), other.data(), other.size());
     }
     return *this;
   }
@@ -146,7 +146,7 @@ class string_templ : public ShmContainer {
   HSHM_CROSS_FUN
   explicit string_templ(const std::string &other) {
     shm_strong_copy_op<false, true>(
-      GetTlsAllocator(), other.data(), other.size());
+      GetCtxAllocator(), other.data(), other.size());
   }
 
   /** SHM Constructor. From std::string */
@@ -161,7 +161,7 @@ class string_templ : public ShmContainer {
   HSHM_CROSS_FUN
   string_templ& operator=(const std::string &other) {
     shm_strong_copy_op<true, true>(
-      GetTlsAllocator(), other.data(), other.size());
+      GetCtxAllocator(), other.data(), other.size());
     return *this;
   }
 
@@ -211,7 +211,7 @@ class string_templ : public ShmContainer {
   HSHM_CROSS_FUN
   string_templ& operator=(string_templ &&other) noexcept {
     if (this != &other) {
-      shm_move_op<true>(GetTlsAllocator(), std::move(other));
+      shm_move_op<true>(GetCtxAllocator(), std::move(other));
     }
     return *this;
   }
@@ -226,7 +226,7 @@ class string_templ : public ShmContainer {
     } else {
       init_shm_container(alloc);
     }
-    if (GetTlsAllocator() == other.GetTlsAllocator()) {
+    if (GetCtxAllocator() == other.GetCtxAllocator()) {
       strong_copy(other);
       other.SetNull();
     } else {
@@ -253,7 +253,7 @@ class string_templ : public ShmContainer {
   /** Destroy the shared-memory data. */
   HSHM_INLINE_CROSS_FUN void shm_destroy_main() {
     if (size() >= SSO) {
-      GetTlsAllocator()->Free(GetThreadId(), text_);
+      GetCtxAllocator()->Free(GetThreadId(), text_);
     }
   }
 
@@ -296,7 +296,7 @@ class string_templ : public ShmContainer {
     if (length_ < SSO) {
       return sso_;
     } else {
-      return GetTlsAllocator()->template Convert<char, Pointer>(text_);
+      return GetCtxAllocator()->template Convert<char, Pointer>(text_);
     }
   }
 
@@ -305,7 +305,7 @@ class string_templ : public ShmContainer {
     if (length_ < SSO) {
       return sso_;
     } else {
-      return GetTlsAllocator()->template Convert<char, Pointer>(text_);
+      return GetCtxAllocator()->template Convert<char, Pointer>(text_);
     }
   }
 
@@ -315,7 +315,7 @@ class string_templ : public ShmContainer {
     if (IsNull()) {
       _create_str(new_size);
     } else if (new_size > size()) {
-      GetTlsAllocator()->template Reallocate<Pointer>(
+      GetCtxAllocator()->template Reallocate<Pointer>(
           GetThreadId(), text_, new_size);
       length_ = new_size;
     } else {
@@ -370,7 +370,7 @@ class string_templ : public ShmContainer {
       // NOTE(llogan): less than and not equal because length doesn't
       // account for trailing 0.
     } else {
-      text_ = GetTlsAllocator()->Allocate(GetThreadId(), length + 1);
+      text_ = GetCtxAllocator()->Allocate(GetThreadId(), length + 1);
     }
     length_ = length;
   }

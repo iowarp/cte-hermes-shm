@@ -56,6 +56,17 @@ class Pthread : public ThreadModel {
     if (ret != 0) {
       return false;
     }
+    return SetTls(key, data);
+#else
+    return false;
+#endif
+  }
+
+  /** Create thread-local storage */
+  template<typename TLS>
+  HSHM_CROSS_FUN
+  bool SetTls(ThreadLocalKey &key, TLS *data) {
+#ifdef HSHM_IS_HOST
     pthread_setspecific(key.pthread_key_, data);
     return true;
 #else

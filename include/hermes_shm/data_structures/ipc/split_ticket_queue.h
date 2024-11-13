@@ -71,7 +71,7 @@ class split_ticket_queue : public ShmContainer {
     if (split == 0) {
       split = HERMES_SYSTEM_INFO->ncpu_;
     }
-    HSHM_MAKE_AR(splits_, GetTlsAllocator(), split, depth_per_split);
+    HSHM_MAKE_AR(splits_, GetCtxAllocator(), split, depth_per_split);
     SetNull();
   }
 
@@ -82,7 +82,7 @@ class split_ticket_queue : public ShmContainer {
   /** Copy constructor */
   HSHM_CROSS_FUN
   explicit split_ticket_queue(const split_ticket_queue &other) {
-    init_shm_container(other.GetTlsAllocator());
+    init_shm_container(other.GetCtxAllocator());
     SetNull();
     shm_strong_copy_op(other);
   }
@@ -119,7 +119,7 @@ class split_ticket_queue : public ShmContainer {
   /** Move constructor. */
   HSHM_CROSS_FUN
   split_ticket_queue(split_ticket_queue &&other) noexcept {
-    shm_move_op<false>(other.GetTlsAllocator(), std::move(other));
+    shm_move_op<false>(other.GetCtxAllocator(), std::move(other));
   }
 
   /** SHM move constructor. */
@@ -133,7 +133,7 @@ class split_ticket_queue : public ShmContainer {
   HSHM_CROSS_FUN
   split_ticket_queue& operator=(split_ticket_queue &&other) noexcept {
     if (this != &other) {
-      shm_move_op<true>(GetTlsAllocator(), std::move(other));
+      shm_move_op<true>(GetCtxAllocator(), std::move(other));
     }
     return *this;
   }
@@ -147,7 +147,7 @@ class split_ticket_queue : public ShmContainer {
     } else {
       init_shm_container(alloc);
     }
-    if (GetTlsAllocator() == other.GetTlsAllocator()) {
+    if (GetCtxAllocator() == other.GetCtxAllocator()) {
       (*splits_) = std::move(*other.splits_);
       other.SetNull();
     } else {

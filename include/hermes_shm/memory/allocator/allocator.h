@@ -56,7 +56,7 @@ struct AllocatorHeader {
 /** Memory context */
 class MemContext {
  public:
-  ThreadId tls_ = ThreadId::GetNull();
+  ThreadId tid_ = ThreadId::GetNull();
 
  public:
   /** Default constructor */
@@ -65,7 +65,7 @@ class MemContext {
 
   /** Constructor */
   HSHM_INLINE_CROSS_FUN
-  MemContext(const ThreadId &tls) : tls_(tls) {}
+  MemContext(const ThreadId &tid) : tid_(tid) {}
 };
 
 /**
@@ -165,13 +165,13 @@ class Allocator {
   virtual void FreeTls(const MemContext &ctx) = 0;
 
   /** Get the allocator identifier */
-  HSHM_CROSS_FUN
+  HSHM_INLINE_CROSS_FUN
   AllocatorId& GetId()  {
     return id_;
   }
 
   /** Get the allocator identifier (const) */
-  HSHM_CROSS_FUN
+  HSHM_INLINE_CROSS_FUN
   const AllocatorId& GetId() const {
     return id_;
   }
@@ -1046,16 +1046,35 @@ struct CtxAllocator {
 
   /** Allocator and thread identifier constructor */
   HSHM_INLINE_CROSS_FUN
-  CtxAllocator(AllocT *alloc, const ThreadId &tls)
-  : alloc_(alloc), ctx_(tls) {}
+  CtxAllocator(AllocT *alloc, const ThreadId &tid)
+  : alloc_(alloc), ctx_(tid) {}
 
   /** Allocator and thread identifier constructor */
   HSHM_INLINE_CROSS_FUN
-  CtxAllocator(const ThreadId &tls, AllocT *alloc)
-  : alloc_(alloc), ctx_(tls) {}
+  CtxAllocator(const ThreadId &tid, AllocT *alloc)
+  : alloc_(alloc), ctx_(tid) {}
 
   /** Arrow operator */
-  HSHM_INLINE_CROSS_FUN AllocT* operator->() {
+  HSHM_INLINE_CROSS_FUN
+  AllocT* operator->() {
+    return alloc_;
+  }
+
+  /** Arrow operator (const) */
+  HSHM_INLINE_CROSS_FUN
+  const AllocT* operator->() const {
+    return alloc_;
+  }
+
+  /** Star operator */
+  HSHM_INLINE_CROSS_FUN
+  AllocT* operator*() {
+    return alloc_;
+  }
+
+  /** Star operator (const) */
+  HSHM_INLINE_CROSS_FUN
+  const AllocT* operator*() const {
     return alloc_;
   }
 
@@ -1076,28 +1095,45 @@ struct CtxAllocator {
  * Scoped Allocator (thread-local)
  * */
 template<typename AllocT>
-class ScopedCtxAllocator {
+class ScopedTlsAllocator {
  public:
   CtxAllocator<AllocT> alloc_;
 
  public:
-  ScopedCtxAllocator() {
+  ScopedTlsAllocator(const MemContext &ctx, AllocT *alloc)
+  : alloc_(ctx, alloc) {
     alloc_->CreateTls(alloc_.ctx_);
   }
 
-  ~ScopedCtxAllocator() {
+  ScopedTlsAllocator(const CtxAllocator<AllocT> &alloc) : alloc_(alloc) {
+    alloc_->CreateTls(alloc_.ctx_);
+  }
+
+  ~ScopedTlsAllocator() {
     alloc_->FreeTls(alloc_.ctx_);
   }
 
   /** Arrow operator */
   HSHM_INLINE_CROSS_FUN
-  AllocT* operator->() {
-    return alloc_.alloc_;
+  CtxAllocator<AllocT>& operator->() {
+    return alloc_;
+  }
+
+  /** Arrow operator (const) */
+  HSHM_INLINE_CROSS_FUN
+  const CtxAllocator<AllocT>& operator->() const {
+    return alloc_;
   }
 
   /** Star operator */
   HSHM_INLINE_CROSS_FUN
   CtxAllocator<AllocT>& operator*() {
+    return alloc_;
+  }
+
+  /** Star operator (const) */
+  HSHM_INLINE_CROSS_FUN
+  const CtxAllocator<AllocT>& operator*() const {
     return alloc_;
   }
 };
@@ -1107,13 +1143,13 @@ template<typename AllocT>
 class TlsAllocatorInfo : public thread::ThreadLocalData {
  public:
   AllocT *alloc_;
-  ThreadId tls_;
+  ThreadId tid_;
 
  public:
-  TlsAllocatorInfo() : alloc_(nullptr), tls_(ThreadId::GetNull()) {}
+  TlsAllocatorInfo() : alloc_(nullptr), tid_(ThreadId::GetNull()) {}
 
   void destroy() {
-    alloc_->FreeTls(tls_);
+    alloc_->FreeTls(tid_);
   }
 };
 

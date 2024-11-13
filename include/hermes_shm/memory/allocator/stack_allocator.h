@@ -70,6 +70,8 @@ class StackAllocator : public Allocator {
     size_t region_off = (custom_header_ - buffer_) + custom_header_size;
     size_t region_size = buffer_size_ - region_off;
     header_->Configure(id, custom_header_size, region_off, region_size);
+    memset(buffer_ + region_off, 0,
+           region_size < MEGABYTES(1) ? region_size : MEGABYTES(1));
     heap_ = &header_->heap_;
   }
 
@@ -86,6 +88,23 @@ class StackAllocator : public Allocator {
     id_ = header_->allocator_id_;
     custom_header_ = reinterpret_cast<char*>(header_ + 1);
     heap_ = &header_->heap_;
+  }
+
+  /**
+   * Allocate a memory of \a size size. The page allocator cannot allocate
+   * memory larger than the page size.
+   * */
+  HSHM_INLINE_CROSS_FUN
+  OffsetPointer SubAllocateOffset(size_t size) {
+    return heap_->AllocateOffset(size);
+  }
+
+  /** Align the memory to the next page boundary */
+  void Align() {
+    size_t off = heap_->heap_off_.load();
+    size_t page_size = 4096;
+    size_t new_off = (off + page_size - 1) & ~(page_size - 1);
+    heap_->heap_off_.store(new_off);
   }
 
   /**

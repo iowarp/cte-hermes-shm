@@ -19,22 +19,32 @@
 namespace hshm::ipc {
 
 struct HeapAllocator {
+  size_t region_off_;
   hipc::atomic<hshm::min_u64> heap_off_;
   size_t heap_size_;
 
   /** Default constructor */
   HSHM_CROSS_FUN
-  HeapAllocator() : heap_off_(0), heap_size_(0) {}
+  HeapAllocator() : region_off_(0), heap_off_(0), heap_size_(0) {}
 
   /** Emplace constructor */
   HSHM_CROSS_FUN
-  explicit HeapAllocator(size_t heap_off, size_t heap_size)
-  : heap_off_(heap_off), heap_size_(heap_size) {}
+  explicit HeapAllocator(size_t region_off, size_t heap_size)
+  : region_off_(region_off), heap_off_(0), heap_size_(heap_size) {}
 
   /** Explicit initialization */
   HSHM_CROSS_FUN
-  void shm_init(size_t heap_off, size_t heap_size) {
-    heap_off_ = heap_off;
+  void shm_init(size_t region_off, size_t heap_size) {
+    region_off_ = region_off;
+    heap_off_ = 0;
+    heap_size_ = heap_size;
+  }
+
+  /** Explicit initialization */
+  HSHM_CROSS_FUN
+  void shm_init(const OffsetPointer &region_off, size_t heap_size) {
+    region_off_ = region_off.off_.load();
+    heap_off_ = 0;
     heap_size_ = heap_size;
   }
 
@@ -42,9 +52,19 @@ struct HeapAllocator {
   HSHM_INLINE_CROSS_FUN OffsetPointer AllocateOffset(size_t size) {
     size_t off = heap_off_.fetch_add(size);
     if (off + size > heap_size_) {
-      HERMES_THROW_ERROR(OUT_OF_MEMORY, size, heap_size_);
+      // HERMES_THROW_ERROR(OUT_OF_MEMORY, size, heap_size_);
+      return OffsetPointer::GetNull();
     }
-    return OffsetPointer(off);
+    return OffsetPointer(region_off_ + off);
+  }
+
+  /** Copy assignment operator */
+  HSHM_CROSS_FUN
+  HeapAllocator& operator=(const HeapAllocator &other) {
+    region_off_ = other.region_off_;
+    heap_off_ = other.heap_off_.load();
+    heap_size_ = other.heap_size_;
+    return *this;
   }
 };
 

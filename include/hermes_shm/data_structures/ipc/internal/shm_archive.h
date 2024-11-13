@@ -48,10 +48,10 @@ class ShmArchive {
   char obj_[sizeof(T)];
 
   /** Default constructor */
-  HSHM_CROSS_FUN ShmArchive() = default;
+  HSHM_INLINE_CROSS_FUN ShmArchive() = default;
 
   /** Destructor */
-  HSHM_CROSS_FUN ~ShmArchive() = default;
+  HSHM_INLINE_CROSS_FUN ~ShmArchive() = default;
 
   /** Pointer to internal object */
   HSHM_INLINE_CROSS_FUN T* get() {
@@ -99,16 +99,20 @@ class ShmArchive {
   }
 
   /** Copy constructor */
-  HSHM_CROSS_FUN ShmArchive(const ShmArchive &other) = delete;
+  HSHM_INLINE_CROSS_FUN
+  ShmArchive(const ShmArchive &other) = delete;
 
   /** Copy assignment operator */
-  HSHM_CROSS_FUN ShmArchive& operator=(const ShmArchive &other) = delete;
+  HSHM_INLINE_CROSS_FUN
+  ShmArchive& operator=(const ShmArchive &other) = delete;
 
   /** Move constructor */
-  HSHM_CROSS_FUN ShmArchive(ShmArchive &&other) = delete;
+  HSHM_INLINE_CROSS_FUN
+  ShmArchive(ShmArchive &&other) = delete;
 
   /** Move assignment operator */
-  HSHM_CROSS_FUN ShmArchive& operator=(ShmArchive &&other) = delete;
+  HSHM_INLINE_CROSS_FUN
+  ShmArchive& operator=(ShmArchive &&other) = delete;
 
   /** Initialize */
   template<typename ...Args>

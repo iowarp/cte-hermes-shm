@@ -45,12 +45,23 @@ class Cuda : public ThreadModel {
   /** Create thread-local storage */
   template<typename TLS>
   HSHM_CROSS_FUN
-  bool CreateTls(ThreadLocalKey &key, TLS *data) {}
+  bool CreateTls(ThreadLocalKey &key, TLS *data) {
+    return false;
+  }
 
   /** Get thread-local storage */
   template<typename TLS>
   HSHM_CROSS_FUN
-  TLS* GetTls(const ThreadLocalKey &key) {}
+  TLS* GetTls(const ThreadLocalKey &key) {
+    return nullptr;
+  }
+
+  /** Create thread-local storage */
+  template<typename TLS>
+  HSHM_CROSS_FUN
+  bool SetTls(ThreadLocalKey &key, TLS *data) {
+    return false;
+  }
 
   /** Get the TID of the current thread */
   HSHM_CROSS_FUN

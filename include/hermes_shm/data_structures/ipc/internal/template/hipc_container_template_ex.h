@@ -126,7 +126,7 @@ class ShmContainerExample : public hipc::ShmContainer {
 
   /** Get the shared-memory allocator id */
   HSHM_INLINE_CROSS_FUN
-  hipc::CtxAllocator<AllocT> GetTlsAllocator() const {
+  hipc::CtxAllocator<AllocT> GetCtxAllocator() const {
     return hipc::CtxAllocator<AllocT>{GetThreadId(), GetAllocator()};
   }
 };

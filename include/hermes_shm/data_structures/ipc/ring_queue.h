@@ -80,7 +80,7 @@ class ring_queue_base : public ShmContainer {
                 size_t depth = 1024,
                 Args &&...args) {
     init_shm_container(alloc);
-    HSHM_MAKE_AR(queue_, GetTlsAllocator(), depth,
+    HSHM_MAKE_AR(queue_, GetCtxAllocator(), depth,
                  std::forward<Args>(args)...);
     flags_.Clear();
     SetNull();
@@ -125,7 +125,7 @@ class ring_queue_base : public ShmContainer {
   /** Move constructor. */
   HSHM_CROSS_FUN
   ring_queue_base(ring_queue_base &&other) noexcept {
-    shm_move_op<false>(other.GetTlsAllocator(), other);
+    shm_move_op<false>(other.GetCtxAllocator(), other);
   }
 
   /** SHM move constructor. */
@@ -139,7 +139,7 @@ class ring_queue_base : public ShmContainer {
   HSHM_CROSS_FUN
   ring_queue_base& operator=(ring_queue_base &&other) noexcept {
     if (this != &other) {
-      shm_move_op<true>(other.GetTlsAllocator(), std::move(other));
+      shm_move_op<true>(other.GetCtxAllocator(), std::move(other));
     }
     return *this;
   }
@@ -153,7 +153,7 @@ class ring_queue_base : public ShmContainer {
     } else {
       init_shm_container(alloc);
     }
-    if (GetTlsAllocator() == other.GetTlsAllocator()) {
+    if (GetCtxAllocator() == other.GetCtxAllocator()) {
       head_ = other.head_.load();
       tail_ = other.tail_.load();
       (*queue_) = std::move(*other.queue_);
