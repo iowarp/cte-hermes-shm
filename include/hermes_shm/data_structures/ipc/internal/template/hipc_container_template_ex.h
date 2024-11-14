@@ -34,18 +34,33 @@ class ShmContainerExample : public hipc::ShmContainer {
    * ===================================*/
   /** Get thread-local reference */
   HSHM_CROSS_FUN
-  TYPE_UNWRAP(CLASS_NAME)<TYPE_UNWRAP(CLASS_NEW_ARGS), HSHM_CLASS_TEMPL_ARGS>
-  GetThreadLocal(const ThreadId &tid) {
-    return TYPE_UNWRAP(CLASS_NAME)<TYPE_UNWRAP(CLASS_NEW_ARGS), HSHM_CLASS_TEMPL_ARGS>(
+  TYPE_UNWRAP(CLASS_NAME)<TYPE_UNWRAP(CLASS_NEW_ARGS), HSHM_CLASS_TEMPL_TLS_ARGS>
+  GetThreadLocal(const hipc::ScopedTlsAllocator<AllocT> &tls_alloc) {
+    return GetThreadLocal(tls_alloc.alloc_);
+  }
+
+  /** Get thread-local reference */
+  HSHM_CROSS_FUN
+  TYPE_UNWRAP(CLASS_NAME)<TYPE_UNWRAP(CLASS_NEW_ARGS), HSHM_CLASS_TEMPL_TLS_ARGS>
+  GetThreadLocal(const hipc::CtxAllocator<AllocT> &ctx_alloc) {
+    return GetThreadLocal(ctx_alloc.ctx_.tid_);
+  }
+
+  /** Get thread-local reference */
+  HSHM_CROSS_FUN
+  TYPE_UNWRAP(CLASS_NAME)<TYPE_UNWRAP(CLASS_NEW_ARGS), HSHM_CLASS_TEMPL_TLS_ARGS>
+  GetThreadLocal(const hshm::ThreadId &tid) {
+    return TYPE_UNWRAP(CLASS_NAME)<TYPE_UNWRAP(CLASS_NEW_ARGS), HSHM_CLASS_TEMPL_TLS_ARGS>(
         *this, tid, GetAllocator());
   }
 
+
   /** SHM constructor. Thread-local. */
-  template<ShmFlagField OTHER_FLAGS>
+  template<hipc::ShmFlagField OTHER_FLAGS>
   HSHM_CROSS_FUN
   explicit TYPE_UNWRAP(CLASS_NAME)(
       const TYPE_UNWRAP(CLASS_NAME)<TYPE_UNWRAP(CLASS_NEW_ARGS), AllocT, OTHER_FLAGS> &other,
-      const ThreadId &tid, const hipc::Allocator *alloc) {
+      const hshm::ThreadId &tid, AllocT *alloc) {
     memcpy(this, &other, sizeof(*this));
     init_shm_container(tid, alloc);
   }
