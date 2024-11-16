@@ -41,9 +41,9 @@ struct ShmFlag {
  * Flags for ShmContainer classes
  * */
 #define HSHM_CLASS_TEMPL_WITH_DEFAULTS \
-  typename AllocT = HSHM_DEFAULT_ALLOC, ShmFlagField HSHM_FLAGS = 0
+  typename AllocT = HSHM_DEFAULT_ALLOC, hipc::ShmFlagField HSHM_FLAGS = 0
 #define HSHM_CLASS_TEMPL \
-  typename AllocT, ShmFlagField HSHM_FLAGS
+  typename AllocT, hipc::ShmFlagField HSHM_FLAGS
 #define HSHM_CLASS_TEMPL_ARGS \
   AllocT, HSHM_FLAGS
 #define HSHM_CLASS_TEMPL_TLS_ARGS \
