@@ -14,6 +14,7 @@
 #ifndef HERMES_DATA_STRUCTURES_SHM_ARCHIVE_H_
 #define HERMES_DATA_STRUCTURES_SHM_ARCHIVE_H_
 
+#include "hermes_shm/constants/macros.h"
 #include "shm_macros.h"
 #include "hermes_shm/memory/memory.h"
 #include "hermes_shm/types/argpack.h"
