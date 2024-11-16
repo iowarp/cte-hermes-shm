@@ -164,6 +164,15 @@ class ShmContainerExample : public hipc::ShmContainer {
   hipc::CtxAllocator<AllocT> GetCtxAllocator() const {
     return hipc::CtxAllocator<AllocT>{GetThreadId(), GetAllocator()};
   }
+
+  /**====================================
+   * DO NOT COPY!!!
+   * ===================================*/
+   void SetNull() {}
+
+   bool IsNull() { return true; }
+
+   void shm_destroy_main() {}
 };
 
 }  // namespace hshm::ipc

@@ -208,4 +208,6 @@ HSHM_INLINE_CROSS_FUN \
 
 }  // namespace hshm::ipc
 
+#include "template/hipc_container_template_ex.h"
+
 #endif  // HERMES_SHM_CONTAINER_H_
