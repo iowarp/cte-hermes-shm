@@ -197,6 +197,13 @@ class ticket_stack : public ShmContainer {
 
 }  // namespace hshm::ipc
 
+namespace hshm {
+
+template<typename T, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
+using ticket_stack = hipc::ticket_stack<T, HSHM_CLASS_TEMPL_ARGS>;
+
+}  // namespace hshm
+
 #undef CLASS_NEW_ARGS
 #undef CLASS_NAME
 

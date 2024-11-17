@@ -277,9 +277,16 @@ class pair : public ShmContainer {
   HSHM_INLINE_CROSS_FUN SecondT& GetVal() const { return second_.get_ref(); }
 };
 
+}  // namespace hshm::ipc
+
+namespace hshm {
+
+template<typename FirstT, typename SecondT, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
+using pair = hipc::pair<FirstT, SecondT, HSHM_CLASS_TEMPL_ARGS>;
+
+}  // namespace hshm
+
 #undef CLASS_NAME
 #undef CLASS_NEW_ARGS
-
-}  // namespace hshm::ipc
 
 #endif  // HERMES_INCLUDE_HERMES_DATA_STRUCTURES_PAIR_H_

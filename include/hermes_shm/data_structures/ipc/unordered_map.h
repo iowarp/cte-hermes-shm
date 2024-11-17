@@ -579,6 +579,13 @@ class unordered_map : public ShmContainer {
 
 }  // namespace hshm::ipc
 
+namespace hshm {
+
+template<typename Key, typename T, class Hash = hshm::hash<Key>, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
+using unordered_map = hipc::unordered_map<Key, T, Hash, HSHM_CLASS_TEMPL_ARGS>;
+
+}  // namespace hshm
+
 #undef CLASS_NAME
 #undef CLASS_NEW_ARGS
 

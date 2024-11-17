@@ -40,14 +40,33 @@ struct ShmFlag {
 /**
  * Flags for ShmContainer classes
  * */
+
+/** Flags for base container creation */
 #define HSHM_CLASS_TEMPL_WITH_DEFAULTS \
   typename AllocT = HSHM_DEFAULT_ALLOC, hipc::ShmFlagField HSHM_FLAGS = 0
+
+/** A specific parameterization of the base container for shared memory (hshm) functions */
+#define HSHM_CLASS_TEMPL_WITH_IPC_DEFAULTS \
+  HSHM_CLASS_TEMPL_WITH_DEFAULTS
+
+/** A specific parameterization of the base container for local memory (hshm) functions */
+#define HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS \
+  typename AllocT = HSHM_DEFAULT_ALLOC, \
+  hipc::ShmFlagField HSHM_FLAGS = hipc::ShmFlag::kIsPrivate
+
+/** A specific parameterization of the base container for local memory (hshm) functions */
 #define HSHM_CLASS_TEMPL \
   typename AllocT, hipc::ShmFlagField HSHM_FLAGS
+
+/** General template arguments for HIPC containers */
 #define HSHM_CLASS_TEMPL_ARGS \
   AllocT, HSHM_FLAGS
+
+/** Template arguments for thread-local storage */
 #define HSHM_CLASS_TEMPL_TLS_ARGS \
   AllocT, hipc::ShmFlag::kIsThreadLocal
+
+/** Whether to use allocator ID (shared) or context (private) in class */
 #define HSHM_ALLOCATOR_INFO \
   typename std::conditional<HSHM_FLAGS & hipc::ShmFlag::kIsPrivate, \
                    hipc::CtxAllocator<AllocT>, \

@@ -224,6 +224,13 @@ class split_ticket_queue : public ShmContainer {
 
 }  // namespace hshm::ipc
 
+namespace hshm {
+
+template<typename T, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
+using split_ticket_queue = hipc::split_ticket_queue<T, HSHM_CLASS_TEMPL_ARGS>;
+
+}  // namespace hshm
+
 #undef CLASS_NEW_ARGS
 #undef CLASS_NAME
 

@@ -195,6 +195,13 @@ class ticket_queue : public ShmContainer {
 
 }  // namespace hshm::ipc
 
+namespace hshm {
+
+template<typename T, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
+using ticket_queue = hipc::ticket_queue<T, HSHM_CLASS_TEMPL_ARGS>;
+
+}  // namespace hshm
+
 #undef CLASS_NEW_ARGS
 #undef CLASS_NAME
 

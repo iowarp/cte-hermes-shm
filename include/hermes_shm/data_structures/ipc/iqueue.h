@@ -427,6 +427,13 @@ class iqueue : public ShmContainer {
 
 }  // namespace hshm::ipc
 
+namespace hshm {
+
+template<typename T, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
+using iqueue = hipc::iqueue<T, HSHM_CLASS_TEMPL_ARGS>;
+
+}  // namespace hshm
+
 #undef CLASS_NAME
 #undef CLASS_NEW_ARGS
 
