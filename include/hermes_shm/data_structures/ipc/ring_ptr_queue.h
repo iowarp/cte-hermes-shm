@@ -196,11 +196,13 @@ class ring_ptr_queue_base : public ShmContainer {
    * ===================================*/
 
   /** Resize */
+  HSHM_CROSS_FUN
   void resize(size_t new_depth) {
     queue_->resize(new_depth);
   }
 
-  /** Resize */
+  /** Resize (wrapper) */
+  HSHM_INLINE_CROSS_FUN
   void Resize(size_t new_depth) {
     resize(new_depth);
   }
@@ -286,6 +288,29 @@ class ring_ptr_queue_base : public ShmContainer {
     } else {
       return qtok_t::GetNull();
     }
+  }
+
+  /** Get size at this moment */
+  HSHM_CROSS_FUN
+  size_t GetSize() {
+    size_t tail = tail_.load();
+    size_t head = head_.load();
+    if (tail < head) {
+      return 0;
+    }
+    return tail - head;
+  }
+
+  /** Get size (wrapper) */
+  HSHM_INLINE_CROSS_FUN
+  void size() {
+    return GetSize();
+  }
+
+  /** Get size (wrapper) */
+  HSHM_INLINE_CROSS_FUN
+  void Size() {
+    return GetSize();
   }
 };
 

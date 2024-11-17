@@ -202,11 +202,13 @@ class ring_queue_base : public ShmContainer {
    * ===================================*/
 
   /** Resize */
+  HSHM_CROSS_FUN
   void resize(size_t new_depth) {
     queue_->resize(new_depth);
   }
 
-  /** Resize */
+  /** Resize (wrapper) */
+  HSHM_INLINE_CROSS_FUN
   void Resize(size_t new_depth) {
     resize(new_depth);
   }
@@ -347,6 +349,18 @@ class ring_queue_base : public ShmContainer {
       return 0;
     }
     return tail - head;
+  }
+
+  /** Get size (wrapper) */
+  HSHM_INLINE_CROSS_FUN
+  void size() {
+    return GetSize();
+  }
+
+  /** Get size (wrapper) */
+  HSHM_INLINE_CROSS_FUN
+  void Size() {
+    return GetSize();
   }
 };
 
