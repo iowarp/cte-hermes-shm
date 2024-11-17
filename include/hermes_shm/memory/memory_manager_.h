@@ -136,7 +136,7 @@ class MemoryManager {
    * Create and register a memory allocator for a particular backend.
    * */
   template<typename AllocT, typename ...Args>
-  Allocator* CreateAllocator(const MemoryBackendId &backend_id,
+  AllocT* CreateAllocator(const MemoryBackendId &backend_id,
                              const AllocatorId &alloc_id,
                              size_t custom_header_size,
                              Args&& ...args);
@@ -170,30 +170,34 @@ class MemoryManager {
   /**
    * Locates an allocator of a particular id
    * */
-  HSHM_CROSS_FUN Allocator* GetAllocator(const AllocatorId &alloc_id) {
-    return allocators_[alloc_id.ToIndex()];
+  template<typename AllocT = Allocator>
+  HSHM_CROSS_FUN AllocT* GetAllocator(const AllocatorId &alloc_id) {
+    return (AllocT*)allocators_[alloc_id.ToIndex()];
   }
 
   /**
    * Gets the allocator used for initializing other allocators.
    * */
-  HSHM_CROSS_FUN Allocator* GetRootAllocator() {
-    return root_alloc_;
+  template<typename AllocT = Allocator>
+  HSHM_CROSS_FUN AllocT* GetRootAllocator() {
+    return (AllocT*)root_alloc_;
   }
 
   /**
    * Gets the allocator used by default when no allocator is
    * used to construct an object.
    * */
-  HSHM_CROSS_FUN Allocator* GetDefaultAllocator() {
-    return reinterpret_cast<Allocator*>(default_allocator_);
+  template<typename AllocT = Allocator>
+  HSHM_CROSS_FUN AllocT* GetDefaultAllocator() {
+    return (AllocT*)(default_allocator_);
   }
 
   /**
    * Sets the allocator used by default when no allocator is
    * used to construct an object.
    * */
-  HSHM_CROSS_FUN void SetDefaultAllocator(Allocator *alloc) {
+  template<typename AllocT = Allocator>
+  HSHM_CROSS_FUN void SetDefaultAllocator(AllocT *alloc) {
     default_allocator_ = alloc;
   }
 

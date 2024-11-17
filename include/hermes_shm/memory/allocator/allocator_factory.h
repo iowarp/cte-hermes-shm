@@ -28,11 +28,11 @@ class AllocatorFactory {
    * Create a new memory allocator
    * */
   template<typename AllocT, typename ...Args>
-  static Allocator* shm_init(AllocatorId alloc_id,
-                             size_t custom_header_size,
-                             char *buffer,
-                             size_t buffer_size,
-                             Args&& ...args) {
+  static AllocT* shm_init(AllocatorId alloc_id,
+                          size_t custom_header_size,
+                          char *buffer,
+                          size_t buffer_size,
+                          Args&& ...args) {
     if constexpr(std::is_same_v<StackAllocator, AllocT>) {
       // StackAllocator
       auto alloc = HERMES_MEMORY_MANAGER->GetRootAllocator()->
@@ -72,7 +72,7 @@ class AllocatorFactory {
    * Create a new memory allocator
    * */
   template<typename AllocT, typename ...Args>
-  static Allocator* shm_init(AllocatorId alloc_id,
+  static AllocT* shm_init(AllocatorId alloc_id,
                              size_t custom_header_size,
                              MemoryBackend *backend,
                              Args&& ...args) {
@@ -86,8 +86,9 @@ class AllocatorFactory {
   /**
    * Deserialize the allocator managing this backend.
    * */
+  template<typename AllocT = Allocator>
   HSHM_CROSS_FUN
-  static Allocator* shm_deserialize(char *buffer, size_t buffer_size) {
+  static AllocT* shm_deserialize(char *buffer, size_t buffer_size) {
     auto header_ = reinterpret_cast<AllocatorHeader*>(buffer);
     switch (header_->allocator_type_) {
       // Stack Allocator
@@ -121,23 +122,25 @@ class AllocatorFactory {
   /**
    * Deserialize the allocator managing this backend.
    * */
+  template<typename AllocT = Allocator>
   HSHM_CROSS_FUN
-  static Allocator* shm_deserialize(MemoryBackend *backend) {
+  static AllocT* shm_deserialize(MemoryBackend *backend) {
     if (backend == nullptr) {
       return nullptr;
     }
-    return shm_deserialize(backend->data_, backend->data_size_);
+    return shm_deserialize<AllocT>(backend->data_, backend->data_size_);
   }
 
   /**
    * Attach the allocator
    * */
+  template<typename AllocT = Allocator>
   HSHM_CROSS_FUN
-  static Allocator* shm_attach(Allocator *other) {
+  static AllocT* shm_attach(Allocator *other) {
     if (other == nullptr) {
       return nullptr;
     }
-    return shm_deserialize(other->buffer_, other->buffer_size_);
+    return shm_deserialize<AllocT>(other->buffer_, other->buffer_size_);
   }
 };
 

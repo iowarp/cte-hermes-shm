@@ -43,18 +43,18 @@ MemoryBackend* MemoryManager::CreateBackend(
  * Create and register a memory allocator for a particular backend.
  * */
 template<typename AllocT, typename ...Args>
-Allocator* MemoryManager::CreateAllocator(const MemoryBackendId &backend_id,
+AllocT* MemoryManager::CreateAllocator(const MemoryBackendId &backend_id,
                                           const AllocatorId &alloc_id,
                                           size_t custom_header_size,
                                           Args&& ...args) {
-  auto backend = GetBackend(backend_id);
+  MemoryBackend *backend = GetBackend(backend_id);
   if (alloc_id.IsNull()) {
     HELOG(kFatal, "Allocator cannot be created with a NIL ID");
   }
-  auto alloc = AllocatorFactory::shm_init<AllocT>(
+  AllocT *alloc = AllocatorFactory::shm_init<AllocT>(
       alloc_id, custom_header_size, backend, std::forward<Args>(args)...);
   RegisterAllocator(alloc);
-  return GetAllocator(alloc_id);
+  return GetAllocator<AllocT>(alloc_id);
 }
 
 }  // namespace hshm::ipc
