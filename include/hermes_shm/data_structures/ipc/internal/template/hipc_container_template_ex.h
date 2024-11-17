@@ -20,12 +20,12 @@ namespace honey {
 
 #define CLASS_NAME ShmContainerExample
 #define CLASS_NEW_ARGS T
-#define TYPED_CLASS_ARGS \
-  TYPE_UNWRAP(CLASS_NEW_ARGS), HSHM_CLASS_TEMPL_ARGS
-#define TYPED_CLASS_TLS_ARGS \
-  TYPE_UNWRAP(CLASS_NEW_ARGS), HSHM_CLASS_TEMPL_TLS_ARGS
-#define TYPED_CLASS_TLS_ARGS2 \
-  TYPE_UNWRAP(CLASS_NEW_ARGS), AllocT
+#define TYPED_CLASS \
+  (__TU(CLASS_NAME)<__TU(CLASS_NEW_ARGS), HSHM_CLASS_TEMPL_ARGS>)
+#define TYPED_CLASS_TLS \
+  (__TU(CLASS_NAME)<__TU(CLASS_NEW_ARGS), HSHM_CLASS_TEMPL_TLS_ARGS>)
+#define TYPED_CLASS_TLS2 \
+  (__TU(CLASS_NAME)<__TU(CLASS_NEW_ARGS), AllocT, OTHER_FLAGS>)
 
 template<typename T, HSHM_CLASS_TEMPL_WITH_DEFAULTS>
 class ShmContainerExample : public hipc::ShmContainer {
@@ -40,23 +40,23 @@ class ShmContainerExample : public hipc::ShmContainer {
    * ===================================*/
   /** Get thread-local reference */
   HSHM_CROSS_FUN
-  TYPE_UNWRAP(CLASS_NAME)<TYPE_UNWRAP(TYPED_CLASS_TLS_ARGS)>
+  __TU(TYPED_CLASS_TLS)
   GetThreadLocal(const hipc::ScopedTlsAllocator<AllocT> &tls_alloc) {
     return GetThreadLocal(tls_alloc.alloc_);
   }
 
   /** Get thread-local reference */
   HSHM_CROSS_FUN
-  TYPE_UNWRAP(CLASS_NAME)<TYPE_UNWRAP(TYPED_CLASS_TLS_ARGS)>
+  __TU(TYPED_CLASS_TLS)
   GetThreadLocal(const hipc::CtxAllocator<AllocT> &ctx_alloc) {
     return GetThreadLocal(ctx_alloc.ctx_.tid_);
   }
 
   /** Get thread-local reference */
   HSHM_CROSS_FUN
-  TYPE_UNWRAP(CLASS_NAME)<TYPE_UNWRAP(TYPED_CLASS_TLS_ARGS)>
+  __TU(TYPED_CLASS_TLS)
   GetThreadLocal(const hshm::ThreadId &tid) {
-    return TYPE_UNWRAP(CLASS_NAME)<TYPE_UNWRAP(TYPED_CLASS_TLS_ARGS)>(
+    return __TU(TYPED_CLASS_TLS)(
         *this, tid, GetAllocator());
   }
 
@@ -64,8 +64,8 @@ class ShmContainerExample : public hipc::ShmContainer {
   /** SHM constructor. Thread-local. */
   template<hipc::ShmFlagField OTHER_FLAGS>
   HSHM_CROSS_FUN
-  explicit TYPE_UNWRAP(CLASS_NAME)(
-      const TYPE_UNWRAP(CLASS_NAME)<TYPE_UNWRAP(TYPED_CLASS_TLS_ARGS2), OTHER_FLAGS> &other,
+  explicit __TU(CLASS_NAME)(
+      const __TU(TYPED_CLASS_TLS2) &other,
       const hshm::ThreadId &tid, AllocT *alloc) {
     memcpy(this, &other, sizeof(*this));
     init_shm_container(tid, alloc);
@@ -104,7 +104,7 @@ class ShmContainerExample : public hipc::ShmContainer {
    * ===================================*/
   /** Destructor. */
   HSHM_INLINE_CROSS_FUN
-  ~TYPE_UNWRAP(CLASS_NAME)() {
+  ~__TU(CLASS_NAME)() {
     if constexpr ((HSHM_FLAGS & hipc::ShmFlag::kIsUndestructable)) {
       shm_destroy();
     }
@@ -127,8 +127,7 @@ class ShmContainerExample : public hipc::ShmContainer {
   HSHM_INLINE_CROSS_FUN
   POINTER_T GetShmPointer() const {
     return GetAllocator()->template
-        Convert<TYPE_UNWRAP(CLASS_NAME)<TYPE_UNWRAP(TYPED_CLASS_ARGS)>,
-        POINTER_T>(this);
+        Convert<__TU(TYPED_CLASS), POINTER_T>(this);
   }
 
   /**====================================
@@ -161,14 +160,18 @@ class ShmContainerExample : public hipc::ShmContainer {
     if constexpr (!(HSHM_FLAGS & hipc::ShmFlag::kIsPrivate)) {
       return hshm::ThreadId::GetNull();
     } else {
-      return alloc_info_.ctx_;
+      return alloc_info_.ctx_.tid_;
     }
   }
 
   /** Get the shared-memory allocator id */
   HSHM_INLINE_CROSS_FUN
   hipc::CtxAllocator<AllocT> GetCtxAllocator() const {
-    return hipc::CtxAllocator<AllocT>{GetThreadId(), GetAllocator()};
+    if constexpr (!(HSHM_FLAGS & hipc::ShmFlag::kIsPrivate)) {
+      return hipc::CtxAllocator<AllocT>{GetThreadId(), GetAllocator()};
+    } else {
+      return alloc_info_;
+    }
   }
 
   /**====================================
@@ -185,7 +188,7 @@ class ShmContainerExample : public hipc::ShmContainer {
 
 #undef CLASS_NAME
 #undef CLASS_NEW_ARGS
-#undef TYPED_CLASS_ARGS
-#undef TYPED_CLASS_TLS_ARGS
+#undef TYPED_CLASS
+#undef TYPED_CLASS_TLS
 
 #endif  // HERMES_INCLUDE_HERMES_DATA_STRUCTURES_INTERNAL_SHM_CONTAINER_EXAMPLE_H_

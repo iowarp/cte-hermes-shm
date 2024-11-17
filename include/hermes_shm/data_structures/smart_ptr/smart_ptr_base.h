@@ -24,12 +24,6 @@
 namespace hshm::ipc {
 
 /**
- * MACROS to simplify the ptr namespace
- * */
-#define CLASS_NAME smart_ptr_base
-#define TYPED_CLASS smart_ptr_base<T>
-
-/**
  * Flags used for the smart pointer
  * */
 #define POINTER_IS_OWNED BIT_OPT(uint32_t, 0)
@@ -301,9 +295,6 @@ void load(Ar &ar, smart_ptr_base<T, UNIQUE> &ptr) {
 }
 
 }  // namespace hshm::ipc
-
-#undef CLASS_NAME
-#undef TYPED_CLASS
 
 /**====================================
 * Hash Functions

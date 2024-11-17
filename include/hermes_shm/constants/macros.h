@@ -59,6 +59,7 @@
 #define ESC(...) ESC_(__VA_ARGS__)
 #define ESC_(...) VAN ## __VA_ARGS__
 #define VANISH
+#define __TU(X) TYPE_UNWRAP(X)
 
 /** Macros for CUDA functions */
 #ifdef HERMES_ENABLE_CUDA
