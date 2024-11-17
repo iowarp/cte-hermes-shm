@@ -32,7 +32,7 @@ target_link_libraries(hermes_shm_data_structures
         ${COMPRESS_LIBS}
         ${ENCRYPT_LIBS}
 )
-if (HERMES_ENABLE_PTHREAD)
+if (HERMES_ENABLE_PTHREADS)
     target_link_libraries(hermes_shm_data_structures pthread)
 endif()
 if (HERMES_ENABLE_OPENMP)
