@@ -43,8 +43,20 @@ template<
     HSHM_CLASS_TEMPL>
 class ring_queue_base : public ShmContainer {
  public:
- HIPC_CONTAINER_TEMPLATE((CLASS_NAME), (CLASS_NEW_ARGS))
-  delay_ar<vector<pair<bitfield32_t, T, HSHM_CLASS_TEMPL_ARGS>>> queue_;
+  HIPC_CONTAINER_TEMPLATE((CLASS_NAME), (CLASS_NEW_ARGS))
+
+ public:
+  /**====================================
+   * Typedefs
+   * ===================================*/
+  typedef pair<bitfield32_t, T, HSHM_CLASS_TEMPL_ARGS> pair_t;
+  typedef vector<pair_t, HSHM_CLASS_TEMPL_ARGS> vector_t;
+
+ public:
+  /**====================================
+   * Variables
+   * ===================================*/
+  delay_ar<vector_t> queue_;
   hipc::opt_atomic<qtok_id, IsPushAtomic> tail_;
   hipc::opt_atomic<qtok_id, IsPopAtomic> head_;
   bitfield32_t flags_;
@@ -208,7 +220,7 @@ class ring_queue_base : public ShmContainer {
     qtok_id head = head_.load();
     qtok_id tail = tail_.fetch_add(1);
     size_t size = tail - head + 1;
-    vector<pair<bitfield32_t, T>> &queue = (*queue_);
+    vector_t &queue = (*queue_);
 
     // Check if there's space in the queue.
     if constexpr (!IsFixedSize) {
@@ -233,7 +245,7 @@ class ring_queue_base : public ShmContainer {
                   make_argpack(std::forward<Args>(args)...));
 
     // Let pop know that the data is fully prepared
-    pair<bitfield32_t, T> &entry = (*iter);
+    pair_t &entry = (*iter);
     entry.GetFirst().SetBits(1);
     return qtok_t(tail);
   }
@@ -251,7 +263,7 @@ class ring_queue_base : public ShmContainer {
 
     // Pop the element, but only if it's marked valid
     qtok_id idx = head % (*queue_).size();
-    hipc::pair<bitfield32_t, T> &entry = (*queue_)[idx];
+    pair_t &entry = (*queue_)[idx];
     if (entry.GetFirst().Any(1)) {
       val = std::move(entry.GetSecond());
       entry.GetFirst().Clear();
@@ -274,7 +286,7 @@ class ring_queue_base : public ShmContainer {
 
     // Pop the element, but only if it's marked valid
     qtok_id idx = head % (*queue_).size();
-    hipc::pair<bitfield32_t, T> &entry = (*queue_)[idx];
+    pair_t &entry = (*queue_)[idx];
     if (entry.GetFirst().Any(1)) {
       entry.GetFirst().Clear();
       head_.fetch_add(1);
@@ -296,7 +308,7 @@ class ring_queue_base : public ShmContainer {
 
     // Pop the element, but only if it's marked valid
     qtok_id idx = (head) % (*queue_).size();
-    hipc::pair<bitfield32_t, T> &entry = (*queue_)[idx];
+    pair_t &entry = (*queue_)[idx];
     if (entry.GetFirst().Any(1)) {
       val = &entry.GetSecond();
       return qtok_t(head);
@@ -307,7 +319,7 @@ class ring_queue_base : public ShmContainer {
 
   /** Consumer peeks an object */
   HSHM_CROSS_FUN
-  qtok_t peek(pair<bitfield32_t, T> *&val, int off = 0) {
+  qtok_t peek(pair_t *&val, int off = 0) {
     // Don't pop if there's no entries
     qtok_id head = head_.load() + off;
     qtok_id tail = tail_.load();
@@ -317,7 +329,7 @@ class ring_queue_base : public ShmContainer {
 
     // Pop the element, but only if it's marked valid
     qtok_id idx = (head) % (*queue_).size();
-    hipc::pair<bitfield32_t, T> &entry = (*queue_)[idx];
+    pair_t &entry = (*queue_)[idx];
     if (entry.GetFirst().Any(1)) {
       val = &entry;
       return qtok_t(head);

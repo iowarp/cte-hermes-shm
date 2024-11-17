@@ -43,7 +43,15 @@ template<
 class ring_ptr_queue_base : public ShmContainer {
  public:
   HIPC_CONTAINER_TEMPLATE((CLASS_NAME), (CLASS_NEW_ARGS))
-  delay_ar<vector<T, HSHM_CLASS_TEMPL_ARGS>> queue_;
+
+ public:
+  /**====================================
+   * Typedefs
+   * ===================================*/
+  typedef vector<T, HSHM_CLASS_TEMPL_ARGS> vector_t;
+
+ public:
+  delay_ar<vector_t> queue_;
   hipc::opt_atomic<qtok_id, IsPushAtomic> tail_;
   hipc::opt_atomic<qtok_id, IsPopAtomic> head_;
   bitfield32_t flags_;
@@ -206,7 +214,7 @@ class ring_ptr_queue_base : public ShmContainer {
     qtok_id head = head_.load();
     qtok_id tail = tail_.fetch_add(1);
     size_t size = tail - head + 1;
-    vector<T> &queue = (*queue_);
+    vector_t &queue = (*queue_);
 
     // Check if there's space in the queue.
     if constexpr (IsFixedSize) {
