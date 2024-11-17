@@ -1062,7 +1062,7 @@ struct CtxAllocator {
 
   /** Arrow operator (const) */
   HSHM_INLINE_CROSS_FUN
-  const AllocT* operator->() const {
+  AllocT* operator->() const {
     return alloc_;
   }
 
@@ -1074,7 +1074,7 @@ struct CtxAllocator {
 
   /** Star operator (const) */
   HSHM_INLINE_CROSS_FUN
-  const AllocT* operator*() const {
+  AllocT* operator*() const {
     return alloc_;
   }
 
