@@ -295,6 +295,11 @@ configure_file(
 )
 
 configure_file(
+        ${CMAKE_CURRENT_SOURCE_DIR}/include/hermes_shm/constants/settings.h_templ
+        ${PROJECT_BINARY_DIR}/include/hermes_shm/constants/settings.h @ONLY
+)
+
+configure_file(
         ${CMAKE_CURRENT_SOURCE_DIR}/CMake/UseDoxygenDoc.cmake
         ${PROJECT_BINARY_DIR}/CMakeFiles/UseDoxygenDoc.cmake @ONLY
 )
@@ -305,4 +310,11 @@ install(
         ${PROJECT_BINARY_DIR}/CMakeFiles/UseDoxygenDoc.cmake
     DESTINATION
         ${CMAKE_INSTALL_PREFIX}/cmake
+)
+
+install(
+        FILES
+        ${PROJECT_BINARY_DIR}/include/hermes_shm/constants/settings.h
+        DESTINATION
+        ${CMAKE_INSTALL_PREFIX}/include/hermes_shm/constants/
 )

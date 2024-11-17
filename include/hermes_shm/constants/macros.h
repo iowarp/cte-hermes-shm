@@ -13,6 +13,8 @@
 #ifndef HERMES_MACROS_H
 #define HERMES_MACROS_H
 
+#include "settings.h"
+
 /** Bytes -> Bytes */
 #ifndef BYTES
 #define BYTES(n) (size_t)((n) * (((size_t)1) << 0))
