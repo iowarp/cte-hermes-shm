@@ -50,8 +50,9 @@ struct pod_array {
   }
 
   /** Construct */
+  template<typename AllocT>
   HSHM_INLINE_CROSS_FUN
-  void construct(Allocator *alloc, int size = 0) {
+  void construct(const hipc::CtxAllocator<AllocT> &alloc, int size = 0) {
     HSHM_MAKE_AR0(vec_, alloc);
     if (size) {
       resize(size);
