@@ -130,7 +130,7 @@ TEST_CASE("SerializeHipcShmArchive") {
 
 TEST_CASE("SerializePodArray") {
   std::stringstream ss;
-  Allocator *alloc = HERMES_MEMORY_MANAGER->GetDefaultAllocator();
+  hipc::CtxAllocator<Allocator> alloc(HERMES_MEMORY_MANAGER->GetDefaultAllocator());
   {
     hipc::pod_array<int, 2> x;
     x.construct(alloc, 5);
