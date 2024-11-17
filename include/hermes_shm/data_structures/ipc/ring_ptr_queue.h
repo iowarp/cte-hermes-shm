@@ -187,6 +187,16 @@ class ring_ptr_queue_base : public ShmContainer {
    * MPSC Queue Methods
    * ===================================*/
 
+  /** Resize */
+  void resize(size_t new_depth) {
+    queue_->resize(new_depth);
+  }
+
+  /** Resize */
+  void Resize(size_t new_depth) {
+    resize(new_depth);
+  }
+
   /** Construct an element at \a pos position in the list */
   template<typename ...Args>
   HSHM_CROSS_FUN
