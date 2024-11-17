@@ -208,10 +208,9 @@ HSHM_INLINE_CROSS_FUN \
   } \
 }
 
-
-
-
-
+/**====================================
+ * HIPC Template Public
+ * ===================================*/
 
 #define HIPC_CONTAINER_TEMPLATE(CLASS_NAME, CLASS_NEW_ARGS) \
   HIPC_CONTAINER_TEMPLATE_BASE(                             \
