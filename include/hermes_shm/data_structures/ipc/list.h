@@ -227,7 +227,7 @@ class list : public ShmContainer {
   /** Constructor. Default. */
   HSHM_CROSS_FUN
   explicit list() {
-    init_shm_container(HERMES_MEMORY_MANAGER->GetDefaultAllocator());
+    init_shm_container(HERMES_MEMORY_MANAGER->GetDefaultAllocator<AllocT>());
     SetNull();
   }
 

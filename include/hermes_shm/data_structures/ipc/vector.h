@@ -250,7 +250,7 @@ class vector : public ShmContainer {
   /** SHM constructor. Default. */
   HSHM_CROSS_FUN
   explicit vector() {
-    init_shm_container(HERMES_MEMORY_MANAGER->GetDefaultAllocator());
+    init_shm_container(HERMES_MEMORY_MANAGER->GetDefaultAllocator<AllocT>());
     SetNull();
   }
 
@@ -265,7 +265,7 @@ class vector : public ShmContainer {
   template<typename ...Args>
   HSHM_CROSS_FUN
   explicit vector(size_t length, Args&& ...args) {
-    shm_init(HERMES_MEMORY_MANAGER->GetDefaultAllocator(),
+    shm_init(HERMES_MEMORY_MANAGER->GetDefaultAllocator<AllocT>(),
       length, std::forward<Args>(args)...);
   }
 
@@ -363,7 +363,7 @@ class vector : public ShmContainer {
   HSHM_CROSS_FUN
   vector(vector &&other) {
     shm_move_op<false>(
-      HERMES_MEMORY_MANAGER->GetDefaultAllocator(), std::move(other));
+      HERMES_MEMORY_MANAGER->GetDefaultAllocator<AllocT>(), std::move(other));
   }
 
   /** SHM move constructor. */

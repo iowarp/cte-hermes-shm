@@ -183,7 +183,7 @@ class iqueue : public ShmContainer {
   /** Constructor. Default. */
   HSHM_CROSS_FUN
   iqueue() {
-    shm_init(HERMES_MEMORY_MANAGER->GetDefaultAllocator());
+    shm_init(HERMES_MEMORY_MANAGER->GetDefaultAllocator<AllocT>());
   }
 
   /** SHM constructor. Default. */
@@ -208,7 +208,7 @@ class iqueue : public ShmContainer {
   /** Copy constructor */
   HSHM_CROSS_FUN
   explicit iqueue(const iqueue &other) {
-    init_shm_container(HERMES_MEMORY_MANAGER->GetDefaultAllocator());
+    init_shm_container(HERMES_MEMORY_MANAGER->GetDefaultAllocator<AllocT>());
     shm_strong_copy_op(other);
   }
 

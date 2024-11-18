@@ -51,7 +51,7 @@ class pair : public ShmContainer {
   /** Constructor. Default. */
   HSHM_CROSS_FUN
   explicit pair() {
-    shm_init(HERMES_MEMORY_MANAGER->GetDefaultAllocator());
+    shm_init(HERMES_MEMORY_MANAGER->GetDefaultAllocator<AllocT>());
   }
 
   /** SHM constructor. Default. */
@@ -96,7 +96,7 @@ class pair : public ShmContainer {
   /** Constructor. Copy parameters. */
   HSHM_CROSS_FUN
   explicit pair(const FirstT &first, const SecondT &second) {
-    init_shm_container(HERMES_MEMORY_MANAGER->GetDefaultAllocator());
+    init_shm_container(HERMES_MEMORY_MANAGER->GetDefaultAllocator<AllocT>());
     HSHM_MAKE_AR(first_, GetCtxAllocator(), first)
     HSHM_MAKE_AR(second_, GetCtxAllocator(), second)
   }
@@ -116,7 +116,7 @@ class pair : public ShmContainer {
   explicit pair(PiecewiseConstruct &&hint,
                 FirstArgPackT &&first,
                 SecondArgPackT &&second) {
-    init_shm_container(HERMES_MEMORY_MANAGER->GetDefaultAllocator());
+    init_shm_container(HERMES_MEMORY_MANAGER->GetDefaultAllocator<AllocT>());
     HSHM_MAKE_AR_PW(first_, GetCtxAllocator(),
                     std::forward<FirstArgPackT>(first))
     HSHM_MAKE_AR_PW(second_, GetCtxAllocator(),

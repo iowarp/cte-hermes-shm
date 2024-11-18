@@ -53,7 +53,7 @@ class string_templ : public ShmContainer {
   /** Constructor. Default. */
   HSHM_CROSS_FUN
   explicit string_templ() {
-    init_shm_container(HERMES_MEMORY_MANAGER->GetDefaultAllocator());
+    init_shm_container(HERMES_MEMORY_MANAGER->GetDefaultAllocator<AllocT>());
     SetNull();
   }
 
@@ -71,7 +71,7 @@ class string_templ : public ShmContainer {
   /** SHM Constructor. Just allocate space. */
   HSHM_CROSS_FUN
   explicit string_templ(size_t length) {
-    init_shm_container(HERMES_MEMORY_MANAGER->GetDefaultAllocator());
+    init_shm_container(HERMES_MEMORY_MANAGER->GetDefaultAllocator<AllocT>());
     _create_str(length);
   }
 
@@ -106,7 +106,7 @@ class string_templ : public ShmContainer {
   HSHM_CROSS_FUN
   explicit string_templ(const char *text, size_t length) {
     shm_strong_copy_op<false, true>(
-      HERMES_MEMORY_MANAGER->GetDefaultAllocator(), text, length);
+      HERMES_MEMORY_MANAGER->GetDefaultAllocator<AllocT>(), text, length);
   }
 
   /** SHM Constructor. From const char* and size */
@@ -198,7 +198,7 @@ class string_templ : public ShmContainer {
   /** Move constructor. */
   HSHM_CROSS_FUN
   string_templ(string_templ &&other) {
-    shm_move_op<false>(HERMES_MEMORY_MANAGER->GetDefaultAllocator(), std::move(other));
+    shm_move_op<false>(HERMES_MEMORY_MANAGER->GetDefaultAllocator<AllocT>(), std::move(other));
   }
 
   /** SHM move constructor. */

@@ -64,7 +64,7 @@ class ring_ptr_queue_base : public ShmContainer {
   /** Constructor. Default. */
   HSHM_CROSS_FUN
   ring_ptr_queue_base(size_t depth = 1024) {
-    shm_init(HERMES_MEMORY_MANAGER->GetDefaultAllocator(), depth);
+    shm_init(HERMES_MEMORY_MANAGER->GetDefaultAllocator<AllocT>(), depth);
   }
 
   /** SHM constructor. Default. */

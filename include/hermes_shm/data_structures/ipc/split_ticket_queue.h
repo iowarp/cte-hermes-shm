@@ -51,7 +51,7 @@ class split_ticket_queue : public ShmContainer {
   HSHM_CROSS_FUN
   explicit split_ticket_queue(size_t depth_per_split = 1024,
                               size_t split = 0) {
-    shm_init(HERMES_MEMORY_MANAGER->GetDefaultAllocator(),
+    shm_init(HERMES_MEMORY_MANAGER->GetDefaultAllocator<AllocT>(),
       depth_per_split, split);
   }
 

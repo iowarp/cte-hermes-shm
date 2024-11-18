@@ -51,7 +51,7 @@ class ticket_stack : public ShmContainer {
   /** Constructor. Default. */
   HSHM_CROSS_FUN
   explicit ticket_stack(size_t depth = 1024) {
-    shm_init(HERMES_MEMORY_MANAGER->GetDefaultAllocator(), depth);
+    shm_init(HERMES_MEMORY_MANAGER->GetDefaultAllocator<AllocT>(), depth);
   }
 
   /** SHM constructor. Default. */

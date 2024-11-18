@@ -121,6 +121,11 @@ namespace hipc = hshm::ipc;
 #define kCurrentDevice "gpu"
 #endif
 
+/***************************************************
+ * CUSTOM SETTINGS FOR ALLOCATORS + THREAD MODELS
+ * ************************************************* */
+#ifndef HSHM_CUSTOM_SETTINGS
+
 /** Define the default allocator class */
 #ifndef HSHM_DEFAULT_ALLOC
 #define HSHM_DEFAULT_ALLOC hipc::Allocator
@@ -133,6 +138,8 @@ namespace hipc = hshm::ipc;
 #else
 #define HSHM_DEFAULT_THREAD_MODEL hshm::thread::Cuda
 #endif
+#endif
+
 #endif
 
 #endif  // HERMES_MACROS_H

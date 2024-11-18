@@ -199,7 +199,7 @@ class unordered_map : public ShmContainer {
   explicit unordered_map(int num_buckets = 20,
                          RealNumber max_capacity = RealNumber(4, 5),
                          RealNumber growth = RealNumber(5, 4)) {
-    shm_init(HERMES_MEMORY_MANAGER->GetDefaultAllocator(),
+    shm_init(HERMES_MEMORY_MANAGER->GetDefaultAllocator<AllocT>(),
              num_buckets, max_capacity, growth);
   }
 
@@ -241,7 +241,7 @@ class unordered_map : public ShmContainer {
   /** Copy constructor */
   HSHM_CROSS_FUN
   explicit unordered_map(const unordered_map &other) {
-    init_shm_container(HERMES_MEMORY_MANAGER->GetDefaultAllocator());
+    init_shm_container(HERMES_MEMORY_MANAGER->GetDefaultAllocator<AllocT>());
     shm_strong_copy_construct(other);
   }
 

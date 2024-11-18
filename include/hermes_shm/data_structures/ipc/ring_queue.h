@@ -70,7 +70,7 @@ class ring_queue_base : public ShmContainer {
   template<typename ...Args>
   HSHM_CROSS_FUN
   explicit ring_queue_base(size_t depth = 1024, Args &&...args) {
-    shm_init(HERMES_MEMORY_MANAGER->GetDefaultAllocator(), depth,
+    shm_init(HERMES_MEMORY_MANAGER->GetDefaultAllocator<AllocT>(), depth,
              std::forward<Args>(args)...);
   }
 

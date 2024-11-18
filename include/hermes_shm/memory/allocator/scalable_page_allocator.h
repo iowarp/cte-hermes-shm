@@ -139,8 +139,11 @@ class PageAllocator {
 
 struct ScalablePageAllocatorHeader : public AllocatorHeader {
   typedef TlsAllocatorInfo<ScalablePageAllocator> TLS;
-  hipc::delay_ar<hipc::vector<PageAllocator, StackAllocator>> tls_;
-  hipc::delay_ar<hipc::fixed_mpmc_ptr_queue<hshm::min_u64>> free_tids_;
+  typedef hipc::vector<PageAllocator, StackAllocator> PageAllocVec;
+  typedef hipc::fixed_mpmc_ptr_queue<hshm::min_u64, StackAllocator> PageAllocIdVec;
+
+  hipc::delay_ar<PageAllocVec> tls_;
+  hipc::delay_ar<PageAllocIdVec> free_tids_;
   hipc::atomic<hshm::min_u64> tid_heap_;
   hipc::atomic<hshm::min_u64> total_alloc_;
 
