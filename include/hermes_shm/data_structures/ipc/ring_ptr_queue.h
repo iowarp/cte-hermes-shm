@@ -218,7 +218,7 @@ class ring_ptr_queue_base : public ShmContainer {
     // The slot is marked NULL, so pop won't do anything if context switch
     qtok_id head = head_.load();
     qtok_id tail = tail_.fetch_add(1);
-    size_t size = tail - head + 1;
+    size_t size = tail - head;
     vector_t &queue = (*queue_);
 
     // Check if there's space in the queue.
@@ -226,7 +226,7 @@ class ring_ptr_queue_base : public ShmContainer {
       if (size > queue.size()) {
         while (true) {
           head = head_.load();
-          size = tail - head + 1;
+          size = tail - head;
           if (size <= (*queue_).size()) {
             break;
           }
