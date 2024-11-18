@@ -135,21 +135,23 @@ class ring_queue_base : public ShmContainer {
   /** Move constructor. */
   HSHM_CROSS_FUN
   ring_queue_base(ring_queue_base &&other) noexcept {
-    shm_move_op<false>(other.GetCtxAllocator(), other);
+    shm_move_op<false>(other.GetCtxAllocator(),
+                       std::forward<ring_queue_base>(other));
   }
 
   /** SHM move constructor. */
   HSHM_CROSS_FUN
   ring_queue_base(const hipc::CtxAllocator<AllocT> &alloc,
              ring_queue_base &&other) noexcept {
-    shm_move_op<false>(alloc, other);
+    shm_move_op<false>(alloc, std::forward<ring_queue_base>(other));
   }
 
   /** SHM move assignment operator. */
   HSHM_CROSS_FUN
   ring_queue_base& operator=(ring_queue_base &&other) noexcept {
     if (this != &other) {
-      shm_move_op<true>(other.GetCtxAllocator(), std::move(other));
+      shm_move_op<true>(other.GetCtxAllocator(),
+                        std::forward<ring_queue_base>(other));
     }
     return *this;
   }
@@ -340,6 +342,12 @@ class ring_queue_base : public ShmContainer {
     }
   }
 
+  /** Get queue depth */
+  HSHM_CROSS_FUN
+  size_t GetDepth() {
+    return queue_->size();
+  }
+
   /** Get size at this moment */
   HSHM_CROSS_FUN
   size_t GetSize() {
@@ -353,13 +361,13 @@ class ring_queue_base : public ShmContainer {
 
   /** Get size (wrapper) */
   HSHM_INLINE_CROSS_FUN
-  void size() {
+  size_t size() {
     return GetSize();
   }
 
   /** Get size (wrapper) */
   HSHM_INLINE_CROSS_FUN
-  void Size() {
+  size_t Size() {
     return GetSize();
   }
 };

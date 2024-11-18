@@ -383,10 +383,10 @@ class string_templ : public ShmContainer {
 };
 
 /** Our default SSO value */
-typedef string_templ<32> string;
+using string = string_templ<32>;
 
 /** Consider the string as an uniterpreted set of bytes */
-typedef string charbuf;
+using charbuf = string;
 
 }  // namespace hshm::ipc
 

@@ -129,21 +129,24 @@ class ring_ptr_queue_base : public ShmContainer {
   /** Move constructor. */
   HSHM_CROSS_FUN
   ring_ptr_queue_base(ring_ptr_queue_base &&other) noexcept {
-    shm_move_op<false>(other.GetCtxAllocator(), std::move(other));
+    shm_move_op<false>(other.GetCtxAllocator(),
+                       std::forward<ring_ptr_queue_base>(other));
   }
 
   /** SHM move constructor. */
   HSHM_CROSS_FUN
   ring_ptr_queue_base(const hipc::CtxAllocator<AllocT> &alloc,
                  ring_ptr_queue_base &&other) noexcept {
-    shm_move_op<false>(alloc, std::move(other));
+    shm_move_op<false>(alloc,
+                       std::forward<ring_ptr_queue_base>(other));
   }
 
   /** SHM move assignment operator. */
   HSHM_CROSS_FUN
   ring_ptr_queue_base& operator=(ring_ptr_queue_base &&other) noexcept {
     if (this != &other) {
-      shm_move_op<true>(other.GetCtxAllocator(), std::move(other));
+      shm_move_op<true>(other.GetCtxAllocator(),
+                        std::forward<ring_ptr_queue_base>(other));
     }
     return *this;
   }
@@ -290,6 +293,42 @@ class ring_ptr_queue_base : public ShmContainer {
     }
   }
 
+  /** Consumer pops the head object */
+  HSHM_CROSS_FUN
+  qtok_t pop() {
+    // Don't pop if there's no entries
+    qtok_id head = head_.load();
+    qtok_id tail = tail_.load();
+    if (head >= tail) {
+      return qtok_t::GetNull();
+    }
+
+    // Pop the element, but only if it's marked valid
+    qtok_id idx = head % (*queue_).size();
+    T &entry = (*queue_)[idx];
+
+    // Check if bit is marked
+    bool is_marked;
+    if constexpr(std::is_arithmetic<T>::value) {
+      is_marked = IS_FIRST_BIT_MARKED(T, entry);
+    } else {
+      is_marked = IS_FIRST_BIT_MARKED(size_t, entry.off_.load());
+    }
+
+    if (is_marked) {
+      head_.fetch_add(1);
+      return qtok_t(head);
+    } else {
+      return qtok_t::GetNull();
+    }
+  }
+
+  /** Get queue depth */
+  HSHM_CROSS_FUN
+  size_t GetDepth() {
+    return queue_->size();
+  }
+
   /** Get size at this moment */
   HSHM_CROSS_FUN
   size_t GetSize() {
@@ -303,13 +342,13 @@ class ring_ptr_queue_base : public ShmContainer {
 
   /** Get size (wrapper) */
   HSHM_INLINE_CROSS_FUN
-  void size() {
+  size_t size() {
     return GetSize();
   }
 
   /** Get size (wrapper) */
   HSHM_INLINE_CROSS_FUN
-  void Size() {
+  size_t Size() {
     return GetSize();
   }
 };

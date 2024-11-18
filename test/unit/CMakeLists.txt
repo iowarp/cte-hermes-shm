@@ -18,11 +18,9 @@ if (HERMES_ENABLE_CUDA)
 endif()
 
 if (HERMES_ENABLE_COMPRESS)
-    message("HERMES ENABLE COMPRESS")
     add_subdirectory(compress)
 endif()
 
 if (HERMES_ENABLE_ENCRYPT)
-    message("HERMES ENABLE ENCRYPT")
     add_subdirectory(encrypt)
 endif()

@@ -149,6 +149,7 @@ endif()
 
 # Compression libraries
 if(HERMES_ENABLE_COMPRESS)
+    message("HERMES_ENABLE_COMPRESS is ON")
     pkg_check_modules(bzip2 REQUIRED bzip2)
     message(STATUS "found bz2.h at ${bzip2_INCLUDE_DIRS}")
 
