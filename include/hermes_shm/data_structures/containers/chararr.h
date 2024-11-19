@@ -38,6 +38,7 @@ class chararr_templ {
   chararr_templ(const char *data) {
     length_ = hshm::strnlen(data, LENGTH);
     memcpy(buf_, data, length_);
+    buf_[length_] = '\0';
   }
 
   /** Construct from sized char* */
@@ -45,6 +46,7 @@ class chararr_templ {
   chararr_templ(const char *data, size_t length) {
     length_ = length;
     memcpy(buf_, data, length);
+    buf_[length_] = '\0';
   }
 
   /** Construct from std::string */
@@ -52,6 +54,7 @@ class chararr_templ {
   chararr_templ(const std::string &data) {
     length_ = data.size();
     memcpy(buf_, data.data(), length_);
+    buf_[length_] = '\0';
   }
 
   /** Construct from chararr_templ */
@@ -59,6 +62,7 @@ class chararr_templ {
   chararr_templ(const chararr_templ &data) {
     length_ = data.size();
     memcpy(buf_, data.data(), length_);
+    buf_[length_] = '\0';
   }
 
   /** Copy assignment operator */
@@ -66,6 +70,7 @@ class chararr_templ {
     if (this != &other) {
       length_ = other.size();
       memcpy(buf_, other.data(), length_);
+      buf_[length_] = '\0';
     }
     return *this;
   }
@@ -78,6 +83,7 @@ class chararr_templ {
   HSHM_CROSS_FUN chararr_templ(chararr_templ &&other) {
     length_ = other.length_;
     memcpy(buf_, other.buf_, length_);
+    buf_[length_] = '\0';
   }
 
   /** Move assignment operator */
@@ -85,6 +91,7 @@ class chararr_templ {
     if (this != &other) {
       length_ = other.length_;
       memcpy(buf_, other.buf_, length_);
+      buf_[length_] = '\0';
     }
     return *this;
   }
