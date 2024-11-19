@@ -15,7 +15,6 @@
 
 #include "hermes_shm/data_structures/data_structure.h"
 #include "omp.h"
-#include "hermes_shm/data_structures/ipc/ticket_stack.h"
 
 template<typename QueueT, typename T>
 class QueueTestSuite {

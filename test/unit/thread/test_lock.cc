@@ -18,8 +18,7 @@
 using hshm::Mutex;
 using hshm::RwLock;
 
-void MutexTest() {
-  size_t nthreads = 8;
+void MutexTest(int nthreads) {
   size_t loop_count = 10000;
   size_t count = 0;
   Mutex lock;
@@ -76,7 +75,7 @@ void RwLockTest(int producers, int consumers, size_t loop_count) {
 }
 
 TEST_CASE("Mutex") {
-  MutexTest();
+  MutexTest(8);
 }
 
 TEST_CASE("RwLock") {

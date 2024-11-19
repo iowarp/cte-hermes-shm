@@ -217,8 +217,15 @@ class ring_ptr_queue_base : public ShmContainer {
     // Allocate a slot in the queue
     // The slot is marked NULL, so pop won't do anything if context switch
     qtok_id head = head_.load();
-    qtok_id tail = tail_.fetch_add(1);
+    qtok_id tail;
     vector_t &queue = (*queue_);
+
+    // Get the tail
+    if constexpr (IsPushAtomic) {
+      tail = tail_.fetch_add(1);
+    } else {
+      tail = tail_.load();
+    }
 
     // Check if there's space in the queue.
     if constexpr (!IsFixedSize) {
@@ -233,6 +240,16 @@ class ring_ptr_queue_base : public ShmContainer {
           HERMES_THREAD_MODEL->Yield();
         }
       }
+    } else if constexpr (!IsPushAtomic) {
+      size_t size = tail - head + 1;
+      if (size > queue.size()) {
+        return qtok_t::GetNull();
+      }
+    }
+
+    // Increment tail
+    if constexpr (!IsPushAtomic) {
+      tail_.fetch_add(1);
     }
 
     // Emplace into queue at our slot
@@ -261,7 +278,6 @@ class ring_ptr_queue_base : public ShmContainer {
     if (head >= tail) {
       return qtok_t::GetNull();
     }
-    atomic_thread_fence(std::memory_order_release);
 
     // Pop the element, but only if it's marked valid
     qtok_id idx = head % (*queue_).size();
