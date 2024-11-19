@@ -42,38 +42,40 @@ struct nonatomic {
 
   /** Atomic fetch_add wrapper*/
   HSHM_INLINE_CROSS_FUN T fetch_add(
-    T count, std::memory_order order = std::memory_order_seq_cst) {
+      T count, std::memory_order order = std::memory_order_seq_cst) {
     (void) order;
+    T orig_x = x;
     x += count;
-    return x;
+    return orig_x;
   }
 
   /** Atomic fetch_sub wrapper*/
   HSHM_INLINE_CROSS_FUN T fetch_sub(
-    T count, std::memory_order order = std::memory_order_seq_cst) {
+      T count, std::memory_order order = std::memory_order_seq_cst) {
     (void) order;
+    T orig_x = x;
     x -= count;
-    return x;
+    return orig_x;
   }
 
   /** Atomic load wrapper */
   HSHM_INLINE_CROSS_FUN T load(
-    std::memory_order order = std::memory_order_seq_cst) const {
+      std::memory_order order = std::memory_order_seq_cst) const {
     (void) order;
     return x;
   }
 
   /** Atomic exchange wrapper */
   HSHM_INLINE_CROSS_FUN void exchange(
-    T count, std::memory_order order = std::memory_order_seq_cst) {
+      T count, std::memory_order order = std::memory_order_seq_cst) {
     (void) order;
     x = count;
   }
 
   /** Atomic compare exchange weak wrapper */
   HSHM_INLINE_CROSS_FUN bool compare_exchange_weak(T& expected, T desired,
-                                    std::memory_order order =
-                                    std::memory_order_seq_cst) {
+                                                   std::memory_order order =
+                                                   std::memory_order_seq_cst) {
     (void) expected; (void) order;
     x = desired;
     return true;
@@ -81,8 +83,8 @@ struct nonatomic {
 
   /** Atomic compare exchange strong wrapper */
   HSHM_INLINE_CROSS_FUN bool compare_exchange_strong(T& expected, T desired,
-                                      std::memory_order order =
-                                      std::memory_order_seq_cst) {
+                                                     std::memory_order order =
+                                                     std::memory_order_seq_cst) {
     (void) expected; (void) order;
     x = desired;
     return true;
@@ -107,7 +109,9 @@ struct nonatomic {
 
   /** Atomic post-decrement operator */
   HSHM_INLINE_CROSS_FUN nonatomic operator--(int) {
-    return atomic(x-1);
+    nonatomic orig_x(x);
+    --x;
+    return orig_x;
   }
 
   /** Atomic add operator */
@@ -278,19 +282,19 @@ struct std_atomic {
 
   /** Atomic fetch_add wrapper*/
   HSHM_ALWAYS_INLINE T fetch_add(
-    T count, std::memory_order order = std::memory_order_seq_cst) {
+      T count, std::memory_order order = std::memory_order_seq_cst) {
     return x.fetch_add(count, order);
   }
 
   /** Atomic fetch_sub wrapper*/
   HSHM_ALWAYS_INLINE T fetch_sub(
-    T count, std::memory_order order = std::memory_order_seq_cst) {
+      T count, std::memory_order order = std::memory_order_seq_cst) {
     return x.fetch_sub(count, order);
   }
 
   /** Atomic load wrapper */
   HSHM_ALWAYS_INLINE T load(
-    std::memory_order order = std::memory_order_seq_cst) const {
+      std::memory_order order = std::memory_order_seq_cst) const {
     return x.load(order);
   }
 
@@ -302,21 +306,21 @@ struct std_atomic {
 
   /** Atomic exchange wrapper */
   HSHM_ALWAYS_INLINE void exchange(
-    T count, std::memory_order order = std::memory_order_seq_cst) {
+      T count, std::memory_order order = std::memory_order_seq_cst) {
     x.exchange(count, order);
   }
 
   /** Atomic compare exchange weak wrapper */
   HSHM_ALWAYS_INLINE bool compare_exchange_weak(T& expected, T desired,
-                                    std::memory_order order =
-                                    std::memory_order_seq_cst) {
+                                                std::memory_order order =
+                                                std::memory_order_seq_cst) {
     return x.compare_exchange_weak(expected, desired, order);
   }
 
   /** Atomic compare exchange strong wrapper */
   HSHM_ALWAYS_INLINE bool compare_exchange_strong(T& expected, T desired,
-                                      std::memory_order order =
-                                      std::memory_order_seq_cst) {
+                                                  std::memory_order order =
+                                                  std::memory_order_seq_cst) {
     return x.compare_exchange_strong(expected, desired, order);
   }
 

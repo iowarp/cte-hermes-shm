@@ -221,7 +221,7 @@ class ring_ptr_queue_base : public ShmContainer {
     vector_t &queue = (*queue_);
 
     // Check if there's space in the queue.
-    if constexpr (IsFixedSize) {
+    if constexpr (!IsFixedSize) {
       size_t size = tail - head + 1;
       if (size > queue.size()) {
         while (true) {
@@ -236,7 +236,8 @@ class ring_ptr_queue_base : public ShmContainer {
     }
 
     // Emplace into queue at our slot
-    uint32_t idx = tail % queue.size();
+    size_t depth = queue.size();
+    uint32_t idx = tail % depth;
     if constexpr(std::is_arithmetic<T>::value) {
       queue[idx] = MARK_FIRST_BIT(T, val);
     } else if constexpr(IS_SHM_OFFSET_POINTER(T)) {
@@ -260,6 +261,7 @@ class ring_ptr_queue_base : public ShmContainer {
     if (head >= tail) {
       return qtok_t::GetNull();
     }
+    atomic_thread_fence(std::memory_order_release);
 
     // Pop the element, but only if it's marked valid
     qtok_id idx = head % (*queue_).size();

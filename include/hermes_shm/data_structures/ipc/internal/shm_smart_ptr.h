@@ -14,15 +14,6 @@
 #ifndef HERMES_DATA_STRUCTURES_INTERNAL_SHM_DATA_STRUCTURE_POINTER_H_
 #define HERMES_DATA_STRUCTURES_INTERNAL_SHM_DATA_STRUCTURE_POINTER_H_
 
-namespace hshm::ipc {
-
-/**
- * Indicates a data structure represents a memory paradigm for Shm.
- * */
-class ShmSmartPointer {};
-
-}  // namespace hshm::ipc
-
 /**
  * Enables a specific TypedPointer type to be serialized
  * */
