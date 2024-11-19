@@ -39,7 +39,9 @@ template<typename T, HSHM_CLASS_TEMPL>
 class split_ticket_queue : public ShmContainer {
  public:
   HIPC_CONTAINER_TEMPLATE((CLASS_NAME), (CLASS_NEW_ARGS))
-  delay_ar<vector<ticket_queue<T, HSHM_CLASS_TEMPL_ARGS>>> splits_;
+  typedef ticket_queue<T, HSHM_CLASS_TEMPL_ARGS> ticket_queue_t;
+  typedef vector<ticket_queue_t, HSHM_CLASS_TEMPL_ARGS> vector_t;
+  delay_ar<vector_t> splits_;
   hipc::atomic<hshm::min_i32> rr_tail_, rr_head_;
 
  public:
@@ -193,7 +195,7 @@ class split_ticket_queue : public ShmContainer {
     uint16_t qid_start = rr % num_splits;
     for (size_t i = 0; i < num_splits; ++i) {
       uint32_t qid = (qid_start + i) % num_splits;
-      ticket_queue<T> &queue = (*splits_)[qid];
+      ticket_queue_t &queue = (*splits_)[qid];
       qtok_t qtok = queue.emplace(tkt);
       if (!qtok.IsNull()) {
         return qtok;
@@ -212,7 +214,7 @@ class split_ticket_queue : public ShmContainer {
     uint16_t qid_start = rr % num_splits;
     for (size_t i = 0; i < num_splits; ++i) {
       uint32_t qid = (qid_start + i) % num_splits;
-      ticket_queue<T> &queue = (*splits_)[qid];
+      ticket_queue_t &queue = (*splits_)[qid];
       qtok_t qtok = queue.pop(tkt);
       if (!qtok.IsNull()) {
         return qtok;
