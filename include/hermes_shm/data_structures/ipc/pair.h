@@ -75,7 +75,7 @@ class pair : public ShmContainer {
   /** Constructor. Move parameters. */
   HSHM_CROSS_FUN
   explicit pair(FirstT &&first, SecondT &&second) {
-    init_shm_container(first.GetCtxAllocator());
+    init_shm_container(HERMES_MEMORY_MANAGER->GetDefaultAllocator<AllocT>());
     HSHM_MAKE_AR(first_, GetCtxAllocator(),
                  std::forward<FirstT>(first))
     HSHM_MAKE_AR(second_, GetCtxAllocator(),

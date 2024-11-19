@@ -158,7 +158,7 @@ void init_shm_container(const hipc::CtxAllocator<AllocT> &tls_alloc) { \
 /** Destructor. */ \
 HSHM_INLINE_CROSS_FUN \
 ~__TU(CLASS_NAME)() { \
-  if constexpr ((HSHM_FLAGS & hipc::ShmFlag::kIsUndestructable)) { \
+  if constexpr (!(HSHM_FLAGS & hipc::ShmFlag::kIsUndestructable)) { \
     shm_destroy(); \
   } \
 } \

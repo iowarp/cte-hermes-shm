@@ -37,7 +37,7 @@ bool VerifyVector(hipc::vector<T> &vec) {
 
 int main() {
   // Pretest
-  ServerPretest<hipc::StackAllocator>();
+  ServerPretest<hipc::ScalablePageAllocator>();
 
   // Create thallium server
   server_ = std::make_unique<tl::engine>(

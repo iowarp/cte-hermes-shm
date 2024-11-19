@@ -344,7 +344,7 @@ class unordered_map : public ShmContainer {
 
   /** Sets this pair as empty */
   HSHM_INLINE_CROSS_FUN void SetNull() {
-    length_ = 0;
+    buckets_->SetNull();
   }
 
   /** Destroy the unordered_map buckets */

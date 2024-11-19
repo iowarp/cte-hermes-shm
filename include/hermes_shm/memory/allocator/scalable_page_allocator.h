@@ -190,7 +190,6 @@ class ScalablePageAllocator : public Allocator {
   ScalablePageAllocatorHeader *header_;
   StackAllocator alloc_;
   thread::ThreadLocalKey tls_key_;
-  hipc::atomic<hshm::min_u64> new_counter_;
 
  public:
   /**

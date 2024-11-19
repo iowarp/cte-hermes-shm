@@ -21,7 +21,7 @@ std::unique_ptr<tl::engine> client_;
 std::unique_ptr<tl::engine> server_;
 
 void MainPretest() {
-  ClientPretest<hipc::StackAllocator>();
+  ClientPretest<hipc::ScalablePageAllocator>();
   client_ = std::make_unique<tl::engine>(
     "ofi+sockets",
     THALLIUM_CLIENT_MODE);
