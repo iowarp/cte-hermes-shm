@@ -165,7 +165,7 @@ class chararr_templ {
 
   /** Hash function */
   HSHM_CROSS_FUN size_t Hash() const {
-    return string_hash<hshm::chararr_templ<LENGTH, WithNull>>(*this);
+    return string_hash<chararr_templ>(*this);
   }
 
   /**====================================
@@ -214,16 +214,16 @@ class chararr_templ {
 #ifdef HSHM_IS_HOST
 typedef chararr_templ<4096, true> chararr;
 #else
-typedef chararr_templ<32> chararr;
+typedef chararr_templ<32, true> chararr;
 #endif
 
 }  // namespace hshm
 
 /** std::hash function for string */
 namespace std {
-template<>
-struct hash<hshm::chararr> {
-  HSHM_CROSS_FUN size_t operator()(const hshm::chararr &text) const {
+template<int LENGTH, bool WithNull>
+struct hash<hshm::chararr_templ<LENGTH, WithNull>> {
+  HSHM_CROSS_FUN size_t operator()(const hshm::chararr_templ<LENGTH, WithNull> &text) const {
     return text.Hash();
   }
 };
@@ -231,9 +231,9 @@ struct hash<hshm::chararr> {
 
 /** hshm::hash function for string */
 namespace hshm {
-template<>
-struct hash<hshm::chararr> {
-  HSHM_CROSS_FUN size_t operator()(const hshm::chararr &text) const {
+template<int LENGTH, bool WithNull>
+struct hash<hshm::chararr_templ<LENGTH, WithNull>> {
+  HSHM_CROSS_FUN size_t operator()(const hshm::chararr_templ<LENGTH, WithNull> &text) const {
     return text.Hash();
   }
 };
