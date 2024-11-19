@@ -1054,6 +1054,16 @@ struct CtxAllocator {
   CtxAllocator(const ThreadId &tid, AllocT *alloc)
   : alloc_(alloc), ctx_(tid) {}
 
+  /** Allocator and ctx constructor */
+  HSHM_INLINE_CROSS_FUN
+  CtxAllocator(const MemContext &ctx, AllocT *alloc)
+  : alloc_(alloc), ctx_(ctx) {}
+
+  /** ctx and Allocator constructor */
+  HSHM_INLINE_CROSS_FUN
+  CtxAllocator(AllocT *alloc, const MemContext &ctx)
+  : alloc_(alloc), ctx_(ctx) {}
+
   /** Arrow operator */
   HSHM_INLINE_CROSS_FUN
   AllocT* operator->() {
