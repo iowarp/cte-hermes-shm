@@ -223,16 +223,16 @@ class ring_queue_base : public ShmContainer {
     // The slot is marked NULL, so pop won't do anything if context switch
     qtok_id head = head_.load();
     qtok_id tail = tail_.fetch_add(1);
-    size_t size = tail - head + 1;  // NOTE(llogan): If tail is 0, tail_ is 1, so we add +1
     vector_t &queue = (*queue_);
 
     // Check if there's space in the queue.
     if constexpr (!IsFixedSize) {
+      size_t size = tail - head + 1;  // NOTE(llogan): If tail is 0, tail_ is 1, so we add +1
       if (size > queue.size()) {
         while (true) {
           head = head_.load();
           size = tail - head + 1;
-          if (size <= (*queue_).size()) {
+          if (size <= GetDepth()) {
             break;
           }
           HERMES_THREAD_MODEL->Yield();
