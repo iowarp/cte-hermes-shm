@@ -409,13 +409,16 @@ template<typename T, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
 using mpsc_queue = hipc::ring_queue_base<T, true, false, false, HSHM_CLASS_TEMPL_ARGS>;
 
 template<typename T, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
+using spsc_queue = hipc::ring_queue_base<T, false, false, false, HSHM_CLASS_TEMPL_ARGS>;
+
+template<typename T, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
 using fixed_spsc_queue = hipc::ring_queue_base<T, false, false, true, HSHM_CLASS_TEMPL_ARGS>;
 
 template<typename T, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
 using fixed_mpmc_queue = hipc::ring_queue_base<T, true, true, true, HSHM_CLASS_TEMPL_ARGS>;
 
 template<typename T, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
-using spsc_queue = hipc::ring_queue_base<T, false, false, false, HSHM_CLASS_TEMPL_ARGS>;
+using fixed_mpsc_queue = fixed_mpmc_queue<T, HSHM_CLASS_TEMPL_ARGS>;
 
 }  // namespace hshm
 

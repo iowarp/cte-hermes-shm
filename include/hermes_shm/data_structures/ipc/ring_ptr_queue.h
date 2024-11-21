@@ -375,13 +375,16 @@ template<typename T, HSHM_CLASS_TEMPL_WITH_DEFAULTS>
 using mpsc_ptr_queue = ring_ptr_queue_base<T, true, false, false, HSHM_CLASS_TEMPL_ARGS>;
 
 template<typename T, HSHM_CLASS_TEMPL_WITH_DEFAULTS>
+using spsc_ptr_queue = ring_ptr_queue_base<T, false, false, false, HSHM_CLASS_TEMPL_ARGS>;
+
+template<typename T, HSHM_CLASS_TEMPL_WITH_DEFAULTS>
 using fixed_spsc_ptr_queue = ring_ptr_queue_base<T, false, false, true, HSHM_CLASS_TEMPL_ARGS>;
 
 template<typename T, HSHM_CLASS_TEMPL_WITH_DEFAULTS>
 using fixed_mpmc_ptr_queue = ring_ptr_queue_base<T, true, true, true, HSHM_CLASS_TEMPL_ARGS>;
 
 template<typename T, HSHM_CLASS_TEMPL_WITH_DEFAULTS>
-using spsc_ptr_queue = ring_ptr_queue_base<T, false, false, false, HSHM_CLASS_TEMPL_ARGS>;
+using fixed_mpsc_ptr_queue = fixed_mpmc_ptr_queue<T, HSHM_CLASS_TEMPL_ARGS>;
 
 }  // namespace hshm::ipc
 
