@@ -38,10 +38,6 @@
 #include "serialization/serialize_common.h"
 
 #define HSHM_DATA_STRUCTURES_TEMPLATE(NS, AllocT) \
-//#include "hermes_shm/data_structures/data_structure.h" \
-// \
-//typedef hipc::Allocator AllocT; \
- \
 namespace NS { \
 template<typename T> \
 using iqueue = hipc::iqueue<T, AllocT>; \
