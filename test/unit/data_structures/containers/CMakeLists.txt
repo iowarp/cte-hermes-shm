@@ -26,6 +26,7 @@ add_executable(test_data_structure_exec
         ticket_queue.cc
         pod_array.cc
         chararr.cc
+        namespace.cc
 )
 
 add_dependencies(test_data_structure_exec hermes_shm_data_structures)
