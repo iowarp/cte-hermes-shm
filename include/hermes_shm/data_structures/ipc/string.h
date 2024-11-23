@@ -150,7 +150,7 @@ class string_templ : public ShmContainer {
   }
 
   /** SHM Constructor. From std::string */
-  HSHM_CROSS_FUN
+  HSHM_HOST_FUN
   explicit string_templ(const hipc::CtxAllocator<AllocT> &alloc,
                         const std::string &other) {
     shm_strong_copy_op<false, true>(
@@ -158,7 +158,7 @@ class string_templ : public ShmContainer {
   }
 
   /** SHM copy assignment operator. From std::string. */
-  HSHM_CROSS_FUN
+  HSHM_HOST_FUN
   string_templ& operator=(const std::string &other) {
     shm_strong_copy_op<true, true>(
       GetCtxAllocator(), other.data(), other.size());
@@ -277,7 +277,7 @@ class string_templ : public ShmContainer {
   }
 
   /** Convert into a std::string */
-  HSHM_INLINE_CROSS_FUN std::string str() const {
+  HSHM_INLINE_HOST_FUN std::string str() const {
     return {c_str(), length_};
   }
 

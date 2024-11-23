@@ -18,7 +18,6 @@
 #include "hermes_shm/memory/memory_manager.h"
 
 #include "containers/charbuf.h"
-#include "containers/converters.h"
 #include "containers/functional.h"
 #include "containers/tuple_base.h"
 
@@ -36,6 +35,8 @@
 #include "ipc/vector.h"
 
 #include "serialization/serialize_common.h"
+
+#define HSHM_DEFAULT_MEM_CTX {}
 
 #define HSHM_DATA_STRUCTURES_TEMPLATE(NS, AllocT) \
 namespace NS { \

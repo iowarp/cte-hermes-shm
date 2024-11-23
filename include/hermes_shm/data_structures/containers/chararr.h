@@ -14,7 +14,7 @@ namespace hshm {
 template<int LENGTH, bool WithNull>
 class chararr_templ {
  public:
-  char buf_[LENGTH];
+  char buf_[LENGTH + 1];
   int length_;
 
  public:
@@ -212,7 +212,7 @@ class chararr_templ {
 };
 
 #ifdef HSHM_IS_HOST
-typedef chararr_templ<4096, true> chararr;
+typedef chararr_templ<4095, true> chararr;
 #else
 typedef chararr_templ<32, true> chararr;
 #endif
