@@ -91,7 +91,7 @@ class string_templ : public ShmContainer {
   HSHM_CROSS_FUN
   explicit string_templ(const char *text) {
     shm_strong_copy_op<false, false>(
-          GetCtxAllocator(), text, 0);
+        HERMES_MEMORY_MANAGER->GetDefaultAllocator<AllocT>(), text, 0);
   }
 
   /** SHM Constructor. From const char* */
@@ -121,7 +121,7 @@ class string_templ : public ShmContainer {
   HSHM_CROSS_FUN
   explicit string_templ(const string_templ &other) {
     shm_strong_copy_op<false, true>(
-            other.GetCtxAllocator(), other.data(), other.size());
+        other.GetCtxAllocator(), other.data(), other.size());
   }
 
   /** SHM copy constructor. From string_templ. */
@@ -146,7 +146,7 @@ class string_templ : public ShmContainer {
   HSHM_CROSS_FUN
   explicit string_templ(const std::string &other) {
     shm_strong_copy_op<false, true>(
-      GetCtxAllocator(), other.data(), other.size());
+        HERMES_MEMORY_MANAGER->GetDefaultAllocator<AllocT>(), other.data(), other.size());
   }
 
   /** SHM Constructor. From std::string */
@@ -198,7 +198,7 @@ class string_templ : public ShmContainer {
   /** Move constructor. */
   HSHM_CROSS_FUN
   string_templ(string_templ &&other) {
-    shm_move_op<false>(HERMES_MEMORY_MANAGER->GetDefaultAllocator<AllocT>(), std::move(other));
+    shm_move_op<false>(other.GetCtxAllocator(), std::move(other));
   }
 
   /** SHM move constructor. */
