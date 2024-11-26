@@ -140,9 +140,9 @@ namespace hipc = hshm::ipc;
 #endif
 #endif
 
+#endif
+
 /** Default memory context object */
 #define HSHM_DEFAULT_MEM_CTX {}
-
-#endif
 
 #endif  // HERMES_MACROS_H
