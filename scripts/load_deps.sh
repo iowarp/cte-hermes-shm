@@ -9,9 +9,6 @@ argobots@1.1+affinity \
 cereal \
 boost@1.7: +context +fiber +coroutine +regex +system +filesystem +serialization +pic +math \
 mpi \
-hdf5@1.14.0 \
-libzmq \
-adios2 \
 python \
 py-pip \
 py-pybind11 \
