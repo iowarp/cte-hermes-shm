@@ -253,7 +253,7 @@ class string_templ : public ShmContainer {
   /** Destroy the shared-memory data. */
   HSHM_INLINE_CROSS_FUN void shm_destroy_main() {
     if (size() >= SSO) {
-      GetCtxAllocator()->Free(GetThreadId(), text_);
+      GetAllocator()->Free(GetMemCtx(), text_);
     }
   }
 
@@ -296,7 +296,7 @@ class string_templ : public ShmContainer {
     if (length_ < SSO) {
       return sso_;
     } else {
-      return GetCtxAllocator()->template Convert<char, Pointer>(text_);
+      return GetAllocator()->template Convert<char, Pointer>(text_);
     }
   }
 
@@ -305,7 +305,7 @@ class string_templ : public ShmContainer {
     if (length_ < SSO) {
       return sso_;
     } else {
-      return GetCtxAllocator()->template Convert<char, Pointer>(text_);
+      return GetAllocator()->template Convert<char, Pointer>(text_);
     }
   }
 
@@ -315,8 +315,8 @@ class string_templ : public ShmContainer {
     if (IsNull()) {
       _create_str(new_size);
     } else if (new_size > size()) {
-      GetCtxAllocator()->template Reallocate<Pointer>(
-          GetThreadId(), text_, new_size);
+      GetAllocator()->template Reallocate<Pointer>(
+          GetMemCtx(), text_, new_size);
       length_ = new_size;
     } else {
       length_ = new_size;
@@ -370,7 +370,7 @@ class string_templ : public ShmContainer {
       // NOTE(llogan): less than and not equal because length doesn't
       // account for trailing 0.
     } else {
-      text_ = GetCtxAllocator()->Allocate(GetThreadId(), length + 1);
+      text_ = GetAllocator()->Allocate(GetMemCtx(), length + 1);
     }
     length_ = length;
   }

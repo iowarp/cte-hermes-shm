@@ -156,9 +156,9 @@ class ShmContainerExample : public hipc::ShmContainer {
 
   /** Get the shared-memory allocator id */
   HSHM_INLINE_CROSS_FUN
-  hshm::ThreadId GetThreadId() const {
+  hipc::MemContext GetMemCtx() const {
     if constexpr (!(HSHM_FLAGS & hipc::ShmFlag::kIsPrivate)) {
-      return hshm::ThreadId::GetNull();
+      return HSHM_DEFAULT_MEM_CTX;
     } else {
       return alloc_info_.ctx_.tid_;
     }
@@ -168,7 +168,7 @@ class ShmContainerExample : public hipc::ShmContainer {
   HSHM_INLINE_CROSS_FUN
   hipc::CtxAllocator<AllocT> GetCtxAllocator() const {
     if constexpr (!(HSHM_FLAGS & hipc::ShmFlag::kIsPrivate)) {
-      return hipc::CtxAllocator<AllocT>{GetThreadId(), GetAllocator()};
+      return hipc::CtxAllocator<AllocT>{GetMemCtx(), GetAllocator()};
     } else {
       return alloc_info_;
     }

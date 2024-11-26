@@ -421,7 +421,8 @@ class vector : public ShmContainer {
   HSHM_INLINE_CROSS_FUN
   void shm_destroy_main() {
     erase(begin(), end());
-    GetCtxAllocator()->Free(GetThreadId(), vec_ptr_);
+    CtxAllocator<AllocT> alloc = GetCtxAllocator();
+    alloc->Free(alloc.ctx_, vec_ptr_);
   }
 
   /**====================================
@@ -610,12 +611,12 @@ class vector : public ShmContainer {
 
   /** Retreives a pointer to the internal array */
   HSHM_INLINE_CROSS_FUN delay_ar<T>* data_ar() {
-    return GetCtxAllocator()->template Convert<delay_ar<T>>(vec_ptr_);
+    return GetAllocator()->template Convert<delay_ar<T>>(vec_ptr_);
   }
 
   /** Retreives a pointer to the array */
   HSHM_INLINE_CROSS_FUN delay_ar<T>* data_ar() const {
-    return GetCtxAllocator()->template Convert<delay_ar<T>>(vec_ptr_);
+    return GetAllocator()->template Convert<delay_ar<T>>(vec_ptr_);
   }
 
   /**====================================
@@ -647,35 +648,36 @@ class vector : public ShmContainer {
 
     // Allocate new shared-memory vec
     delay_ar<T> *new_vec;
+    CtxAllocator<AllocT> alloc = GetCtxAllocator();
     if constexpr(std::is_pod<T>() && !IS_SHM_ARCHIVEABLE(T)) {
       // Use reallocate for well-behaved objects
-      new_vec = GetCtxAllocator()->template
+      new_vec = alloc->template
         ReallocateObjs<delay_ar<T>>(
-            GetThreadId(), vec_ptr_, max_length);
+            alloc.ctx_, vec_ptr_, max_length);
     } else {
       // Use std::move for unpredictable objects
       OffsetPointer new_p;
-      new_vec = GetCtxAllocator()->template
+      new_vec = alloc->template
         AllocateObjs<delay_ar<T>>(
-          GetThreadId(), max_length, new_p);
+          alloc.ctx_, max_length, new_p);
       for (size_t i = 0; i < length_; ++i) {
         T& old_entry = (*this)[i];
-        HSHM_MAKE_AR(new_vec[i], GetCtxAllocator(),
+        HSHM_MAKE_AR(new_vec[i], alloc,
                      std::move(old_entry))
       }
       if (!vec_ptr_.IsNull()) {
-        GetCtxAllocator()->Free(GetThreadId(), vec_ptr_);
+        alloc->Free(alloc.ctx_, vec_ptr_);
       }
       vec_ptr_ = new_p;
     }
     if (new_vec == nullptr) {
       HERMES_THROW_ERROR(OUT_OF_MEMORY,
                          max_length * sizeof(delay_ar<T>),
-                         GetCtxAllocator()->GetCurrentlyAllocatedSize());
+                         alloc->GetCurrentlyAllocatedSize());
     }
     if (resize) {
       for (size_t i = length_; i < max_length; ++i) {
-        HSHM_MAKE_AR(new_vec[i], GetCtxAllocator(),
+        HSHM_MAKE_AR(new_vec[i], alloc,
                      std::forward<Args>(args)...)
       }
     }

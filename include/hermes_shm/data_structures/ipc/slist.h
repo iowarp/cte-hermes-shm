@@ -99,7 +99,7 @@ struct slist_iterator_templ {
   slist_iterator_templ& operator++() {
     if (is_end()) { return *this; }
     entry_ptr_ = entry_->next_ptr_;
-    entry_ = slist_->GetCtxAllocator()->template
+    entry_ = slist_->GetAllocator()->template
       Convert<slist_entry<T, HSHM_CLASS_TEMPL_ARGS>>(entry_->next_ptr_);
     return *this;
   }
@@ -109,7 +109,7 @@ struct slist_iterator_templ {
   slist_iterator_templ& operator--() {
     if (is_end() || is_begin()) { return *this; }
     entry_ptr_ = entry_->prior_ptr_;
-    entry_ = slist_->GetCtxAllocator()->template
+    entry_ = slist_->GetAllocator()->template
       Convert<slist_entry<T, HSHM_CLASS_TEMPL_ARGS>>(entry_->prior_ptr_);
     return *this;
   }
@@ -412,7 +412,7 @@ class slist : public ShmContainer {
       head_ptr_ = entry_ptr;
     } else if (pos.is_end()) {
       entry->next_ptr_.SetNull();
-      auto tail = GetCtxAllocator()->template
+      auto tail = GetAllocator()->template
         Convert<slist_entry<T, HSHM_CLASS_TEMPL_ARGS>>(tail_ptr_);
       tail->next_ptr_ = entry_ptr;
       tail_ptr_ = entry_ptr;
@@ -467,7 +467,7 @@ class slist : public ShmContainer {
     while (pos != last) {
       auto next = pos + 1;
       HSHM_DESTROY_AR(pos.entry_->data_)
-      GetCtxAllocator()->Free(GetThreadId(), pos.entry_ptr_);
+      GetAllocator()->Free(GetMemCtx(), pos.entry_ptr_);
       --length_;
       pos = next;
     }
@@ -524,7 +524,7 @@ class slist : public ShmContainer {
   HSHM_CROSS_FUN
   iterator_t begin() {
     if (size() == 0) { return end(); }
-    auto head = GetCtxAllocator()->template
+    auto head = GetAllocator()->template
       Convert<slist_entry<T, HSHM_CLASS_TEMPL_ARGS>>(head_ptr_);
     return iterator_t(*this, head, head_ptr_);
   }
@@ -540,7 +540,7 @@ class slist : public ShmContainer {
   HSHM_CROSS_FUN
   iterator_t last() {
     if (size() == 0) { return end(); }
-    auto tail = GetCtxAllocator()->template
+    auto tail = GetAllocator()->template
       Convert<slist_entry<T, HSHM_CLASS_TEMPL_ARGS>>(tail_ptr_);
     return iterator_t(*this, tail, tail_ptr_);
   }
@@ -549,7 +549,7 @@ class slist : public ShmContainer {
   HSHM_CROSS_FUN
   citerator_t cbegin() const {
     if (size() == 0) { return cend(); }
-    auto head = GetCtxAllocator()->template
+    auto head = GetAllocator()->template
       Convert<slist_entry<T, HSHM_CLASS_TEMPL_ARGS>>(head_ptr_);
     return citerator_t(const_cast<slist&>(*this), head, head_ptr_);
   }
@@ -583,9 +583,9 @@ class slist : public ShmContainer {
   template<typename ...Args>
   HSHM_CROSS_FUN
   slist_entry<T, HSHM_CLASS_TEMPL_ARGS>* _create_entry(OffsetPointer &p, Args&& ...args) {
-    auto entry = GetCtxAllocator()->template
+    auto entry = GetAllocator()->template
       AllocateObjs<slist_entry<T, HSHM_CLASS_TEMPL_ARGS>>(
-        GetThreadId(), 1, p);
+        GetMemCtx(), 1, p);
     HSHM_MAKE_AR(entry->data_, GetCtxAllocator(), std::forward<Args>(args)...)
     return entry;
   }

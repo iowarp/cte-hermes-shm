@@ -36,8 +36,6 @@
 
 #include "serialization/serialize_common.h"
 
-#define HSHM_DEFAULT_MEM_CTX {}
-
 #define HSHM_DATA_STRUCTURES_TEMPLATE(NS, AllocT) \
 namespace NS { \
 template<typename T> \
