@@ -216,13 +216,13 @@ struct charbuf {
   /** Serialize */
   template <typename Ar>
   HSHM_CROSS_FUN void save(Ar &ar) const {
-    save_string<Ar, charbuf>(ar, *this);
+    hipc::save_string<Ar, charbuf>(ar, *this);
   }
 
   /** Deserialize */
   template <typename Ar>
   HSHM_CROSS_FUN void load(Ar &ar) {
-    load_string<Ar, charbuf>(ar, *this);
+    hipc::load_string<Ar, charbuf>(ar, *this);
   }
 
   /**====================================

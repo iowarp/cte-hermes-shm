@@ -19,6 +19,7 @@ set (SOURCE_FILES
         data_structure_singleton.cc
         ../include/hermes_shm/constants/settings.h_templ
         ../include/hermes_shm/constants/settings.h
+        ../include/hermes_shm/data_structures/serialization/local_serialize.h
 )
 if (BUILD_SHARED_LIBS)
     message("Building dynamic library")

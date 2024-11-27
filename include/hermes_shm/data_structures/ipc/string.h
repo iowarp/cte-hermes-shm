@@ -314,6 +314,13 @@ class string_templ : public ShmContainer {
   void resize(size_t new_size) {
     if (IsNull()) {
       _create_str(new_size);
+    } else if (length_ < SSO && new_size < SSO) {
+      // DO NOTHING
+    } else if (length_ < SSO && new_size >= SSO) {
+      LPointer<char> text = GetAllocator()->template AllocateLocalPtr<char>(
+          GetMemCtx(), new_size);
+      text_ = text.shm_;
+      memcpy(text.ptr_, sso_, length_);
     } else if (new_size > size()) {
       GetAllocator()->template Reallocate<Pointer>(
           GetMemCtx(), text_, new_size);

@@ -175,13 +175,13 @@ class chararr_templ {
   /** Serialize */
   template <typename Ar>
   void save(Ar &ar) const {
-    save_string<Ar, chararr_templ>(ar, *this);
+    hipc::save_string<Ar, chararr_templ>(ar, *this);
   }
 
   /** Deserialize */
   template <typename Ar>
   void load(Ar &ar) {
-    load_string<Ar, chararr_templ>(ar, *this);
+    hipc::load_string<Ar, chararr_templ>(ar, *this);
   }
 
   /**====================================

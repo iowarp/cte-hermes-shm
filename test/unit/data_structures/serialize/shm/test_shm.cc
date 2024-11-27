@@ -15,6 +15,7 @@
 #include "hermes_shm/data_structures/ipc/string.h"
 #include "hermes_shm/data_structures/data_structure.h"
 
+
 TEST_CASE("SerializePod") {
   Allocator *alloc = HERMES_MEMORY_MANAGER->GetDefaultAllocator();
   int a = 1;
@@ -56,3 +57,150 @@ TEST_CASE("SerializeString") {
   REQUIRE(c2 == c);
 }
 
+// Primary template: defaults to false (method does not exist)
+template <typename, typename = void>
+struct has_serialize : std::false_type {};
+
+// Specialization: checks if the serialize method exists with the signature template<typename Ar, typename T> void serialize(Ar& ar, T& data)
+template <typename T>
+struct has_serialize<T, std::void_t<decltype(&T::template serialize<int, double>)>>  // Here, we're checking if T has a serialize template
+    : std::true_type {};
+
+// Helper variable template for easier usage
+template <typename T>
+inline constexpr bool has_serialize_v = has_serialize<T>::value;
+
+// Class with external serialize
+struct ClassWithExternalSerialize {
+  int z_;
+};
+template<typename Ar>
+void serialize(Ar &ar, ClassWithExternalSerialize &obj) {
+  ar(obj.z_);
+}
+
+// Class with external load/save
+struct ClassWithExternalLoadSave {
+  int z_;
+};
+template<typename Ar>
+void save(Ar &ar, ClassWithExternalLoadSave &obj) {
+  ar(obj.z_);
+}
+template<typename Ar>
+void load(Ar &ar, ClassWithExternalLoadSave &obj) {
+  ar(obj.z_);
+}
+
+// Class with serialize
+class ClassWithSerialize {
+ public:
+  int z_;
+
+ public:
+  template<typename Ar>
+  void serialize(Ar& ar) {
+    ar(z_);
+  }
+};
+
+// Class with load/save
+class ClassWithLoadSave {
+ public:
+  int z_;
+
+ public:
+  template<typename Ar>
+  void save(Ar& ar) {
+    ar << z_;
+  }
+
+  template<typename Ar>
+  void load(Ar& ar) {
+    ar >> z_;
+  }
+};
+
+TEST_CASE("SerializeExists") {
+  std::string buf;
+  buf.resize(8192);
+
+  PAGE_DIVIDE("Arithmetic serialize, shift operator") {
+    hipc::LocalSerialize srl(buf);
+    int y = 25;
+    int z = 30;
+    srl << y;
+    srl << z;
+  }
+  PAGE_DIVIDE("Arithmetic deserialize, shift operator") {
+    hipc::LocalDeserialize srl(buf);
+    int y;
+    int z;
+    srl >> y;
+    srl >> z;
+    REQUIRE(y == 25);
+    REQUIRE(z == 30);
+  }
+  PAGE_DIVIDE("Arithmetic serialize, paren operator") {
+    hipc::LocalSerialize srl(buf);
+    int y = 27;
+    int z = 41;
+    srl(y, z);
+  }
+  PAGE_DIVIDE("Arithmetic deserialize, paren operator") {
+    hipc::LocalDeserialize srl(buf);
+    int y;
+    int z;
+    srl(y, z);
+    REQUIRE(y == 27);
+    REQUIRE(z == 41);
+  }
+  PAGE_DIVIDE("External serialize") {
+    hipc::LocalSerialize srl(buf);
+    ClassWithExternalSerialize y;
+    y.z_ = 12;
+    srl(y);
+  }
+  PAGE_DIVIDE("External deserialize") {
+    hipc::LocalDeserialize srl(buf);
+    ClassWithExternalSerialize y;
+    srl(y);
+    REQUIRE(y.z_ == 12);
+  }
+  PAGE_DIVIDE("External save") {
+    hipc::LocalSerialize srl(buf);
+    ClassWithExternalLoadSave y;
+    y.z_ = 13;
+    srl(y);
+  }
+  PAGE_DIVIDE("External load") {
+    hipc::LocalDeserialize srl(buf);
+    ClassWithExternalLoadSave y;
+    srl(y);
+    REQUIRE(y.z_ == 13);
+  }
+  PAGE_DIVIDE("Internal serialize") {
+    hipc::LocalSerialize srl(buf);
+    ClassWithSerialize y;
+    y.z_ = 14;
+    srl(y);
+  }
+  PAGE_DIVIDE("Internal deserialize") {
+    hipc::LocalDeserialize srl(buf);
+    ClassWithSerialize y;
+    srl(y);
+    REQUIRE(y.z_ == 14);
+  }
+  PAGE_DIVIDE("Internal save") {
+    hipc::LocalSerialize srl(buf);
+    ClassWithLoadSave y;
+    y.z_ = 15;
+    srl(y);
+  }
+  PAGE_DIVIDE("Internal load") {
+    hipc::LocalDeserialize srl(buf);
+    ClassWithLoadSave y;
+    srl(y);
+    REQUIRE(y.z_ == 15);
+  }
+}

@@ -35,6 +35,7 @@
 #include "ipc/vector.h"
 
 #include "serialization/serialize_common.h"
+#include "serialization/local_serialize.h"
 
 #define HSHM_DATA_STRUCTURES_TEMPLATE(NS, AllocT) \
 namespace NS { \
