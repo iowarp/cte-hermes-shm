@@ -57,39 +57,30 @@ TEST_CASE("SerializeString") {
   REQUIRE(c2 == c);
 }
 
-// Primary template: defaults to false (method does not exist)
-template <typename, typename = void>
-struct has_serialize : std::false_type {};
-
-// Specialization: checks if the serialize method exists with the signature template<typename Ar, typename T> void serialize(Ar& ar, T& data)
-template <typename T>
-struct has_serialize<T, std::void_t<decltype(&T::template serialize<int, double>)>>  // Here, we're checking if T has a serialize template
-    : std::true_type {};
-
-// Helper variable template for easier usage
-template <typename T>
-inline constexpr bool has_serialize_v = has_serialize<T>::value;
-
 // Class with external serialize
 struct ClassWithExternalSerialize {
   int z_;
 };
+namespace hshm::ipc {
 template<typename Ar>
 void serialize(Ar &ar, ClassWithExternalSerialize &obj) {
   ar(obj.z_);
+}
 }
 
 // Class with external load/save
 struct ClassWithExternalLoadSave {
   int z_;
 };
+namespace hshm::ipc {
 template<typename Ar>
-void save(Ar &ar, ClassWithExternalLoadSave &obj) {
+void save(Ar &ar, const ClassWithExternalLoadSave &obj) {
   ar(obj.z_);
 }
 template<typename Ar>
 void load(Ar &ar, ClassWithExternalLoadSave &obj) {
   ar(obj.z_);
+}
 }
 
 // Class with serialize
@@ -111,7 +102,7 @@ class ClassWithLoadSave {
 
  public:
   template<typename Ar>
-  void save(Ar& ar) {
+  void save(Ar& ar) const {
     ar << z_;
   }
 
@@ -124,6 +115,7 @@ class ClassWithLoadSave {
 TEST_CASE("SerializeExists") {
   std::string buf;
   buf.resize(8192);
+  static_assert(hipc::has_load_fun_v<hipc::LocalSerialize<std::string>, ClassWithExternalLoadSave>);
 
   PAGE_DIVIDE("Arithmetic serialize, shift operator") {
     hipc::LocalSerialize srl(buf);

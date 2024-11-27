@@ -41,14 +41,14 @@ inline constexpr bool has_save_fun_v = has_save_fun<Ar, T>::value;
 template <typename, typename, typename = void>
 struct has_load_fun: std::false_type {};
 template <typename Ar, typename T>
-struct has_load_fun<Ar, T, std::void_t<decltype(load(std::declval<Ar&>(), std::declval<const T&>()))>>
+struct has_load_fun<Ar, T, std::void_t<decltype(load(std::declval<Ar&>(), std::declval<T&>()))>>
     : std::true_type {};
 template <typename Ar, typename T>
 inline constexpr bool has_load_fun_v = has_load_fun<Ar, T>::value;
 
 // Has both load and save functions
 template <typename Ar, typename T>
-inline constexpr bool has_load_fun_save_fun_v = has_load_fun_v<Ar, T> && has_save_fun_v<Ar, T>;
+inline constexpr bool has_load_save_fun_v = has_load_fun_v<Ar, T> && has_save_fun_v<Ar, T>;
 
 // Detect if serialize method exists
 template <typename, typename, typename = void>
@@ -63,7 +63,7 @@ inline constexpr bool has_serialize_cls_v = has_serialize_cls<Ar, CLS>::value;
 template <typename, typename, typename = void>
 struct has_save_cls : std::false_type {};
 template <typename Ar, typename CLS>
-struct has_save_cls<Ar, CLS, std::void_t<decltype(std::declval<CLS>().template save<Ar>(std::declval<const Ar&>()))>>
+struct has_save_cls<Ar, CLS, std::void_t<decltype(std::declval<CLS>().template save<Ar>(std::declval<Ar&>()))>>
     : std::true_type {};
 template <typename Ar, typename CLS>
 inline constexpr bool has_save_cls_v = has_save_cls<Ar, CLS>::value;
@@ -79,7 +79,16 @@ inline constexpr bool has_load_cls_v = has_load_cls<Ar, CLS>::value;
 
 // Has both load and save methods
 template <typename Ar, typename T>
-inline constexpr bool has_load_fun_save_cls_v = has_load_fun_v<Ar, T> && has_save_fun_v<Ar, T>;
+inline constexpr bool has_load_save_cls_v = has_load_cls_v<Ar, T> && has_save_cls_v<Ar, T>;
+
+// Detect if a class is serializeable
+template <typename Ar, typename T>
+inline constexpr bool is_serializeable_v =
+  has_serialize_fun_v<Ar, T> ||
+  has_load_save_fun_v<Ar, T> ||
+  has_serialize_cls_v<Ar, T> ||
+  has_load_save_cls_v<Ar, T> ||
+  std::is_arithmetic_v<T>;
 
 template<typename Ar, typename T>
 HSHM_CROSS_FUN

@@ -26,7 +26,7 @@ class LocalSerialize {
   template<typename T>
   HSHM_ALWAYS_INLINE
   LocalSerialize& operator<<(const T &obj) {
-    return save(obj);
+    return base(obj);
   }
 
   /** Parenthesis operator */
@@ -36,7 +36,7 @@ class LocalSerialize {
     hshm::ForwardIterateArgpack::Apply(
         hshm::make_argpack(std::forward<Args>(args)...),
         [this](auto i, const auto &arg) {
-          this->save(arg);
+          this->base(arg);
         });
     return *this;
   }
@@ -44,22 +44,23 @@ class LocalSerialize {
   /** Save function */
   template<typename T>
   HSHM_ALWAYS_INLINE
-  LocalSerialize& save(const T &obj) {
-    if constexpr(std::is_arithmetic<T>::value) {
+  LocalSerialize& base(const T &obj) {
+    static_assert(
+        is_serializeable_v<LocalSerialize, T>,
+        "Cannot serialize object");
+    if constexpr (std::is_arithmetic<T>::value) {
       size_t size = sizeof(T);
       size_t off = data_.size();
       data_.resize(off + size);
       memcpy(data_.data() + off, &obj, size);
     } else if constexpr (has_serialize_fun_v<LocalSerialize, T>) {
       serialize(*this, const_cast<T&>(obj));
-    } else if constexpr (has_load_fun_save_fun_v<LocalSerialize, T>) {
+    } else if constexpr (has_load_save_fun_v<LocalSerialize, T>) {
       save(*this, obj);
     } else if constexpr (has_serialize_cls_v<LocalSerialize, T>) {
       const_cast<T&>(obj).serialize(*this);
-    } else if constexpr (has_save_cls_v<LocalSerialize, T>) {
+    } else if constexpr (has_load_save_cls_v<LocalSerialize, T>) {
       obj.save(*this);
-    } else {
-      static_assert("Cannot serialize object");
     }
     return *this;
   }
@@ -80,7 +81,7 @@ class LocalDeserialize {
   template<typename T>
   HSHM_ALWAYS_INLINE
   LocalDeserialize& operator>>(T &obj) {
-    return load(obj);
+    return base(obj);
   }
 
   /** Parenthesis operator */
@@ -90,7 +91,7 @@ class LocalDeserialize {
     hshm::ForwardIterateArgpack::Apply(
         hshm::make_argpack(std::forward<Args>(args)...),
         [this](auto i, auto &arg) {
-          this->load(arg);
+          this->base(arg);
         });
     return *this;
   }
@@ -98,21 +99,22 @@ class LocalDeserialize {
   /** Load function */
   template<typename T>
   HSHM_ALWAYS_INLINE
-  LocalDeserialize& load(T &obj) {
-    if constexpr(std::is_arithmetic<T>::value) {
+  LocalDeserialize& base(T &obj) {
+    static_assert(
+        is_serializeable_v<LocalDeserialize, T>,
+        "Cannot serialize object");
+    if constexpr (std::is_arithmetic<T>::value) {
       size_t size = sizeof(T);
       memcpy(&obj, data_.data() + cur_off_, size);
       cur_off_ += size;
     } else if constexpr (has_serialize_fun_v<LocalDeserialize, T>) {
       serialize(*this, obj);
-    } else if constexpr (has_load_fun_save_fun_v<LocalDeserialize, T>) {
+    } else if constexpr (has_load_save_fun_v<LocalDeserialize, T>) {
       load(*this, obj);
     } else if constexpr (has_serialize_cls_v<LocalDeserialize, T>) {
       obj.serialize(*this);
-    } else if constexpr (has_load_cls_v<LocalDeserialize, T>) {
+    } else if constexpr (has_load_save_cls_v<LocalDeserialize, T>) {
       obj.load(*this);
-    } else {
-      static_assert("Cannot serialize object");
     }
     return *this;
   }
