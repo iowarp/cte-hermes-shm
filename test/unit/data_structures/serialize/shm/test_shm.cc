@@ -205,6 +205,49 @@ TEST_CASE("SerializeHshm") {
   std::string buf;
   buf.resize(8192);
 
+  /** std::string */
+  PAGE_DIVIDE("std::string") {
+    hipc::LocalSerialize srl(buf);
+    std::string h("hello");
+    srl(h);
+  }
+  PAGE_DIVIDE("std::string") {
+    hipc::LocalDeserialize srl(buf);
+    std::string h;
+    srl(h);
+    REQUIRE(h == "hello");
+  }
+  /** std::vector */
+  PAGE_DIVIDE("std::vector") {
+    hipc::LocalSerialize srl(buf);
+    std::vector<int> h(5);
+    for (int i = 0; i < 5; ++i) {
+      h[i] = i;
+    }
+    srl(h);
+  }
+  PAGE_DIVIDE("std::vector") {
+    hipc::LocalDeserialize srl(buf);
+    std::vector<int> h(5);
+    srl(h);
+    for (int i = 0; i < 5; ++i) {
+      REQUIRE(h[i] == i);
+    }
+  }
+  /** std::unordered_map */
+  PAGE_DIVIDE("std::unordered_map") {
+    hipc::LocalSerialize srl(buf);
+    std::unordered_map<int, int> h;
+    h[10] = 2;
+    srl(h);
+  }
+  PAGE_DIVIDE("std::unordered_map") {
+    hipc::LocalDeserialize srl(buf);
+    std::unordered_map<int, int> h;
+    srl(h);
+    REQUIRE(h[10] == 2);
+  }
+  /** hipc::charbuf */
   PAGE_DIVIDE("hipc::charbuf") {
     hipc::LocalSerialize srl(buf);
     hipc::charbuf h("hello");

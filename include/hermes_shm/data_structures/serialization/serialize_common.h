@@ -165,10 +165,35 @@ HSHM_CROSS_FUN
 void load_list(Ar &ar, ContainerT &obj) {
   size_t size;
   ar >> size;
-  for (int i = 0; i < size; ++i) {
+  for (size_t i = 0; i < size; ++i) {
     obj.emplace_back();
     auto &last = obj.back();
     ar >> last;
+  }
+}
+
+/** Serialize a generic list */
+template<typename Ar, typename ContainerT, typename KeyT, typename T>
+HSHM_CROSS_FUN
+void save_map(Ar &ar, const ContainerT &obj) {
+  ar << obj.size();
+  for (auto iter = obj.cbegin(); iter != obj.cend(); ++iter) {
+    ar << (*iter).first;
+    ar << (*iter).second;
+  }
+}
+/** Deserialize a generic list */
+template<typename Ar, typename ContainerT, typename KeyT, typename T>
+HSHM_CROSS_FUN
+void load_map(Ar &ar, ContainerT &obj) {
+  size_t size;
+  ar >> size;
+  for (size_t i = 0; i < size; ++i) {
+    KeyT key;
+    T val;
+    ar >> key;
+    ar >> val;
+    obj[key] = val;
   }
 }
 

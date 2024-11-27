@@ -11,14 +11,64 @@
 
 namespace hshm::ipc {
 
+/** Save cereal binary archive */
 template<typename Ar, typename T>
 void save(Ar &ar, const cereal::BinaryData<T> &data) {
   ar.write_binary((const char*)data.data, data.size);
 }
 
+/** Load cereal binary archive */
 template<typename Ar, typename T>
 void load(Ar &ar, cereal::BinaryData<T> &data) {
   ar.read_binary((char*)data.data, data.size);
+}
+
+/** Save string */
+template<typename Ar>
+void save(Ar &ar, const std::string &str) {
+  save_string(ar, str);
+}
+
+/** Load string */
+template<typename Ar>
+void load(Ar &ar, std::string &str) {
+  load_string(ar, str);
+}
+
+/** Save vector */
+template<typename Ar, typename T>
+void save(Ar &ar, const std::vector<T> &data) {
+  save_vec<Ar, std::vector<T>, T>(ar, data);
+}
+
+/** Load vector */
+template<typename Ar, typename T>
+void load(Ar &ar, std::vector<T> &data) {
+  load_vec<Ar, std::vector<T>, T>(ar, data);
+}
+
+/** Save list */
+template<typename Ar, typename T>
+void save(Ar &ar, const std::list<T> &data) {
+  save_list<Ar, std::list<T>, T>(ar, data);
+}
+
+/** Load list */
+template<typename Ar, typename T>
+void load(Ar &ar, std::list<T> &data) {
+  load_list<Ar, std::list<T>, T>(ar, data);
+}
+
+/** Save unordered_map */
+template<typename Ar, typename KeyT, typename T>
+void save(Ar &ar, const std::unordered_map<KeyT, T> &data) {
+  save_map<Ar, std::unordered_map<KeyT, T>, KeyT, T>(ar, data);
+}
+
+/** Load list */
+template<typename Ar, typename KeyT, typename T>
+void load(Ar &ar, std::unordered_map<KeyT, T> &data) {
+  load_map<Ar, std::unordered_map<KeyT, T>, KeyT, T>(ar, data);
 }
 
 /** A class for serializing simple objects into private memory */
@@ -39,7 +89,14 @@ class LocalSerialize {
     return base(obj);
   }
 
-  /** Parenthesis operator */
+  /** & operator */
+  template<typename T>
+  HSHM_ALWAYS_INLINE
+  LocalSerialize& operator&(const T &obj) {
+    return base(obj);
+  }
+
+  /** Call operator */
   template<typename ...Args>
   HSHM_ALWAYS_INLINE
   LocalSerialize& operator()(Args&& ...args) {
@@ -100,7 +157,14 @@ class LocalDeserialize {
     return base(obj);
   }
 
-  /** Parenthesis operator */
+  /** & operator */
+  template<typename T>
+  HSHM_ALWAYS_INLINE
+  LocalDeserialize& operator&(const T &obj) {
+    return base(obj);
+  }
+
+  /** Call operator */
   template<typename ...Args>
   HSHM_ALWAYS_INLINE
   LocalDeserialize& operator()(Args&& ...args) {
