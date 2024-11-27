@@ -96,17 +96,20 @@ class ClassWithSerialize {
 };
 
 // Class with load/save
+template<typename T>
 class ClassWithLoadSave {
  public:
-  int z_;
+  T z_;
 
  public:
   template<typename Ar>
+  HSHM_CROSS_FUN
   void save(Ar& ar) const {
     ar << z_;
   }
 
   template<typename Ar>
+  HSHM_CROSS_FUN
   void load(Ar& ar) {
     ar >> z_;
   }
@@ -185,14 +188,32 @@ TEST_CASE("SerializeExists") {
   }
   PAGE_DIVIDE("Internal save") {
     hipc::LocalSerialize srl(buf);
-    ClassWithLoadSave y;
+    ClassWithLoadSave<int> y;
     y.z_ = 15;
     srl(y);
   }
   PAGE_DIVIDE("Internal load") {
     hipc::LocalDeserialize srl(buf);
-    ClassWithLoadSave y;
+    ClassWithLoadSave<int> y;
     srl(y);
     REQUIRE(y.z_ == 15);
+  }
+}
+
+/** Serialize data structures */
+TEST_CASE("SerializeHshm") {
+  std::string buf;
+  buf.resize(8192);
+
+  PAGE_DIVIDE("hipc::charbuf") {
+    hipc::LocalSerialize srl(buf);
+    hipc::charbuf h("hello");
+    srl(h);
+  }
+  PAGE_DIVIDE("hipc::charbuf") {
+    hipc::LocalDeserialize srl(buf);
+    hipc::charbuf h;
+    srl(h);
+    REQUIRE(h == "hello");
   }
 }

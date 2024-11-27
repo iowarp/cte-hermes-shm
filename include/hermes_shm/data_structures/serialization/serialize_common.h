@@ -93,12 +93,20 @@ inline constexpr bool is_serializeable_v =
 template<typename Ar, typename T>
 HSHM_CROSS_FUN
 void write_binary(Ar &ar, const T *data, size_t size) {
-  ar(cereal::binary_data(data, size));
+  if constexpr (std::is_same_v<Ar, cereal::BinaryOutputArchive>) {
+    ar(cereal::binary_data(data, size));
+  } else {
+    ar.write_binary(data, size);
+  }
 }
 template<typename Ar, typename T>
 HSHM_CROSS_FUN
 void read_binary(Ar &ar, T *data, size_t size) {
-  ar(cereal::binary_data(data, size));
+  if constexpr (std::is_same_v<Ar, cereal::BinaryOutputArchive>) {
+    ar(cereal::binary_data(data, size));
+  } else {
+    ar.read_binary(data, size);
+  }
 }
 
 /** Serialize a generic string. */

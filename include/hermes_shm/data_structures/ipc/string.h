@@ -342,10 +342,10 @@ class string_templ : public ShmContainer {
   }
 
   /** Deserialize */
-  template <typename A>
+  template <typename Ar>
   HSHM_CROSS_FUN
-  void load(A &ar) {
-    load_string<A, string_templ>(ar, *this);
+  void load(Ar &ar) {
+    load_string<Ar, string_templ>(ar, *this);
   }
 
   /**====================================

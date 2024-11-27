@@ -49,10 +49,7 @@ class LocalSerialize {
         is_serializeable_v<LocalSerialize, T>,
         "Cannot serialize object");
     if constexpr (std::is_arithmetic<T>::value) {
-      size_t size = sizeof(T);
-      size_t off = data_.size();
-      data_.resize(off + size);
-      memcpy(data_.data() + off, &obj, size);
+      write_binary(reinterpret_cast<const char*>(&obj), sizeof(T));
     } else if constexpr (has_serialize_fun_v<LocalSerialize, T>) {
       serialize(*this, const_cast<T&>(obj));
     } else if constexpr (has_load_save_fun_v<LocalSerialize, T>) {
@@ -62,6 +59,15 @@ class LocalSerialize {
     } else if constexpr (has_load_save_cls_v<LocalSerialize, T>) {
       obj.save(*this);
     }
+    return *this;
+  }
+
+  /** Save function (binary data) */
+  HSHM_ALWAYS_INLINE
+  LocalSerialize& write_binary(const char *data, size_t size) {
+    size_t off = data_.size();
+    data_.resize(off + size);
+    memcpy(data_.data() + off, data, size);
     return *this;
   }
 };
@@ -104,9 +110,7 @@ class LocalDeserialize {
         is_serializeable_v<LocalDeserialize, T>,
         "Cannot serialize object");
     if constexpr (std::is_arithmetic<T>::value) {
-      size_t size = sizeof(T);
-      memcpy(&obj, data_.data() + cur_off_, size);
-      cur_off_ += size;
+      read_binary(reinterpret_cast<char*>(&obj), sizeof(T));
     } else if constexpr (has_serialize_fun_v<LocalDeserialize, T>) {
       serialize(*this, obj);
     } else if constexpr (has_load_save_fun_v<LocalDeserialize, T>) {
@@ -116,6 +120,14 @@ class LocalDeserialize {
     } else if constexpr (has_load_save_cls_v<LocalDeserialize, T>) {
       obj.load(*this);
     }
+    return *this;
+  }
+
+  /** Save function (binary data) */
+  HSHM_ALWAYS_INLINE
+  LocalDeserialize& read_binary(char *data, size_t size) {
+    memcpy(data, data_.data() + cur_off_, size);
+    cur_off_ += size;
     return *this;
   }
 };
