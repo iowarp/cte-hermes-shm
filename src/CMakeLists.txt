@@ -20,6 +20,7 @@ set (SOURCE_FILES
         ../include/hermes_shm/constants/settings.h_templ
         ../include/hermes_shm/constants/settings.h
         ../include/hermes_shm/data_structures/serialization/local_serialize.h
+        ../include/hermes_shm/data_structures/ipc/key_set.h
 )
 if (BUILD_SHARED_LIBS)
     message("Building dynamic library")

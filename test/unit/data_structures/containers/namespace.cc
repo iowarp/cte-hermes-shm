@@ -19,5 +19,5 @@
 
 HSHM_DATA_STRUCTURES_TEMPLATE(chi, hipc::Allocator);
 
-TEST_CASE("VectorOfListOfString") {
+TEST_CASE("Namespace") {
 }

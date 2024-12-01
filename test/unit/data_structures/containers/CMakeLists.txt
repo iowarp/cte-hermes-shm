@@ -27,6 +27,7 @@ add_executable(test_data_structure_exec
         pod_array.cc
         chararr.cc
         namespace.cc
+        key_set.cc
 )
 
 add_dependencies(test_data_structure_exec hermes_shm_data_structures)

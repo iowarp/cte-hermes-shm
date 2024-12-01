@@ -33,6 +33,7 @@
 #include "ipc/ticket_queue.h"
 #include "ipc/unordered_map.h"
 #include "ipc/vector.h"
+#include "ipc/key_set.h"
 
 #include "serialization/serialize_common.h"
 #include "serialization/local_serialize.h"
