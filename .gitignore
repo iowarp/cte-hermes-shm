@@ -13,3 +13,5 @@ cmake*
 build
 Testing
 *.env
+*scspkg.cmake
+CMakePresets.json
