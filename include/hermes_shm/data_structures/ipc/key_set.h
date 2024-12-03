@@ -16,7 +16,7 @@ namespace hshm::ipc {
  * Programs must store the keys themselves. 
  */
 template<typename T, HSHM_CLASS_TEMPL_WITH_DEFAULTS>
-class KeySetTempl : public ShmContainer {
+class key_setTempl : public ShmContainer {
  public:
   hipc::fixed_spsc_queue<size_t, HSHM_CLASS_TEMPL_ARGS> keys_;
   hipc::vector<T, HSHM_CLASS_TEMPL_ARGS> set_;
@@ -24,11 +24,11 @@ class KeySetTempl : public ShmContainer {
   size_t max_size_;
 
  public:
-  KeySetTempl()
+  key_setTempl()
   : keys_(HERMES_MEMORY_MANAGER->GetDefaultAllocator<AllocT>()),
     set_(HERMES_MEMORY_MANAGER->GetDefaultAllocator<AllocT>()) {}
 
-  KeySetTempl(const hipc::CtxAllocator<AllocT> &alloc)
+  key_setTempl(const hipc::CtxAllocator<AllocT> &alloc)
   : keys_(alloc), set_(alloc) {}
 
   void Init(size_t max_size) {
@@ -80,14 +80,14 @@ class KeySetTempl : public ShmContainer {
 };
 
 template<typename T, HSHM_CLASS_TEMPL_WITH_DEFAULTS>
-using KeySet = KeySetTempl<T, HSHM_CLASS_TEMPL_ARGS>;
+using key_set = key_setTempl<T, HSHM_CLASS_TEMPL_ARGS>;
 
 }  // namespace hshm::ipc
 
 namespace hshm {
 
 template<typename T, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
-using KeySet = ipc::KeySetTempl<T, HSHM_CLASS_TEMPL_ARGS>;
+using key_set = ipc::key_setTempl<T, HSHM_CLASS_TEMPL_ARGS>;
 
 }  // namespace hshm
 

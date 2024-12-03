@@ -91,10 +91,10 @@
   using vector = HSHM_NS::vector<T, AllocT>;                             \
                                                                          \
   template <typename T>                                                  \
-  using key_set = HSHM_NS::KeySet<T, AllocT>;                            \
+  using key_set = HSHM_NS::key_set<T, AllocT>;                            \
                                                                          \
   template <typename T>                                                  \
-  using key_queue = HSHM_NS::KeyQueue<T, AllocT>;                        \
+  using key_queue = HSHM_NS::key_queue<T, AllocT>;                        \
   }
 
 #define HSHM_DATA_STRUCTURES_TEMPLATE(NS, AllocT) \

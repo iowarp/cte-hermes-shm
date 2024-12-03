@@ -14,8 +14,8 @@ struct Entry {
   size_t value_;
 };
 
-TEST_CASE("KeyQueue") {
-  hshm::KeyQueue<Entry> queue;
+TEST_CASE("key_queue") {
+  hshm::key_queue<Entry> queue;
   queue.Init(0, 32);
 
   for (int i = 0; i < 64; ++i) {

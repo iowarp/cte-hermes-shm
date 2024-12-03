@@ -8,8 +8,8 @@
 
 #include "hermes_shm/data_structures/data_structure.h"
 
-TEST_CASE("KeySet") {
-  hshm::KeySet<size_t> count;
+TEST_CASE("key_set") {
+  hshm::key_set<size_t> count;
   count.Init(32);
   std::vector<size_t> keys(64);
 

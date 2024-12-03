@@ -273,7 +273,7 @@ class string_templ : public ShmContainer {
 
   /** Hash function */
   HSHM_CROSS_FUN size_t Hash() const {
-    return string_hash<string_templ<SSO>>(*this);
+    return string_hash<string_templ>(*this);
   }
 
   /** Convert into a std::string */
@@ -404,12 +404,12 @@ using string_templ = ipc::string_templ<SSO, HSHM_CLASS_TEMPL_ARGS>;
 
 }  // namespace hshm
 
-
 /** std::hash function for string */
 namespace std {
-template<size_t SSO>
-struct hash<hshm::ipc::string_templ<SSO>> {
-  HSHM_CROSS_FUN size_t operator()(const hshm::ipc::string_templ<SSO> &text) const {
+template <size_t SSO, HSHM_CLASS_TEMPL>
+struct hash<hshm::ipc::string_templ<SSO, HSHM_CLASS_TEMPL_ARGS>> {
+  HSHM_CROSS_FUN size_t operator()(
+      const hshm::ipc::string_templ<SSO, HSHM_CLASS_TEMPL_ARGS> &text) const {
     return text.Hash();
   }
 };
@@ -417,9 +417,10 @@ struct hash<hshm::ipc::string_templ<SSO>> {
 
 /** hshm::hash function for string */
 namespace hshm {
-template<size_t SSO>
-struct hash<hshm::ipc::string_templ<SSO>> {
-  HSHM_CROSS_FUN size_t operator()(const hshm::ipc::string_templ<SSO> &text) const {
+template <size_t SSO, HSHM_CLASS_TEMPL>
+struct hash<hshm::ipc::string_templ<SSO, HSHM_CLASS_TEMPL_ARGS>> {
+  HSHM_CROSS_FUN size_t operator()(
+      const hshm::ipc::string_templ<SSO, HSHM_CLASS_TEMPL_ARGS> &text) const {
     return text.Hash();
   }
 };

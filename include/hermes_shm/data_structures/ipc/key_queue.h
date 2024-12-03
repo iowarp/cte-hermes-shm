@@ -12,9 +12,9 @@ namespace hshm::ipc {
  * Assumes the type T has next_ + prior_ variables.
  */
 template <typename T, HSHM_CLASS_TEMPL_WITH_DEFAULTS>
-class KeyQueue : public hipc::ShmContainer {
+class key_queue : public hipc::ShmContainer {
  public:
-  KeySet<T, HSHM_CLASS_TEMPL_ARGS> queue_;
+  key_set<T, HSHM_CLASS_TEMPL_ARGS> queue_;
   size_t size_, head_, tail_;
   int id_;
 
@@ -81,7 +81,7 @@ class KeyQueue : public hipc::ShmContainer {
 namespace hshm {
 
 template <typename T, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
-using KeyQueue = ipc::KeyQueue<T, HSHM_CLASS_TEMPL_ARGS>;
+using key_queue = ipc::key_queue<T, HSHM_CLASS_TEMPL_ARGS>;
 
 }  // namespace hshm
 
