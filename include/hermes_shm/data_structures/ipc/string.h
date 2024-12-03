@@ -228,8 +228,7 @@ class string_templ : public ShmContainer {
       length_ = length;
       max_length_ = length_;
     } else {
-      shm_strong_copy_op<false, false>(
-          HERMES_MEMORY_MANAGER->GetDefaultAllocator<AllocT>(), text, 0);
+      shm_strong_copy_op<false, false>(alloc, text, 0);
     }
   }
 
