@@ -228,7 +228,7 @@ class string_templ : public ShmContainer {
       length_ = length;
       max_length_ = length_;
     } else {
-      shm_strong_copy_op<false, false>(alloc, text, 0);
+      shm_strong_copy_op<IS_ASSIGN, HAS_LENGTH>(alloc, text, 0);
     }
   }
 
