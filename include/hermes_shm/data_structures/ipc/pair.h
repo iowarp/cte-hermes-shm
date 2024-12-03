@@ -187,7 +187,7 @@ class pair : public ShmContainer {
   HSHM_CROSS_FUN
   explicit pair(pair &&other) {
     init_shm_container(other.GetCtxAllocator());
-    if (GetCtxAllocator() == other.GetCtxAllocator()) {
+    if (GetAllocator() == other.GetAllocator()) {
       HSHM_MAKE_AR(first_, other.first_->GetCtxAllocator(),
                    std::forward<FirstT>(*other.first_))
       HSHM_MAKE_AR(second_, other.second_->GetCtxAllocator(),
@@ -202,7 +202,7 @@ class pair : public ShmContainer {
   HSHM_CROSS_FUN
   explicit pair(const hipc::CtxAllocator<AllocT> &alloc, pair &&other) {
     init_shm_container(alloc);
-    if (GetCtxAllocator() == other.GetCtxAllocator()) {
+    if (GetAllocator() == other.GetAllocator()) {
       HSHM_MAKE_AR(first_, GetCtxAllocator(),
                    std::forward<FirstT>(*other.first_))
       HSHM_MAKE_AR(second_, GetCtxAllocator(),
@@ -218,7 +218,7 @@ class pair : public ShmContainer {
   pair& operator=(pair &&other) noexcept {
     if (this != &other) {
       shm_destroy();
-      if (GetCtxAllocator() == other.GetCtxAllocator()) {
+      if (GetAllocator() == other.GetAllocator()) {
         (*first_) = std::move(*other.first_);
         (*second_) = std::move(*other.second_);
         other.SetNull();

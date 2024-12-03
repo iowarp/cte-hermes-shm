@@ -317,7 +317,7 @@ class unordered_map : public ShmContainer {
     } else {
       init_shm_container(alloc);
     }
-    if (GetCtxAllocator() == other.GetCtxAllocator()) {
+    if (GetAllocator() == other.GetAllocator()) {
       if constexpr (IS_ASSIGN) {
         GetBuckets() = std::move(other.GetBuckets());
       } else {

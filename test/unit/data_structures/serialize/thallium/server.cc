@@ -13,7 +13,6 @@
 #include "test_init.h"
 #include "hermes_shm/data_structures/ipc/string.h"
 #include "thallium.h"
-#include "hermes_shm/data_structures/containers/charwrap.h"
 #include <memory>
 
 std::unique_ptr<tl::engine> client_;

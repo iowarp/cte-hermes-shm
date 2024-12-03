@@ -15,14 +15,21 @@
 #define HERMES_DATA_STRUCTURES_LOCKLESS_STRING_H_
 
 #include "hermes_shm/data_structures/ipc/internal/shm_internal.h"
-#include "hermes_shm/data_structures/ipc/string.h"
+#include "chararr.h"
 #include "hermes_shm/data_structures/serialization/serialize_common.h"
 #include <string>
 
 namespace hshm::ipc {
 
+class StringFlags {
+  public:
+    CLS_CONST u32 kWrap = BIT_OPT(u32, 0);
+};
+#define HSHM_STRING_SSO 31
+
+
 /** forward declaration for string */
-template<size_t SSO, HSHM_CLASS_TEMPL_WITH_DEFAULTS>
+template<size_t SSO, u32 FLAGS, HSHM_CLASS_TEMPL_WITH_DEFAULTS>
 class string_templ;
 
 /**
@@ -30,20 +37,24 @@ class string_templ;
  * Used as inputs to the HIPC_CONTAINER_TEMPLATE
  * */
 #define CLASS_NAME string_templ
-#define CLASS_NEW_ARGS SSO
+#define CLASS_NEW_ARGS SSO, FLAGS
 
 /**
  * A string of characters.
  * */
-template<size_t SSO, HSHM_CLASS_TEMPL>
+template<size_t SSO, u32 FLAGS, HSHM_CLASS_TEMPL>
 class string_templ : public ShmContainer {
  public:
   HIPC_CONTAINER_TEMPLATE((CLASS_NAME), (CLASS_NEW_ARGS))
 
  public:
-  size_t length_;
-  Pointer text_;
-  char sso_[SSO];
+  size_t length_, max_length_;
+  union {
+    Pointer text_;
+    char *data_;
+  };
+  char sso_[SSO + 1];
+  bool is_wrap_;
 
  public:
   /**====================================
@@ -90,7 +101,7 @@ class string_templ : public ShmContainer {
   /** Constructor. From const char* */
   HSHM_CROSS_FUN
   explicit string_templ(const char *text) {
-    shm_strong_copy_op<false, false>(
+    shm_strong_or_weak_copy_op<false, false>(
         HERMES_MEMORY_MANAGER->GetDefaultAllocator<AllocT>(), text, 0);
   }
 
@@ -98,71 +109,85 @@ class string_templ : public ShmContainer {
   HSHM_CROSS_FUN
   explicit string_templ(const hipc::CtxAllocator<AllocT> &alloc,
                         const char *text) {
-    shm_strong_copy_op<false, false>(
-          alloc, text, 0);
+    shm_strong_or_weak_copy_op<false, false>(alloc, text, 0);
   }
 
   /** Constructor. From const char* and size */
   HSHM_CROSS_FUN
   explicit string_templ(const char *text, size_t length) {
-    shm_strong_copy_op<false, true>(
-      HERMES_MEMORY_MANAGER->GetDefaultAllocator<AllocT>(), text, length);
+    shm_strong_or_weak_copy_op<false, true>(
+        HERMES_MEMORY_MANAGER->GetDefaultAllocator<AllocT>(), text, length);
   }
 
   /** SHM Constructor. From const char* and size */
   HSHM_CROSS_FUN
   explicit string_templ(const hipc::CtxAllocator<AllocT> &alloc,
                         const char *text, size_t length) {
-    shm_strong_copy_op<false, true>(
-      alloc, text, length);
+    shm_strong_or_weak_copy_op<false, true>(alloc, text, length);
   }
 
-  /** Copy constructor. From string_templ. */
-  HSHM_CROSS_FUN
-  explicit string_templ(const string_templ &other) {
-    shm_strong_copy_op<false, true>(
-        other.GetCtxAllocator(), other.data(), other.size());
+  /** Copy constructor. From any string_templ. */
+  HSHM_CROSS_FUN explicit string_templ(
+      const string_templ &other) {
+    shm_strong_or_weak_copy_op<false, true>(other.GetCtxAllocator(),
+                                            other.data(), other.size());
   }
 
-  /** SHM copy constructor. From string_templ. */
-  HSHM_CROSS_FUN
-  explicit string_templ(const hipc::CtxAllocator<AllocT> &alloc,
-                        const string_templ &other) {
-    shm_strong_copy_op<false, true>(
-            alloc, other.data(), other.size());
+  /** SHM copy constructor. From any string_templ. */
+  HSHM_CROSS_FUN explicit string_templ(const hipc::CtxAllocator<AllocT> &alloc,
+                                       const string_templ &other) {
+    shm_strong_or_weak_copy_op<false, true>(alloc, other.data(), other.size());
   }
 
-  /** SHM copy assignment operator. From string_templ. */
-  HSHM_CROSS_FUN
-  string_templ& operator=(const string_templ &other) {
+  /** SHM copy assignment operator. From any string_templ. */
+  HSHM_CROSS_FUN string_templ &operator=(
+      const string_templ &other) {
     if (this != &other) {
-      shm_strong_copy_op<true, true>(
-        GetCtxAllocator(), other.data(), other.size());
+      shm_strong_or_weak_copy_op<true, true>(GetCtxAllocator(), other.data(),
+                                             other.size());
     }
     return *this;
   }
 
-  /** Constructor. From std::string */
-  HSHM_CROSS_FUN
-  explicit string_templ(const std::string &other) {
-    shm_strong_copy_op<false, true>(
-        HERMES_MEMORY_MANAGER->GetDefaultAllocator<AllocT>(), other.data(), other.size());
+  /** Copy constructor. From std::string. */
+  template <typename StringT>
+  HSHM_HOST_FUN explicit string_templ(const std::string &other) {
+    shm_strong_or_weak_copy_op<false, true>(GetCtxAllocator(),
+                                            other.data(), other.size());
   }
 
-  /** SHM Constructor. From std::string */
-  HSHM_HOST_FUN
-  explicit string_templ(const hipc::CtxAllocator<AllocT> &alloc,
-                        const std::string &other) {
-    shm_strong_copy_op<false, true>(
-      alloc, other.data(), other.size());
+  /** SHM copy constructor. From std::string. */
+  HSHM_HOST_FUN explicit string_templ(const hipc::CtxAllocator<AllocT> &alloc,
+                                      const std::string &other) {
+    shm_strong_or_weak_copy_op<false, true>(alloc, other.data(), other.size());
   }
 
   /** SHM copy assignment operator. From std::string. */
-  HSHM_HOST_FUN
-  string_templ& operator=(const std::string &other) {
-    shm_strong_copy_op<true, true>(
-      GetCtxAllocator(), other.data(), other.size());
+  HSHM_HOST_FUN string_templ &operator=(const std::string &other) {
+    if (this != reinterpret_cast<const string_templ *>(&other)) {
+      shm_strong_or_weak_copy_op<true, true>(GetCtxAllocator(), other.data(),
+                                             other.size());
+    }
     return *this;
+  }
+
+  /** Strong or weak copy operation */
+  template <bool IS_ASSIGN, bool HAS_LENGTH>
+  void shm_strong_or_weak_copy_op(const hipc::CtxAllocator<AllocT> &alloc,
+                                  const char *text, size_t length) {
+    if constexpr (FLAGS & StringFlags::kWrap) {
+      shm_destroy();
+      is_wrap_ = true;
+      data_ = const_cast<char *>(text);
+      if constexpr (!HAS_LENGTH) {
+        length = strlen(text);
+      }
+      length_ = length;
+      max_length_ = length_;
+    } else {
+      shm_strong_copy_op<false, false>(
+          HERMES_MEMORY_MANAGER->GetDefaultAllocator<AllocT>(), text, 0);
+    }
   }
 
   /** Strong copy operation */
@@ -170,6 +195,7 @@ class string_templ : public ShmContainer {
   void shm_strong_copy_op(const hipc::CtxAllocator<AllocT> &alloc,
                           const char *text,
                           size_t length) {
+    is_wrap_ = false;
     if constexpr (IS_ASSIGN) {
       shm_destroy();
     } else {
@@ -179,16 +205,6 @@ class string_templ : public ShmContainer {
       length = strlen(text);
     }
     _create_str(text, length);
-  }
-
-  /** Strong copy */
-  HSHM_INLINE_CROSS_FUN
-  void strong_copy(const string_templ &other) {
-    length_ = other.length_;
-    text_ = other.text_;
-    if (length_ < SSO) {
-      memcpy(sso_, other.sso_, other.length_ + 1);
-    }
   }
 
   /**====================================
@@ -226,12 +242,24 @@ class string_templ : public ShmContainer {
     } else {
       init_shm_container(alloc);
     }
-    if (GetCtxAllocator() == other.GetCtxAllocator()) {
-      strong_copy(other);
+    if (is_wrap_ || GetAllocator() == other.GetAllocator()) {
+      move_copy(other);
       other.SetNull();
     } else {
       _create_str(other.data(), other.size());
       other.shm_destroy();
+    }
+  }
+
+  /** Move copy */
+  HSHM_INLINE_CROSS_FUN
+  void move_copy(const string_templ &other) {
+    length_ = other.length_;
+    max_length_ = other.max_length_;
+    text_ = other.text_;
+    is_wrap_ = other.is_wrap_;
+    if (length_ <= SSO && !is_wrap_) {
+      memcpy(sso_, other.sso_, other.length_ + 1);
     }
   }
 
@@ -248,11 +276,12 @@ class string_templ : public ShmContainer {
   HSHM_INLINE_CROSS_FUN void SetNull() {
     text_.SetNull();
     length_ = 0;
+    is_wrap_ = false;
   }
 
   /** Destroy the shared-memory data. */
   HSHM_INLINE_CROSS_FUN void shm_destroy_main() {
-    if (size() >= SSO) {
+    if (max_length_ > SSO && !is_wrap_) {
       GetAllocator()->Free(GetMemCtx(), text_);
     }
   }
@@ -293,7 +322,12 @@ class string_templ : public ShmContainer {
 
   /** Get a constant reference to the C-style string */
   HSHM_INLINE_CROSS_FUN const char* data() const {
-    if (length_ < SSO) {
+    if constexpr (FLAGS & StringFlags::kWrap) {
+      if (is_wrap_) {
+        return data_;
+      }
+    }
+    if (length_ <= SSO) {
       return sso_;
     } else {
       return GetAllocator()->template Convert<char, Pointer>(text_);
@@ -302,7 +336,12 @@ class string_templ : public ShmContainer {
 
   /** Get a mutable reference to the C-style string */
   HSHM_INLINE_CROSS_FUN char* data() {
-    if (length_ < SSO) {
+    if constexpr (FLAGS & StringFlags::kWrap) {
+      if (is_wrap_) {
+        return data_;
+      }
+    }
+    if (length_ <= SSO) {
       return sso_;
     } else {
       return GetAllocator()->template Convert<char, Pointer>(text_);
@@ -314,19 +353,43 @@ class string_templ : public ShmContainer {
   void resize(size_t new_size) {
     if (IsNull()) {
       _create_str(new_size);
-    } else if (length_ < SSO && new_size < SSO) {
-      length_ = new_size;
-    } else if (length_ < SSO && new_size >= SSO) {
-      LPointer<char> text = GetAllocator()->template AllocateLocalPtr<char>(
-          GetMemCtx(), new_size);
-      text_ = text.shm_;
-      memcpy(text.ptr_, sso_, length_);
-    } else if (new_size > size()) {
-      GetAllocator()->template Reallocate<Pointer>(
-          GetMemCtx(), text_, new_size);
-      length_ = new_size;
-    } else {
-      length_ = new_size;
+      return;
+    }
+    size_t orig_length = length_;
+    char *orig_data = data();
+    Pointer orig_text = text_;
+    length_ = new_size;
+
+    // WRAP cases
+    if constexpr (FLAGS & StringFlags::kWrap) {
+      if (is_wrap_) {
+        if (new_size < max_length_) {
+        } else {
+        _create_str(orig_data, orig_length, new_size);
+        }
+        return;
+      }
+    }
+
+    // SSO cases
+    if (orig_length <= SSO) {
+      if (new_size <= SSO) {
+      } else {
+        _create_str(orig_data, orig_length, new_size);
+      }
+      return;
+    }
+
+    // Buffer cases
+    if (new_size > orig_length) {
+      // Make the current buffer larger
+      GetAllocator()->template Reallocate<Pointer>(GetMemCtx(), text_,
+                                                   new_size);
+      max_length_ = new_size;
+    } else if (new_size <= SSO) {
+      // Free current buffer & use SSO
+      _create_str(orig_data, orig_length, new_size);
+      GetAllocator()->Free(GetMemCtx(), orig_text);
     }
   }
 
@@ -373,24 +436,33 @@ class string_templ : public ShmContainer {
 
  private:
   HSHM_INLINE_CROSS_FUN void _create_str(size_t length) {
-    if (length < SSO) {
-      // NOTE(llogan): less than and not equal because length doesn't
-      // account for trailing 0.
+    is_wrap_ = false;
+    if (length <= SSO) {
+      length_ = length;
+      max_length_ = SSO;
     } else {
-      text_ = GetAllocator()->Allocate(GetMemCtx(), length + 1);
+      text_ = GetAllocator()->Allocate(GetMemCtx(), length);
+      length_ = length;
+      max_length_ = length;
     }
-    length_ = length;
   }
+
   HSHM_INLINE_CROSS_FUN void _create_str(const char *text, size_t length) {
     _create_str(length);
     char *str = data();
     memcpy(str, text, length);
     str[length] = 0;
   }
+
+  HSHM_INLINE_CROSS_FUN void _create_str(const char *text, size_t orig_length, size_t new_length) {
+    _create_str(new_length);
+    char *str = data();
+    memcpy(str, text, orig_length < new_length ? orig_length : new_length);
+  }
 };
 
 /** Our default SSO value */
-using string = string_templ<32>;
+using string = string_templ<HSHM_STRING_SSO, 0>;
 
 /** Consider the string as an uniterpreted set of bytes */
 using charbuf = string;
@@ -399,17 +471,20 @@ using charbuf = string;
 
 namespace hshm {
 
-template<size_t SSO, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
-using string_templ = ipc::string_templ<SSO, HSHM_CLASS_TEMPL_ARGS>;
+template<size_t SSO, u32 FLAGS, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
+using string_templ = ipc::string_templ<SSO, FLAGS, HSHM_CLASS_TEMPL_ARGS>;
+
+using charwrap = ipc::string_templ<HSHM_STRING_SSO, hipc::StringFlags::kWrap>;
 
 }  // namespace hshm
 
 /** std::hash function for string */
 namespace std {
-template <size_t SSO, HSHM_CLASS_TEMPL>
-struct hash<hshm::ipc::string_templ<SSO, HSHM_CLASS_TEMPL_ARGS>> {
+template <size_t SSO, hshm::u32 FLAGS, HSHM_CLASS_TEMPL>
+struct hash<hshm::ipc::string_templ<SSO, FLAGS, HSHM_CLASS_TEMPL_ARGS>> {
   HSHM_CROSS_FUN size_t operator()(
-      const hshm::ipc::string_templ<SSO, HSHM_CLASS_TEMPL_ARGS> &text) const {
+      const hshm::ipc::string_templ<SSO, FLAGS, HSHM_CLASS_TEMPL_ARGS> &text)
+      const {
     return text.Hash();
   }
 };
@@ -417,10 +492,11 @@ struct hash<hshm::ipc::string_templ<SSO, HSHM_CLASS_TEMPL_ARGS>> {
 
 /** hshm::hash function for string */
 namespace hshm {
-template <size_t SSO, HSHM_CLASS_TEMPL>
-struct hash<hshm::ipc::string_templ<SSO, HSHM_CLASS_TEMPL_ARGS>> {
+template <size_t SSO, u32 FLAGS, HSHM_CLASS_TEMPL>
+struct hash<hshm::ipc::string_templ<SSO, FLAGS, HSHM_CLASS_TEMPL_ARGS>> {
   HSHM_CROSS_FUN size_t operator()(
-      const hshm::ipc::string_templ<SSO, HSHM_CLASS_TEMPL_ARGS> &text) const {
+      const hshm::ipc::string_templ<SSO, FLAGS, HSHM_CLASS_TEMPL_ARGS> &text)
+      const {
     return text.Hash();
   }
 };

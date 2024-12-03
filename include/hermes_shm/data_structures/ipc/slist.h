@@ -346,7 +346,7 @@ class slist : public ShmContainer {
     } else {
       init_shm_container(alloc);
     }
-    if (GetCtxAllocator() == other.GetCtxAllocator()) {
+    if (GetAllocator() == other.GetAllocator()) {
       shm_weak_copy_op(other);
       other.SetNull();
     } else {

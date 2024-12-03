@@ -149,7 +149,7 @@ class split_ticket_queue : public ShmContainer {
     } else {
       init_shm_container(alloc);
     }
-    if (GetCtxAllocator() == other.GetCtxAllocator()) {
+    if (GetAllocator() == other.GetAllocator()) {
       (*splits_) = std::move(*other.splits_);
       other.SetNull();
     } else {

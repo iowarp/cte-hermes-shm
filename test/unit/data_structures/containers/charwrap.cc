@@ -12,7 +12,7 @@
 
 #include "basic_test.h"
 #include "test_init.h"
-#include "hermes_shm/data_structures/containers/charwrap.h"
+#include "hermes_shm/data_structures/ipc/string.h"
 
 using hshm::ipc::string;
 
@@ -25,15 +25,16 @@ void TestCharbuf() {
     REQUIRE(data.size() == 256);
     REQUIRE(data.GetAllocator() == alloc);
   }
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
 
   PAGE_DIVIDE("Construct from malloc") {
     char *ptr = (char*)malloc(256);
     hshm::charwrap data(ptr, 256);
     memset(data.data(), 0, 256);
     REQUIRE(data.size() == 256);
-    REQUIRE(data.GetAllocator() == nullptr);
     free(ptr);
   }
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
 
   PAGE_DIVIDE("Resize null charbuf to higher value") {
     hshm::charwrap data;
@@ -41,13 +42,14 @@ void TestCharbuf() {
     REQUIRE(data.size() == 256);
     REQUIRE(data.GetAllocator() == alloc);
   }
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
 
   PAGE_DIVIDE("Resize null charbuf to 0 value") {
     hshm::charwrap data;
     data.resize(0);
     REQUIRE(data.size() == 0);
-    REQUIRE(data.GetAllocator() == nullptr);
   }
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
 
   PAGE_DIVIDE("Resize destructable charbuf to 0 value") {
     hshm::charwrap data(8192);
@@ -55,6 +57,7 @@ void TestCharbuf() {
     REQUIRE(data.size() == 0);
     REQUIRE(data.GetAllocator() == alloc);
   }
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
 
   PAGE_DIVIDE("Resize destructable charbuf to lower value") {
     hshm::charwrap data(8192);
@@ -62,6 +65,7 @@ void TestCharbuf() {
     REQUIRE(data.size() == 256);
     REQUIRE(data.GetAllocator() == alloc);
   }
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
 
   PAGE_DIVIDE("Resize destructable charbuf to higher value") {
     hshm::charwrap data(256);
@@ -69,6 +73,7 @@ void TestCharbuf() {
     REQUIRE(data.size() == 8192);
     REQUIRE(data.GetAllocator() == alloc);
   }
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
 
   PAGE_DIVIDE("Resize indestructable charbuf to higher value") {
     char *ptr = (char*)malloc(256);
@@ -77,6 +82,7 @@ void TestCharbuf() {
     REQUIRE(data.size() == 8192);
     free(ptr);
   }
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
 
   PAGE_DIVIDE("Resize indestructable charbuf to lower value") {
     char *ptr = (char*)malloc(8192);
@@ -85,12 +91,14 @@ void TestCharbuf() {
     REQUIRE(data.size() == 256);
     free(ptr);
   }
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
 
   PAGE_DIVIDE("Move construct from destructable") {
     hshm::charwrap data1(8192);
     hshm::charwrap data2(std::move(data1));
     REQUIRE(data2.size() == 8192);
   }
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
 
   PAGE_DIVIDE("Move construct from indestructable") {
     char *ptr1 = (char*)malloc(8192);
@@ -99,6 +107,7 @@ void TestCharbuf() {
     REQUIRE(data2.size() == 8192);
     free(ptr1);
   }
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
 
   PAGE_DIVIDE("Move assign between two destructables") {
     hshm::charwrap data1(8192);
@@ -106,6 +115,7 @@ void TestCharbuf() {
     data1 = std::move(data2);
     REQUIRE(data1.size() == 512);
   }
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
 
   PAGE_DIVIDE("Move assign between two indestructables") {
     char *ptr1 = (char*)malloc(8192);
@@ -117,6 +127,7 @@ void TestCharbuf() {
     free(ptr1);
     free(ptr2);
   }
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
 
   PAGE_DIVIDE("Move assign indestructable -> destructable") {
     hshm::charwrap data1(8192);
@@ -126,6 +137,7 @@ void TestCharbuf() {
     REQUIRE(data1.size() == 512);
     free(ptr2);
   }
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
 
   PAGE_DIVIDE("Move assign destructable -> indestructable") {
     char *ptr1 = (char*)malloc(8192);
@@ -135,6 +147,7 @@ void TestCharbuf() {
     REQUIRE(data1.size() == 512);
     free(ptr1);
   }
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
 
   PAGE_DIVIDE("Move assign to null") {
     hshm::charwrap data1;
@@ -142,6 +155,7 @@ void TestCharbuf() {
     data1 = std::move(data2);
     REQUIRE(data1.size() == 512);
   }
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
 
   PAGE_DIVIDE("Copy construct from destructable") {
     hshm::charwrap data1(8192);
@@ -150,6 +164,7 @@ void TestCharbuf() {
     REQUIRE(data2.size() == 8192);
     REQUIRE(data1 == data2);
   }
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
 
   PAGE_DIVIDE("Copy construct from indestructable") {
     char *ptr1 = (char*)malloc(8192);
@@ -160,6 +175,7 @@ void TestCharbuf() {
     REQUIRE(data1 == data2);
     free(ptr1);
   }
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
 
   PAGE_DIVIDE("Copy assign between two destructables") {
     hshm::charwrap data1(8192);
@@ -169,6 +185,7 @@ void TestCharbuf() {
     REQUIRE(data1.size() == 512);
     REQUIRE(data1 == data2);
   }
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
 
   PAGE_DIVIDE("Copy assign between two indestructables") {
     char *ptr1 = (char*)malloc(8192);
@@ -182,6 +199,7 @@ void TestCharbuf() {
     free(ptr1);
     free(ptr2);
   }
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
 
   PAGE_DIVIDE("Copy assign indestructable -> destructable") {
     hshm::charwrap data1(8192);
@@ -192,6 +210,7 @@ void TestCharbuf() {
     REQUIRE(data1.size() == 512);
     free(ptr2);
   }
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
 
   PAGE_DIVIDE("Copy assign destructable -> indestructable") {
     char *ptr1 = (char*)malloc(8192);
@@ -202,6 +221,7 @@ void TestCharbuf() {
     REQUIRE(data1.size() == 512);
     free(ptr1);
   }
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
 
   PAGE_DIVIDE("Copy assign to null") {
     char *ptr1 = (char*)malloc(8192);
@@ -212,6 +232,7 @@ void TestCharbuf() {
     REQUIRE(data1.size() == 512);
     free(ptr1);
   }
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
 }
 
 TEST_CASE("Charbuf") {

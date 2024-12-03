@@ -160,7 +160,7 @@ class ring_ptr_queue_base : public ShmContainer {
     } else {
       init_shm_container(alloc);
     }
-    if (GetCtxAllocator() == other.GetCtxAllocator()) {
+    if (GetAllocator() == other.GetAllocator()) {
       head_ = other.head_.load();
       tail_ = other.tail_.load();
       (*queue_) = std::move(*other.queue_);

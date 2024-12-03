@@ -141,7 +141,7 @@ class ticket_queue : public ShmContainer {
     } else {
       init_shm_container(alloc);
     }
-    if (GetCtxAllocator() == other.GetCtxAllocator()) {
+    if (GetAllocator() == other.GetAllocator()) {
       (*queue_) = std::move(*other.queue_);
       other.SetNull();
     } else {

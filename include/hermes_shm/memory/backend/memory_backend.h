@@ -19,8 +19,8 @@
 #include <hermes_shm/memory/memory.h>
 #include "hermes_shm/constants/macros.h"
 #include <limits>
-#include "hermes_shm/data_structures/containers/chararr.h"
-#include "../../constants/macros.h"
+#include "hermes_shm/data_structures/ipc/chararr.h"
+#include "hermes_shm/constants/macros.h"
 
 namespace hshm::ipc {
 

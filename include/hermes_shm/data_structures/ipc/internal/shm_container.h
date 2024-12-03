@@ -62,6 +62,14 @@ struct ShmFlag {
 #define HSHM_CLASS_TEMPL_ARGS \
   AllocT, HSHM_FLAGS
 
+/** A specific parameterization of the base container for local memory (hshm) functions */
+#define HSHM_CLASS_TEMPL2 \
+  typename AllocT1, hipc::ShmFlagField HSHM_FLAGS1
+
+/** General template arguments for HIPC containers */
+#define HSHM_CLASS_TEMPL_ARGS2 \
+  AllocT1, HSHM_FLAGS1
+
 /** Template arguments for thread-local storage */
 #define HSHM_CLASS_TEMPL_TLS_ARGS \
   AllocT, hipc::ShmFlag::kIsThreadLocal

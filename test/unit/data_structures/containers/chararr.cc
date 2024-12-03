@@ -12,7 +12,7 @@
 
 #include "basic_test.h"
 #include "test_init.h"
-#include "hermes_shm/data_structures/containers/chararr.h"
+#include "hermes_shm/data_structures/ipc/chararr.h"
 #include "hermes_shm/data_structures/ipc/internal/template/hipc_container_template_ex.h"
 
 using hshm::ipc::string;

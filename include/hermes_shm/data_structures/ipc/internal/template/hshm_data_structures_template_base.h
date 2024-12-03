@@ -40,8 +40,10 @@ using slist = HSHM_NS::slist<T, AllocT>;
 template<typename T>
 using split_ticket_queue = HSHM_NS::split_ticket_queue<T, AllocT>;
 
-using string = HSHM_NS::string_templ<32, AllocT>;
-using charbuf = HSHM_NS::string_templ<32, AllocT>;
+using string = HSHM_NS::string_templ<HSHM_STRING_SSO, 0, AllocT>;
+using charbuf = HSHM_NS::string_templ<HSHM_STRING_SSO, 0, AllocT>;
+using charwrap =
+    HSHM_NS::string_templ<HSHM_STRING_SSO, hipc::StringFlags::kWrap, AllocT>;
 
 template<typename T>
 using ticket_queue = HSHM_NS::ticket_queue<T, AllocT>;
