@@ -13,7 +13,7 @@
 #include "test_init.h"
 #include "hermes_shm/data_structures/ipc/string.h"
 #include "thallium.h"
-#include "hermes_shm/data_structures/containers/charbuf.h"
+#include "hermes_shm/data_structures/containers/charwrap.h"
 #include <memory>
 
 std::unique_ptr<tl::engine> client_;
@@ -64,7 +64,7 @@ int main() {
 
   // Test transfer of 0-length charbuf
   auto charbuf_test0 = [](const request &req,
-                          hshm::charbuf &text) {
+                          hshm::charwrap &text) {
     bool ret = (text == "");
     req.respond(ret);
   };
@@ -72,7 +72,7 @@ int main() {
 
   // Test transfer of long charbuf
   auto charbuf_test1 = [](const request &req,
-                          hshm::charbuf &text) {
+                          hshm::charwrap &text) {
     bool ret = (text == tcnst::kTestString);
     req.respond(ret);
   };

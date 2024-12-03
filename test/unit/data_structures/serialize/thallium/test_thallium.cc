@@ -34,8 +34,8 @@ TEST_CASE("SerializeCharBuf") {
   tl::remote_procedure string_large_proc = client_->define(
     tcnst::kCharbufTestLarge);
 
-  hshm::charbuf empty_str("");
-  hshm::charbuf large_str(tcnst::kTestString);
+  hshm::charwrap empty_str("");
+  hshm::charwrap large_str(tcnst::kTestString);
 
   REQUIRE(string0_proc.on(server)(empty_str));
   REQUIRE(string_large_proc.on(server)(large_str));

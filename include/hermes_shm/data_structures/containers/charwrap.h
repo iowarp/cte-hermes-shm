@@ -10,8 +10,8 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_INCLUDE_HERMES_TYPES_CHARBUF_H_
-#define HERMES_INCLUDE_HERMES_TYPES_CHARBUF_H_
+#ifndef HERMES_INCLUDE_HERMES_TYPES_charwrap_H_
+#define HERMES_INCLUDE_HERMES_TYPES_charwrap_H_
 
 #include "hermes_shm/types/real_number.h"
 #include "hermes_shm/memory/memory_manager_.h"
@@ -23,7 +23,7 @@
 namespace hshm {
 
 /** An uninterpreted array of bytes */
-struct charbuf {
+struct charwrap {
   /**====================================
    * Variables & Types
    * ===================================*/
@@ -38,7 +38,7 @@ struct charbuf {
    * ===================================*/
 
   /** Default constructor */
-  HSHM_INLINE_CROSS_FUN charbuf()
+  HSHM_INLINE_CROSS_FUN charwrap()
   : alloc_(nullptr), data_(nullptr), size_(0),
     total_size_(0), destructable_(false) {}
 
@@ -47,19 +47,19 @@ struct charbuf {
    * ===================================*/
 
   /** Destructor */
-  HSHM_INLINE_CROSS_FUN ~charbuf() { Free(); }
+  HSHM_INLINE_CROSS_FUN ~charwrap() { Free(); }
 
   /**====================================
    * Emplace Constructors
    * ===================================*/
 
   /** Size-based constructor */
-  HSHM_INLINE_CROSS_FUN explicit charbuf(size_t size) {
+  HSHM_INLINE_CROSS_FUN explicit charwrap(size_t size) {
     Allocate(HERMES_MEMORY_MANAGER->GetDefaultAllocator(), size);
   }
 
   /** Allocator + Size-based constructor */
-  HSHM_INLINE_CROSS_FUN explicit charbuf(hipc::Allocator *alloc, size_t size) {
+  HSHM_INLINE_CROSS_FUN explicit charwrap(hipc::Allocator *alloc, size_t size) {
     Allocate(alloc, size);
   }
 
@@ -68,7 +68,7 @@ struct charbuf {
   * ===================================*/
 
   /** Reference constructor. From char* + size */
-  HSHM_INLINE_CROSS_FUN explicit charbuf(char *data, size_t size)
+  HSHM_INLINE_CROSS_FUN explicit charwrap(char *data, size_t size)
   : alloc_(nullptr), data_(data), size_(size),
     total_size_(size), destructable_(false) {}
 
@@ -77,7 +77,7 @@ struct charbuf {
    * We assume that the data will not be modified by the user, but
    * we must cast away the const anyway.
    * */
-  HSHM_INLINE_CROSS_FUN explicit charbuf(const char *data, size_t size)
+  HSHM_INLINE_CROSS_FUN explicit charwrap(const char *data, size_t size)
   : alloc_(nullptr), data_(const_cast<char*>(data)),
     size_(size), total_size_(size), destructable_(false) {}
 
@@ -86,13 +86,13 @@ struct charbuf {
    * ===================================*/
 
   /** Copy constructor. From std::string. */
-  HSHM_INLINE_CROSS_FUN explicit charbuf(const std::string &data) {
+  HSHM_INLINE_CROSS_FUN explicit charwrap(const std::string &data) {
     Allocate(HERMES_MEMORY_MANAGER->GetDefaultAllocator(), data.size());
     memcpy(data_, data.data(), data.size());
   }
 
-  /** Copy constructor. From charbuf. */
-  HSHM_INLINE_CROSS_FUN charbuf(const charbuf &other) {
+  /** Copy constructor. From charwrap. */
+  HSHM_INLINE_CROSS_FUN charwrap(const charwrap &other) {
     if (!Allocate(HERMES_MEMORY_MANAGER->GetDefaultAllocator(),
                   other.size())) {
       return;
@@ -101,7 +101,7 @@ struct charbuf {
   }
 
   /** Copy assignment operator */
-  HSHM_INLINE_CROSS_FUN charbuf& operator=(const charbuf &other) {
+  HSHM_INLINE_CROSS_FUN charwrap& operator=(const charwrap &other) {
     if (this != &other) {
       Free();
       if (!Allocate(HERMES_MEMORY_MANAGER->GetDefaultAllocator(),
@@ -118,7 +118,7 @@ struct charbuf {
    * ===================================*/
 
   /** Move constructor */
-  HSHM_CROSS_FUN charbuf(charbuf &&other) {
+  HSHM_CROSS_FUN charwrap(charwrap &&other) {
     alloc_ = other.alloc_;
     data_ = other.data_;
     size_ = other.size_;
@@ -130,7 +130,7 @@ struct charbuf {
   }
 
   /** Move assignment operator */
-  HSHM_CROSS_FUN charbuf& operator=(charbuf &&other) noexcept {
+  HSHM_CROSS_FUN charwrap& operator=(charwrap &&other) noexcept {
     if (this != &other) {
       Free();
       alloc_ = other.alloc_;
@@ -206,7 +206,7 @@ struct charbuf {
 
   /** Hash function */
   HSHM_CROSS_FUN size_t Hash() const {
-    return string_hash<hshm::charbuf>(*this);
+    return string_hash<hshm::charwrap>(*this);
   }
 
   /**====================================
@@ -216,13 +216,13 @@ struct charbuf {
   /** Serialize */
   template <typename Ar>
   HSHM_CROSS_FUN void save(Ar &ar) const {
-    hipc::save_string<Ar, charbuf>(ar, *this);
+    hipc::save_string<Ar, charwrap>(ar, *this);
   }
 
   /** Deserialize */
   template <typename Ar>
   HSHM_CROSS_FUN void load(Ar &ar) {
-    hipc::load_string<Ar, charbuf>(ar, *this);
+    hipc::load_string<Ar, charwrap>(ar, *this);
   }
 
   /**====================================
@@ -235,7 +235,7 @@ struct charbuf {
   bool operator op(const std::string &other) const { \
   return hshm::strncmp(data(), size(), other.data(), other.size()) op 0; \
   } \
-  bool operator op(const charbuf &other) const { \
+  bool operator op(const charwrap &other) const { \
   return hshm::strncmp(data(), size(), other.data(), other.size()) op 0; \
   }
 
@@ -252,7 +252,7 @@ struct charbuf {
    * Internal functions
    * ===================================*/
 
-  /** Allocate charbuf */
+  /** Allocate charwrap */
   HSHM_CROSS_FUN bool Allocate(hipc::Allocator *alloc, size_t size) {
     hipc::OffsetPointer p;
     if (size == 0) {
@@ -272,7 +272,7 @@ struct charbuf {
     return true;
   }
 
-  /** Explicitly free the charbuf */
+  /** Explicitly free the charwrap */
   HSHM_CROSS_FUN void Free() {
     if (destructable_ && data_ && total_size_) {
       alloc_->FreePtr<char>(hshm::ThreadId::GetNull(), data_);
@@ -280,15 +280,15 @@ struct charbuf {
   }
 };
 
-typedef charbuf string;
+typedef charwrap string;
 
 }  // namespace hshm
 
 /** std::hash function for string */
 namespace std {
 template<>
-struct hash<hshm::charbuf> {
-  HSHM_CROSS_FUN size_t operator()(const hshm::charbuf &text) const {
+struct hash<hshm::charwrap> {
+  HSHM_CROSS_FUN size_t operator()(const hshm::charwrap &text) const {
     return text.Hash();
   }
 };
@@ -297,11 +297,11 @@ struct hash<hshm::charbuf> {
 /** hshm::hash function for string */
 namespace hshm {
 template<>
-struct hash<hshm::charbuf> {
-  HSHM_CROSS_FUN size_t operator()(const hshm::charbuf &text) const {
+struct hash<hshm::charwrap> {
+  HSHM_CROSS_FUN size_t operator()(const hshm::charwrap &text) const {
     return text.Hash();
   }
 };
 }  // namespace hshm
 
-#endif  // HERMES_INCLUDE_HERMES_TYPES_CHARBUF_H_
+#endif  // HERMES_INCLUDE_HERMES_TYPES_charwrap_H_

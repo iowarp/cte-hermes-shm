@@ -397,6 +397,14 @@ using charbuf = string;
 
 }  // namespace hshm::ipc
 
+namespace hshm {
+
+template<size_t SSO, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
+using string_templ = ipc::string_templ<SSO, HSHM_CLASS_TEMPL_ARGS>;
+
+}  // namespace hshm
+
+
 /** std::hash function for string */
 namespace std {
 template<size_t SSO>
