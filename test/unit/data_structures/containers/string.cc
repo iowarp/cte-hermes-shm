@@ -69,6 +69,18 @@ void TestString() {
   }
 }
 
+TEST_CASE("StringConv") {
+  Allocator *alloc = HERMES_MEMORY_MANAGER->GetDefaultAllocator();
+  REQUIRE(IS_SHM_ARCHIVEABLE(string));
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+  {
+    hipc::string text("hello");
+    hshm::string x(text);
+    REQUIRE(text == x);
+  }
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+}
+
 TEST_CASE("String") {
   Allocator *alloc = HERMES_MEMORY_MANAGER->GetDefaultAllocator();
   REQUIRE(IS_SHM_ARCHIVEABLE(string));

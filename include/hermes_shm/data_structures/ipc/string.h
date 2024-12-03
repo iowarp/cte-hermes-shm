@@ -40,7 +40,7 @@ class string_templ;
 #define CLASS_NEW_ARGS SSO, FLAGS
 
 /**
- * A string of characters.
+ * A string of bytes.
  * */
 template<size_t SSO, u32 FLAGS, HSHM_CLASS_TEMPL>
 class string_templ : public ShmContainer {
@@ -126,31 +126,70 @@ class string_templ : public ShmContainer {
     shm_strong_or_weak_copy_op<false, true>(alloc, text, length);
   }
 
+  /**
+   * Templated string_templ copy constructors
+   */
+
   /** Copy constructor. From any string_templ. */
+  template <size_t SSO1, u32 FLAGS1, HSHM_CLASS_TEMPL2>
   HSHM_CROSS_FUN explicit string_templ(
-      const string_templ &other) {
+      const string_templ<SSO1, FLAGS1, HSHM_CLASS_TEMPL_ARGS2> &other) {
     shm_strong_or_weak_copy_op<false, true>(other.GetCtxAllocator(),
                                             other.data(), other.size());
   }
 
   /** SHM copy constructor. From any string_templ. */
-  HSHM_CROSS_FUN explicit string_templ(const hipc::CtxAllocator<AllocT> &alloc,
-                                       const string_templ &other) {
+  template <size_t SSO1, u32 FLAGS1, HSHM_CLASS_TEMPL2>
+  HSHM_CROSS_FUN explicit string_templ(
+      const hipc::CtxAllocator<AllocT> &alloc,
+      const string_templ<SSO1, FLAGS1, HSHM_CLASS_TEMPL_ARGS2> &other) {
     shm_strong_or_weak_copy_op<false, true>(alloc, other.data(), other.size());
   }
 
   /** SHM copy assignment operator. From any string_templ. */
+  template <size_t SSO1, u32 FLAGS1, HSHM_CLASS_TEMPL2>
   HSHM_CROSS_FUN string_templ &operator=(
-      const string_templ &other) {
-    if (this != &other) {
+      const string_templ<SSO1, FLAGS1, HSHM_CLASS_TEMPL_ARGS2> &other) {
+    if ((char *)this != (char *)&other) {
       shm_strong_or_weak_copy_op<true, true>(GetCtxAllocator(), other.data(),
                                              other.size());
     }
     return *this;
   }
 
+  /**
+   * This string_templ copy constructors
+   */
+
+  /** Copy constructor. From this string_templ. */
+  HSHM_CROSS_FUN explicit string_templ(
+      const string_templ &other) {
+    shm_strong_or_weak_copy_op<false, true>(other.GetCtxAllocator(),
+                                            other.data(), other.size());
+  }
+
+  /** SHM copy constructor. From this string_templ. */
+  HSHM_CROSS_FUN explicit string_templ(
+      const hipc::CtxAllocator<AllocT> &alloc,
+      const string_templ &other) {
+    shm_strong_or_weak_copy_op<false, true>(alloc, other.data(), other.size());
+  }
+
+  /** SHM copy assignment operator. From this string_templ. */
+  HSHM_CROSS_FUN string_templ &operator=(
+      const string_templ &other) {
+    if ((char*)this != (char*)&other) {
+      shm_strong_or_weak_copy_op<true, true>(GetCtxAllocator(), other.data(),
+                                             other.size());
+    }
+    return *this;
+  }
+
+  /**
+   * std::string copy constructors
+   */
+
   /** Copy constructor. From std::string. */
-  template <typename StringT>
   HSHM_HOST_FUN explicit string_templ(const std::string &other) {
     shm_strong_or_weak_copy_op<false, true>(GetCtxAllocator(),
                                             other.data(), other.size());
@@ -170,6 +209,10 @@ class string_templ : public ShmContainer {
     }
     return *this;
   }
+
+  /**
+   * Core copy operations
+   */
 
   /** Strong or weak copy operation */
   template <bool IS_ASSIGN, bool HAS_LENGTH>
@@ -415,15 +458,17 @@ class string_templ : public ShmContainer {
    * Comparison Operations
    * ===================================*/
 
-#define HERMES_STR_CMP_OPERATOR(op) \
-  bool operator TYPE_UNWRAP(op)(const char *other) const { \
-    return hshm::strncmp(data(), size(), other, hshm::strlen(other)) op 0; \
-  } \
-  bool operator op(const std::string &other) const { \
-    return hshm::strncmp(data(), size(), other.data(), other.size()) op 0; \
-  } \
-  bool operator op(const string_templ &other) const { \
-    return hshm::strncmp(data(), size(), other.data(), other.size()) op 0; \
+#define HERMES_STR_CMP_OPERATOR(op)                                            \
+  bool operator TYPE_UNWRAP(op)(const char *other) const {                     \
+    return hshm::strncmp(data(), size(), other, hshm::strlen(other)) op 0;     \
+  }                                                                            \
+  bool operator op(const std::string &other) const {                           \
+    return hshm::strncmp(data(), size(), other.data(), other.size()) op 0;     \
+  }                                                                            \
+  template <size_t SSO1, u32 FLAGS1, HSHM_CLASS_TEMPL2>                        \
+  bool operator op(                                                            \
+      const string_templ<SSO1, FLAGS1, HSHM_CLASS_TEMPL_ARGS2> &other) const { \
+    return hshm::strncmp(data(), size(), other.data(), other.size()) op 0;     \
   }
 
   HERMES_STR_CMP_OPERATOR(==)  // NOLINT
@@ -461,10 +506,7 @@ class string_templ : public ShmContainer {
   }
 };
 
-/** Our default SSO value */
 using string = string_templ<HSHM_STRING_SSO, 0>;
-
-/** Consider the string as an uniterpreted set of bytes */
 using charbuf = string;
 
 }  // namespace hshm::ipc
@@ -474,6 +516,8 @@ namespace hshm {
 template<size_t SSO, u32 FLAGS, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
 using string_templ = ipc::string_templ<SSO, FLAGS, HSHM_CLASS_TEMPL_ARGS>;
 
+using string = string_templ<HSHM_STRING_SSO, 0>;
+using charbuf = string;
 using charwrap = ipc::string_templ<HSHM_STRING_SSO, hipc::StringFlags::kWrap>;
 
 }  // namespace hshm
