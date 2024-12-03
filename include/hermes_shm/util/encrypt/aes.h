@@ -18,7 +18,7 @@
 #include <openssl/rand.h>
 
 #include <string>
-#include <hermes_shm/data_structures/data_structure.h>
+#include <hermes_shm/data_structures/all.h>
 
 namespace hshm {
 

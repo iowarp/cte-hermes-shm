@@ -6,7 +6,7 @@
 #include "test_init.h"
 #include "list.h"
 
-#include "hermes_shm/data_structures/data_structure.h"
+#include "hermes_shm/data_structures/all.h"
 
 struct Entry {
   size_t next_;

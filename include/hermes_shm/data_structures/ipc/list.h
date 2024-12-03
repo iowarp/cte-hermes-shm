@@ -15,7 +15,7 @@
 #define HERMES_DATA_STRUCTURES_THREAD_UNSAFE_LIST_H_
 
 #include "hermes_shm/data_structures/ipc/internal/shm_internal.h"
-#include "hermes_shm/data_structures/containers/functional.h"
+#include "hermes_shm/data_structures/ipc/functional.h"
 #include "hermes_shm/data_structures/serialization/serialize_common.h"
 
 #include <list>

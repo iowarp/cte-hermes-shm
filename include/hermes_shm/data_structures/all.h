@@ -17,8 +17,8 @@
 #include "ipc/internal/shm_internal.h"
 #include "hermes_shm/memory/memory_manager.h"
 
-#include "containers/functional.h"
-#include "containers/tuple_base.h"
+#include "ipc/functional.h"
+#include "ipc/tuple_base.h"
 
 #include "ipc/chararr.h"
 #include "ipc/iqueue.h"

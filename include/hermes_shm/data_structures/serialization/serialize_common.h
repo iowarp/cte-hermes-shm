@@ -15,7 +15,7 @@
 
 #include <stddef.h>
 #include <cereal/archives/binary.hpp>
-#include "hermes_shm/data_structures/containers/hash.h"
+#include "hermes_shm/data_structures/ipc/hash.h"
 
 namespace hshm::ipc {
 

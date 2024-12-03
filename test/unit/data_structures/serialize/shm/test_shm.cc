@@ -13,7 +13,7 @@
 #include "basic_test.h"
 #include "test_init.h"
 #include "hermes_shm/data_structures/ipc/string.h"
-#include "hermes_shm/data_structures/data_structure.h"
+#include "hermes_shm/data_structures/all.h"
 
 
 TEST_CASE("SerializePod") {

@@ -6,7 +6,7 @@
 #include "test_init.h"
 #include "list.h"
 
-#include "hermes_shm/data_structures/data_structure.h"
+#include "hermes_shm/data_structures/all.h"
 
 TEST_CASE("key_set") {
   hshm::key_set<size_t> count;

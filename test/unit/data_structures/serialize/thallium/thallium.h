@@ -16,7 +16,7 @@
 
 #include "thallium.hpp"
 #include "hermes_shm/data_structures/ipc/string.h"
-#include "hermes_shm/data_structures/data_structure.h"
+#include "hermes_shm/data_structures/all.h"
 #include "hermes_shm/data_structures/ipc/vector.h"
 #include "hermes_shm/data_structures/ipc/list.h"
 #include "hermes_shm/data_structures/ipc/slist.h"

@@ -33,6 +33,6 @@
 
 #include "memory/memory_manager.h"
 
-#include "data_structures/data_structure.h"
+#include "data_structures/all.h"
 
 #endif  // HERMES_SHM_INCLUDE_HERMES_SHM_HERMES_SHM_H_

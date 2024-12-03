@@ -1,4 +1,4 @@
-//#include "hermes_shm/data_structures/data_structure.h"
+//#include "hermes_shm/data_structures/all.h"
 //
 //typedef HSHM_NS::Allocator AllocT;
 

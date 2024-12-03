@@ -21,7 +21,7 @@
 
 #include <boost/container/scoped_allocator.hpp>
 
-#include "hermes_shm/data_structures/data_structure.h"
+#include "hermes_shm/data_structures/all.h"
 #include <hermes_shm/util/timer.h>
 
 using hshm::ipc::MemoryBackendType;

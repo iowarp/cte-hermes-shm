@@ -15,7 +15,7 @@
 
 #include <thallium.hpp>
 #include "hermes_shm/thread/thread_model_manager.h"
-#include "hermes_shm/data_structures/data_structure.h"
+#include "hermes_shm/data_structures/all.h"
 #include "thallium.h"
 
 using hshm::ipc::PosixShmMmap;
