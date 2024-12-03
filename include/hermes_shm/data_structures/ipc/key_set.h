@@ -11,6 +11,10 @@
 
 namespace hshm::ipc {
 
+/**
+ * Stores a set of numeric keys and their value. Keys can be reused.
+ * Programs must store the keys themselves. 
+ */
 template<typename T, HSHM_CLASS_TEMPL_WITH_DEFAULTS>
 class KeySetTempl : public ShmContainer {
  public:
@@ -29,7 +33,7 @@ class KeySetTempl : public ShmContainer {
 
   void Init(size_t max_size) {
     keys_.resize(max_size);
-    set_.resize(max_size);
+    set_.reserve(max_size);
     heap_ = 0;
     max_size_ = max_size;
   }
@@ -37,7 +41,7 @@ class KeySetTempl : public ShmContainer {
   void resize() {
     size_t new_size = set_.size() * 2;
     keys_.resize(new_size);
-    set_.resize(new_size);
+    set_.reserve(new_size);
     max_size_ = new_size;
   }
 

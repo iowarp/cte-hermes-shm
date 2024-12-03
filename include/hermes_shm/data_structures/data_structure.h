@@ -34,6 +34,7 @@
 #include "ipc/unordered_map.h"
 #include "ipc/vector.h"
 #include "ipc/key_set.h"
+#include "ipc/key_queue.h"
 
 #include "serialization/serialize_common.h"
 #include "serialization/local_serialize.h"
