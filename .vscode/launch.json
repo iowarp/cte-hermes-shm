@@ -40,6 +40,48 @@
             "logging": {
                 "engineLogging": false
             }
+        },
+        {
+            "name": "test-local-serialize",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/bin/test_shm_exec",
+            "args": ["SerializeHshm"],
+            "miDebuggerPath": "/usr/bin/gdb",
+            "cwd": "${workspaceFolder}",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ],
+            "externalConsole": false,
+            "logging": {
+                "engineLogging": false
+            }
+        },
+        {
+            "name": "test-key-set",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/bin/test_data_structure_exec",
+            "args": [
+                "KeySet"
+            ],
+            "miDebuggerPath": "/usr/bin/gdb",
+            "cwd": "${workspaceFolder}",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ],
+            "externalConsole": false,
+            "logging": {
+                "engineLogging": false
+            }
         }
     ]
 }

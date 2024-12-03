@@ -41,7 +41,7 @@ class KeySetTempl : public ShmContainer {
     max_size_ = new_size;
   }
 
-  void emplace(const T &entry, size_t &key) {
+  void emplace(size_t &key, const T &entry) {
     pop_key(key);
     set_[key] = entry;
   }

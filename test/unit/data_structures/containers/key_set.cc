@@ -11,7 +11,7 @@
 TEST_CASE("KeySet") {
   hshm::KeySet<size_t> count;
   count.Init(32);
-  std::vector<size_t> keys;
+  std::vector<size_t> keys(64);
 
   for (int i = 0; i < 64; ++i) {
     size_t entry = i;
