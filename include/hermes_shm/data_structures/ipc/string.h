@@ -216,6 +216,7 @@ class string_templ : public ShmContainer {
 
   /** Strong or weak copy operation */
   template <bool IS_ASSIGN, bool HAS_LENGTH>
+  HSHM_CROSS_FUN
   void shm_strong_or_weak_copy_op(const hipc::CtxAllocator<AllocT> &alloc,
                                   const char *text, size_t length) {
     if constexpr (FLAGS & StringFlags::kWrap) {
@@ -228,15 +229,15 @@ class string_templ : public ShmContainer {
       length_ = length;
       max_length_ = length_;
     } else {
-      shm_strong_copy_op<IS_ASSIGN, HAS_LENGTH>(alloc, text, 0);
+      shm_strong_copy_op<IS_ASSIGN, HAS_LENGTH>(alloc, text, length);
     }
   }
 
   /** Strong copy operation */
-  template<bool IS_ASSIGN, bool HAS_LENGTH>
-  void shm_strong_copy_op(const hipc::CtxAllocator<AllocT> &alloc,
-                          const char *text,
-                          size_t length) {
+  template <bool IS_ASSIGN, bool HAS_LENGTH>
+  HSHM_CROSS_FUN void shm_strong_copy_op(
+      const hipc::CtxAllocator<AllocT> &alloc, const char *text,
+      size_t length) {
     is_wrap_ = false;
     if constexpr (IS_ASSIGN) {
       shm_destroy();
