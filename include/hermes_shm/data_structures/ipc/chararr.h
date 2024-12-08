@@ -11,10 +11,10 @@
 
 namespace hshm::ipc {
 
-template<int LENGTH, bool WithNull>
+template<int LENGTH, bool WithNull, int FULL_LENGTH = LENGTH + WithNull>
 class chararr_templ {
  public:
-  char buf_[LENGTH + 1];
+  char buf_[FULL_LENGTH];
   int length_;
 
  public:
@@ -46,6 +46,9 @@ class chararr_templ {
   /** Construct from sized char* */
   HSHM_CROSS_FUN
   chararr_templ(const char *data, size_t length) {
+    if (length > LENGTH) {
+      length_ = LENGTH;
+    }
     length_ = length;
     memcpy(buf_, data, length);
     if constexpr (WithNull) {

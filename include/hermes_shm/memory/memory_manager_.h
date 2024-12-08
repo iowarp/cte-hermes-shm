@@ -8,6 +8,7 @@
 #include "hermes_shm/memory/allocator/allocator.h"
 #include "hermes_shm/memory/backend/posix_mmap.h"
 #include "hermes_shm/util/singleton/_global_singleton.h"
+#include "allocator/allocator_factory_.h"
 
 /** Singleton declaration */
 #define HERMES_MEMORY_MANAGER \

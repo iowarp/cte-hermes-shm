@@ -19,6 +19,7 @@
 #include "malloc_allocator.h"
 #include "scalable_page_allocator.h"
 #include "hermes_shm/memory/memory_manager_.h"
+#include "allocator_factory_.h"
 
 namespace hshm::ipc {
 
@@ -145,5 +146,7 @@ class AllocatorFactory {
 };
 
 }  // namespace hshm::ipc
+
+#define HSHM_ALLOCATOR_FACTORY_DONE
 
 #endif  // HERMES_MEMORY_ALLOCATOR_ALLOCATOR_FACTORY_H_

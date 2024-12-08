@@ -22,13 +22,12 @@ size_t strlen(const char *buf) {
 }
 
 HSHM_INLINE_CROSS_FUN static
-size_t strnlen(const char *buf, size_t max_lan) {
+size_t strnlen(const char *buf, size_t max_len) {
   size_t length = 0;
-  for (int i = 0; i < max_lan; ++i) {
-    if (buf[i] == 0) {
+  for (; length < max_len; ++length) {
+    if (buf[length] == 0) {
       break;
     }
-    ++length;
   }
   return length;
 }

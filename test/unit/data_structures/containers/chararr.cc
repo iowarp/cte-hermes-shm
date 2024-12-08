@@ -41,63 +41,63 @@ void Testchararr() {
   }
 
   PAGE_DIVIDE("Resize destructable chararr to 0 value") {
-    hshm::chararr data(4096);
+    hshm::chararr data(4095);
     data.resize(0);
     REQUIRE(data.size() == 0);
   }
 
   PAGE_DIVIDE("Resize destructable chararr to lower value") {
-    hshm::chararr data(4096);
+    hshm::chararr data(4095);
     data.resize(256);
     REQUIRE(data.size() == 256);
   }
 
   PAGE_DIVIDE("Resize destructable chararr to higher value") {
     hshm::chararr data(256);
-    data.resize(4096);
-    REQUIRE(data.size() == 4096);
+    data.resize(4095);
+    REQUIRE(data.size() == 4095);
   }
 
   PAGE_DIVIDE("Resize indestructable chararr to higher value") {
     char *ptr = (char*)malloc(256);
     hshm::chararr data(ptr, 256);
-    data.resize(4096);
-    REQUIRE(data.size() == 4096);
+    data.resize(4095);
+    REQUIRE(data.size() == 4095);
     free(ptr);
   }
 
   PAGE_DIVIDE("Resize indestructable chararr to lower value") {
-    char *ptr = (char*)malloc(4096);
-    hshm::chararr data(ptr, 4096);
+    char *ptr = (char*)malloc(4095);
+    hshm::chararr data(ptr, 4095);
     data.resize(256);
     REQUIRE(data.size() == 256);
     free(ptr);
   }
 
   PAGE_DIVIDE("Move construct from destructable") {
-    hshm::chararr data1(4096);
+    hshm::chararr data1(4095);
     hshm::chararr data2(std::move(data1));
-    REQUIRE(data2.size() == 4096);
+    REQUIRE(data2.size() == 4095);
   }
 
   PAGE_DIVIDE("Move construct from indestructable") {
-    char *ptr1 = (char*)malloc(4096);
-    hshm::chararr data1(ptr1, 4096);
+    char *ptr1 = (char*)malloc(4095);
+    hshm::chararr data1(ptr1, 4095);
     hshm::chararr data2(std::move(data1));
-    REQUIRE(data2.size() == 4096);
+    REQUIRE(data2.size() == 4095);
     free(ptr1);
   }
 
   PAGE_DIVIDE("Move assign between two destructables") {
-    hshm::chararr data1(4096);
+    hshm::chararr data1(4095);
     hshm::chararr data2(512);
     data1 = std::move(data2);
     REQUIRE(data1.size() == 512);
   }
 
   PAGE_DIVIDE("Move assign between two indestructables") {
-    char *ptr1 = (char*)malloc(4096);
-    hshm::chararr data1(ptr1, 4096);
+    char *ptr1 = (char*)malloc(4095);
+    hshm::chararr data1(ptr1, 4095);
     char *ptr2 = (char*)malloc(512);
     hshm::chararr data2(ptr2, 512);
     data1 = std::move(data2);
@@ -107,7 +107,7 @@ void Testchararr() {
   }
 
   PAGE_DIVIDE("Move assign indestructable -> destructable") {
-    hshm::chararr data1(4096);
+    hshm::chararr data1(4095);
     char *ptr2 = (char*)malloc(512);
     hshm::chararr data2(ptr2, 512);
     data1 = std::move(data2);
@@ -116,8 +116,8 @@ void Testchararr() {
   }
 
   PAGE_DIVIDE("Move assign destructable -> indestructable") {
-    char *ptr1 = (char*)malloc(4096);
-    hshm::chararr data1(ptr1, 4096);
+    char *ptr1 = (char*)malloc(4095);
+    hshm::chararr data1(ptr1, 4095);
     hshm::chararr data2(512);
     data1 = std::move(data2);
     REQUIRE(data1.size() == 512);
@@ -132,25 +132,25 @@ void Testchararr() {
   }
 
   PAGE_DIVIDE("Copy construct from destructable") {
-    hshm::chararr data1(4096);
+    hshm::chararr data1(4095);
     hshm::chararr data2(data1);
-    REQUIRE(data1.size() == 4096);
-    REQUIRE(data2.size() == 4096);
+    REQUIRE(data1.size() == 4095);
+    REQUIRE(data2.size() == 4095);
     REQUIRE(data1 == data2);
   }
 
   PAGE_DIVIDE("Copy construct from indestructable") {
-    char *ptr1 = (char*)malloc(4096);
-    hshm::chararr data1(ptr1, 4096);
+    char *ptr1 = (char*)malloc(4095);
+    hshm::chararr data1(ptr1, 4095);
     hshm::chararr data2(data1);
-    REQUIRE(data1.size() == 4096);
-    REQUIRE(data2.size() == 4096);
+    REQUIRE(data1.size() == 4095);
+    REQUIRE(data2.size() == 4095);
     REQUIRE(data1 == data2);
     free(ptr1);
   }
 
   PAGE_DIVIDE("Copy assign between two destructables") {
-    hshm::chararr data1(4096);
+    hshm::chararr data1(4095);
     hshm::chararr data2(512);
     data1 = data2;
     REQUIRE(data2.size() == 512);
@@ -159,8 +159,8 @@ void Testchararr() {
   }
 
   PAGE_DIVIDE("Copy assign between two indestructables") {
-    char *ptr1 = (char*)malloc(4096);
-    hshm::chararr data1(ptr1, 4096);
+    char *ptr1 = (char*)malloc(4095);
+    hshm::chararr data1(ptr1, 4095);
     char *ptr2 = (char*)malloc(512);
     hshm::chararr data2(ptr2, 512);
     data1 = data2;
@@ -172,7 +172,7 @@ void Testchararr() {
   }
 
   PAGE_DIVIDE("Copy assign indestructable -> destructable") {
-    hshm::chararr data1(4096);
+    hshm::chararr data1(4095);
     char *ptr2 = (char*)malloc(512);
     hshm::chararr data2(ptr2, 512);
     data1 = data2;
@@ -182,8 +182,8 @@ void Testchararr() {
   }
 
   PAGE_DIVIDE("Copy assign destructable -> indestructable") {
-    char *ptr1 = (char*)malloc(4096);
-    hshm::chararr data1(ptr1, 4096);
+    char *ptr1 = (char*)malloc(4095);
+    hshm::chararr data1(ptr1, 4095);
     hshm::chararr data2(512);
     data1 = data2;
     REQUIRE(data2.size() == 512);
@@ -192,7 +192,7 @@ void Testchararr() {
   }
 
   PAGE_DIVIDE("Copy assign to null") {
-    char *ptr1 = (char*)malloc(4096);
+    char *ptr1 = (char*)malloc(4095);
     hshm::chararr data1;
     hshm::chararr data2(512);
     data1 = data2;
