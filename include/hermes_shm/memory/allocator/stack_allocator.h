@@ -21,12 +21,12 @@
 
 namespace hshm::ipc {
 
-struct StackAllocatorHeader : public AllocatorHeader {
+struct _StackAllocatorHeader : public AllocatorHeader {
   HeapAllocator heap_;
   hipc::atomic<hshm::min_u64> total_alloc_;
 
   HSHM_CROSS_FUN
-  StackAllocatorHeader() = default;
+  _StackAllocatorHeader() = default;
 
   HSHM_CROSS_FUN
   void Configure(AllocatorId alloc_id,
@@ -40,9 +40,10 @@ struct StackAllocatorHeader : public AllocatorHeader {
   }
 };
 
-class StackAllocator : public Allocator {
+class _StackAllocator : public Allocator {
  public:
-  StackAllocatorHeader *header_;
+  typedef BaseAllocator<_StackAllocator> AllocT;
+  _StackAllocatorHeader *header_;
   HeapAllocator *heap_;
 
  public:
@@ -50,7 +51,7 @@ class StackAllocator : public Allocator {
    * Allocator constructor
    * */
   HSHM_CROSS_FUN
-  StackAllocator()
+  _StackAllocator()
   : header_(nullptr) {}
 
   /**
@@ -65,7 +66,7 @@ class StackAllocator : public Allocator {
     id_ = id;
     buffer_ = buffer;
     buffer_size_ = buffer_size;
-    header_ = reinterpret_cast<StackAllocatorHeader*>(buffer_);
+    header_ = reinterpret_cast<_StackAllocatorHeader*>(buffer_);
     custom_header_ = reinterpret_cast<char*>(header_ + 1);
     size_t region_off = (custom_header_ - buffer_) + custom_header_size;
     size_t region_size = buffer_size_ - region_off;
@@ -78,10 +79,10 @@ class StackAllocator : public Allocator {
    * */
   HSHM_CROSS_FUN
   void shm_deserialize(char *buffer,
-                       size_t buffer_size) override {
+                       size_t buffer_size) {
     buffer_ = buffer;
     buffer_size_ = buffer_size;
-    header_ = reinterpret_cast<StackAllocatorHeader*>(buffer_);
+    header_ = reinterpret_cast<_StackAllocatorHeader*>(buffer_);
     type_ = header_->allocator_type_;
     id_ = header_->allocator_id_;
     custom_header_ = reinterpret_cast<char*>(header_ + 1);
@@ -112,7 +113,7 @@ class StackAllocator : public Allocator {
    * */
   HSHM_CROSS_FUN
   OffsetPointer AllocateOffset(const hipc::MemContext &ctx,
-                               size_t size) override {
+                               size_t size) {
     size += sizeof(MpPage);
     OffsetPointer p = heap_->AllocateOffset(size);
     auto hdr = Convert<MpPage>(p);
@@ -129,7 +130,7 @@ class StackAllocator : public Allocator {
    * */
   HSHM_CROSS_FUN
   OffsetPointer AlignedAllocateOffset(const hipc::MemContext &ctx,
-                                      size_t size, size_t alignment) override {
+                                      size_t size, size_t alignment) {
     HERMES_THROW_ERROR(NOT_IMPLEMENTED, "AlignedAllocateOffset");
   }
 
@@ -141,14 +142,15 @@ class StackAllocator : public Allocator {
   HSHM_CROSS_FUN
   OffsetPointer ReallocateOffsetNoNullCheck(
       const hipc::MemContext &ctx,
-      OffsetPointer p, size_t new_size) override {
+      OffsetPointer p, size_t new_size) {
     OffsetPointer new_p;
     void *src = Convert<void>(p);
     auto hdr = Convert<MpPage>(p - sizeof(MpPage));
     size_t old_size = hdr->page_size_ - sizeof(MpPage);
-    void *dst = AllocatePtr<void, OffsetPointer>(ctx, new_size, new_p);
+    void *dst = ((AllocT*)this)->AllocatePtr<void, OffsetPointer>(
+      ctx, new_size, new_p);
     memcpy((void*)dst, (void*)src, old_size);
-    Free(ThreadId::GetNull(), p);
+    ((AllocT *)this)->Free(ctx, p);
     return new_p;
   }
 
@@ -157,7 +159,7 @@ class StackAllocator : public Allocator {
    * */
   HSHM_CROSS_FUN
   void FreeOffsetNoNullCheck(const hipc::MemContext &ctx,
-                             OffsetPointer p) override {
+                             OffsetPointer p) {
     auto hdr = Convert<MpPage>(p - sizeof(MpPage));
     if (!hdr->IsAllocated()) {
       HERMES_THROW_ERROR(DOUBLE_FREE);
@@ -171,7 +173,7 @@ class StackAllocator : public Allocator {
    * checking.
    * */
   HSHM_CROSS_FUN
-  size_t GetCurrentlyAllocatedSize() override {
+  size_t GetCurrentlyAllocatedSize() {
     return header_->total_alloc_.load();
   }
 
@@ -179,16 +181,18 @@ class StackAllocator : public Allocator {
    * Create a globally-unique thread ID
    * */
   HSHM_CROSS_FUN
-  void CreateTls(MemContext &ctx) override {
+  void CreateTls(MemContext &ctx) {
   }
 
   /**
    * Free a thread-local memory storage
    * */
   HSHM_CROSS_FUN
-  void FreeTls(const hipc::MemContext &ctx) override {
+  void FreeTls(const hipc::MemContext &ctx) {
   }
 };
+
+typedef BaseAllocator<_StackAllocator> StackAllocator;
 
 }  // namespace hshm::ipc
 

@@ -13,16 +13,17 @@
 
 #include "test_init.h"
 
-void MultiThreadedPageAllocationTest(Allocator *alloc) {
+template <typename AllocT>
+void MultiThreadedPageAllocationTest(AllocT *alloc) {
   size_t nthreads = 8;
   omp_set_dynamic(0);
 #pragma omp parallel shared(alloc) num_threads(nthreads)
   {
 #pragma omp barrier
-    PageAllocationTest(alloc);
+    Workloads<AllocT>::PageAllocationTest(alloc);
 #pragma omp barrier
     try {
-      MultiPageAllocationTest(alloc);
+      Workloads<AllocT>::MultiPageAllocationTest(alloc);
     } catch (std::shared_ptr<hshm::Error> &err) {
       err->print();
       exit(1);

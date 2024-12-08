@@ -61,6 +61,6 @@ HERMES_INTEGER_HASH(unsigned int);
 HERMES_INTEGER_HASH(unsigned long);
 HERMES_INTEGER_HASH(unsigned long long);
 
-}
+}  // namespace hshm
 
 #endif //HERMES_SHM_INCLUDE_HERMES_SHM_DATA_STRUCTURES_CONTAINERS_HASH_H_

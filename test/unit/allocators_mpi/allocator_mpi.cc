@@ -20,7 +20,8 @@ struct Record {
   Pointer ptr;
 };
 
-void MpiPageAllocationTest(Allocator *alloc, size_t count) {
+template <typename AllocT>
+void MpiPageAllocationTest(AllocT *alloc, size_t count) {
   size_t window_length = 32;
   size_t min_page = 64;
   size_t max_page = MEGABYTES(1);
@@ -33,7 +34,7 @@ void MpiPageAllocationTest(Allocator *alloc, size_t count) {
   for (size_t w = 0; w < num_windows; ++w) {
     for (size_t i = 0; i < window_length; ++i) {
       window[i].size = uni(rng);
-      window[i].data = alloc->AllocatePtr<char>(
+      window[i].data = alloc->template AllocatePtr<char>(
           HSHM_DEFAULT_MEM_CTX,
           window[i].size, window[i].ptr);
       memset(window[i].data, (char)i, window[i].size);

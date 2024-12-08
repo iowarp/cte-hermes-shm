@@ -13,10 +13,10 @@
 #ifndef HERMES_SHM_INCLUDE_HERMES_SHM_DATA_STRUCTURES_IPC_TICKET_QUEUE_H_
 #define HERMES_SHM_INCLUDE_HERMES_SHM_DATA_STRUCTURES_IPC_TICKET_QUEUE_H_
 
-#include "hermes_shm/data_structures/ipc/internal/shm_internal.h"
+#include "hermes_shm/data_structures/internal/shm_internal.h"
 #include "hermes_shm/thread/lock.h"
-#include "spsc_queue.h"
 #include "hermes_shm/types/qtok.h"
+#include "ring_queue.h"
 
 namespace hshm::ipc {
 

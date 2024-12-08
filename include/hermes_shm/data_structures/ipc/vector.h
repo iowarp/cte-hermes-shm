@@ -14,7 +14,7 @@
 #ifndef HERMES_DATA_STRUCTURES_LOCKLESS_VECTOR_H_
 #define HERMES_DATA_STRUCTURES_LOCKLESS_VECTOR_H_
 
-#include "hermes_shm/data_structures/ipc/internal/shm_internal.h"
+#include "hermes_shm/data_structures/internal/shm_internal.h"
 #include "hermes_shm/data_structures/serialization/serialize_common.h"
 
 #include <vector>

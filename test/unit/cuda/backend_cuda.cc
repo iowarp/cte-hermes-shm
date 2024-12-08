@@ -14,7 +14,7 @@
 #include "hermes_shm/memory/memory_manager.h"
 #include "hermes_shm/data_structures/ipc/string.h"
 #include <cassert>
-#include <hermes_shm/data_structures/ipc/mpsc_queue.h>
+#include <hermes_shm/data_structures/ipc/ring_queue.h>
 #include <hermes_shm/data_structures/ipc/unordered_map.h>
 
 struct MyStruct {

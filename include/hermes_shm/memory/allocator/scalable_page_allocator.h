@@ -78,12 +78,12 @@ struct PageId {
   }
 };
 
-class ScalablePageAllocator;
+class _ScalablePageAllocator;
 
 class PageAllocator {
  public:
   typedef StackAllocator Alloc_;
-  typedef TlsAllocatorInfo<ScalablePageAllocator> TLS;
+  typedef TlsAllocatorInfo<_ScalablePageAllocator> TLS;
   typedef hipc::iqueue<MpPage, Alloc_> LIST;
 
  public:
@@ -137,8 +137,8 @@ class PageAllocator {
   }
 };
 
-struct ScalablePageAllocatorHeader : public AllocatorHeader {
-  typedef TlsAllocatorInfo<ScalablePageAllocator> TLS;
+struct _ScalablePageAllocatorHeader : public AllocatorHeader {
+  typedef TlsAllocatorInfo<_ScalablePageAllocator> TLS;
   typedef hipc::vector<PageAllocator, StackAllocator> PageAllocVec;
   typedef hipc::fixed_mpmc_ptr_queue<hshm::min_u64, StackAllocator> PageAllocIdVec;
 
@@ -148,7 +148,7 @@ struct ScalablePageAllocatorHeader : public AllocatorHeader {
   hipc::atomic<hshm::min_u64> total_alloc_;
 
   HSHM_CROSS_FUN
-  ScalablePageAllocatorHeader() = default;
+  _ScalablePageAllocatorHeader() = default;
 
   HSHM_CROSS_FUN
   void Configure(AllocatorId alloc_id,
@@ -184,10 +184,11 @@ struct ScalablePageAllocatorHeader : public AllocatorHeader {
   }
 };
 
-class ScalablePageAllocator : public Allocator {
+class _ScalablePageAllocator : public Allocator {
  private:
-  typedef TlsAllocatorInfo<ScalablePageAllocator> TLS;
-  ScalablePageAllocatorHeader *header_;
+  typedef TlsAllocatorInfo<_ScalablePageAllocator> TLS;
+  typedef BaseAllocator<_ScalablePageAllocator> AllocT;
+  _ScalablePageAllocatorHeader *header_;
   StackAllocator alloc_;
   thread::ThreadLocalKey tls_key_;
 
@@ -196,7 +197,7 @@ class ScalablePageAllocator : public Allocator {
    * Allocator constructor
    * */
   HSHM_CROSS_FUN
-  ScalablePageAllocator()
+  _ScalablePageAllocator()
     : header_(nullptr) {}
 
   /**
@@ -212,7 +213,7 @@ class ScalablePageAllocator : public Allocator {
     id_ = id;
     buffer_ = buffer;
     buffer_size_ = buffer_size;
-    header_ = reinterpret_cast<ScalablePageAllocatorHeader*>(buffer_);
+    header_ = reinterpret_cast<_ScalablePageAllocatorHeader*>(buffer_);
     custom_header_ = reinterpret_cast<char*>(header_ + 1);
     size_t region_off = (custom_header_ - buffer_) + custom_header_size;
     size_t region_size = buffer_size_ - region_off;
@@ -230,10 +231,10 @@ class ScalablePageAllocator : public Allocator {
    * */
   HSHM_CROSS_FUN
   void shm_deserialize(char *buffer,
-                       size_t buffer_size) override {
+                       size_t buffer_size) {
     buffer_ = buffer;
     buffer_size_ = buffer_size;
-    header_ = reinterpret_cast<ScalablePageAllocatorHeader*>(buffer_);
+    header_ = reinterpret_cast<_ScalablePageAllocatorHeader*>(buffer_);
     type_ = header_->allocator_type_;
     id_ = header_->allocator_id_;
     custom_header_ = reinterpret_cast<char*>(header_ + 1);
@@ -269,7 +270,7 @@ class ScalablePageAllocator : public Allocator {
    * */
   HSHM_CROSS_FUN
   OffsetPointer AllocateOffset(const hipc::MemContext &ctx,
-                               size_t size) override {
+                               size_t size) {
     MpPage *page = nullptr;
     PageId page_id(size + sizeof(MpPage));
 
@@ -312,7 +313,7 @@ class ScalablePageAllocator : public Allocator {
   HSHM_CROSS_FUN
   OffsetPointer AlignedAllocateOffset(const hipc::MemContext &ctx,
                                       size_t size,
-                                      size_t alignment) override {
+                                      size_t alignment) {
     HERMES_THROW_ERROR(NOT_IMPLEMENTED, "AlignedAllocateOffset");
   }
 
@@ -324,9 +325,9 @@ class ScalablePageAllocator : public Allocator {
   HSHM_CROSS_FUN
   OffsetPointer ReallocateOffsetNoNullCheck(
       const hipc::MemContext &ctx,
-      OffsetPointer p, size_t new_size) override {
+      OffsetPointer p, size_t new_size) {
     LPointer<char, OffsetPointer> new_ptr =
-        AllocateLocalPtr<char, OffsetPointer>(ctx, new_size);
+        ((AllocT*)this)->AllocateLocalPtr<char, OffsetPointer>(ctx, new_size);
     char *old = Convert<char, OffsetPointer>(p);
     MpPage *old_hdr = (MpPage*)(old - sizeof(MpPage));
     memcpy(new_ptr.ptr_, old, old_hdr->page_size_ - sizeof(MpPage));
@@ -339,7 +340,7 @@ class ScalablePageAllocator : public Allocator {
    * */
   HSHM_CROSS_FUN
   void FreeOffsetNoNullCheck(const hipc::MemContext &ctx,
-                             OffsetPointer p) override {
+                             OffsetPointer p) {
     // Mark as free
     auto hdr_offset = p - sizeof(MpPage);
     MpPage *hdr = Convert<MpPage>(hdr_offset);
@@ -358,7 +359,7 @@ class ScalablePageAllocator : public Allocator {
    * checking.
    * */
   HSHM_CROSS_FUN
-  size_t GetCurrentlyAllocatedSize() override {
+  size_t GetCurrentlyAllocatedSize() {
     return header_->total_alloc_.load();
   }
 
@@ -366,7 +367,7 @@ class ScalablePageAllocator : public Allocator {
    * Create a globally-unique thread ID
    * */
   HSHM_CROSS_FUN
-  void CreateTls(MemContext &ctx) override {
+  void CreateTls(MemContext &ctx) {
     ctx.tid_ = GetOrCreateTid(ctx);
   }
 
@@ -374,7 +375,7 @@ class ScalablePageAllocator : public Allocator {
    * Free a thread-local memory storage
    * */
   HSHM_CROSS_FUN
-  void FreeTls(const MemContext &ctx) override {
+  void FreeTls(const MemContext &ctx) {
     ThreadId tid = GetOrCreateTid(ctx);
     if (tid.IsNull()){
       return;
@@ -383,6 +384,8 @@ class ScalablePageAllocator : public Allocator {
     HERMES_THREAD_MODEL->SetTls<TLS>(tls_key_, nullptr);
   }
 };
+
+typedef BaseAllocator<_ScalablePageAllocator> ScalablePageAllocator;
 
 }  // namespace hshm::ipc
 

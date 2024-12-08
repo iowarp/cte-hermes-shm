@@ -18,10 +18,11 @@
 #include "hermes_shm/data_structures/ipc/string.h"
 
 /** Test cases for the allocator */
+template<typename AllocT>
 class AllocatorTestSuite {
  public:
   std::string alloc_type_;
-  hipc::CtxAllocator<Allocator> alloc_;
+  hipc::CtxAllocator<AllocT> alloc_;
   Timer timer_;
 
   /**====================================
@@ -30,8 +31,8 @@ class AllocatorTestSuite {
 
   /** Constructor */
   AllocatorTestSuite(AllocatorType alloc_type,
-                     hipc::CtxAllocator<Allocator> &alloc)
-    : alloc_(alloc) {
+                     hipc::CtxAllocator<AllocT> &alloc)
+      : alloc_(alloc) {
     switch (alloc_type) {
       case AllocatorType::kStackAllocator: {
         alloc_type_ = "hipc::StackAllocator";
@@ -174,9 +175,8 @@ static int minor = 1;
 const std::string shm_url = "test_allocators";
 
 /** Create the allocator + backend for the test */
-template<typename BackendT, typename AllocT, typename ...Args>
-Allocator* Pretest(MemoryBackendType backend_type,
-                   Args&& ...args) {
+template <typename BackendT, typename AllocT, typename... Args>
+AllocT *Pretest(MemoryBackendType backend_type, Args &&...args) {
   int rank = omp_get_thread_num();
   AllocatorId alloc_id(0, minor);
   auto mem_mngr = HERMES_MEMORY_MANAGER;
@@ -194,7 +194,7 @@ Allocator* Pretest(MemoryBackendType backend_type,
   }
 #pragma omp barrier
 
-  auto *alloc = mem_mngr->GetAllocator<HSHM_DEFAULT_ALLOC_T>(alloc_id);
+  auto *alloc = mem_mngr->GetAllocator<AllocT>(alloc_id);
   if (alloc == nullptr) {
     HELOG(kFatal, "Failed to find the memory allocator?")
   }
@@ -223,19 +223,21 @@ void AllocatorTest(AllocatorType alloc_type,
                    Args&& ...args) {
   auto *alloc = Pretest<BackendT, AllocT>(
     backend_type, std::forward<Args>(args)...);
-  hipc::ScopedTlsAllocator<Allocator> scoped_tls(alloc);
-//  if (alloc_type == AllocatorType::kScalablePageAllocator) {
-//    printf("TID: %llu\n", (*scoped_tls).ctx_.tid_);
-//  }
+  hipc::ScopedTlsAllocator<AllocT> scoped_tls(alloc);
+  //  if (alloc_type == AllocatorType::kScalablePageAllocator) {
+  //    printf("TID: %llu\n", (*scoped_tls).ctx_.tid_);
+  //  }
   size_t count = (1 << 20);
   // Allocate many and then free many
-//  AllocatorTestSuite(alloc_type, *scoped_tls).AllocateThenFreeFixedSize(
-//    count, KILOBYTES(1));
-//  // Allocate and free immediately
-//  AllocatorTestSuite(alloc_type, *scoped_tls).AllocateAndFreeFixedSize(
-//    count, KILOBYTES(1));
+  //  AllocatorTestSuite<AllocT>((alloc_type,
+  //  *scoped_tls).AllocateThenFreeFixedSize(
+  //    count, KILOBYTES(1));
+  //  // Allocate and free immediately
+  //  AllocatorTestSuite<AllocT>((alloc_type,
+  //  *scoped_tls).AllocateAndFreeFixedSize(
+  //    count, KILOBYTES(1));
   // Allocate and free randomly
-  AllocatorTestSuite(alloc_type, *scoped_tls).AllocateAndFreeRandomWindow(
+  AllocatorTestSuite<AllocT>(alloc_type, *scoped_tls).AllocateAndFreeRandomWindow(
     count);
   Posttest();
 }
@@ -269,7 +271,7 @@ void FullAllocatorTestThreaded(int nthreads) {
 
 TEST_CASE("AllocatorBenchmark") {
   HERMES_ERROR_HANDLE_START();
-  AllocatorTestSuite::PrintTestHeader();
+  AllocatorTestSuite<hipc::NullAllocator>::PrintTestHeader();
   FullAllocatorTestThreaded(1);
   FullAllocatorTestThreaded(2);
   FullAllocatorTestThreaded(4);

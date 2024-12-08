@@ -9,16 +9,20 @@
 #include "hermes_shm/memory/backend/posix_mmap.h"
 #include "hermes_shm/util/singleton/_global_singleton.h"
 
-
+/** Singleton declaration */
 #define HERMES_MEMORY_MANAGER \
   hshm::GlobalSingleton<hshm::ipc::MemoryManager>::GetInstance()
 #define HERMES_MEMORY_MANAGER_T hshm::ipc::MemoryManager*
 
 namespace hshm::ipc {
 
+/** Max # of allocator the mem mngr can hold */
 #define MAX_ALLOCATORS 64
+
+/** Max number of memory backends that can be mounted */
 #define MAX_BACKENDS 16
 
+/** Memory manager class */
 class MemoryManager {
  public:
   AllocatorId root_allocator_id_;

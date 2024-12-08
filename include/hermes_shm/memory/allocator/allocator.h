@@ -68,10 +68,8 @@ class MemContext {
   MemContext(const ThreadId &tid) : tid_(tid) {}
 };
 
-/**
- * The allocator base class.
- * */
-class Allocator {
+/** The allocator information struct */
+struct Allocator {
  public:
   AllocatorType type_;
   AllocatorId id_;
@@ -80,20 +78,154 @@ class Allocator {
   char *custom_header_;
 
  public:
+  /** Default constructor */
+  HSHM_INLINE_CROSS_FUN
+  Allocator() : custom_header_(nullptr) {}
+
+  /** Get the allocator identifier */
+  HSHM_INLINE_CROSS_FUN
+  AllocatorId &GetId() { return id_; }
+
+  /** Get the allocator identifier (const) */
+  HSHM_INLINE_CROSS_FUN
+  const AllocatorId &GetId() const { return id_; }
+
+  /**
+   * Get the custom header of the shared-memory allocator
+   *
+   * @return Custom header pointer
+   * */
+  template<typename HEADER_T>
+  HSHM_INLINE_CROSS_FUN HEADER_T* GetCustomHeader() {
+    return reinterpret_cast<HEADER_T*>(custom_header_);
+  }
+
+  /**
+   * Convert a process-independent pointer into a process-specific pointer
+   *
+   * @param p process-independent pointer
+   * @return a process-specific pointer
+   * */
+  template<typename T, typename PointerT = Pointer>
+  HSHM_INLINE_CROSS_FUN T* Convert(const PointerT &p) {
+    if (p.IsNull()) { return nullptr; }
+    return reinterpret_cast<T*>(buffer_ + p.off_.load());
+  }
+
+  /**
+   * Convert a process-specific pointer into a process-independent pointer
+   *
+   * @param ptr process-specific pointer
+   * @return a process-independent pointer
+   * */
+  template<typename T, typename PointerT = Pointer>
+  HSHM_INLINE_CROSS_FUN PointerT Convert(const T *ptr) {
+    if (ptr == nullptr) { return PointerT::GetNull(); }
+    return PointerT(GetId(),
+                    reinterpret_cast<size_t>(ptr) -
+                        reinterpret_cast<size_t>(buffer_));
+  }
+
+  /**
+   * Determine whether or not this allocator contains a process-specific
+   * pointer
+   *
+   * @param ptr process-specific pointer
+   * @return True or false
+   * */
+  template<typename T = void>
+  HSHM_INLINE_CROSS_FUN bool ContainsPtr(T *ptr) {
+    return  reinterpret_cast<size_t>(ptr) >=
+        reinterpret_cast<size_t>(buffer_);
+  }
+
+  /** Print */
+  HSHM_CROSS_FUN
+  void Print() {
+    printf("(%s) Allocator: type: %d, id: %d.%d, custom_header: %p\n",
+           kCurrentDevice,
+           static_cast<int>(type_),
+           GetId().bits_.major_,
+           GetId().bits_.minor_,
+           custom_header_);
+  }
+
+  /**====================================
+   * Object Constructors
+   * ===================================*/
+
+  /**
+   * Construct each object in an array of objects.
+   *
+   * @param ptr the array of objects (potentially archived)
+   * @param old_count the original size of the ptr
+   * @param new_count the new size of the ptr
+   * @param args parameters to construct object of type T
+   * @return None
+   * */
+  template <typename T, typename... Args>
+  HSHM_INLINE_CROSS_FUN static void ConstructObjs(T *ptr, size_t old_count,
+                                                  size_t new_count,
+                                                  Args &&...args) {
+    if (ptr == nullptr) {
+      return;
+    }
+    for (size_t i = old_count; i < new_count; ++i) {
+      ConstructObj<T>(*(ptr + i), std::forward<Args>(args)...);
+    }
+  }
+
+  /**
+   * Construct an object.
+   *
+   * @param ptr the object to construct (potentially archived)
+   * @param args parameters to construct object of type T
+   * @return None
+   * */
+  template <typename T, typename... Args>
+  HSHM_INLINE_CROSS_FUN static void ConstructObj(T &obj, Args &&...args) {
+    new (&obj) T(std::forward<Args>(args)...);
+  }
+
+  /**
+   * Destruct an array of objects
+   *
+   * @param ptr the object to destruct (potentially archived)
+   * @param count the length of the object array
+   * @return None
+   * */
+  template <typename T>
+  HSHM_INLINE_CROSS_FUN static void DestructObjs(T *ptr, size_t count) {
+    if (ptr == nullptr) {
+      return;
+    }
+    for (size_t i = 0; i < count; ++i) {
+      DestructObj<T>(*(ptr + i));
+    }
+  }
+
+  /**
+   * Destruct an object
+   *
+   * @param ptr the object to destruct (potentially archived)
+   * @param count the length of the object array
+   * @return None
+   * */
+  template <typename T>
+  HSHM_INLINE_CROSS_FUN static void DestructObj(T &obj) {
+    obj.~T();
+  }
+};
+
+/**
+ * The allocator base class.
+ * */
+template<typename CoreAllocT>
+class BaseAllocator : public CoreAllocT {
+ public:
   /**====================================
   * Constructors
   * ===================================*/
-
-  /**
-   * Constructor
-   * */
-  HSHM_CROSS_FUN Allocator() : custom_header_(nullptr) {}
-
-  /**
-   * Destructor
-   * */
-  HSHM_CROSS_FUN virtual ~Allocator() = default;
-
   /**
    * Create the shared-memory allocator with \a id unique allocator id over
    * the particular slot of a memory backend.
@@ -102,14 +234,18 @@ class Allocator {
    * each allocator has its own arguments to this method. Though each
    * allocator must have "id" as its first argument.
    * */
-  // virtual void shm_init(AllocatorId id, Args ...args) = 0;
+  template<typename ...Args>
+  void shm_init(AllocatorId id, Args ...args) {
+    CoreAllocT::shm_init(id, std::forward<Args>(args)...);
+  }
 
   /**
    * Deserialize allocator from a buffer.
    * */
   HSHM_CROSS_FUN
-  virtual void shm_deserialize(char *buffer,
-                               size_t buffer_size) = 0;
+  void shm_deserialize(char *buffer, size_t buffer_size) {
+    CoreAllocT::shm_deserialize(buffer, buffer_size);
+  }
 
   /**====================================
   * Core Allocator API
@@ -119,8 +255,10 @@ class Allocator {
    * Allocate a region of memory of \a size size
    * */
   HSHM_CROSS_FUN
-  virtual OffsetPointer AllocateOffset(
-      const MemContext &ctx, size_t size) = 0;
+  OffsetPointer AllocateOffset(
+      const MemContext &ctx, size_t size) {
+    return CoreAllocT::AllocateOffset(ctx, size);
+  }
 
   /**
    * Allocate a region of memory of \a size size
@@ -128,10 +266,12 @@ class Allocator {
    * alignment is not 0.
    * */
   HSHM_CROSS_FUN
-  virtual OffsetPointer AlignedAllocateOffset(
+  OffsetPointer AlignedAllocateOffset(
       const MemContext &ctx,
       size_t size,
-      size_t alignment) = 0;
+      size_t alignment) {
+    return CoreAllocT::AlignedAllocateOffset(ctx, size, alignment);
+  }
 
   /**
    * Reallocate \a pointer to \a new_size new size.
@@ -140,40 +280,48 @@ class Allocator {
    * @return true if p was modified.
    * */
   HSHM_CROSS_FUN
-  virtual OffsetPointer ReallocateOffsetNoNullCheck(
+  OffsetPointer ReallocateOffsetNoNullCheck(
       const MemContext &ctx,
       OffsetPointer p,
-      size_t new_size) = 0;
+      size_t new_size) {
+    return CoreAllocT::ReallocateOffsetNoNullCheck(ctx, p, new_size);
+  }
 
 
   /**
    * Free the memory pointed to by \a ptr Pointer
    * */
   HSHM_CROSS_FUN
-  virtual void FreeOffsetNoNullCheck(const MemContext &ctx, OffsetPointer p) = 0;
+  void FreeOffsetNoNullCheck(const MemContext &ctx, OffsetPointer p) {
+    CoreAllocT::FreeOffsetNoNullCheck(ctx, p);
+  }
 
   /**
    * Create a globally-unique thread ID
    * */
   HSHM_CROSS_FUN
-  virtual void CreateTls(MemContext &ctx) = 0;
+  void CreateTls(MemContext &ctx) {
+    CoreAllocT::CreateTls(ctx);
+  }
 
   /**
    * Free the memory pointed to by \a ptr Pointer
    * */
   HSHM_CROSS_FUN
-  virtual void FreeTls(const MemContext &ctx) = 0;
+  void FreeTls(const MemContext &ctx) {
+    CoreAllocT::FreeTls(ctx);
+  }
 
   /** Get the allocator identifier */
   HSHM_INLINE_CROSS_FUN
   AllocatorId& GetId()  {
-    return id_;
+    return CoreAllocT::GetId();
   }
 
   /** Get the allocator identifier (const) */
   HSHM_INLINE_CROSS_FUN
   const AllocatorId& GetId() const {
-    return id_;
+    return CoreAllocT::GetId();
   }
 
   /**
@@ -181,7 +329,9 @@ class Allocator {
    * Useful for memory leak checks.
    * */
   HSHM_CROSS_FUN
-  virtual size_t GetCurrentlyAllocatedSize() = 0;
+  size_t GetCurrentlyAllocatedSize() {
+    return CoreAllocT::GetCurrentlyAllocatedSize();
+  }
 
   /**====================================
   * SHM Pointer Allocator
@@ -273,7 +423,7 @@ class Allocator {
       size_t alignment = 0) {
     p = Allocate<PointerT>(ctx, size, alignment);
     if (p.IsNull()) { return nullptr; }
-    return reinterpret_cast<T*>(buffer_ + p.off_.load());
+    return reinterpret_cast<T*>(CoreAllocT::buffer_ + p.off_.load());
   }
 
   /**
@@ -299,7 +449,7 @@ class Allocator {
                       size_t alignment = 0) {
     p = Allocate<PointerT>(ctx, size, alignment);
     if (p.IsNull()) { return nullptr; }
-    auto ptr = reinterpret_cast<T*>(buffer_ + p.off_.load());
+    auto ptr = reinterpret_cast<T *>(CoreAllocT::buffer_ + p.off_.load());
     if (ptr) {
       memset(ptr, 0, size);
     }
@@ -914,10 +1064,8 @@ class Allocator {
   static void ConstructObjs(T *ptr,
                             size_t old_count,
                             size_t new_count, Args&& ...args) {
-    if (ptr == nullptr) { return; }
-    for (size_t i = old_count; i < new_count; ++i) {
-      ConstructObj<T>(*(ptr + i), std::forward<Args>(args)...);
-    }
+    CoreAllocT::template ConstructObjs<T>(ptr, old_count, new_count,
+                                          std::forward<Args>(args)...);
   }
 
   /**
@@ -932,7 +1080,7 @@ class Allocator {
       typename ...Args>
   HSHM_INLINE_CROSS_FUN
   static void ConstructObj(T &obj, Args&& ...args) {
-    new (&obj) T(std::forward<Args>(args)...);
+    CoreAllocT::template ConstructObj(obj, std::forward<Args>(args)...);
   }
 
   /**
@@ -945,10 +1093,7 @@ class Allocator {
   template<typename T>
   HSHM_INLINE_CROSS_FUN
   static void DestructObjs(T *ptr, size_t count) {
-    if (ptr == nullptr) { return; }
-    for (size_t i = 0; i < count; ++i) {
-      DestructObj<T>(*(ptr + i));
-    }
+    CoreAllocT::template DestructObjs(ptr, count);
   }
 
   /**
@@ -960,7 +1105,7 @@ class Allocator {
    * */
   template<typename T>
   HSHM_INLINE_CROSS_FUN static void DestructObj(T &obj) {
-    obj.~T();
+    CoreAllocT::template DestructObj(obj);
   }
 
   /**====================================
@@ -974,7 +1119,7 @@ class Allocator {
    * */
   template<typename HEADER_T>
   HSHM_INLINE_CROSS_FUN HEADER_T* GetCustomHeader() {
-    return reinterpret_cast<HEADER_T*>(custom_header_);
+    return CoreAllocT::template GetCustomHeader<HEADER_T>();
   }
 
   /**
@@ -985,8 +1130,7 @@ class Allocator {
    * */
   template<typename T, typename PointerT = Pointer>
   HSHM_INLINE_CROSS_FUN T* Convert(const PointerT &p) {
-    if (p.IsNull()) { return nullptr; }
-    return reinterpret_cast<T*>(buffer_ + p.off_.load());
+    return CoreAllocT::template Convert<T, PointerT>(p);
   }
 
   /**
@@ -997,10 +1141,7 @@ class Allocator {
    * */
   template<typename T, typename PointerT = Pointer>
   HSHM_INLINE_CROSS_FUN PointerT Convert(const T *ptr) {
-    if (ptr == nullptr) { return PointerT::GetNull(); }
-    return PointerT(GetId(),
-                    reinterpret_cast<size_t>(ptr) -
-                        reinterpret_cast<size_t>(buffer_));
+    return CoreAllocT::template Convert<T, PointerT>(ptr);
   }
 
   /**
@@ -1012,21 +1153,97 @@ class Allocator {
    * */
   template<typename T = void>
   HSHM_INLINE_CROSS_FUN bool ContainsPtr(T *ptr) {
-    return  reinterpret_cast<size_t>(ptr) >=
-        reinterpret_cast<size_t>(buffer_);
+    return CoreAllocT::template ContainsPtr<T>(ptr);
   }
 
   /** Print */
   HSHM_CROSS_FUN
-  void Print() {
-    printf("(%s) Allocator: type: %d, id: %d.%d, custom_header: %p\n",
-           kCurrentDevice,
-           static_cast<int>(type_),
-           GetId().bits_.major_,
-           GetId().bits_.minor_,
-           custom_header_);
-  }
+  void Print() { CoreAllocT::Print(); }
 };
+
+/** Demonstration allocator */
+class _NullAllocator : public Allocator {
+ public:
+  /**====================================
+   * Constructors
+   * ===================================*/
+  /**
+   * Create the shared-memory allocator with \a id unique allocator id over
+   * the particular slot of a memory backend.
+   *
+   * The shm_init function is required, but cannot be marked virtual as
+   * each allocator has its own arguments to this method. Though each
+   * allocator must have "id" as its first argument.
+   * */
+  void shm_init(AllocatorId id) {}
+
+  /**
+   * Deserialize allocator from a buffer.
+   * */
+  HSHM_CROSS_FUN
+  void shm_deserialize(char *buffer, size_t buffer_size) {}
+
+  /**====================================
+   * Core Allocator API
+   * ===================================*/
+ public:
+  /**
+   * Allocate a region of memory of \a size size
+   * */
+  HSHM_CROSS_FUN
+  OffsetPointer AllocateOffset(const MemContext &ctx, size_t size) {
+    return OffsetPointer::GetNull();
+  }
+
+  /**
+   * Allocate a region of memory of \a size size
+   * and \a alignment alignment. Assumes that
+   * alignment is not 0.
+   * */
+  HSHM_CROSS_FUN
+  OffsetPointer AlignedAllocateOffset(const MemContext &ctx, size_t size,
+                                      size_t alignment) {
+    return OffsetPointer::GetNull();
+  }
+
+  /**
+   * Reallocate \a pointer to \a new_size new size.
+   * Assumes that p is not kNullPointer.
+   *
+   * @return true if p was modified.
+   * */
+  HSHM_CROSS_FUN
+  OffsetPointer ReallocateOffsetNoNullCheck(const MemContext &ctx,
+                                            OffsetPointer p, size_t new_size) {
+    return p;
+  }
+
+  /**
+   * Free the memory pointed to by \a ptr Pointer
+   * */
+  HSHM_CROSS_FUN
+  void FreeOffsetNoNullCheck(const MemContext &ctx, OffsetPointer p) {}
+
+  /**
+   * Create a globally-unique thread ID
+   * */
+  HSHM_CROSS_FUN
+  void CreateTls(MemContext &ctx) {}
+
+  /**
+   * Free the memory pointed to by \a ptr Pointer
+   * */
+  HSHM_CROSS_FUN
+  void FreeTls(const MemContext &ctx) {}
+
+  /**
+   * Get the amount of memory that was allocated, but not yet freed.
+   * Useful for memory leak checks.
+   * */
+  HSHM_CROSS_FUN
+  size_t GetCurrentlyAllocatedSize() { return 0; }
+};
+typedef BaseAllocator<_NullAllocator> NullAllocator;
 
 /**
  * Allocator with thread-local storage identifier

@@ -19,7 +19,7 @@
 #include "hermes_shm/data_structures/ipc/slist.h"
 #include "pair.h"
 #include "hermes_shm/types/atomic.h"
-#include "hermes_shm/data_structures/ipc/internal/shm_internal.h"
+#include "hermes_shm/data_structures/internal/shm_internal.h"
 
 namespace hshm::ipc {
 

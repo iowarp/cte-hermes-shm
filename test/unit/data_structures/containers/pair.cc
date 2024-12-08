@@ -17,7 +17,7 @@
 
 template<typename FirstT, typename SecondT>
 void PairTest() {
-  auto *alloc = HSHM_DEFAULT_ALLOC;
+  hipc::CtxAllocator<HSHM_DEFAULT_ALLOC_T> alloc(HSHM_DEFAULT_ALLOC);
 
   // Construct test
   PAGE_DIVIDE("Construct") {

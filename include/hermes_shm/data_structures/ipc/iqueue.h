@@ -14,7 +14,7 @@
 #ifndef HERMES_DATA_STRUCTURES_THREAD_UNSAFE_IQUEUE_H
 #define HERMES_DATA_STRUCTURES_THREAD_UNSAFE_IQUEUE_H
 
-#include "hermes_shm/data_structures/ipc/internal/shm_internal.h"
+#include "hermes_shm/data_structures/internal/shm_internal.h"
 
 namespace hshm::ipc {
 
@@ -418,8 +418,8 @@ class iqueue : public ShmContainer {
 
 namespace hshm {
 
-template<typename T, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
-using iqueue = hipc::iqueue<T, HSHM_CLASS_TEMPL_ARGS>;
+template <typename T, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
+using iqueue = hshm::ipc::iqueue<T, HSHM_CLASS_TEMPL_ARGS>;
 
 }  // namespace hshm
 

@@ -13,7 +13,7 @@
 #ifndef HERMES_SHM__DATA_STRUCTURES_IPC_SPLIT_TICKET_QUEUE_H_
 #define HERMES_SHM__DATA_STRUCTURES_IPC_SPLIT_TICKET_QUEUE_H_
 
-#include "hermes_shm/data_structures/ipc/internal/shm_internal.h"
+#include "hermes_shm/data_structures/internal/shm_internal.h"
 #include "hermes_shm/thread/lock.h"
 #include "vector.h"
 #include "ticket_queue.h"

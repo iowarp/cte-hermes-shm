@@ -13,7 +13,7 @@
 #ifndef HERMES_INCLUDE_HERMES_DATA_STRUCTURES_PAIR_H_
 #define HERMES_INCLUDE_HERMES_DATA_STRUCTURES_PAIR_H_
 
-#include "hermes_shm/data_structures/ipc/internal/shm_internal.h"
+#include "hermes_shm/data_structures/internal/shm_internal.h"
 #include "hermes_shm/constants/macros.h"
 
 namespace hshm::ipc {

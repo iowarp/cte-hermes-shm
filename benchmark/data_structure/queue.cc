@@ -21,9 +21,8 @@
 // hermes
 #include "hermes_shm/data_structures/ipc/string.h"
 #include "hermes_shm/data_structures/ipc/split_ticket_queue.h"
-#include "hermes_shm/data_structures/ipc/mpsc_ptr_queue.h"
-#include <hermes_shm/data_structures/ipc/mpsc_queue.h>
-#include <hermes_shm/data_structures/ipc/spsc_queue.h>
+#include "hermes_shm/data_structures/ipc/ring_ptr_queue.h"
+#include <hermes_shm/data_structures/ipc/ring_queue.h>
 #include <hermes_shm/data_structures/ipc/ticket_queue.h>
 
 /**

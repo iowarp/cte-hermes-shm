@@ -13,7 +13,7 @@
 #include "basic_test.h"
 #include "test_init.h"
 #include "hermes_shm/data_structures/ipc/string.h"
-#include "hermes_shm/data_structures/ipc/mpsc_ptr_queue.h"
+#include "hermes_shm/data_structures/ipc/ring_ptr_queue.h"
 #include "hermes_shm/util/error.h"
 #include "hermes_shm/util/affinity.h"
 

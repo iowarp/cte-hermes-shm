@@ -130,7 +130,7 @@ TEST_CASE("SerializeHipcShmArchive") {
 
 TEST_CASE("SerializePodArray") {
   std::stringstream ss;
-  hipc::CtxAllocator<Allocator> alloc(HSHM_DEFAULT_ALLOC);
+  hipc::CtxAllocator<HSHM_DEFAULT_ALLOC_T> alloc(HSHM_DEFAULT_ALLOC);
   {
     hipc::pod_array<int, 2> x;
     x.construct(alloc, 5);

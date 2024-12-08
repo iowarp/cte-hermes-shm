@@ -5,7 +5,7 @@
 #ifndef HERMES_SHM_INCLUDE_HERMES_SHM_DATA_STRUCTURES_IPC_ring_ptr_queue_base_H_
 #define HERMES_SHM_INCLUDE_HERMES_SHM_DATA_STRUCTURES_IPC_ring_ptr_queue_base_H_
 
-#include "hermes_shm/data_structures/ipc/internal/shm_internal.h"
+#include "hermes_shm/data_structures/internal/shm_internal.h"
 #include "hermes_shm/thread/lock.h"
 #include "vector.h"
 #include "pair.h"

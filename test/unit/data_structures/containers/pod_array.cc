@@ -16,7 +16,7 @@
 #include "vector.h"
 
 TEST_CASE("PodArray") {
-  hipc::CtxAllocator<Allocator> alloc(HSHM_DEFAULT_ALLOC);
+  hipc::CtxAllocator<HSHM_DEFAULT_ALLOC_T> alloc(HSHM_DEFAULT_ALLOC);
 
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
   PAGE_DIVIDE("resize") {

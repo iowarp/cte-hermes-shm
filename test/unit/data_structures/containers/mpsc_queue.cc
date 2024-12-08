@@ -12,8 +12,8 @@
 
 #include "basic_test.h"
 #include "test_init.h"
-#include "hermes_shm/data_structures/ipc/mpsc_queue.h"
-#include "hermes_shm/data_structures/ipc/mpsc_ptr_queue.h"
+#include "hermes_shm/data_structures/ipc/ring_queue.h"
+#include "hermes_shm/data_structures/ipc/ring_ptr_queue.h"
 #include "queue.h"
 
 /**

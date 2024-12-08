@@ -109,4 +109,8 @@ struct pod_array {
 
 }  // namespace hshm::ipc
 
+namespace hshm {
+using hshm::ipc::pod_array;
+}  // namespace hshm
+
 #endif  // HERMES_SHM_INCLUDE_HERMES_SHM_DATA_STRUCTURES_IPC_POD_ARRAY_H_

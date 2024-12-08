@@ -9,7 +9,7 @@
 #include "hermes_shm/data_structures/serialization/serialize_common.h"
 #include "string_common.h"
 
-namespace hshm {
+namespace hshm::ipc {
 
 template<int LENGTH, bool WithNull>
 class chararr_templ {
@@ -214,9 +214,15 @@ class chararr_templ {
 #ifdef HSHM_IS_HOST
 typedef chararr_templ<4095, true> chararr;
 #else
-typedef chararr_templ<32, true> chararr;
+typedef chararr_templ<31, true> chararr;
 #endif
 
+}  // namespace hshm
+
+namespace hshm {
+template <int LENGTH, bool WithNull>
+using chararr_templ = hshm::ipc::chararr_templ<LENGTH, WithNull>;
+using hshm::ipc::chararr;
 }  // namespace hshm
 
 /** std::hash function for string */
