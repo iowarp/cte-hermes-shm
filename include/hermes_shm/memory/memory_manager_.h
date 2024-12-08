@@ -214,8 +214,8 @@ class MemoryManager {
     if (p.IsNull()) {
       return nullptr;
     }
-    return GetAllocator(p.allocator_id_)->template
-        Convert<T, POINTER_T>(p);
+    return GetAllocator<NullAllocator>(p.allocator_id_)
+        ->template Convert<T, POINTER_T>(p);
   }
 
   /**
@@ -226,8 +226,8 @@ class MemoryManager {
    * */
   template<typename T, typename POINTER_T = Pointer>
   HSHM_INLINE_CROSS_FUN POINTER_T Convert(AllocatorId allocator_id, T *ptr) {
-    return GetAllocator<Allocator>(allocator_id)->template
-        Convert<T, POINTER_T>(ptr);
+    return GetAllocator<NullAllocator>(allocator_id)
+        ->template Convert<T, POINTER_T>(ptr);
   }
 
   /**

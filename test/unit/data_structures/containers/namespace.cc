@@ -17,7 +17,7 @@
 #include "hermes_shm/data_structures/ipc/string.h"
 #include "vector.h"
 
-HSHM_DATA_STRUCTURES_TEMPLATE(chi, hipc::Allocator);
+HSHM_DATA_STRUCTURES_TEMPLATE(chi, hipc::ScalablePageAllocator);
 
 TEST_CASE("Namespace") {
 }
