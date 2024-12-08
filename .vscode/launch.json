@@ -82,6 +82,50 @@
             "logging": {
                 "engineLogging": false
             }
+        },
+        {
+            "name": "bench-allocators",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/bin/benchmark_allocators_exec",
+            "args": [
+                ""
+            ],
+            "miDebuggerPath": "/usr/bin/gdb",
+            "cwd": "${workspaceFolder}",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ],
+            "externalConsole": false,
+            "logging": {
+                "engineLogging": false
+            }
+        },
+        {
+            "name": "bench-data-structures",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/bin/benchmark_data_structures_exec",
+            "args": [
+                ""
+            ],
+            "miDebuggerPath": "/usr/bin/gdb",
+            "cwd": "${workspaceFolder}",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ],
+            "externalConsole": false,
+            "logging": {
+                "engineLogging": false
+            }
         }
     ]
 }

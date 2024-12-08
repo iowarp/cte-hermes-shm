@@ -1,5 +1,21 @@
 {
     "version": "2.0.0",
     "tasks": [
+      {
+        "label": "bench-allocators",
+        "type": "shell",
+        "command": "${workspaceFolder}/build/bin/benchmark_allocators_exec",
+        "args": [
+          ""
+        ]
+      },
+      {
+        "label": "bench-data-structures",
+        "type": "shell",
+        "command": "${workspaceFolder}/build/bin/benchmark_data_structures_exec",
+        "args": [
+          ""
+        ]
+      }
     ]
   }
