@@ -191,8 +191,9 @@ class string_templ : public ShmContainer {
 
   /** Copy constructor. From std::string. */
   HSHM_HOST_FUN explicit string_templ(const std::string &other) {
-    shm_strong_or_weak_copy_op<false, true>(GetCtxAllocator(),
-                                            other.data(), other.size());
+    shm_strong_or_weak_copy_op<false, true>(
+        HERMES_MEMORY_MANAGER->GetDefaultAllocator<AllocT>(), other.data(),
+        other.size());
   }
 
   /** SHM copy constructor. From std::string. */
@@ -220,17 +221,28 @@ class string_templ : public ShmContainer {
   void shm_strong_or_weak_copy_op(const hipc::CtxAllocator<AllocT> &alloc,
                                   const char *text, size_t length) {
     if constexpr (FLAGS & StringFlags::kWrap) {
-      shm_destroy();
-      is_wrap_ = true;
-      data_ = const_cast<char *>(text);
-      if constexpr (!HAS_LENGTH) {
-        length = strlen(text);
-      }
-      length_ = length;
-      max_length_ = length_;
+      shm_weak_wrap_op<IS_ASSIGN, HAS_LENGTH>(alloc, text, length);
     } else {
       shm_strong_copy_op<IS_ASSIGN, HAS_LENGTH>(alloc, text, length);
     }
+  }
+
+  /** Weak wrap operation */
+  template <bool IS_ASSIGN, bool HAS_LENGTH>
+  HSHM_CROSS_FUN void shm_weak_wrap_op(const hipc::CtxAllocator<AllocT> &alloc,
+                                       const char *text, size_t length) {
+    if constexpr (IS_ASSIGN) {
+      shm_destroy();
+    } else {
+      init_shm_container(alloc);
+    }
+    is_wrap_ = true;
+    data_ = const_cast<char *>(text);
+    if constexpr (!HAS_LENGTH) {
+      length = strlen(text);
+    }
+    length_ = length;
+    max_length_ = length_;
   }
 
   /** Strong copy operation */

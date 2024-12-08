@@ -26,6 +26,13 @@ void TestString() {
     REQUIRE(text != "asdfklaf");
   }
 
+  PAGE_DIVIDE("Test assignment operator") {
+    hipc::string text = hipc::string("hello1");
+    REQUIRE(text == "hello1");
+    REQUIRE(text != "h");
+    REQUIRE(text != "asdfklaf");
+  }
+
   PAGE_DIVIDE("Test construction from std::string") {
     hipc::string text(alloc, std::string("hello1"));
     REQUIRE(text == "hello1");
