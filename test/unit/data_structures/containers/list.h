@@ -17,15 +17,14 @@
 #include "test_init.h"
 #include "hermes_shm/data_structures/ipc/string.h"
 
-template<typename T, typename Container>
+template<typename T, typename Container, typename AllocT = HSHM_DEFAULT_ALLOC_T>
 class ListTestSuite {
  public:
   Container &obj_;
-  Allocator *alloc_;
+  AllocT *alloc_;
 
   /// Constructor
-  ListTestSuite(Container &obj, Allocator *alloc)
-  : obj_(obj), alloc_(alloc) {}
+  ListTestSuite(Container &obj, AllocT *alloc) : obj_(obj), alloc_(alloc) {}
 
   /// Emplace elements
   void EmplaceTest(size_t count = 30) {

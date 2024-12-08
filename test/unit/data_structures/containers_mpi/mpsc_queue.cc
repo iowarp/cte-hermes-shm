@@ -22,35 +22,33 @@ TEST_CASE("TestMpscQueueMpi") {
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   // The allocator was initialized in test_init.c
   // we are getting the "header" of the allocator
-  Allocator *alloc = HERMES_MEMORY_MANAGER->GetDefaultAllocator();
-  Pointer *header = alloc->GetCustomHeader<Pointer>();
+  auto *alloc = HSHM_DEFAULT_ALLOC;
+  auto *queue_ =
+      alloc->GetCustomHeader<hipc::delay_ar<hipc::mpsc_ptr_queue<int>>>();
 
   // Make the queue uptr
-  hipc::uptr<hipc::mpsc_ptr_queue<int>> queue_;
   if (rank == 0) {
     // Rank 0 create the pointer queue
-    queue_ = hipc::make_uptr<hipc::mpsc_ptr_queue<int>>(alloc, 256);
-    queue_ >> (*header);
+    queue_->shm_init(alloc, 256);
     // Affine to CPU 0
     ProcessAffiner::SetCpuAffinity(getpid(), 0);
   }
   MPI_Barrier(MPI_COMM_WORLD);
   if (rank != 0) {
-    // Rank 1 gets the pointer queue
-    queue_ << (*header);
     // Affine to CPU 1
     ProcessAffiner::SetCpuAffinity(getpid(), 1);
   }
 
+  hipc::mpsc_ptr_queue<int> *queue = queue_->get();
   if (rank == 0) {
     // Emplace values into the queue
     for (int i = 0; i < 256; ++i) {
-      queue_->emplace(i);
+      queue->emplace(i);
     }
   } else {
     // Pop entries from the queue
     int x, count = 0;
-    while (!queue_->pop(x).IsNull() && count < 256) {
+    while (!queue->pop(x).IsNull() && count < 256) {
       REQUIRE(x == count);
       ++count;
     }

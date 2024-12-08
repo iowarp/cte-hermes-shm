@@ -16,7 +16,7 @@
 #include "vector.h"
 
 TEST_CASE("PodArray") {
-  hipc::CtxAllocator<Allocator> alloc(HERMES_MEMORY_MANAGER->GetDefaultAllocator());
+  hipc::CtxAllocator<Allocator> alloc(HSHM_DEFAULT_ALLOC);
 
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
   PAGE_DIVIDE("resize") {

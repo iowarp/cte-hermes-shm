@@ -43,7 +43,7 @@ struct ShmFlag {
 
 /** Flags for base container creation */
 #define HSHM_CLASS_TEMPL_WITH_DEFAULTS \
-  typename AllocT = HSHM_DEFAULT_ALLOC, hipc::ShmFlagField HSHM_FLAGS = 0
+  typename AllocT = HSHM_DEFAULT_ALLOC_T, hipc::ShmFlagField HSHM_FLAGS = 0
 
 /** A specific parameterization of the base container for shared memory (hshm) functions */
 #define HSHM_CLASS_TEMPL_WITH_IPC_DEFAULTS \
@@ -51,7 +51,7 @@ struct ShmFlag {
 
 /** A specific parameterization of the base container for local memory (hshm) functions */
 #define HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS \
-  typename AllocT = HSHM_DEFAULT_ALLOC, \
+  typename AllocT = HSHM_DEFAULT_ALLOC_T, \
   hipc::ShmFlagField HSHM_FLAGS = hipc::ShmFlag::kIsPrivate
 
 /** A specific parameterization of the base container for local memory (hshm) functions */
@@ -199,7 +199,7 @@ HSHM_INLINE_CROSS_FUN \
 HSHM_INLINE_CROSS_FUN \
     AllocT* GetAllocator() const { \
   if constexpr (!(HSHM_FLAGS & hipc::ShmFlag::kIsPrivate)) { \
-    return (AllocT*)HERMES_MEMORY_MANAGER->GetAllocator(alloc_info_); \
+    return  HERMES_MEMORY_MANAGER->GetAllocator<AllocT>(alloc_info_); \
   } else { \
     return alloc_info_.alloc_; \
   } \

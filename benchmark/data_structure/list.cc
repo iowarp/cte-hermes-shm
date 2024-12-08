@@ -33,14 +33,12 @@ using bipc_list = bipc::list<T, typename BoostAllocator<T>::alloc_t>;
  * OUTPUT:
  * [test_name] [vec_type] [internal_type] [time_ms]
  * */
-template<typename T, typename ListT,
-  typename ListTPtr=SHM_X_OR_Y(ListT, hipc::mptr<ListT>, ListT*)>
+template <typename T, typename ListT>
 class ListTest {
  public:
   std::string list_type_;
   std::string internal_type_;
   ListT *lp_;
-  ListTPtr list_ptr_;
   void *ptr_;
 
   /**====================================
@@ -134,7 +132,7 @@ class ListTest {
 
     t.Resume();
     if constexpr(IS_SHM_ARCHIVEABLE(ListT)) {
-      auto vec2 = hipc::make_uptr<ListT>(*lp_);
+      auto vec2 = ListT(*lp_);
       USE(vec2);
     } else {
       ListT vec2(*lp_);
@@ -155,7 +153,7 @@ class ListTest {
 
     t.Resume();
     if constexpr(IS_SHM_ARCHIVEABLE(ListT)) {
-      auto vec2 = hipc::make_uptr<ListT>(std::move(*lp_));
+      auto vec2 = ListT(std::move(*lp_));
       USE(vec2)
     } else {
       ListT vec2(*lp_);
@@ -213,30 +211,28 @@ class ListTest {
 
   /** Allocate an arbitrary list for the test cases */
   void Allocate() {
-    if constexpr(std::is_same_v<ListT, hipc::list<T>>) {
-      list_ptr_ = hipc::make_mptr<ListT>();
-      lp_ = list_ptr_.get();
-    } if constexpr(std::is_same_v<ListT, hipc::slist<T>>) {
-      list_ptr_ = hipc::make_mptr<ListT>();
-      lp_ = list_ptr_.get();
+    auto alloc = HSHM_DEFAULT_ALLOC;
+    if constexpr (std::is_same_v<ListT, hipc::list<T>>) {
+      lp_ = alloc->template NewObjLocal<ListT>(HSHM_DEFAULT_MEM_CTX).ptr_;
+    } else if constexpr (std::is_same_v<ListT, hipc::slist<T>>) {
+      lp_ = alloc->template NewObjLocal<ListT>(HSHM_DEFAULT_MEM_CTX).ptr_;
     } else if constexpr (std::is_same_v<ListT, bipc_list<T>>) {
-      list_ptr_ = BOOST_SEGMENT->construct<ListT>("BoostList")(
-        BOOST_ALLOCATOR((std::pair<int, T>)));
-      lp_ = list_ptr_;
-    } else if constexpr(std::is_same_v<ListT, std::list<T>>) {
-      list_ptr_ = new std::list<T>();
-      lp_ = list_ptr_;
+      lp_ = BOOST_SEGMENT->construct<ListT>("BoostList")(
+          BOOST_ALLOCATOR((std::pair<int, T>)));
+    } else if constexpr (std::is_same_v<ListT, std::list<T>>) {
+      lp_ = new std::list<T>();
     }
   }
 
   /** Destroy the list */
   void Destroy() {
-    if constexpr(std::is_same_v<ListT, hipc::list<T>>) {
-      list_ptr_.shm_destroy();
-    } else if constexpr(std::is_same_v<ListT, hipc::slist<T>>) {
-      list_ptr_.shm_destroy();
-    } else if constexpr(std::is_same_v<ListT, std::list<T>>) {
-      delete list_ptr_;
+    auto alloc = HSHM_DEFAULT_ALLOC;
+    if constexpr (std::is_same_v<ListT, hipc::list<T>>) {
+      alloc->DelObj(HSHM_DEFAULT_MEM_CTX, lp_);
+    } else if constexpr (std::is_same_v<ListT, hipc::slist<T>>) {
+      alloc->DelObj(HSHM_DEFAULT_MEM_CTX, lp_);
+    } else if constexpr (std::is_same_v<ListT, std::list<T>>) {
+      delete lp_;
     } else if constexpr (std::is_same_v<ListT, bipc_list<T>>) {
       BOOST_SEGMENT->destroy<ListT>("BoostList");
     }

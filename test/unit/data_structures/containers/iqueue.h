@@ -19,22 +19,21 @@
 
 using hipc::MpPage;
 
-template<typename T, typename Container>
+template<typename T, typename Container, typename AllocT = HSHM_DEFAULT_ALLOC_T>
 class IqueueTestSuite {
  public:
   Container &obj_;
-  Allocator *alloc_;
+  AllocT *alloc_;
 
   /// Constructor
-  IqueueTestSuite(Container &obj, Allocator *alloc)
-  : obj_(obj), alloc_(alloc) {}
+  IqueueTestSuite(Container &obj, AllocT *alloc) : obj_(obj), alloc_(alloc) {}
 
   /// Enqueue elements
   void EnqueueTest(size_t count = 30) {
     for (size_t i = 0; i < count; ++i) {
       hipc::OffsetPointer p;
       auto page = alloc_->template
-        AllocateConstructObjs<T>(hshm::ThreadId::GetNull(), 1, p);
+        AllocateConstructObjs<T>(HSHM_DEFAULT_MEM_CTX, 1, p);
       page->page_size_ = count - i - 1;
       obj_.enqueue(page);
     }
@@ -99,7 +98,7 @@ class IqueueTestSuite {
     }
     obj_.clear();
     for (T *page : tmp) {
-      alloc_->FreePtr(hshm::ThreadId::GetNull(), page);
+      alloc_->FreePtr(HSHM_DEFAULT_MEM_CTX, page);
     }
     REQUIRE(obj_.size() == 0);
   }

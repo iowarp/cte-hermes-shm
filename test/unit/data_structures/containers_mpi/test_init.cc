@@ -14,8 +14,6 @@
 #include "basic_test.h"
 #include "test_init.h"
 
-Allocator *alloc_g = nullptr;
-
 template<typename AllocT>
 void PretestRank0() {
   std::string shm_url = "test_allocators";
@@ -34,7 +32,6 @@ void PretestRankN() {
   AllocatorId alloc_id(0, 1);
   auto mem_mngr = HERMES_MEMORY_MANAGER;
   mem_mngr->AttachBackend(MemoryBackendType::kPosixShmMmap, shm_url);
-  alloc_g = mem_mngr->GetAllocator(alloc_id);
 }
 
 void MainPretest() {

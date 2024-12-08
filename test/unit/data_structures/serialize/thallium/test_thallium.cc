@@ -20,8 +20,8 @@ TEST_CASE("SerializeString") {
   tl::remote_procedure string_large_proc = client_->define(
     tcnst::kStringTestLarge);
 
-  auto empty_str = hipc::make_uptr<hipc::string>("");
-  auto large_str = hipc::make_uptr<hipc::string>(tcnst::kTestString);
+  auto empty_str = hipc::string("");
+  auto large_str = hipc::string(tcnst::kTestString);
 
   REQUIRE(string0_proc.on(server)(empty_str));
   REQUIRE(string_large_proc.on(server)(large_str));
@@ -49,12 +49,12 @@ TEST_CASE("SerializeVectorOfInt") {
     tcnst::kVecOfIntLargeTest);
 
   // Send empty vector
-  auto vec_int = hipc::make_uptr<hipc::vector<int>>();
+  auto vec_int = hipc::vector<int>();
   REQUIRE(vec_int0_proc.on(server)(vec_int));
 
   // Send initialized vector
   for (int i = 0; i < 20; ++i) {
-    vec_int->emplace_back(i);
+    vec_int.emplace_back(i);
   }
   REQUIRE(vec_int_proc.on(server)(vec_int));
 }
@@ -67,12 +67,12 @@ TEST_CASE("SerializeVectorOfString") {
     tcnst::kVecOfStringLargeTest);
 
   // Send empty vector
-  auto vec_string = hipc::make_uptr<hipc::vector<hipc::string>>();
+  auto vec_string = hipc::vector<hipc::string>();
   REQUIRE(vec_string0_proc.on(server)(vec_string));
 
   // Send initialized vector
   for (int i = 0; i < 20; ++i) {
-    vec_string->emplace_back(std::to_string(i));
+    vec_string.emplace_back(std::to_string(i));
   }
   REQUIRE(vec_string_proc.on(server)(vec_string));
 }
@@ -97,7 +97,7 @@ TEST_CASE("SerializeShmArchive") {
 
   // Send ShmArchive
   hipc::ShmArchive<hipc::vector<int>> vec;
-  HSHM_MAKE_AR0(vec, HERMES_MEMORY_MANAGER->GetDefaultAllocator());
+  HSHM_MAKE_AR0(vec, HSHM_DEFAULT_ALLOC);
   vec->reserve(20);
   for (int i = 0; i < 20; ++i) {
     vec->emplace_back(i);

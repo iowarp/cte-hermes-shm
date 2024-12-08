@@ -56,9 +56,9 @@ TEST_CASE("MemoryManager") {
   MPI_Barrier(MPI_COMM_WORLD);
   if (rank == 0) {
     std::cout << "Allocating pages (rank 0)" << std::endl;
-    hipc::Allocator *alloc = mem_mngr->GetAllocator(alloc_id);
-    char *page = alloc->AllocatePtr<char>(
-        hshm::ThreadId::GetNull(), page_size);
+    auto *alloc = mem_mngr->GetAllocator<HSHM_DEFAULT_ALLOC_T>(alloc_id);
+    char *page = alloc->template AllocatePtr<char>(
+        HSHM_DEFAULT_MEM_CTX, page_size);
     memset(page, nonce, page_size);
     auto header = alloc->GetCustomHeader<SimpleHeader>();
     hipc::Pointer p1 = mem_mngr->Convert<void>(alloc_id, page);
@@ -70,8 +70,8 @@ TEST_CASE("MemoryManager") {
   MPI_Barrier(MPI_COMM_WORLD);
   if (rank != 0) {
     std::cout << "Finding and checking pages (rank 1)" << std::endl;
-    hipc::Allocator *alloc = mem_mngr->GetAllocator(alloc_id);
-    SimpleHeader *header = alloc->GetCustomHeader<SimpleHeader>();
+    auto *alloc = mem_mngr->GetAllocator<HSHM_DEFAULT_ALLOC_T>(alloc_id);
+    SimpleHeader *header = alloc->template GetCustomHeader<SimpleHeader>();
     char *page = alloc->Convert<char>(header->p_);
     REQUIRE(VerifyBuffer(page, page_size, nonce));
   }

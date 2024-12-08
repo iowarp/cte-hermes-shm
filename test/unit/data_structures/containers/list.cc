@@ -38,7 +38,7 @@ void ListTestRunner(ListTestSuite<T, ListT> &test) {
 
 template<typename T>
 void HipcListTest() {
-  Allocator *alloc = HERMES_MEMORY_MANAGER->GetDefaultAllocator();
+  auto *alloc = HSHM_DEFAULT_ALLOC;
   hipc::list<T> lp(alloc);
   ListTestSuite<T, hipc::list<T>> test(lp, alloc);
   ListTestRunner(test);
@@ -46,21 +46,21 @@ void HipcListTest() {
 
 
 TEST_CASE("hipc::ListOfInt") {
-  Allocator *alloc = HERMES_MEMORY_MANAGER->GetDefaultAllocator();
+  auto *alloc = HSHM_DEFAULT_ALLOC;
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
   HipcListTest<int>();
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
 }
 
 TEST_CASE("hipc::ListOfString") {
-  Allocator *alloc = HERMES_MEMORY_MANAGER->GetDefaultAllocator();
+  auto *alloc = HSHM_DEFAULT_ALLOC;
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
   HipcListTest<hipc::string>();
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
 }
 
 TEST_CASE("hipc::ListOfStdString") {
-  Allocator *alloc = HERMES_MEMORY_MANAGER->GetDefaultAllocator();
+  auto *alloc = HSHM_DEFAULT_ALLOC;
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
   HipcListTest<std::string>();
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
@@ -74,28 +74,28 @@ TEST_CASE("hipc::ListOfStdString") {
 //
 //template<typename T>
 //void HshmListTest() {
-//  Allocator *alloc = HERMES_MEMORY_MANAGER->GetDefaultAllocator();
+//  auto *alloc = HSHM_DEFAULT_ALLOC;
 //  hshm::list<T> lp;
 //  ListTestSuite<T, hshm::list<T>> test(lp, alloc);
 //  ListTestRunner(test);
 //}
 //
 //TEST_CASE("hshm::ListOfInt") {
-//  Allocator *alloc = HERMES_MEMORY_MANAGER->GetDefaultAllocator();
+//  auto *alloc = HSHM_DEFAULT_ALLOC;
 //  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
 //  HshmListTest<int>();
 //  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
 //}
 //
 //TEST_CASE("hshm::ListOfString") {
-//  Allocator *alloc = HERMES_MEMORY_MANAGER->GetDefaultAllocator();
+//  auto *alloc = HSHM_DEFAULT_ALLOC;
 //  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
 //  HshmListTest<hipc::string>();
 //  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
 //}
 //
 //TEST_CASE("hshm::ListOfStdString") {
-//  Allocator *alloc = HERMES_MEMORY_MANAGER->GetDefaultAllocator();
+//  auto *alloc = HSHM_DEFAULT_ALLOC;
 //  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
 //  HshmListTest<std::string>();
 //  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);

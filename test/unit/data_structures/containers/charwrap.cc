@@ -17,7 +17,7 @@
 using hshm::ipc::string;
 
 void TestCharbuf() {
-  Allocator *alloc = HERMES_MEMORY_MANAGER->GetDefaultAllocator();
+  auto *alloc = HSHM_DEFAULT_ALLOC;
 
   PAGE_DIVIDE("Construct from allocator") {
     hshm::charwrap data(256);
@@ -236,7 +236,7 @@ void TestCharbuf() {
 }
 
 TEST_CASE("Charbuf") {
-  Allocator *alloc = HERMES_MEMORY_MANAGER->GetDefaultAllocator();
+  auto *alloc = HSHM_DEFAULT_ALLOC;
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
   TestCharbuf();
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);

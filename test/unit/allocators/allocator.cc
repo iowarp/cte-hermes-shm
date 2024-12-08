@@ -23,7 +23,7 @@ void PageAllocationTest(Allocator *alloc) {
   void *ptrs[count];
   for (size_t i = 0; i < count; ++i) {
     ptrs[i] = alloc->AllocatePtr<void>(
-        hshm::ThreadId::GetNull(), page_size, ps[i]);
+        HSHM_DEFAULT_MEM_CTX, page_size, ps[i]);
     memset(ptrs[i], i, page_size);
     REQUIRE(ps[i].off_.load() != 0);
     REQUIRE(!ps[i].IsNull());
@@ -43,20 +43,20 @@ void PageAllocationTest(Allocator *alloc) {
 
   // Free pages
   for (size_t i = 0; i < count; ++i) {
-    alloc->Free(hshm::ThreadId::GetNull(), ps[i]);
+    alloc->Free(HSHM_DEFAULT_MEM_CTX, ps[i]);
   }
 
   // Reallocate pages
   for (size_t i = 0; i < count; ++i) {
     ptrs[i] = alloc->AllocatePtr<void>(
-        hshm::ThreadId::GetNull(), page_size, ps[i]);
+        HSHM_DEFAULT_MEM_CTX, page_size, ps[i]);
     REQUIRE(ps[i].off_.load() != 0);
     REQUIRE(!ps[i].IsNull());
   }
 
   // Free again
   for (size_t i = 0; i < count; ++i) {
-    alloc->Free(hshm::ThreadId::GetNull(), ps[i]);
+    alloc->Free(HSHM_DEFAULT_MEM_CTX, ps[i]);
   }
 
   return;
@@ -76,10 +76,10 @@ void MultiPageAllocationTest(Allocator *alloc) {
         Pointer ps[16];
         for (size_t j = 0; j < 16; ++j) {
           ps[j] = alloc->Allocate(
-              hshm::ThreadId::GetNull(), alloc_sizes[i]);
+              HSHM_DEFAULT_MEM_CTX, alloc_sizes[i]);
         }
         for (size_t j = 0; j < 16; ++j) {
-          alloc->Free(hshm::ThreadId::GetNull(), ps[j]);
+          alloc->Free(HSHM_DEFAULT_MEM_CTX, ps[j]);
         }
       }
     }
@@ -96,15 +96,15 @@ void ReallocationTest(Allocator *alloc) {
   for (auto &[small_size, large_size] : sizes) {
     Pointer p;
     char *ptr = alloc->AllocatePtr<char>(
-        hshm::ThreadId::GetNull(), small_size, p);
+        HSHM_DEFAULT_MEM_CTX, small_size, p);
     memset(ptr, 10, small_size);
     char *new_ptr = alloc->ReallocatePtr<char>(
-        hshm::ThreadId::GetNull(), p, large_size);
+        HSHM_DEFAULT_MEM_CTX, p, large_size);
     for (size_t i = 0; i < small_size; ++i) {
       REQUIRE(ptr[i] == 10);
     }
     memset(new_ptr, 0, large_size);
-    alloc->Free(hshm::ThreadId::GetNull(), p);
+    alloc->Free(HSHM_DEFAULT_MEM_CTX, p);
   }
 }
 
@@ -118,10 +118,10 @@ void AlignedAllocationTest(Allocator *alloc) {
     for (size_t i = 0; i < 1024; ++i) {
       Pointer p;
       char *ptr = alloc->AllocatePtr<char>(
-          hshm::ThreadId::GetNull(), size, p, alignment);
+          HSHM_DEFAULT_MEM_CTX, size, p, alignment);
       REQUIRE(((size_t)ptr % alignment) == 0);
       memset(alloc->Convert<void>(p), 0, size);
-      alloc->Free(hshm::ThreadId::GetNull(), p);
+      alloc->Free(HSHM_DEFAULT_MEM_CTX, p);
     }
   }
 }
@@ -169,32 +169,32 @@ TEST_CASE("LocalPointers") {
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
   // Allocate API
   hipc::LPointer<char> p1 =
-      alloc->AllocateLocalPtr<char>(hshm::ThreadId::GetNull(), 256);
+      alloc->AllocateLocalPtr<char>(HSHM_DEFAULT_MEM_CTX, 256);
   REQUIRE(!p1.shm_.IsNull());
   REQUIRE(p1.ptr_ != nullptr);
   hipc::LPointer<char> p2 =
-      alloc->ClearAllocateLocalPtr<char>(hshm::ThreadId::GetNull(), 256);
+      alloc->ClearAllocateLocalPtr<char>(HSHM_DEFAULT_MEM_CTX, 256);
   REQUIRE(!p2.shm_.IsNull());
   REQUIRE(p2.ptr_ != nullptr);
   REQUIRE(*p2 == 0);
-  alloc->ReallocateLocalPtr<char>(hshm::ThreadId::GetNull(), p1, 256);
+  alloc->ReallocateLocalPtr<char>(HSHM_DEFAULT_MEM_CTX, p1, 256);
   REQUIRE(!p1.shm_.IsNull());
   REQUIRE(p1.ptr_ != nullptr);
-  alloc->FreeLocalPtr(hshm::ThreadId::GetNull(), p1);
-  alloc->FreeLocalPtr(hshm::ThreadId::GetNull(), p2);
+  alloc->FreeLocalPtr(HSHM_DEFAULT_MEM_CTX, p1);
+  alloc->FreeLocalPtr(HSHM_DEFAULT_MEM_CTX, p2);
 
   // OBJ API
   hipc::LPointer<std::vector<int>> p4 =
-      alloc->NewObjLocal<std::vector<int>>(hshm::ThreadId::GetNull());
-  alloc->DelObjLocal(hshm::ThreadId::GetNull(), p4);
+      alloc->NewObjLocal<std::vector<int>>(HSHM_DEFAULT_MEM_CTX);
+  alloc->DelObjLocal(HSHM_DEFAULT_MEM_CTX, p4);
   hipc::LPointer<std::vector<int>> p5 =
       alloc->NewObjsLocal<std::vector<int>>(
-          hshm::ThreadId::GetNull(), 4);
+          HSHM_DEFAULT_MEM_CTX, 4);
   alloc->ReallocateObjsLocal<std::vector<int>>(
-      hshm::ThreadId::GetNull(), p5, 5);
+      HSHM_DEFAULT_MEM_CTX, p5, 5);
   alloc->ReallocateConstructObjsLocal<std::vector<int>>(
-      hshm::ThreadId::GetNull(), p5, 4, 5);
-  alloc->DelObjsLocal(hshm::ThreadId::GetNull(), p5, 5);
+      HSHM_DEFAULT_MEM_CTX, p5, 4, 5);
+  alloc->DelObjsLocal(HSHM_DEFAULT_MEM_CTX, p5, 5);
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
   Posttest();
 }
@@ -204,15 +204,15 @@ TEST_CASE("Arrays") {
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
   // Allocate API
   hipc::Array p1 = alloc->AllocateArray<char>(
-      hshm::ThreadId::GetNull(), 256);
+      HSHM_DEFAULT_MEM_CTX, 256);
   REQUIRE(!p1.shm_.IsNull());
   hipc::Array p2 = alloc->ClearAllocateArray<char>(
-      hshm::ThreadId::GetNull(), 256);
+      HSHM_DEFAULT_MEM_CTX, 256);
   REQUIRE(!p2.shm_.IsNull());
   alloc->ReallocateArray<char>(
-      hshm::ThreadId::GetNull(), p1, 256);
+      HSHM_DEFAULT_MEM_CTX, p1, 256);
   REQUIRE(!p1.shm_.IsNull());
-  alloc->FreeArray(hshm::ThreadId::GetNull(), p1);
+  alloc->FreeArray(HSHM_DEFAULT_MEM_CTX, p1);
   Posttest();
 }
 
@@ -221,17 +221,17 @@ TEST_CASE("LocalArrays") {
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
   // Allocate API
   hipc::LArray<char> p1 = alloc->AllocateLocalArray<char>(
-      hshm::ThreadId::GetNull(), 256);
+      HSHM_DEFAULT_MEM_CTX, 256);
   REQUIRE(!p1.shm_.IsNull());
   REQUIRE(p1.ptr_ != nullptr);
   hipc::LArray<char> p2 = alloc->ClearAllocateLocalArray<char>(
-      hshm::ThreadId::GetNull(), 256);
+      HSHM_DEFAULT_MEM_CTX, 256);
   REQUIRE(!p2.shm_.IsNull());
   REQUIRE(p2.ptr_ != nullptr);
   REQUIRE(*p2 == 0);
   alloc->ReallocateLocalArray<char>(
-      hshm::ThreadId::GetNull(), p1, 256);
+      HSHM_DEFAULT_MEM_CTX, p1, 256);
   REQUIRE(!p1.shm_.IsNull());
   REQUIRE(p1.ptr_ != nullptr);
-  alloc->FreeLocalArray(hshm::ThreadId::GetNull(), p1);
+  alloc->FreeLocalArray(HSHM_DEFAULT_MEM_CTX, p1);
 }

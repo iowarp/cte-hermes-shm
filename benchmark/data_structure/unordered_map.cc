@@ -35,14 +35,12 @@ using bipc_unordered_map = boost::unordered_map<
  * OUTPUT:
  * [test_name] [map_type] [internal_type] [time_ms]
  * */
-template<typename T, typename MapT,
-  typename MapTPtr=SHM_X_OR_Y(MapT, hipc::mptr<MapT>, MapT*)>
+template<typename T, typename MapT>
 class UnorderedMapTest {
  public:
   std::string map_type_;
   std::string internal_type_;
   MapT *map_;
-  MapTPtr map_ptr_;
   void *ptr_;
 
   /**====================================
@@ -151,13 +149,8 @@ class UnorderedMapTest {
     Emplace(count);
 
     t.Resume();
-    if constexpr(IS_SHM_ARCHIVEABLE(MapT)) {
-      auto vec2 = hipc::make_uptr<MapT>(*map_);
-      USE(vec2)
-    } else {
-      MapT vec2(*map_);
-      USE(vec2)
-    }
+    MapT vec2(*map_);
+    USE(vec2)
     t.Pause();
 
     TestOutput("Copy", t);
@@ -172,11 +165,7 @@ class UnorderedMapTest {
     Emplace(count);
 
     t.Resume();
-    if constexpr(IS_SHM_ARCHIVEABLE(MapT)) {
-      volatile auto vec2 = hipc::make_uptr<MapT>(std::move(*map_));
-    } else {
-      volatile MapT vec2(*map_);
-    }
+    volatile MapT vec2(*map_);
     t.Pause();
 
     TestOutput("Move", t);
@@ -224,25 +213,24 @@ class UnorderedMapTest {
 
   /** Allocate an arbitrary unordered_map for the test cases */
   void Allocate() {
+    auto alloc = HSHM_DEFAULT_ALLOC;
     if constexpr(std::is_same_v<MapT, hipc::unordered_map<size_t, T>>) {
-      map_ptr_ = hipc::make_mptr<MapT>(5000);
-      map_ = map_ptr_.get();
+      map_ = alloc->template NewObjLocal<MapT>(HSHM_DEFAULT_MEM_CTX, 5000).ptr_;
     } else if constexpr(std::is_same_v<MapT, std::unordered_map<size_t, T>>) {
-      map_ptr_ = new std::unordered_map<size_t, T>();
-      map_ = map_ptr_;
+      map_ = new std::unordered_map<size_t, T>();
     } else if constexpr (std::is_same_v<MapT, bipc_unordered_map<size_t, T>>) {
-      map_ptr_ = BOOST_SEGMENT->construct<MapT>("BoostMap")(
-        BOOST_ALLOCATOR((std::pair<size_t, T>)));
-      map_ = map_ptr_;
+      map_ = BOOST_SEGMENT->construct<MapT>("BoostMap")(
+          BOOST_ALLOCATOR((std::pair<size_t, T>)));
     }
   }
 
   /** Destroy the unordered_map */
   void Destroy() {
+    auto alloc = HSHM_DEFAULT_ALLOC;
     if constexpr(std::is_same_v<MapT, hipc::unordered_map<size_t, T>>) {
-      map_ptr_.shm_destroy();
+      alloc->DelObj(HSHM_DEFAULT_MEM_CTX, map_);
     } else if constexpr(std::is_same_v<MapT, std::unordered_map<size_t, T>>) {
-      delete map_ptr_;
+      delete map_;
     } else if constexpr (std::is_same_v<MapT, bipc_unordered_map<size_t, T>>) {
       BOOST_SEGMENT->destroy<MapT>("BoostMap");
     }

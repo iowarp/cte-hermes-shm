@@ -14,8 +14,6 @@
 #include "basic_test.h"
 #include "test_init.h"
 
-Allocator *alloc_g = nullptr;
-
 void PretestRankN() {
   std::string shm_url = "test_allocators";
   AllocatorId alloc_id(0, 1);
@@ -23,7 +21,6 @@ void PretestRankN() {
   mem_mngr->UnregisterAllocator(alloc_id);
   mem_mngr->UnregisterBackend(hipc::MemoryBackendId::Get(0));
   mem_mngr->AttachBackend(MemoryBackendType::kPosixShmMmap, shm_url);
-  alloc_g = mem_mngr->GetAllocator(alloc_id);
 }
 
 void MainPretest() {

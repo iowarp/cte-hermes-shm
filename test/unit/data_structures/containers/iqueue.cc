@@ -14,15 +14,12 @@
 #include "test_init.h"
 #include "iqueue.h"
 #include "hermes_shm/data_structures/ipc/iqueue.h"
-#include "hermes_shm/data_structures/smart_ptr/smart_ptr_base.h"
 
-using hshm::ipc::mptr;
-using hshm::ipc::make_mptr;
 using hshm::ipc::iqueue;
 
 template<typename T>
 void IqueueTest() {
-  Allocator *alloc = HERMES_MEMORY_MANAGER->GetDefaultAllocator();
+  auto *alloc = HSHM_DEFAULT_ALLOC;
   iqueue<T> lp(alloc);
   IqueueTestSuite<T, iqueue<T>> test(lp, alloc);
 
@@ -35,7 +32,7 @@ void IqueueTest() {
 }
 
 TEST_CASE("IqueueOfMpPage") {
-  Allocator *alloc = HERMES_MEMORY_MANAGER->GetDefaultAllocator();
+  auto *alloc = HSHM_DEFAULT_ALLOC;
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
   IqueueTest<MpPage>();
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);

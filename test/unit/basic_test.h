@@ -35,18 +35,18 @@ static inline bool VerifyBuffer(char *ptr, size_t size, char nonce) {
 /** var = TYPE(val) */
 #define _CREATE_SET_VAR_TO_INT_OR_STRING(TYPE, VAR, TMP_VAR, VAL)\
   if constexpr(std::is_same_v<TYPE, hipc::string>) {\
-    TMP_VAR = hipc::make_uptr<hipc::string>(std::to_string(VAL));\
+    TMP_VAR = hipc::string(std::to_string(VAL));\
   } else if constexpr(std::is_same_v<TYPE, std::string>) {\
-    TMP_VAR = hipc::make_uptr<std::string>(std::to_string(VAL));\
+    TMP_VAR = std::string(std::to_string(VAL));\
   } else {\
-    TMP_VAR = hipc::make_uptr<int>(VAL);\
+    TMP_VAR = VAL;\
   }\
-  TYPE &VAR = *TMP_VAR;\
+  TYPE &VAR = TMP_VAR;\
   (void)VAR;
 
 /** TYPE VAR = TYPE(VAL) */
 #define CREATE_SET_VAR_TO_INT_OR_STRING(TYPE, VAR, VAL)\
-  hipc::uptr<TYPE> VAR##_tmp;\
+  TYPE VAR##_tmp;\
   _CREATE_SET_VAR_TO_INT_OR_STRING(TYPE, VAR, VAR##_tmp, VAL);
 
 /** RET = int(TYPE(VAR)); */

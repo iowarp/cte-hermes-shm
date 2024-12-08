@@ -33,12 +33,11 @@ using hshm::ipc::Allocator;
 using hshm::ipc::MemoryManager;
 using hshm::ipc::Pointer;
 
-extern Allocator *alloc_g;
+GLOBAL_CONST AllocatorId alloc_id(0, 1);
 
 template<typename AllocT>
 void PretestRank0() {
   std::string shm_url = "test_allocators";
-  AllocatorId alloc_id(0, 1);
   auto mem_mngr = HERMES_MEMORY_MANAGER;
   mem_mngr->UnregisterAllocator(alloc_id);
   mem_mngr->UnregisterBackend(hipc::MemoryBackendId::Get(0));
@@ -46,7 +45,6 @@ void PretestRank0() {
       hipc::MemoryBackendId::Get(0), GIGABYTES(1), shm_url);
   mem_mngr->CreateAllocator<AllocT>(
       hipc::MemoryBackendId::Get(0), alloc_id, 0);
-  alloc_g = mem_mngr->GetAllocator(alloc_id);
 }
 
 void PretestRankN();

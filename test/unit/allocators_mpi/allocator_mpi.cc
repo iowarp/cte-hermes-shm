@@ -34,20 +34,20 @@ void MpiPageAllocationTest(Allocator *alloc, size_t count) {
     for (size_t i = 0; i < window_length; ++i) {
       window[i].size = uni(rng);
       window[i].data = alloc->AllocatePtr<char>(
-          hshm::ThreadId::GetNull(),
+          HSHM_DEFAULT_MEM_CTX,
           window[i].size, window[i].ptr);
       memset(window[i].data, (char)i, window[i].size);
     }
     for (size_t i = 0; i < window_length; ++i) {
       VerifyBuffer(window[i].data, window[i].size, (char)i);
-      alloc->Free(hshm::ThreadId::GetNull(), window[i].ptr);
+      alloc->Free(HSHM_DEFAULT_MEM_CTX, window[i].ptr);
     }
   }
   MPI_Barrier(MPI_COMM_WORLD);
 }
 
-template<typename AllocT>
-Allocator* TestAllocatorMpi() {
+template <typename AllocT>
+AllocT *TestAllocatorMpi() {
   int rank;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   if (rank == 0) {
@@ -57,8 +57,7 @@ Allocator* TestAllocatorMpi() {
   if (rank != 0) {
     PretestRankN();
   }
-  HILOG(kInfo, "Allocator: {}", (size_t)alloc_g);
-  return alloc_g;
+  return HERMES_MEMORY_MANAGER->GetAllocator<AllocT>(alloc_id);
 }
 
 TEST_CASE("StackAllocatorMpi") {

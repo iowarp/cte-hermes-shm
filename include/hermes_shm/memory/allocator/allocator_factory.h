@@ -35,8 +35,8 @@ class AllocatorFactory {
                           Args&& ...args) {
     if constexpr(std::is_same_v<StackAllocator, AllocT>) {
       // StackAllocator
-      auto alloc = HERMES_MEMORY_MANAGER->GetRootAllocator()->
-          NewObj<StackAllocator>(hshm::ThreadId::GetNull());
+      auto alloc = HSHM_ROOT_ALLOC->
+          NewObj<StackAllocator>(HSHM_DEFAULT_MEM_CTX);
       alloc->shm_init(alloc_id,
                       custom_header_size,
                       buffer,
@@ -45,8 +45,8 @@ class AllocatorFactory {
       return alloc;
     } else if constexpr(std::is_same_v<MallocAllocator, AllocT>) {
       // Malloc Allocator
-      auto alloc = HERMES_MEMORY_MANAGER->GetRootAllocator()->
-          NewObj<MallocAllocator>(hshm::ThreadId::GetNull());
+      auto alloc = HSHM_ROOT_ALLOC->
+          NewObj<MallocAllocator>(HSHM_DEFAULT_MEM_CTX);
       alloc->shm_init(alloc_id,
                       custom_header_size,
                       buffer_size,
@@ -54,8 +54,8 @@ class AllocatorFactory {
       return alloc;
     } else if constexpr(std::is_same_v<ScalablePageAllocator, AllocT>) {
       // Scalable Page Allocator
-      auto alloc = HERMES_MEMORY_MANAGER->GetRootAllocator()->
-          NewObj<ScalablePageAllocator>(hshm::ThreadId::GetNull());
+      auto alloc = HSHM_ROOT_ALLOC->
+          NewObj<ScalablePageAllocator>(HSHM_DEFAULT_MEM_CTX);
       alloc->shm_init(alloc_id,
                       custom_header_size,
                       buffer,
@@ -93,24 +93,24 @@ class AllocatorFactory {
     switch (header_->allocator_type_) {
       // Stack Allocator
       case AllocatorType::kStackAllocator: {
-        auto alloc = HERMES_MEMORY_MANAGER->GetRootAllocator()->
-            NewObj<StackAllocator>(hshm::ThreadId::GetNull());
+        auto alloc = HSHM_ROOT_ALLOC->
+            NewObj<StackAllocator>(HSHM_DEFAULT_MEM_CTX);
         alloc->shm_deserialize(buffer,
                                buffer_size);
         return alloc;
       }
       // Malloc Allocator
       case AllocatorType::kMallocAllocator: {
-        auto alloc = HERMES_MEMORY_MANAGER->GetRootAllocator()->
-            NewObj<MallocAllocator>(hshm::ThreadId::GetNull());
+        auto alloc = HSHM_ROOT_ALLOC->
+            NewObj<MallocAllocator>(HSHM_DEFAULT_MEM_CTX);
         alloc->shm_deserialize(buffer,
                                buffer_size);
         return alloc;
       }
       // Scalable Page Allocator
       case AllocatorType::kScalablePageAllocator: {
-        auto alloc = HERMES_MEMORY_MANAGER->GetRootAllocator()->
-            NewObj<ScalablePageAllocator>(hshm::ThreadId::GetNull());
+        auto alloc = HSHM_ROOT_ALLOC->
+            NewObj<ScalablePageAllocator>(HSHM_DEFAULT_MEM_CTX);
         alloc->shm_deserialize(buffer,
                                buffer_size);
         return alloc;

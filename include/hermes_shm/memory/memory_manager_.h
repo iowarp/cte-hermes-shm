@@ -170,7 +170,7 @@ class MemoryManager {
   /**
    * Locates an allocator of a particular id
    * */
-  template<typename AllocT = Allocator>
+  template<typename AllocT>
   HSHM_CROSS_FUN AllocT* GetAllocator(const AllocatorId &alloc_id) {
     return (AllocT*)allocators_[alloc_id.ToIndex()];
   }
@@ -178,7 +178,7 @@ class MemoryManager {
   /**
    * Gets the allocator used for initializing other allocators.
    * */
-  template<typename AllocT = Allocator>
+  template<typename AllocT>
   HSHM_CROSS_FUN AllocT* GetRootAllocator() {
     return (AllocT*)root_alloc_;
   }
@@ -187,7 +187,7 @@ class MemoryManager {
    * Gets the allocator used by default when no allocator is
    * used to construct an object.
    * */
-  template<typename AllocT = Allocator>
+  template<typename AllocT>
   HSHM_CROSS_FUN AllocT* GetDefaultAllocator() {
     return (AllocT*)(default_allocator_);
   }
@@ -196,7 +196,7 @@ class MemoryManager {
    * Sets the allocator used by default when no allocator is
    * used to construct an object.
    * */
-  template<typename AllocT = Allocator>
+  template<typename AllocT>
   HSHM_CROSS_FUN void SetDefaultAllocator(AllocT *alloc) {
     default_allocator_ = alloc;
   }
@@ -221,7 +221,7 @@ class MemoryManager {
    * */
   template<typename T, typename POINTER_T = Pointer>
   HSHM_INLINE_CROSS_FUN POINTER_T Convert(AllocatorId allocator_id, T *ptr) {
-    return GetAllocator(allocator_id)->template
+    return GetAllocator<Allocator>(allocator_id)->template
         Convert<T, POINTER_T>(ptr);
   }
 

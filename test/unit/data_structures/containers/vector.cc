@@ -39,33 +39,32 @@ void VectorTestRunner(VectorTestSuite<T, vector<T>> &test) {
 
 template<typename T, bool ptr>
 void VectorTest() {
-  Allocator *alloc = HERMES_MEMORY_MANAGER->GetDefaultAllocator();
-  auto vec = hipc::make_uptr<vector<T>>(alloc);
-  VectorTestSuite<T, vector<T>> test(*vec, alloc);
+  auto *alloc = HSHM_DEFAULT_ALLOC;
+  auto vec = vector<T>(alloc);
+  VectorTestSuite<T, vector<T>> test(vec, alloc);
   VectorTestRunner<T>(test);
 }
 
 void VectorOfVectorOfStringTest() {
-  Allocator *alloc = HERMES_MEMORY_MANAGER->GetDefaultAllocator();
-  auto vec = hipc::make_uptr<
-    vector<vector<string>>>(alloc);
+  auto *alloc = HSHM_DEFAULT_ALLOC;
+  auto vec = vector<vector<string>>(alloc);
 
-  vec->resize(10);
-  for (vector<string> &bkt : *vec) {
+  vec.resize(10);
+  for (vector<string> &bkt : vec) {
     bkt.emplace_back("hello");
   }
-  vec->clear();
+  vec.clear();
 }
 
 void VectorOfListOfStringTest() {
-  Allocator *alloc = HERMES_MEMORY_MANAGER->GetDefaultAllocator();
-  auto vec = hipc::make_uptr<vector<list<string>>>(alloc);
+  auto *alloc = HSHM_DEFAULT_ALLOC;
+  auto vec = vector<list<string>>(alloc);
 
-  vec->resize(10);
+  vec.resize(10);
 
   PAGE_DIVIDE("Emplace an element into each bucket") {
     size_t count = 0;
-    for (list<string> &bkt : *vec) {
+    for (list<string> &bkt : vec) {
       bkt.emplace_back(std::to_string(count));
       count += 1;
     }
@@ -74,7 +73,7 @@ void VectorOfListOfStringTest() {
 
   PAGE_DIVIDE("Get string from each bucket") {
     size_t count = 0;
-    for (list<string> &bkt : *vec) {
+    for (list<string> &bkt : vec) {
       for (string &val : bkt) {
         REQUIRE(val == std::to_string(count));
       }
@@ -83,11 +82,11 @@ void VectorOfListOfStringTest() {
     REQUIRE(count == 10);
   }
 
-  vec->clear();
+  vec.clear();
 }
 
 TEST_CASE("VectorOfInt") {
-  Allocator *alloc = HERMES_MEMORY_MANAGER->GetDefaultAllocator();
+  auto *alloc = HSHM_DEFAULT_ALLOC;
   try {
     REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
     VectorTest<int, false>();
@@ -101,7 +100,7 @@ TEST_CASE("VectorOfInt") {
 }
 
 TEST_CASE("VectorOfString") {
-  Allocator *alloc = HERMES_MEMORY_MANAGER->GetDefaultAllocator();
+  auto *alloc = HSHM_DEFAULT_ALLOC;
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
   VectorTest<hipc::string, false>();
   VectorTest<int, true>();
@@ -109,7 +108,7 @@ TEST_CASE("VectorOfString") {
 }
 
 TEST_CASE("VectorOfStdString") {
-  Allocator *alloc = HERMES_MEMORY_MANAGER->GetDefaultAllocator();
+  auto *alloc = HSHM_DEFAULT_ALLOC;
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
   VectorTest<std::string, false>();
   VectorTest<int, true>();
@@ -117,7 +116,7 @@ TEST_CASE("VectorOfStdString") {
 }
 
 TEST_CASE("VectorOfVectorOfString") {
-  Allocator *alloc = HERMES_MEMORY_MANAGER->GetDefaultAllocator();
+  auto *alloc = HSHM_DEFAULT_ALLOC;
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
   VectorOfVectorOfStringTest();
   VectorOfVectorOfStringTest();
@@ -125,7 +124,7 @@ TEST_CASE("VectorOfVectorOfString") {
 }
 
 TEST_CASE("VectorOfListOfString") {
-  Allocator *alloc = HERMES_MEMORY_MANAGER->GetDefaultAllocator();
+  auto *alloc = HSHM_DEFAULT_ALLOC;
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
   VectorOfListOfStringTest();
   VectorOfListOfStringTest();

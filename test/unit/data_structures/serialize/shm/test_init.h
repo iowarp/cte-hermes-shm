@@ -14,7 +14,6 @@
 #define HERMES_SHM_TEST_UNIT_DATA_STRUCTURES_SERIALIZE_THALLIUM_TEST_INIT_H_
 
 #include "hermes_shm/data_structures/all.h"
-#include "hermes_shm/data_structures/serialization/shm_serialize.h"
 
 using hshm::ipc::PosixShmMmap;
 using hshm::ipc::MemoryBackendType;

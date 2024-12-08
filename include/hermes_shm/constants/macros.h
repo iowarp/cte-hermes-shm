@@ -126,10 +126,19 @@ namespace hipc = hshm::ipc;
  * ************************************************* */
 #ifndef HSHM_CUSTOM_SETTINGS
 
-/** Define the default allocator class */
-#ifndef HSHM_DEFAULT_ALLOC
-#define HSHM_DEFAULT_ALLOC hipc::Allocator
+/** Define the root allocator class */
+#ifndef HSHM_ROOT_ALLOC_T
+#define HSHM_ROOT_ALLOC_T hipc::StackAllocator
 #endif
+#define HSHM_ROOT_ALLOC \
+  HERMES_MEMORY_MANAGER->template GetRootAllocator<HSHM_ROOT_ALLOC_T>()
+
+/** Define the default allocator class */
+#ifndef HSHM_DEFAULT_ALLOC_T
+#define HSHM_DEFAULT_ALLOC_T hipc::Allocator
+#endif
+#define HSHM_DEFAULT_ALLOC \
+  HERMES_MEMORY_MANAGER->template GetDefaultAllocator<HSHM_DEFAULT_ALLOC_T>()
 
 /** Define the default thread model class */
 #ifndef HSHM_DEFAULT_THREAD_MODEL

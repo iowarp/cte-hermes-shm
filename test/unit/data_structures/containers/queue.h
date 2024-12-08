@@ -53,8 +53,8 @@ class QueueTestSuite {
   void Consume(std::atomic<size_t> &count,
                size_t total_count,
                std::vector<size_t> &entries) {
-    auto entry = hipc::make_uptr<T>();
-    auto &entry_ref = *entry;
+    auto entry = T();
+    auto &entry_ref = entry;
 
     // Consume everything
     while (count < total_count) {

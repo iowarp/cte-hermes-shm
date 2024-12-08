@@ -20,9 +20,9 @@ using hshm::ipc::slist;
 
 template<typename T>
 void SlistTest() {
-  Allocator *alloc = HERMES_MEMORY_MANAGER->GetDefaultAllocator();
+  auto *alloc = HSHM_DEFAULT_ALLOC;
   slist<T> lp(alloc);
-  ListTestSuite<T, slist<T>> test(lp, alloc);
+  ListTestSuite<T, slist<T>, HSHM_DEFAULT_ALLOC_T> test(lp, alloc);
 
   test.EmplaceTest(30);
   test.ForwardIteratorTest();
@@ -38,21 +38,21 @@ void SlistTest() {
 }
 
 TEST_CASE("SlistOfInt") {
-  Allocator *alloc = HERMES_MEMORY_MANAGER->GetDefaultAllocator();
+  auto *alloc = HSHM_DEFAULT_ALLOC;
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
   SlistTest<int>();
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
 }
 
 TEST_CASE("SlistOfString") {
-  Allocator *alloc = HERMES_MEMORY_MANAGER->GetDefaultAllocator();
+  auto *alloc = HSHM_DEFAULT_ALLOC;
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
   SlistTest<hipc::string>();
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
 }
 
 TEST_CASE("SlistOfStdString") {
-  Allocator *alloc = HERMES_MEMORY_MANAGER->GetDefaultAllocator();
+  auto *alloc = HSHM_DEFAULT_ALLOC;
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
   SlistTest<std::string>();
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);

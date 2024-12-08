@@ -153,7 +153,7 @@ void MemoryManager::ScanBackends(bool find_allocs) {
     }
     backend->SetScanned();
     if (find_allocs) {
-      Allocator *alloc = AllocatorFactory::shm_deserialize(backend);
+      auto *alloc = AllocatorFactory::shm_deserialize(backend);
       if (!alloc) {
         continue;
       }

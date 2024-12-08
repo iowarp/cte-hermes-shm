@@ -15,14 +15,14 @@
 
 #include "list.h"
 
-template<typename T, typename Container>
+template<typename T, typename Container, typename AllocT = HSHM_DEFAULT_ALLOC_T>
 class VectorTestSuite : public ListTestSuite<T, Container> {
  public:
-  using ListTestSuite<T, Container>::obj_;
+  using ListTestSuite<T, Container, AllocT>::obj_;
 
  public:
   /// Constructor
-  VectorTestSuite(Container &obj, Allocator *alloc)
+  VectorTestSuite(Container &obj, AllocT *alloc)
   : ListTestSuite<T, Container>(obj, alloc) {}
 
   /// Test vector index operator

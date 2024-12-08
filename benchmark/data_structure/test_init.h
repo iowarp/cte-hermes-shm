@@ -88,7 +88,7 @@ struct StringOrInt {
   typedef typename hshm::type_switch<T, size_t,
                                      size_t, size_t,
                                      std::string, std::string,
-                                     hipc::string, hipc::uptr<hipc::string>,
+                                     hipc::string, hipc::string,
                                      bipc_string, bipc_string*>::type
     internal_t;
   internal_t internal_;
@@ -100,7 +100,7 @@ struct StringOrInt {
     } else if constexpr(std::is_same_v<T, std::string>) {
       internal_ = std::to_string(num);
     } else if constexpr(std::is_same_v<T, hipc::string>) {
-      internal_ = hipc::make_uptr<hipc::string>(std::to_string(num));
+      internal_ = hipc::string(std::to_string(num));
     } else if constexpr(std::is_same_v<T, bipc_string>) {
       internal_ = BOOST_SEGMENT->find_or_construct<bipc_string>("MyString")(
         BOOST_ALLOCATOR(bipc_string));
@@ -114,7 +114,7 @@ struct StringOrInt {
     } else if constexpr(std::is_same_v<T, std::string>) {
       return internal_;
     } else if constexpr(std::is_same_v<T, hipc::string>) {
-      return *internal_;
+      return internal_;
     } else if constexpr(std::is_same_v<T, bipc_string>) {
       return *internal_;
     }
@@ -138,7 +138,7 @@ struct StringOrInt {
     } else if constexpr(std::is_same_v<T, std::string>) {
       return internal_;
     } else if constexpr(std::is_same_v<T, hipc::string>) {
-      return internal_->str();
+      return internal_.str();
     } else if constexpr(std::is_same_v<T, bipc_string>) {
       return std::string(internal_->c_str(), internal_->length());
     }

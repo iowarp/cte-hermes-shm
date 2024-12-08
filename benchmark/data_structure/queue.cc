@@ -31,16 +31,14 @@
  * OUTPUT:
  * [test_name] [vec_type] [internal_type] [time_ms]
  * */
-template<typename T, typename QueueT,
-  typename ListTPtr=SHM_X_OR_Y(QueueT, hipc::mptr<QueueT>, QueueT*)>
+template<typename T, typename QueueT>
 class QueueTest {
  public:
   std::string queue_type_;
   std::string internal_type_;
   QueueT *queue_;
-  ListTPtr queue_ptr_;
   void *ptr_;
-  hipc::uptr<T> x_;
+  T x_;
   std::mutex lock_;
   int cpu_;
 
@@ -66,7 +64,7 @@ class QueueTest {
       HELOG(kFatal, "none of the queue tests matched")
     }
     internal_type_ = InternalTypeName<T>::Get();
-    x_ = hipc::make_uptr<T>();
+    x_ = T();
   }
 
   /** Run the tests */
@@ -177,19 +175,19 @@ class QueueTest {
           queue_->pop();
           lock_.unlock();
         } else if constexpr(std::is_same_v<QueueT, hipc::mpsc_queue<T>>) {
-          queue_->pop(*x_);
-          USE(*x_);
+          queue_->pop(x_);
+          USE(x_);
         } else if constexpr(std::is_same_v<QueueT, hipc::mpsc_ptr_queue<T>>) {
-          queue_->pop(*x_);
-          USE(*x_);
+          queue_->pop(x_);
+          USE(x_);
         } else if constexpr(std::is_same_v<QueueT, hipc::spsc_queue<T>>) {
-          queue_->pop(*x_);
-          USE(*x_);
+          queue_->pop(x_);
+          USE(x_);
         } else if constexpr(std::is_same_v<QueueT, hipc::ticket_queue<T>>) {
-          while (queue_->pop(*x_).IsNull());
+          while (queue_->pop(x_).IsNull());
         } else if constexpr(
           std::is_same_v<QueueT, hipc::split_ticket_queue<T>>) {
-          while (queue_->pop(*x_).IsNull());
+          while (queue_->pop(x_).IsNull());
         }
       }
     }
@@ -198,41 +196,42 @@ class QueueTest {
   /** Allocate an arbitrary queue for the test cases */
   void Allocate(size_t count, size_t count_per_rank, int nthreads) {
     (void) count_per_rank; (void) nthreads;
-    if constexpr(std::is_same_v<QueueT, std::queue<T>>) {
-      queue_ptr_ = new std::queue<T>();
-      queue_ = queue_ptr_;
-    } else if constexpr(std::is_same_v<QueueT, hipc::mpsc_queue<T>>) {
-      queue_ptr_ = hipc::make_mptr<QueueT>(count);
-      queue_ = queue_ptr_.get();
-    } else if constexpr(std::is_same_v<QueueT, hipc::mpsc_ptr_queue<T>>) {
-      queue_ptr_ = hipc::make_mptr<QueueT>(count);
-      queue_ = queue_ptr_.get();
-    } else if constexpr(std::is_same_v<QueueT, hipc::spsc_queue<T>>) {
-      queue_ptr_ = hipc::make_mptr<QueueT>(count);
-      queue_ = queue_ptr_.get();
-    } else if constexpr(std::is_same_v<QueueT, hipc::ticket_queue<T>>) {
-      queue_ptr_ = hipc::make_mptr<QueueT>(count);
-      queue_ = queue_ptr_.get();
-    } else if constexpr(std::is_same_v<QueueT, hipc::split_ticket_queue<T>>) {
-      queue_ptr_ = hipc::make_mptr<QueueT>(count_per_rank, nthreads);
-      queue_ = queue_ptr_.get();
+    auto alloc = HSHM_DEFAULT_ALLOC;
+    if constexpr (std::is_same_v<QueueT, std::queue<T>>) {
+      queue_ = new std::queue<T>();
+    } else if constexpr (std::is_same_v<QueueT, hipc::mpsc_queue<T>>) {
+      queue_ =
+          alloc->template NewObjLocal<QueueT>(HSHM_DEFAULT_MEM_CTX, count).ptr_;
+    } else if constexpr (std::is_same_v<QueueT, hipc::mpsc_ptr_queue<T>>) {
+      queue_ =
+          alloc->template NewObjLocal<QueueT>(HSHM_DEFAULT_MEM_CTX, count).ptr_;
+    } else if constexpr (std::is_same_v<QueueT, hipc::spsc_queue<T>>) {
+      queue_ =
+          alloc->template NewObjLocal<QueueT>(HSHM_DEFAULT_MEM_CTX, count).ptr_;
+    } else if constexpr (std::is_same_v<QueueT, hipc::ticket_queue<T>>) {
+      queue_ =
+          alloc->template NewObjLocal<QueueT>(HSHM_DEFAULT_MEM_CTX, count).ptr_;
+    } else if constexpr (std::is_same_v<QueueT, hipc::split_ticket_queue<T>>) {
+      queue_ =
+          alloc->template NewObjLocal<QueueT>(count_per_rank, nthreads).ptr_;
     }
   }
 
   /** Destroy the queue */
   void Destroy() {
+    auto alloc = HSHM_DEFAULT_ALLOC;
     if constexpr(std::is_same_v<QueueT, std::queue<T>>) {
-      delete queue_ptr_;
+      delete queue_;
     } else if constexpr(std::is_same_v<QueueT, hipc::mpsc_queue<T>>) {
-      queue_ptr_.shm_destroy();
-    } else if constexpr(std::is_same_v<QueueT, hipc::mpsc_ptr_queue<T>>) {
-      queue_ptr_.shm_destroy();
-    } else if constexpr(std::is_same_v<QueueT, hipc::spsc_queue<T>>) {
-      queue_ptr_.shm_destroy();
-    } else if constexpr(std::is_same_v<QueueT, hipc::ticket_queue<T>>) {
-      queue_ptr_.shm_destroy();
-    } else if constexpr(std::is_same_v<QueueT, hipc::split_ticket_queue<T>>) {
-      queue_ptr_.shm_destroy();
+      HSHM_DEFAULT_ALLOC->DelObj(HSHM_DEFAULT_MEM_CTX, queue_);
+    } else if constexpr (std::is_same_v<QueueT, hipc::mpsc_ptr_queue<T>>) {
+      HSHM_DEFAULT_ALLOC->DelObj(HSHM_DEFAULT_MEM_CTX, queue_);
+    } else if constexpr (std::is_same_v<QueueT, hipc::spsc_queue<T>>) {
+      HSHM_DEFAULT_ALLOC->DelObj(HSHM_DEFAULT_MEM_CTX, queue_);
+    } else if constexpr (std::is_same_v<QueueT, hipc::ticket_queue<T>>) {
+      HSHM_DEFAULT_ALLOC->DelObj(HSHM_DEFAULT_MEM_CTX, queue_);
+    } else if constexpr (std::is_same_v<QueueT, hipc::split_ticket_queue<T>>) {
+      HSHM_DEFAULT_ALLOC->DelObj(HSHM_DEFAULT_MEM_CTX, queue_);
     }
   }
 };

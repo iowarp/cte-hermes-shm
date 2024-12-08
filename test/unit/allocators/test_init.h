@@ -43,8 +43,8 @@ Allocator* Pretest() {
       hipc::MemoryBackendId::Get(0), GIGABYTES(1), shm_url);
   mem_mngr->CreateAllocator<AllocT>(
       hipc::MemoryBackendId::Get(0), alloc_id, sizeof(SimpleAllocatorHeader));
-  auto alloc = mem_mngr->GetAllocator(alloc_id);
-  auto hdr = alloc->GetCustomHeader<SimpleAllocatorHeader>();
+  auto alloc = mem_mngr->GetAllocator<AllocT>(alloc_id);
+  auto hdr = alloc->template GetCustomHeader<SimpleAllocatorHeader>();
   hdr->checksum_ = HEADER_CHECKSUM;
   return alloc;
 }

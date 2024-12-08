@@ -32,14 +32,12 @@ using bipc_vector = bipc::vector<T, typename BoostAllocator<T>::alloc_t>;
  * OUTPUT:
  * [test_name] [vec_type] [internal_type] [time_ms]
  * */
-template<typename T, typename VecT,
-  typename VecTPtr=SHM_X_OR_Y(VecT, hipc::mptr<VecT>, VecT*)>
+template<typename T, typename VecT>
 class VectorTest {
  public:
   std::string vec_type_;
   std::string internal_type_;
   VecT *vec_;
-  VecTPtr vec_ptr_;
   void *ptr_;
 
   /**====================================
@@ -221,13 +219,8 @@ class VectorTest {
     Emplace(count);
 
     t.Resume();
-    if constexpr(IS_SHM_ARCHIVEABLE(VecT)) {
-      auto vec2 = hipc::make_uptr<VecT>(*vec_);
-      USE(vec2);
-    } else {
-      VecT vec2(*vec_);
-      USE(vec2);
-    }
+    VecT vec2(*vec_);
+    USE(vec2);
     t.Pause();
 
     TestOutput("Copy", t);
@@ -244,7 +237,7 @@ class VectorTest {
 
     t.Resume();
     if constexpr(IS_SHM_ARCHIVEABLE(VecT)) {
-      auto vec2 = hipc::make_uptr<VecT>(std::move(*vec_));
+      auto vec2 = VecT(std::move(*vec_));
       USE(vec2)
     } else {
       VecT vec2(*vec_);
@@ -298,25 +291,23 @@ class VectorTest {
 
   /** Allocate an arbitrary vector for the test cases */
   void Allocate() {
+    auto alloc = HSHM_DEFAULT_ALLOC;
     if constexpr(std::is_same_v<std::vector<T>, VecT>) {
-      vec_ptr_ = new std::vector<T>();
-      vec_ = vec_ptr_;
+      vec_ = new std::vector<T>();
     } else if constexpr(std::is_same_v<hipc::vector<T>, VecT>) {
-      vec_ptr_ = hipc::make_mptr<VecT>();
-      vec_ = vec_ptr_.get();
+      vec_ = alloc->template NewObjLocal<VecT>(HSHM_DEFAULT_MEM_CTX).ptr_;
     } else if constexpr(std::is_same_v<bipc_vector<T>, VecT>) {
-      vec_ptr_ = BOOST_SEGMENT->construct<VecT>("BoostVector")(
+      vec_ = BOOST_SEGMENT->construct<VecT>("BoostVector")(
         BOOST_ALLOCATOR((std::pair<int, T>)));
-      vec_ = vec_ptr_;
     }
   }
 
   /** Destroy the vector */
   void Destroy() {
     if constexpr(std::is_same_v<std::vector<T>, VecT>) {
-      delete vec_ptr_;
+      delete vec_;
     } else if constexpr(std::is_same_v<hipc::vector<T>, VecT>) {
-      vec_ptr_.shm_destroy();
+      HSHM_DEFAULT_ALLOC->DelObj(HSHM_DEFAULT_MEM_CTX, vec_);
     } else if constexpr(std::is_same_v<bipc_vector<T>, VecT>) {
       BOOST_SEGMENT->destroy<VecT>("BoostVector");
     }

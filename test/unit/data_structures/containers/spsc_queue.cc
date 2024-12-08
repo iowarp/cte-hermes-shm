@@ -20,14 +20,14 @@
  * */
 
 TEST_CASE("TestSpscQueueInt") {
-  Allocator *alloc = HERMES_MEMORY_MANAGER->GetDefaultAllocator();
+  auto *alloc = HSHM_DEFAULT_ALLOC;
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
   ProduceThenConsume<hipc::spsc_queue<int>, int>(1, 1, 32, 32);
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
 }
 
 TEST_CASE("TestSpscQueueString") {
-  Allocator *alloc = HERMES_MEMORY_MANAGER->GetDefaultAllocator();
+  auto *alloc = HSHM_DEFAULT_ALLOC;
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
   ProduceThenConsume<hipc::spsc_queue<hipc::string>, hipc::string>(
     1, 1, 32, 32);

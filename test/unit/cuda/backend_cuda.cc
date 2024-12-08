@@ -76,7 +76,7 @@ void backend_test() {
 }
 
 __global__ void mpsc_kernel(hipc::mpsc_queue<int> *queue) {
-  hipc::ScopedTlsAllocator<HSHM_DEFAULT_ALLOC> ctx_alloc(queue->GetCtxAllocator());
+  hipc::ScopedTlsAllocator<HSHM_DEFAULT_ALLOC_T> ctx_alloc(queue->GetCtxAllocator());
   queue->GetThreadLocal(ctx_alloc);
   queue->emplace(10);
 }
@@ -89,10 +89,10 @@ void mpsc_test() {
   mem_mngr->UnregisterBackend(hipc::MemoryBackendId::Get(0));
   mem_mngr->CreateBackend<hipc::CudaShmMmap>(
       hipc::MemoryBackendId::Get(0), MEGABYTES(100), shm_url, 0);
-  hipc::Allocator *alloc = mem_mngr->CreateAllocator<hipc::ScalablePageAllocator>(
+  auto *alloc = mem_mngr->CreateAllocator<hipc::ScalablePageAllocator>(
       hipc::MemoryBackendId::Get(0), alloc_id, 0);
 
-  auto queue = hipc::make_uptr<hipc::mpsc_queue<int>>(alloc, 256 * 256);
+  auto queue = hipc::mpsc_queue<int>(alloc, 256 * 256);
   printf("GetSize: %lu\n", queue->GetSize());
   mpsc_kernel<<<16, 16>>>(queue.get());
   cudaDeviceSynchronize();

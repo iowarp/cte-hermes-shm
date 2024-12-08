@@ -179,7 +179,6 @@ Allocator* Pretest(MemoryBackendType backend_type,
                    Args&& ...args) {
   int rank = omp_get_thread_num();
   AllocatorId alloc_id(0, minor);
-  Allocator *alloc;
   auto mem_mngr = HERMES_MEMORY_MANAGER;
 
   if (rank == 0) {
@@ -195,7 +194,7 @@ Allocator* Pretest(MemoryBackendType backend_type,
   }
 #pragma omp barrier
 
-  alloc = mem_mngr->GetAllocator(alloc_id);
+  auto *alloc = mem_mngr->GetAllocator<HSHM_DEFAULT_ALLOC_T>(alloc_id);
   if (alloc == nullptr) {
     HELOG(kFatal, "Failed to find the memory allocator?")
   }
@@ -222,7 +221,7 @@ template<typename BackendT, typename AllocT, typename ...Args>
 void AllocatorTest(AllocatorType alloc_type,
                    MemoryBackendType backend_type,
                    Args&& ...args) {
-  Allocator *alloc = Pretest<BackendT, AllocT>(
+  auto *alloc = Pretest<BackendT, AllocT>(
     backend_type, std::forward<Args>(args)...);
   hipc::ScopedTlsAllocator<Allocator> scoped_tls(alloc);
 //  if (alloc_type == AllocatorType::kScalablePageAllocator) {

@@ -15,11 +15,8 @@
 #include "test_init.h"
 #include <mpi.h>
 
-Allocator *alloc_g = nullptr;
-
 void Posttest() {
   std::string shm_url = "test_allocators";
-  alloc_g = nullptr;
 }
 
 void MainPretest() {

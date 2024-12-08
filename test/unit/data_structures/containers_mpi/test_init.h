@@ -33,8 +33,6 @@ using hshm::ipc::Allocator;
 using hshm::ipc::MemoryManager;
 using hshm::ipc::Pointer;
 
-extern Allocator *alloc_g;
-
 void Posttest();
 
 #endif  // HERMES_TEST_UNIT_DATA_STRUCTURES_TEST_INIT_H_
