@@ -16,12 +16,7 @@ set(CMAKE_CXX_STANDARD 17)
 #-----------------------------------------------------------------------------
 set (SOURCE_FILES
         memory_manager.cc
-        data_structure_singleton.cc
-        ../include/hermes_shm/constants/settings.h_templ
-        ../include/hermes_shm/constants/settings.h
-        ../include/hermes_shm/data_structures/serialization/local_serialize.h
-        ../include/hermes_shm/data_structures/ipc/key_set.h
-)
+        data_structure_singleton.cc)
 if (BUILD_SHARED_LIBS)
     message("Building dynamic library")
     add_library(hermes_shm_data_structures SHARED ${SOURCE_FILES})
@@ -31,7 +26,7 @@ else()
 endif()
 target_link_libraries(hermes_shm_data_structures
         -lrt -ldl
-        cereal::cereal
+        cereal::cereal yaml-cpp
         $<$<BOOL:${HERMES_RPC_THALLIUM}>:thallium>
         ${COMPRESS_LIBS}
         ${ENCRYPT_LIBS}

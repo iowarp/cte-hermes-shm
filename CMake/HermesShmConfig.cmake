@@ -213,7 +213,7 @@ set(HermesShm_INCLUDE_DIRS
         ${COMPRESS_INCLUDE_DIRS}
         ${HermesShm_INCLUDE_DIR})
 set(HermesShm_LIBRARIES
-        -lrt -ldl cereal::cereal -lstdc++fs
+        -lrt -ldl cereal::cereal -lstdc++fs yaml-cpp
         ${ENCRYPT_LIBRARIES}
         ${COMPRESS_LIBRARIES}
         ${HermesShm_LIBRARY}
