@@ -20,7 +20,8 @@ namespace hshm::ipc {
 struct MpPage : public iqueue_entry {
   bitfield32_t flags_;  /**< Flags of the page (e.g., free/alloc) */
   /** Offset from the start of the page to the beginning of this header */
-  uint32_t off_;
+  u32 off_;
+  ThreadId tid_;        /**< The thread ID that allocated the page */
   size_t page_size_;    /**< The total size of the page allocated */
 
   HSHM_INLINE_CROSS_FUN void SetAllocated() {

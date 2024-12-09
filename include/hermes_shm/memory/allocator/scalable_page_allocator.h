@@ -300,6 +300,7 @@ class _ScalablePageAllocator : public Allocator {
     header_->total_alloc_.fetch_add(page_id.round_);
     OffsetPointer p = Convert<MpPage, OffsetPointer>(page);
     page->page_size_ = page_id.round_;
+    page->tid_ = tid;
     page->SetAllocated();
     // HILOG(kInfo, "TIME: {}ns", timer.GetNsec());
     return p + sizeof(MpPage);
