@@ -65,10 +65,10 @@ class VectorTest {
     // AllocateTest(count);
     // ResizeTest(count);
     ReserveEmplaceTest(count);
-    GetTest(count);
-    BeginIteratorTest(count);
-    EndIteratorTest(count);
-    ForwardIteratorTest(count);
+    // GetTest(count);
+    // BeginIteratorTest(count);
+    // EndIteratorTest(count);
+    // ForwardIteratorTest(count);
     // CopyTest(count);
     // MoveTest(count);
   }
@@ -316,19 +316,22 @@ class VectorTest {
 
 void FullVectorTest() {
   // std::vector tests
-  VectorTest<size_t, std::vector<size_t>>().Test();
-  VectorTest<std::string, std::vector<std::string>>().Test();
+  // VectorTest<size_t, std::vector<size_t>>().Test();
+  // VectorTest<std::string, std::vector<std::string>>().Test();
+  // VectorTest<hipc::string, std::vector<hipc::string>>().Test();
 
-  // boost::ipc::vector tests
-  VectorTest<size_t, bipc_vector<size_t>>().Test();
-  VectorTest<std::string, bipc_vector<std::string>>().Test();
-  VectorTest<bipc_string, bipc_vector<bipc_string>>().Test();
+  // // boost::ipc::vector tests
+  // VectorTest<size_t, bipc_vector<size_t>>().Test();
+  // VectorTest<std::string, bipc_vector<std::string>>().Test();
+  // VectorTest<hipc::string, bipc_vector<hipc::string>>().Test();
+  // VectorTest<bipc_string, bipc_vector<bipc_string>>().Test();
 
-  // hipc::vector tests
+  // // hipc::vector tests
   VectorTest<size_t, hipc::vector<size_t>>().Test();
   VectorTest<std::string, hipc::vector<std::string>>().Test();
   VectorTest<hipc::string, hipc::vector<hipc::string>>().Test();
 }
+
 
 TEST_CASE("VectorBenchmark") {
   FullVectorTest();

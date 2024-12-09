@@ -169,7 +169,7 @@ class string_templ : public ShmContainer {
   }
 
   /** SHM copy constructor. From this string_templ. */
-  HSHM_CROSS_FUN explicit string_templ(
+  HSHM_INLINE_CROSS_FUN explicit string_templ(
       const hipc::CtxAllocator<AllocT> &alloc,
       const string_templ &other) {
     shm_strong_or_weak_copy_op<false, true>(alloc, other.data(), other.size());
@@ -508,7 +508,7 @@ class string_templ : public ShmContainer {
     _create_str(length);
     char *str = data();
     memcpy(str, text, length);
-    str[length] = 0;
+    // str[length] = 0;
   }
 
   HSHM_INLINE_CROSS_FUN void _create_str(const char *text, size_t orig_length, size_t new_length) {

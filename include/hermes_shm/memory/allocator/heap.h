@@ -50,6 +50,9 @@ struct HeapAllocator {
 
   /** Allocate off heap */
   HSHM_INLINE_CROSS_FUN OffsetPointer AllocateOffset(size_t size) {
+    // if (size % 64 != 0) {
+    //   size = (size + 63) & ~63;
+    // }
     size_t off = heap_off_.fetch_add(size);
     if (off + size > heap_size_) {
       // HERMES_THROW_ERROR(OUT_OF_MEMORY, size, heap_size_);
@@ -57,7 +60,7 @@ struct HeapAllocator {
     }
     return OffsetPointer(region_off_ + off);
   }
-
+  
   /** Copy assignment operator */
   HSHM_CROSS_FUN
   HeapAllocator& operator=(const HeapAllocator &other) {

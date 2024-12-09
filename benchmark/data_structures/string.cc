@@ -48,7 +48,7 @@ class StringTestSuite {
         T hello(data);
         USE(hello);
       } else if constexpr(std::is_same_v<hipc::string, T>) {
-        auto hello = hipc::string(data);
+        hipc::string hello(data);
         USE(hello);
       } else if constexpr(std::is_same_v<bipc_string, T>) {
         auto hello = BOOST_SEGMENT->find_or_construct<bipc_string>("MyString")(

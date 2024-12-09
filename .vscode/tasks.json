@@ -14,7 +14,7 @@
         "type": "shell",
         "command": "${workspaceFolder}/build/bin/benchmark_data_structures_exec",
         "args": [
-          ""
+          "StringBenchmark"
         ]
       }
     ]

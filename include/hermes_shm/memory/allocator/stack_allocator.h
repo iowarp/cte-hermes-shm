@@ -72,6 +72,7 @@ class _StackAllocator : public Allocator {
     size_t region_size = buffer_size_ - region_off;
     header_->Configure(id, custom_header_size, region_off, region_size);
     heap_ = &header_->heap_;
+    Align();
   }
 
   /**

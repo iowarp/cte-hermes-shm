@@ -23,22 +23,6 @@
 
 namespace hshm::ipc {
 
-template<typename T>
-struct ShmArchiveShm {
-  HSHM_CROSS_FUN
-  static void shm_destroy(T &obj) {
-    obj.shm_destroy();
-  }
-};
-
-template<typename T>
-struct ShmArchiveNoShm {
-  HSHM_CROSS_FUN
-  static void shm_destroy(T &obj) {
-    Allocator::DestructObj<T>(obj);
-  }
-};
-
 /**
  * Represents the layout of a data structure in shared memory.
  * */
@@ -139,13 +123,7 @@ class ShmArchive {
 
   /** Destroy */
   HSHM_INLINE_CROSS_FUN
-  void shm_destroy() {
-    if constexpr(IS_SHM_ARCHIVEABLE(T)) {
-      ShmArchiveShm<T>::shm_destroy(get_ref());
-    } else {
-      ShmArchiveNoShm<T>::shm_destroy(get_ref());
-    }
-  }
+  void shm_destroy() { Allocator::DestructObj<T>(get_ref()); }
 };
 
 /**
