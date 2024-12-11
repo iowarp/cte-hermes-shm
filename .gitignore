@@ -10,6 +10,7 @@ cmake*
 *.o
 *.o.cmd
 *.o.d
+.cache
 build
 Testing
 *.env
