@@ -40,6 +40,24 @@ struct nonatomic {
   /** Full constructor */
   HSHM_INLINE_CROSS explicit nonatomic(T def) : x(def) {}
 
+  /** Copy constructor */
+  HSHM_INLINE_CROSS nonatomic(const nonatomic &other) : x(other.x) {}
+
+  /* Move constructor */
+  HSHM_INLINE_CROSS nonatomic(nonatomic &&other) : x(std::move(other.x)) {}
+
+  /** Copy assign operator */
+  HSHM_INLINE_CROSS nonatomic& operator=(const nonatomic &other) {
+    x = other.x;
+    return *this;
+  }
+
+  /** Move assign operator */
+  HSHM_INLINE_CROSS nonatomic& operator=(nonatomic &&other) {
+    x = std::move(other.x);
+    return *this;
+  }
+
   /** Atomic fetch_add wrapper*/
   HSHM_INLINE_CROSS T fetch_add(
       T count, std::memory_order order = std::memory_order_seq_cst) {
@@ -165,6 +183,24 @@ struct cuda_atomic {
   /** Full constructor */
   HSHM_INLINE_GPU explicit cuda_atomic(T def) : x(def) {}
 
+  /** Copy constructor */
+  HSHM_INLINE_GPU cuda_atomic(const cuda_atomic &other) : x(other.x) {}
+
+  /* Move constructor */
+  HSHM_INLINE_GPU cuda_atomic(cuda_atomic &&other) : x(std::move(other.x)) {}
+
+  /** Copy assign operator */
+  HSHM_INLINE_GPU cuda_atomic& operator=(const cuda_atomic &other) {
+    x = other.x;
+    return *this;
+  }
+
+  /** Move assign operator */
+  HSHM_INLINE_GPU cuda_atomic& operator=(cuda_atomic &&other) {
+    x = std::move(other.x);
+    return *this;
+  }
+
   /** Atomic fetch_add wrapper*/
   HSHM_INLINE_GPU T fetch_add(T count) {
     return atomicAdd(&x, count);
@@ -277,7 +313,24 @@ struct std_atomic {
   HSHM_INLINE std_atomic() = default;
 
   /** Full constructor */
-  HSHM_INLINE explicit std_atomic(T def) : x(def) {
+  HSHM_INLINE explicit std_atomic(T def) : x(def) {}
+
+  /** Copy constructor */
+  HSHM_INLINE std_atomic(const std_atomic &other) : x(other.x) {}
+
+  /* Move constructor */
+  HSHM_INLINE std_atomic(std_atomic &&other) : x(std::move(other.x)) {}
+
+  /** Copy assign operator */
+  HSHM_INLINE std_atomic& operator=(const std_atomic &other) {
+    x = other.x;
+    return *this;
+  }
+
+  /** Move assign operator */
+  HSHM_INLINE std_atomic& operator=(std_atomic &&other) {
+    x = std::move(other.x);
+    return *this;
   }
 
   /** Atomic fetch_add wrapper*/
