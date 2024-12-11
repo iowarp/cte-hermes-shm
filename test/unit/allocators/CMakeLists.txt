@@ -25,7 +25,7 @@ set(ALLOCATORS
         StackAllocator
         MallocAllocator
         ScalablePageAllocator
-        LocalPointers)
+        LocaFullPtrs)
 foreach(ALLOCATOR ${ALLOCATORS})
     add_test(NAME test_${ALLOCATOR} COMMAND
             ${CMAKE_BINARY_DIR}/bin/test_allocator_exec "${ALLOCATOR}")

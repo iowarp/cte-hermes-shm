@@ -275,7 +275,7 @@ class BaseAllocator : public CoreAllocT {
 
   /**
    * Reallocate \a pointer to \a new_size new size.
-   * Assumes that p is not kNullPointer.
+   * Assumes that p is not kNulFullPtr.
    *
    * @return true if p was modified.
    * */
@@ -375,7 +375,7 @@ class BaseAllocator : public CoreAllocT {
 
   /**
    * Reallocate \a pointer to \a new_size new size
-   * If p is kNullPointer, will internally call Allocate.
+   * If p is kNulFullPtr, will internally call Allocate.
    *
    * @return true if p was modified.
    * */
@@ -540,10 +540,10 @@ class BaseAllocator : public CoreAllocT {
    * */
   template<typename T, typename PointerT = Pointer>
   HSHM_INLINE_CROSS
-  LPointer<T, PointerT>
+  FullPtr<T, PointerT>
   AllocateLocalPtr(const MemContext &ctx,
                    size_t size, size_t alignment = 0) {
-    LPointer<T, PointerT> p;
+    FullPtr<T, PointerT> p;
     p.ptr_ = AllocatePtr<T, PointerT>(ctx, size, p.shm_, alignment);
     return p;
   }
@@ -553,10 +553,10 @@ class BaseAllocator : public CoreAllocT {
    * */
   template<typename T, typename PointerT = Pointer>
   HSHM_INLINE_CROSS
-  LPointer<T, PointerT>
+  FullPtr<T, PointerT>
   ClearAllocateLocalPtr(const MemContext &ctx,
                         size_t size, size_t alignment = 0) {
-    LPointer<T, PointerT> p;
+    FullPtr<T, PointerT> p;
     p.ptr_ = ClearAllocatePtr<T, PointerT>(ctx, size, p.shm_, alignment);
     return p;
   }
@@ -571,7 +571,7 @@ class BaseAllocator : public CoreAllocT {
   template<typename T, typename PointerT = Pointer>
   HSHM_INLINE_CROSS
   bool ReallocateLocalPtr(const MemContext &ctx,
-                     LPointer<T, PointerT> &p, size_t new_size) {
+                     FullPtr<T, PointerT> &p, size_t new_size) {
     bool ret = Reallocate<PointerT>(ctx, p.shm_, new_size);
     p.ptr_ = Convert<T>(p.shm_);
     return ret;
@@ -583,7 +583,7 @@ class BaseAllocator : public CoreAllocT {
   template<typename T = void, typename PointerT = Pointer>
   HSHM_INLINE_CROSS
   void FreeLocalPtr(const MemContext &ctx,
-                    LPointer<T, PointerT> &ptr) {
+                    FullPtr<T, PointerT> &ptr) {
     if (ptr.ptr_ == nullptr) {
       HERMES_THROW_ERROR(INVALID_FREE);
     }
@@ -911,13 +911,13 @@ class BaseAllocator : public CoreAllocT {
   /**
    * Allocate an array of objects (but don't construct).
    *
-   * @return A LocalPointer
+   * @return A LocaFullPtr
    * */
   template<typename T, typename PointerT = Pointer>
   HSHM_INLINE_CROSS
-  LPointer<T, PointerT>
+  FullPtr<T, PointerT>
   AllocateObjsLocal(const MemContext &ctx, size_t count) {
-    LPointer<T, PointerT> p;
+    FullPtr<T, PointerT> p;
     p.ptr_ = AllocateObjs<T>(ctx, count, p.shm_);
     return p;
   }
@@ -935,11 +935,11 @@ class BaseAllocator : public CoreAllocT {
       typename PointerT = Pointer,
       typename ...Args>
   HSHM_INLINE_CROSS
-  LPointer<T, PointerT>
+  FullPtr<T, PointerT>
   AllocateConstructObjsLocal(const MemContext &ctx,
                              size_t count,
                              Args&& ...args) {
-    LPointer<T, PointerT> p;
+    FullPtr<T, PointerT> p;
     p.ptr_ = AllocateConstructObjs<T, OffsetPointer>(
         ctx, count, p.shm_, std::forward<Args>(args)...);
     return p;
@@ -951,9 +951,9 @@ class BaseAllocator : public CoreAllocT {
       typename PointerT = Pointer,
       typename ...Args>
   HSHM_INLINE_CROSS
-  LPointer<T, PointerT>
+  FullPtr<T, PointerT>
   NewObjsLocal(const MemContext &ctx, size_t count, Args&& ...args) {
-    LPointer<T, PointerT> p;
+    FullPtr<T, PointerT> p;
     p.ptr_ = NewObjs<T>(ctx, count, p.shm_, std::forward<Args>(args)...);
     return p;
   }
@@ -964,8 +964,8 @@ class BaseAllocator : public CoreAllocT {
       typename PointerT = Pointer,
       typename ...Args>
   HSHM_INLINE_CROSS
-  LPointer<T, PointerT> NewObjLocal(const MemContext &ctx, Args&& ...args) {
-    LPointer<T, PointerT> p;
+  FullPtr<T, PointerT> NewObjLocal(const MemContext &ctx, Args&& ...args) {
+    FullPtr<T, PointerT> p;
     p.ptr_ = NewObj<T>(ctx, p.shm_, std::forward<Args>(args)...);
     return p;
   }
@@ -982,7 +982,7 @@ class BaseAllocator : public CoreAllocT {
   template<typename T, typename PointerT = Pointer>
   HSHM_INLINE_CROSS
   void ReallocateObjsLocal(const MemContext &ctx,
-                           LPointer<T, PointerT> &p,
+                           FullPtr<T, PointerT> &p,
                            size_t new_count) {
     p.ptr_ = ReallocatePtr<T>(ctx, p.shm_, new_count * sizeof(T));
   }
@@ -1004,7 +1004,7 @@ class BaseAllocator : public CoreAllocT {
       typename ...Args>
   HSHM_INLINE_CROSS
   void ReallocateConstructObjsLocal(const MemContext &ctx,
-                                    LPointer<T, PointerT> &p,
+                                    FullPtr<T, PointerT> &p,
                                     size_t old_count,
                                     size_t new_count,
                                     Args&& ...args) {
@@ -1018,7 +1018,7 @@ class BaseAllocator : public CoreAllocT {
   template <typename T, typename PointerT>
   HSHM_INLINE_CROSS
   void FreeDestructObjsLocal(const MemContext &ctx,
-                             LPointer<T, PointerT> &p, size_t count) {
+                             FullPtr<T, PointerT> &p, size_t count) {
     DestructObjs<T>(p.ptr_, count);
     Free(ctx, p.shm_);
   }
@@ -1029,7 +1029,7 @@ class BaseAllocator : public CoreAllocT {
   template <typename T, typename PointerT>
   HSHM_INLINE_CROSS
   void DelObjsLocal(const MemContext &ctx,
-                    LPointer<T, PointerT> &p, size_t count) {
+                    FullPtr<T, PointerT> &p, size_t count) {
     FreeDestructObjsLocal<T>(ctx, p, count);
   }
 
@@ -1039,7 +1039,7 @@ class BaseAllocator : public CoreAllocT {
   template <typename T, typename PointerT>
   HSHM_INLINE_CROSS
   void DelObjLocal(const MemContext &ctx,
-                   LPointer<T, PointerT> &p) {
+                   FullPtr<T, PointerT> &p) {
     FreeDestructObjsLocal<T>(ctx, p, 1);
   }
 
@@ -1208,7 +1208,7 @@ class _NullAllocator : public Allocator {
 
   /**
    * Reallocate \a pointer to \a new_size new size.
-   * Assumes that p is not kNullPointer.
+   * Assumes that p is not kNulFullPtr.
    *
    * @return true if p was modified.
    * */

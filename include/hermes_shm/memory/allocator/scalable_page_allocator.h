@@ -327,7 +327,7 @@ class _ScalablePageAllocator : public Allocator {
   OffsetPointer ReallocateOffsetNoNullCheck(
       const hipc::MemContext &ctx,
       OffsetPointer p, size_t new_size) {
-    LPointer<char, OffsetPointer> new_ptr =
+    FullPtr<char, OffsetPointer> new_ptr =
         ((AllocT*)this)->AllocateLocalPtr<char, OffsetPointer>(ctx, new_size);
     char *old = Convert<char, OffsetPointer>(p);
     MpPage *old_hdr = (MpPage*)(old - sizeof(MpPage));

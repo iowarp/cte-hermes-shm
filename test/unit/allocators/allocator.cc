@@ -13,6 +13,12 @@
 
 #include "test_init.h"
 
+TEST_CASE("FullPtr") {
+  hipc::FullPtr<int> x;
+  hipc::FullPtr<std::string> y;
+  y = x.Cast<std::string>();
+}
+
 TEST_CASE("StackAllocator") {
   auto alloc = Pretest<hipc::PosixShmMmap, hipc::StackAllocator>();
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
@@ -51,15 +57,15 @@ TEST_CASE("ScalablePageAllocator") {
   Posttest();
 }
 
-TEST_CASE("LocalPointers") {
+TEST_CASE("LocaFullPtrs") {
   auto alloc = Pretest<hipc::PosixShmMmap, hipc::ScalablePageAllocator>();
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
   // Allocate API
-  hipc::LPointer<char> p1 =
+  hipc::FullPtr<char> p1 =
       alloc->AllocateLocalPtr<char>(HSHM_DEFAULT_MEM_CTX, 256);
   REQUIRE(!p1.shm_.IsNull());
   REQUIRE(p1.ptr_ != nullptr);
-  hipc::LPointer<char> p2 =
+  hipc::FullPtr<char> p2 =
       alloc->ClearAllocateLocalPtr<char>(HSHM_DEFAULT_MEM_CTX, 256);
   REQUIRE(!p2.shm_.IsNull());
   REQUIRE(p2.ptr_ != nullptr);
@@ -71,10 +77,10 @@ TEST_CASE("LocalPointers") {
   alloc->FreeLocalPtr(HSHM_DEFAULT_MEM_CTX, p2);
 
   // OBJ API
-  hipc::LPointer<std::vector<int>> p4 =
+  hipc::FullPtr<std::vector<int>> p4 =
       alloc->NewObjLocal<std::vector<int>>(HSHM_DEFAULT_MEM_CTX);
   alloc->DelObjLocal(HSHM_DEFAULT_MEM_CTX, p4);
-  hipc::LPointer<std::vector<int>> p5 =
+  hipc::FullPtr<std::vector<int>> p5 =
       alloc->NewObjsLocal<std::vector<int>>(
           HSHM_DEFAULT_MEM_CTX, 4);
   alloc->ReallocateObjsLocal<std::vector<int>>(

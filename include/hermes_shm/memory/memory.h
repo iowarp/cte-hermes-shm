@@ -389,10 +389,39 @@ struct LPointer {
   }
 
   /** Set to null */
-  HSHM_INLINE_CROSS void SetNull() {
-    ptr_ = nullptr;
+  HSHM_INLINE_CROSS void SetNull() { ptr_ = nullptr; }
+
+  /** Reintrepret cast to other internal type */
+  template <typename U>
+  HSHM_INLINE_CROSS
+  LPointer<U, PointerT>& Cast() {
+    return DeepCast<LPointer<U, PointerT>>();
+  }
+
+  /** Reintrepret cast to other internal type (const) */
+  template <typename U>
+  HSHM_INLINE_CROSS const LPointer<U, PointerT> &Cast() const {
+    return DeepCast<LPointer<U, PointerT>>();
+  }
+
+  /** Reintrepret cast to another LPointer */
+  template <typename LPointerT>
+  HSHM_INLINE_CROSS
+  LPointerT& DeepCast() {
+    return *((LPointerT*)this);
+  }
+
+  /** Reintrepret cast to another LPointer (const) */
+  template <typename LPointerT>
+  HSHM_INLINE_CROSS
+  const LPointerT& DeepCast() const {
+    return *((LPointerT*)this);
   }
 };
+
+/** Alias to local pointer */
+template<typename T = char, typename PointerT = Pointer>
+using FullPtr = LPointer<T, PointerT>;
 
 /** Struct containing both a pointer and its size */
 template<typename PointerT = Pointer>
