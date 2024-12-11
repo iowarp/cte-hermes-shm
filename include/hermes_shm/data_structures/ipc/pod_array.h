@@ -31,7 +31,7 @@ struct pod_array {
   };
 
   /** Default constructor */
-  HSHM_INLINE_CROSS_FUN
+  HSHM_INLINE_CROSS
   pod_array() : size_(0) {}
 
   /** Serialize */
@@ -51,7 +51,7 @@ struct pod_array {
 
   /** Construct */
   template<typename AllocT>
-  HSHM_INLINE_CROSS_FUN
+  HSHM_INLINE_CROSS
   void construct(const hipc::CtxAllocator<AllocT> &alloc, int size = 0) {
     HSHM_MAKE_AR0(vec_, alloc);
     if (size) {
@@ -60,7 +60,7 @@ struct pod_array {
   }
 
   /** Reserve */
-  HSHM_INLINE_CROSS_FUN
+  HSHM_INLINE_CROSS
   void resize(int size) {
     if (size > SO) {
       vec_.get_ref().resize(size);
@@ -69,13 +69,13 @@ struct pod_array {
   }
 
   /** Destroy */
-  HSHM_INLINE_CROSS_FUN
+  HSHM_INLINE_CROSS
   void destroy() {
     HSHM_DESTROY_AR(vec_);
   }
 
   /** Get */
-  HSHM_INLINE_CROSS_FUN
+  HSHM_INLINE_CROSS
   delay_ar<T>* get() {
     if (size_ > SO) {
       return vec_.get_ref().data_ar();
@@ -84,7 +84,7 @@ struct pod_array {
   }
 
   /** Get (const) */
-  HSHM_INLINE_CROSS_FUN
+  HSHM_INLINE_CROSS
   const delay_ar<T>* get() const {
     if (size_ > SO) {
       return vec_.get_ref().data_ar();
@@ -94,14 +94,14 @@ struct pod_array {
 
   /** Index operator */
   template<typename IdxType>
-  HSHM_INLINE_CROSS_FUN
+  HSHM_INLINE_CROSS
   T& operator[](IdxType i) {
     return *(get()[i]);
   }
 
   /** Index operator (const) */
   template<typename IdxType>
-  HSHM_INLINE_CROSS_FUN
+  HSHM_INLINE_CROSS
   const T& operator[](IdxType i) const {
     return *(get()[i]);
   }

@@ -29,7 +29,7 @@ struct RealNumber {
   uint32_t numerator_;
   CLS_CONST uint32_t precision = 65536;
 
-  HSHM_INLINE_CROSS_FUN
+  HSHM_INLINE_CROSS
   RealNumber() =  default;
 
   /**
@@ -39,7 +39,7 @@ struct RealNumber {
    * For example,
    * 4/5 = (4 * 65536 / 5) / 65536
    * */
-  HSHM_INLINE_CROSS_FUN
+  HSHM_INLINE_CROSS
   explicit RealNumber(uint64_t numerator, uint64_t denominator) {
     decimal_ = numerator / denominator;
     uint64_t rem = numerator % denominator;
@@ -50,7 +50,7 @@ struct RealNumber {
    * (d1 + n1/p) * d2 =
    * d1 * d2 + d2 * n1 / p
    * */
-  HSHM_INLINE_CROSS_FUN
+  HSHM_INLINE_CROSS
   RealNumber operator*(size_t other) const {
     RealNumber res;
     res.decimal_ = other * decimal_;
@@ -65,7 +65,7 @@ struct RealNumber {
    * (d1 * d2) + (d1 * n2)/p + (d2 * n1) / p + (n1 * n2 / p) / p =
    * (d1 * d2) + [(d1 * n2) + (d2 * n1) + (n1 * n2)/p] / p
    * */
-  HSHM_INLINE_CROSS_FUN
+  HSHM_INLINE_CROSS
   RealNumber operator*(const RealNumber &other) const {
     RealNumber res;
     // d1 * d2
@@ -79,19 +79,19 @@ struct RealNumber {
     return res;
   }
 
-  HSHM_INLINE_CROSS_FUN
+  HSHM_INLINE_CROSS
   RealNumber operator*=(size_t other) {
     (*this) = (*this) * other;
     return *this;
   }
 
-  HSHM_INLINE_CROSS_FUN
+  HSHM_INLINE_CROSS
   RealNumber operator*=(const RealNumber &other) {
     (*this) = (*this) * other;
     return *this;
   }
 
-  HSHM_INLINE_CROSS_FUN
+  HSHM_INLINE_CROSS
   size_t as_int() const {
     return decimal_ + numerator_ / precision;
   }

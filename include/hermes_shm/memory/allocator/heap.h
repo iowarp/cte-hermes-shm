@@ -49,7 +49,7 @@ struct HeapAllocator {
   }
 
   /** Allocate off heap */
-  HSHM_INLINE_CROSS_FUN OffsetPointer AllocateOffset(size_t size) {
+  HSHM_INLINE_CROSS OffsetPointer AllocateOffset(size_t size) {
     // if (size % 64 != 0) {
     //   size = (size + 63) & ~63;
     // }

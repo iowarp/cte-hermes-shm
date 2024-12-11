@@ -35,6 +35,7 @@ namespace hshm {
   const Error IPC_ARGS_NOT_SHM_COMPATIBLE("Args are not compatible with SHM");
 
   const Error UNORDERED_MAP_CANT_FIND("Could not find key in unordered_map");
+  const Error KEY_SET_OUT_OF_BOUNDS("Too many keys in the key set");
 
   const Error ARGPACK_INDEX_OUT_OF_BOUNDS("Argpack index out of bounds");
 }  // namespace hshm

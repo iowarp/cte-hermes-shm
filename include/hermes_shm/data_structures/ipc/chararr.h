@@ -26,7 +26,7 @@ class chararr_templ {
   chararr_templ() = default;
 
   /** Size-based constructor */
-  HSHM_INLINE_CROSS_FUN explicit chararr_templ(size_t size) {
+  HSHM_INLINE_CROSS explicit chararr_templ(size_t size) {
     resize(size);
   }
 
@@ -77,7 +77,7 @@ class chararr_templ {
   }
 
   /** Copy assignment operator */
-  HSHM_INLINE_CROSS_FUN chararr_templ& operator=(const chararr_templ &other) {
+  HSHM_INLINE_CROSS chararr_templ& operator=(const chararr_templ &other) {
     if (this != &other) {
       length_ = other.size();
       memcpy(buf_, other.data(), length_);
@@ -123,32 +123,32 @@ class chararr_templ {
   }
 
   /** Reference data */
-  HSHM_INLINE_CROSS_FUN char* data() {
+  HSHM_INLINE_CROSS char* data() {
     return buf_;
   }
 
   /** Reference data */
-  HSHM_INLINE_CROSS_FUN const char* data() const {
+  HSHM_INLINE_CROSS const char* data() const {
     return buf_;
   }
 
   /** Reference data */
-  HSHM_INLINE_CROSS_FUN char* c_str() {
+  HSHM_INLINE_CROSS char* c_str() {
     return buf_;
   }
 
   /** Reference data */
-  HSHM_INLINE_CROSS_FUN const char* c_str() const {
+  HSHM_INLINE_CROSS const char* c_str() const {
     return buf_;
   }
 
   /** Reference size */
-  HSHM_INLINE_CROSS_FUN size_t size() const {
+  HSHM_INLINE_CROSS size_t size() const {
     return length_;
   }
 
   /** Convert to std::string */
-  HSHM_INLINE_HOST_FUN const std::string str() const {
+  HSHM_INLINE_HOST const std::string str() const {
     return std::string(data(), size());
   }
 
@@ -157,12 +157,12 @@ class chararr_templ {
    * ===================================*/
 
   /** Index operator */
-  HSHM_INLINE_CROSS_FUN char& operator[](size_t idx) {
+  HSHM_INLINE_CROSS char& operator[](size_t idx) {
     return buf_[idx];
   }
 
   /** Const index operator */
-  HSHM_INLINE_CROSS_FUN const char& operator[](size_t idx) const {
+  HSHM_INLINE_CROSS const char& operator[](size_t idx) const {
     return buf_[idx];
   }
 

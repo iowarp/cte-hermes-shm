@@ -34,6 +34,10 @@ class ring_queue_base;
 /**
  * A queue optimized for multiple producers (emplace) with a single
  * consumer (pop).
+ * @param T The type of the data to store in the queue
+ * @param IsPushAtomic If true, the push operation is atomic (thread-safe)
+ * @param IsPopAtomic If true, the pop operation is atomic (thread-safe)
+ * @param IsFixedSize If true, the queue is guaranteed to push/pop a fixed number of requests.
  * */
 template<
     typename T,
@@ -210,7 +214,7 @@ class ring_queue_base : public ShmContainer {
   }
 
   /** Resize (wrapper) */
-  HSHM_INLINE_CROSS_FUN
+  HSHM_INLINE_CROSS
   void Resize(size_t new_depth) {
     resize(new_depth);
   }
@@ -377,29 +381,39 @@ class ring_queue_base : public ShmContainer {
   }
 
   /** Get size (wrapper) */
-  HSHM_INLINE_CROSS_FUN
+  HSHM_INLINE_CROSS
   size_t size() {
     return GetSize();
   }
 
   /** Get size (wrapper) */
-  HSHM_INLINE_CROSS_FUN
+  HSHM_INLINE_CROSS
   size_t Size() {
     return GetSize();
   }
 };
 
-template<typename T, HSHM_CLASS_TEMPL_WITH_DEFAULTS>
-using mpsc_queue = ring_queue_base<T, true, false, false, HSHM_CLASS_TEMPL_ARGS>;
+// bool IsPushAtomic,
+// bool IsPopAtomic,
+// bool IsFixedSize,
+#define RING_BUFFER_FLAGS bool IsPushAtomic, bool IsPopAtomic, bool IsFixedSize
+#define RING_BUFFER_FLAGS_ARGS IsPushAtomic, IsPopAtomic, IsFixedSize
+#define RING_BUFFER_MPSC_FLAGS true, false, false
+#define RING_BUFFER_SPSC_FLAGS false, false, false
+#define RING_BUFFER_FIXED_SPSC_FLAGS false, false, true
+#define RING_BUFFER_FIXED_MPMC_FLAGS true, true, true
 
 template<typename T, HSHM_CLASS_TEMPL_WITH_DEFAULTS>
-using spsc_queue = ring_queue_base<T, false, false, false, HSHM_CLASS_TEMPL_ARGS>;
+using mpsc_queue = ring_queue_base<T, RING_BUFFER_MPSC_FLAGS, HSHM_CLASS_TEMPL_ARGS>;
 
 template<typename T, HSHM_CLASS_TEMPL_WITH_DEFAULTS>
-using fixed_spsc_queue = ring_queue_base<T, false, false, true, HSHM_CLASS_TEMPL_ARGS>;
+using spsc_queue = ring_queue_base<T, RING_BUFFER_SPSC_FLAGS, HSHM_CLASS_TEMPL_ARGS>;
 
 template<typename T, HSHM_CLASS_TEMPL_WITH_DEFAULTS>
-using fixed_mpmc_queue = ring_queue_base<T, true, true, true, HSHM_CLASS_TEMPL_ARGS>;
+using fixed_spsc_queue = ring_queue_base<T, RING_BUFFER_FIXED_SPSC_FLAGS, HSHM_CLASS_TEMPL_ARGS>;
+
+template<typename T, HSHM_CLASS_TEMPL_WITH_DEFAULTS>
+using fixed_mpmc_queue = ring_queue_base<T, RING_BUFFER_FIXED_MPMC_FLAGS, HSHM_CLASS_TEMPL_ARGS>;
 
 template<typename T, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
 using fixed_mpsc_queue = fixed_mpmc_queue<T, HSHM_CLASS_TEMPL_ARGS>;
@@ -409,16 +423,16 @@ using fixed_mpsc_queue = fixed_mpmc_queue<T, HSHM_CLASS_TEMPL_ARGS>;
 namespace hshm {
 
 template<typename T, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
-using mpsc_queue = hipc::ring_queue_base<T, true, false, false, HSHM_CLASS_TEMPL_ARGS>;
+using mpsc_queue = hipc::ring_queue_base<T, RING_BUFFER_MPSC_FLAGS, HSHM_CLASS_TEMPL_ARGS>;
 
 template<typename T, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
-using spsc_queue = hipc::ring_queue_base<T, false, false, false, HSHM_CLASS_TEMPL_ARGS>;
+using spsc_queue = hipc::ring_queue_base<T, RING_BUFFER_SPSC_FLAGS, HSHM_CLASS_TEMPL_ARGS>;
 
 template<typename T, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
-using fixed_spsc_queue = hipc::ring_queue_base<T, false, false, true, HSHM_CLASS_TEMPL_ARGS>;
+using fixed_spsc_queue = hipc::ring_queue_base<T, RING_BUFFER_FIXED_SPSC_FLAGS, HSHM_CLASS_TEMPL_ARGS>;
 
 template<typename T, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
-using fixed_mpmc_queue = hipc::ring_queue_base<T, true, true, true, HSHM_CLASS_TEMPL_ARGS>;
+using fixed_mpmc_queue = hipc::ring_queue_base<T, RING_BUFFER_FIXED_MPMC_FLAGS, HSHM_CLASS_TEMPL_ARGS>;
 
 template<typename T, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
 using fixed_mpsc_queue = fixed_mpmc_queue<T, HSHM_CLASS_TEMPL_ARGS>;

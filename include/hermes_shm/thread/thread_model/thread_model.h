@@ -75,7 +75,7 @@ class ThreadModel {
 
  public:
   /** Initializer */
-  HSHM_INLINE_CROSS_FUN
+  HSHM_INLINE_CROSS
   ThreadModel(ThreadType type) : type_(type) {}
 
   /** Sleep thread for a period of time */
@@ -91,7 +91,7 @@ class ThreadModel {
   virtual ThreadId GetTid() = 0;
 
   /** Get the thread model type */
-  HSHM_INLINE_CROSS_FUN
+  HSHM_INLINE_CROSS
   ThreadType GetType() {
     return type_;
   }

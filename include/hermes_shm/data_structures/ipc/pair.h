@@ -234,15 +234,15 @@ class pair : public ShmContainer {
    * ===================================*/
 
   /** Check if the pair is empty */
-  HSHM_INLINE_CROSS_FUN bool IsNull() const {
+  HSHM_INLINE_CROSS bool IsNull() const {
     return false;
   }
 
   /** Sets this pair as empty */
-  HSHM_INLINE_CROSS_FUN void SetNull() {}
+  HSHM_INLINE_CROSS void SetNull() {}
 
   /** Destroy the shared-memory data */
-  HSHM_INLINE_CROSS_FUN void shm_destroy_main() {
+  HSHM_INLINE_CROSS void shm_destroy_main() {
     HSHM_DESTROY_AR(first_)
     HSHM_DESTROY_AR(second_)
   }
@@ -252,28 +252,28 @@ class pair : public ShmContainer {
    * ===================================*/
 
   /** Get the first object */
-  HSHM_INLINE_CROSS_FUN FirstT& GetFirst() { return first_.get_ref(); }
+  HSHM_INLINE_CROSS FirstT& GetFirst() { return first_.get_ref(); }
 
   /** Get the first object (const) */
-  HSHM_INLINE_CROSS_FUN FirstT& GetFirst() const { return first_.get_ref(); }
+  HSHM_INLINE_CROSS FirstT& GetFirst() const { return first_.get_ref(); }
 
   /** Get the second object */
-  HSHM_INLINE_CROSS_FUN SecondT& GetSecond() { return second_.get_ref(); }
+  HSHM_INLINE_CROSS SecondT& GetSecond() { return second_.get_ref(); }
 
   /** Get the second object (const) */
-  HSHM_INLINE_CROSS_FUN SecondT& GetSecond() const { return second_.get_ref(); }
+  HSHM_INLINE_CROSS SecondT& GetSecond() const { return second_.get_ref(); }
 
   /** Get the first object (treated as key) */
-  HSHM_INLINE_CROSS_FUN FirstT& GetKey() { return first_.get_ref(); }
+  HSHM_INLINE_CROSS FirstT& GetKey() { return first_.get_ref(); }
 
   /** Get the first object (treated as key) (const) */
-  HSHM_INLINE_CROSS_FUN FirstT& GetKey() const { return first_.get_ref(); }
+  HSHM_INLINE_CROSS FirstT& GetKey() const { return first_.get_ref(); }
 
   /** Get the second object (treated as value) */
-  HSHM_INLINE_CROSS_FUN SecondT& GetVal() { return second_.get_ref(); }
+  HSHM_INLINE_CROSS SecondT& GetVal() { return second_.get_ref(); }
 
   /** Get the second object (treated as value) (const) */
-  HSHM_INLINE_CROSS_FUN SecondT& GetVal() const { return second_.get_ref(); }
+  HSHM_INLINE_CROSS SecondT& GetVal() const { return second_.get_ref(); }
 };
 
 }  // namespace hshm::ipc

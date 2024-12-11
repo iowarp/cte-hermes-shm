@@ -12,9 +12,42 @@
 
 #include "basic_test.h"
 #include "test_init.h"
-#include "hermes_shm/data_structures/ipc/ring_queue.h"
-#include "hermes_shm/data_structures/ipc/ring_ptr_queue.h"
 #include "queue.h"
+
+/**
+ * TEST DYNAMIC QUEUE
+ * */
+
+TEST_CASE("TestDynamicQueueInt") {
+  auto *alloc = HSHM_DEFAULT_ALLOC;
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+  ProduceThenConsume<hipc::dynamic_queue<int>, int>(1, 1, 32, 32);
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+}
+
+TEST_CASE("TestDynamicQueueString") {
+  auto *alloc = HSHM_DEFAULT_ALLOC;
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+  ProduceThenConsume<hipc::dynamic_queue<hipc::string>, hipc::string>(
+    1, 1, 32, 32);
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+}
+
+TEST_CASE("TestDynamicQueueIntMultiThreaded") {
+  auto *alloc = HSHM_DEFAULT_ALLOC;
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+  ProduceAndConsume<hipc::dynamic_queue<int>, int>(8, 1, 8192, 32);
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+}
+
+TEST_CASE("TestDynamicQueueStringMultiThreaded") {
+  auto *alloc = HSHM_DEFAULT_ALLOC;
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+  ProduceAndConsume<hipc::dynamic_queue<hipc::string>, hipc::string>(
+    8, 1, 8192, 32);
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+}
+
 
 /**
  * TEST MPSC QUEUE
@@ -101,4 +134,24 @@ TEST_CASE("TestMpscPointerQueueCompile") {
   queue.emplace(hipc::Pointer(AllocatorId(5, 2), 1));
   queue.pop(off_p);
   REQUIRE(off_p == hipc::Pointer(AllocatorId(5, 2), 1));
+}
+
+
+/**
+ * TEST SPSC QUEUE
+ * */
+
+TEST_CASE("TestSpscQueueInt") {
+  auto *alloc = HSHM_DEFAULT_ALLOC;
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+  ProduceThenConsume<hipc::spsc_queue<int>, int>(1, 1, 32, 32);
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+}
+
+TEST_CASE("TestSpscQueueString") {
+  auto *alloc = HSHM_DEFAULT_ALLOC;
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+  ProduceThenConsume<hipc::spsc_queue<hipc::string>, hipc::string>(
+    1, 1, 32, 32);
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
 }

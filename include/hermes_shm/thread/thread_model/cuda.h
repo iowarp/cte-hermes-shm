@@ -25,7 +25,7 @@ namespace hshm::thread {
 class Cuda : public ThreadModel {
  public:
   /** Default constructor */
-  HSHM_INLINE_CROSS_FUN
+  HSHM_INLINE_CROSS
   Cuda() : ThreadModel(ThreadType::kCuda) {}
 
   /** Virtual destructor */

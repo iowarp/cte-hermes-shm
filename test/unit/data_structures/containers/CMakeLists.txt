@@ -18,15 +18,13 @@ add_executable(test_data_structure_exec
         vector.cc
         iqueue.cc
         unordered_map.cc
-        mpsc_queue.cc
-        spsc_queue.cc
+        ring_queue.cc
         charwrap.cc
         ticket_queue.cc
         pod_array.cc
         chararr.cc
         namespace.cc
         key_set.cc
-        key_queue.cc
 )
 
 add_dependencies(test_data_structure_exec hermes_shm_data_structures)

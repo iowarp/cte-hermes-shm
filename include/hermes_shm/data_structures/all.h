@@ -21,6 +21,7 @@
 #include "ipc/tuple_base.h"
 
 #include "ipc/chararr.h"
+#include "ipc/dynamic_queue.h"
 #include "ipc/iqueue.h"
 #include "ipc/list.h"
 #include "ipc/pair.h"
@@ -34,7 +35,6 @@
 #include "ipc/unordered_map.h"
 #include "ipc/vector.h"
 #include "ipc/key_set.h"
-#include "ipc/key_queue.h"
 
 #include "serialization/serialize_common.h"
 #include "serialization/local_serialize.h"
@@ -101,9 +101,6 @@
                                                                              \
   template <typename T>                                                      \
   using key_set = HSHM_NS::key_set<T, ALLOC_T>;                              \
-                                                                             \
-  template <typename T>                                                      \
-  using key_queue = HSHM_NS::key_queue<T, ALLOC_T>;                          \
   }  // namespace NS
   
 #define HSHM_DATA_STRUCTURES_TEMPLATE(NS, ALLOC_T)      \

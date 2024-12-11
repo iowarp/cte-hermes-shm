@@ -103,7 +103,7 @@ class ShmContainerExample : public hipc::ShmContainer {
    * Destructor
    * ===================================*/
   /** Destructor. */
-  HSHM_INLINE_CROSS_FUN
+  HSHM_INLINE_CROSS
   ~__TU(CLASS_NAME)() {
     if constexpr (!(HSHM_FLAGS & hipc::ShmFlag::kIsUndestructable)) {
       shm_destroy();
@@ -111,7 +111,7 @@ class ShmContainerExample : public hipc::ShmContainer {
   }
 
   /** Destruction operation */
-  HSHM_INLINE_CROSS_FUN
+  HSHM_INLINE_CROSS
   void shm_destroy() {
     if (IsNull()) { return; }
     shm_destroy_main();
@@ -124,7 +124,7 @@ class ShmContainerExample : public hipc::ShmContainer {
 
   /** Get a typed pointer to the object */
   template<typename POINTER_T>
-  HSHM_INLINE_CROSS_FUN
+  HSHM_INLINE_CROSS
   POINTER_T GetShmPointer() const {
     return GetAllocator()->template
         Convert<__TU(TYPED_CLASS), POINTER_T>(this);
@@ -135,7 +135,7 @@ class ShmContainerExample : public hipc::ShmContainer {
    * ===================================*/
 
   /** Get the allocator for this container */
-  HSHM_INLINE_CROSS_FUN
+  HSHM_INLINE_CROSS
   AllocT* GetAllocator() const {
     if constexpr (!(HSHM_FLAGS & hipc::ShmFlag::kIsPrivate)) {
       return HERMES_MEMORY_MANAGER->GetAllocator<AllocT>(alloc_info_);
@@ -145,7 +145,7 @@ class ShmContainerExample : public hipc::ShmContainer {
   }
 
   /** Get the shared-memory allocator id */
-  HSHM_INLINE_CROSS_FUN
+  HSHM_INLINE_CROSS
   const hipc::AllocatorId& GetAllocatorId() const {
     if constexpr (!(HSHM_FLAGS & hipc::ShmFlag::kIsPrivate)) {
       return alloc_info_;
@@ -155,7 +155,7 @@ class ShmContainerExample : public hipc::ShmContainer {
   }
 
   /** Get the shared-memory allocator id */
-  HSHM_INLINE_CROSS_FUN
+  HSHM_INLINE_CROSS
   hipc::MemContext GetMemCtx() const {
     if constexpr (!(HSHM_FLAGS & hipc::ShmFlag::kIsPrivate)) {
       return HSHM_DEFAULT_MEM_CTX;
@@ -165,7 +165,7 @@ class ShmContainerExample : public hipc::ShmContainer {
   }
 
   /** Get the shared-memory allocator id */
-  HSHM_INLINE_CROSS_FUN
+  HSHM_INLINE_CROSS
   hipc::CtxAllocator<AllocT> GetCtxAllocator() const {
     if constexpr (!(HSHM_FLAGS & hipc::ShmFlag::kIsPrivate)) {
       return hipc::CtxAllocator<AllocT>{GetMemCtx(), GetAllocator()};

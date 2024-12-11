@@ -559,7 +559,7 @@ class list : public ShmContainer {
 
  private:
   template<typename ...Args>
-  HSHM_INLINE_CROSS_FUN list_entry<T>* _create_entry(
+  HSHM_INLINE_CROSS list_entry<T>* _create_entry(
     OffsetPointer &p, Args&& ...args) {
     auto entry = GetAllocator()->template
       AllocateObjs<list_entry<T>>(GetMemCtx(), 1, p);

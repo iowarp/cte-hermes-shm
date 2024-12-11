@@ -8,6 +8,7 @@
 #include "hermes_shm/data_structures/internal/shm_internal.h"
 #include "hermes_shm/data_structures/ipc/functional.h"
 #include "hermes_shm/data_structures/serialization/serialize_common.h"
+#include "ring_queue.h"
 
 namespace hshm::ipc {
 
@@ -15,18 +16,17 @@ namespace hshm::ipc {
  * Stores a set of numeric keys and their value. Keys can be reused.
  * Programs must store the keys themselves. 
  */
-template<typename T, HSHM_CLASS_TEMPL_WITH_DEFAULTS>
+template<typename T, RING_BUFFER_FLAGS, HSHM_CLASS_TEMPL_WITH_DEFAULTS>
 class key_set_templ : public ShmContainer {
  public:
-  hipc::fixed_spsc_queue<size_t, HSHM_CLASS_TEMPL_ARGS> keys_;
+  hipc::ring_queue_base<size_t, RING_BUFFER_FLAGS_ARGS, HSHM_CLASS_TEMPL_ARGS> keys_;
   hipc::vector<T, HSHM_CLASS_TEMPL_ARGS> set_;
   size_t heap_;
   size_t max_size_;
 
  public:
   key_set_templ()
-  : keys_(HERMES_MEMORY_MANAGER->GetDefaultAllocator<AllocT>()),
-    set_(HERMES_MEMORY_MANAGER->GetDefaultAllocator<AllocT>()) {}
+  : keys_(), set_() {}
 
   key_set_templ(const hipc::CtxAllocator<AllocT> &alloc)
   : keys_(alloc), set_(alloc) {}
@@ -36,13 +36,6 @@ class key_set_templ : public ShmContainer {
     set_.reserve(max_size);
     heap_ = 0;
     max_size_ = max_size;
-  }
-
-  void resize() {
-    size_t new_size = set_.size() * 2;
-    keys_.resize(new_size);
-    set_.reserve(new_size);
-    max_size_ = new_size;
   }
 
   void emplace(size_t &key, const T &entry) {
@@ -59,6 +52,14 @@ class key_set_templ : public ShmContainer {
     erase(key);
   }
 
+ private:
+  void resize() {
+    size_t new_size = set_.capacity() * 2;
+    keys_.resize(new_size);
+    set_.reserve(new_size);
+    max_size_ = new_size;
+  }
+
   void pop_key(size_t &key) {
     // We have a key cached
     if (!keys_.pop(key).IsNull()) {
@@ -70,7 +71,11 @@ class key_set_templ : public ShmContainer {
       return;
     }
     // We need more keys
-    resize();
+    if constexpr (!IsPushAtomic && !IsPopAtomic) {
+      resize();
+    } else {
+      HERMES_THROW_ERROR(KEY_SET_OUT_OF_BOUNDS, "Key set is full");
+    }
     key = heap_++;
   }
 
@@ -80,7 +85,7 @@ class key_set_templ : public ShmContainer {
 };
 
 template<typename T, HSHM_CLASS_TEMPL_WITH_DEFAULTS>
-using key_set = key_set_templ<T, HSHM_CLASS_TEMPL_ARGS>;
+using key_set = key_set_templ<T, RING_BUFFER_FIXED_SPSC_FLAGS, HSHM_CLASS_TEMPL_ARGS>;
 
 }  // namespace hshm::ipc
 

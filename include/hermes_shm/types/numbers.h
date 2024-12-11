@@ -41,53 +41,53 @@ typedef unsigned long long big_uint; /**< Unsigned long long */
 struct ThreadId {
   hshm::u64 tid_;
 
-  HSHM_INLINE_CROSS_FUN
+  HSHM_INLINE_CROSS
   ThreadId() = default;
 
-  HSHM_INLINE_CROSS_FUN
+  HSHM_INLINE_CROSS
   explicit ThreadId(hshm::u64 tid) : tid_(tid) {}
 
-  HSHM_INLINE_CROSS_FUN
+  HSHM_INLINE_CROSS
   static ThreadId GetNull() {
     return ThreadId{(hshm::u64)-1};
   }
 
-  HSHM_INLINE_CROSS_FUN
+  HSHM_INLINE_CROSS
   bool IsNull() const {
     return tid_ == (hshm::u64)-1;
   }
 
-  HSHM_INLINE_CROSS_FUN
+  HSHM_INLINE_CROSS
   void SetNull() {
     tid_ = (hshm::u64)-1;
   }
 
-  HSHM_INLINE_CROSS_FUN
+  HSHM_INLINE_CROSS
   bool operator==(const ThreadId &other) const {
     return tid_ == other.tid_;
   }
 
-  HSHM_INLINE_CROSS_FUN
+  HSHM_INLINE_CROSS
   bool operator!=(const ThreadId &other) const {
     return tid_ != other.tid_;
   }
 
-  HSHM_INLINE_CROSS_FUN
+  HSHM_INLINE_CROSS
   bool operator<(const ThreadId &other) const {
     return tid_ < other.tid_;
   }
 
-  HSHM_INLINE_CROSS_FUN
+  HSHM_INLINE_CROSS
   bool operator>(const ThreadId &other) const {
     return tid_ > other.tid_;
   }
 
-  HSHM_INLINE_CROSS_FUN
+  HSHM_INLINE_CROSS
   bool operator<=(const ThreadId &other) const {
     return tid_ <= other.tid_;
   }
 
-  HSHM_INLINE_CROSS_FUN
+  HSHM_INLINE_CROSS
   bool operator>=(const ThreadId &other) const {
     return tid_ >= other.tid_;
   }

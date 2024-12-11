@@ -28,35 +28,35 @@ template<typename T = uint32_t>
 struct bitfield {
   T bits_;
 
-  HSHM_INLINE_CROSS_FUN bitfield() : bits_(0) {}
+  HSHM_INLINE_CROSS bitfield() : bits_(0) {}
 
-  HSHM_INLINE_CROSS_FUN explicit bitfield(T mask) : bits_(mask) {}
+  HSHM_INLINE_CROSS explicit bitfield(T mask) : bits_(mask) {}
 
-  HSHM_INLINE_CROSS_FUN void SetBits(T mask) {
+  HSHM_INLINE_CROSS void SetBits(T mask) {
     bits_ |= mask;
   }
 
-  HSHM_INLINE_CROSS_FUN void UnsetBits(T mask) {
+  HSHM_INLINE_CROSS void UnsetBits(T mask) {
     bits_ &= ~mask;
   }
 
-  HSHM_INLINE_CROSS_FUN T Any(T mask) const {
+  HSHM_INLINE_CROSS T Any(T mask) const {
     return bits_ & mask;
   }
 
-  HSHM_INLINE_CROSS_FUN T All(T mask) const {
+  HSHM_INLINE_CROSS T All(T mask) const {
     return Any(mask) == mask;
   }
 
-  HSHM_INLINE_CROSS_FUN void CopyBits(bitfield field, T mask) {
+  HSHM_INLINE_CROSS void CopyBits(bitfield field, T mask) {
     bits_ &= (field.bits_ & mask);
   }
 
-  HSHM_INLINE_CROSS_FUN void Clear() {
+  HSHM_INLINE_CROSS void Clear() {
     bits_ = 0;
   }
 
-  HSHM_INLINE_CROSS_FUN static T MakeMask(int start, int length) {
+  HSHM_INLINE_CROSS static T MakeMask(int start, int length) {
     return ((((T)1) << length) - 1) << start;
   }
 
@@ -88,13 +88,13 @@ template<size_t NUM_BITS,
 struct big_bitfield {
   bitfield32_t bits_[LEN::value];
 
-  HSHM_INLINE_CROSS_FUN big_bitfield() : bits_() {}
+  HSHM_INLINE_CROSS big_bitfield() : bits_() {}
 
-  HSHM_INLINE_CROSS_FUN size_t size() const {
+  HSHM_INLINE_CROSS size_t size() const {
     return LEN::value;
   }
 
-  HSHM_INLINE_CROSS_FUN void SetBits(int start, int length) {
+  HSHM_INLINE_CROSS void SetBits(int start, int length) {
     int bf_idx = start / 32;
     int bf_idx_count = 32 - bf_idx;
     int rem = length;
@@ -110,7 +110,7 @@ struct big_bitfield {
     }
   }
 
-  HSHM_INLINE_CROSS_FUN void UnsetBits(int start, int length) {
+  HSHM_INLINE_CROSS void UnsetBits(int start, int length) {
     int bf_idx = start / 32;
     int bf_idx_count = 32 - bf_idx;
     int rem = length;
@@ -126,7 +126,7 @@ struct big_bitfield {
     }
   }
 
-  HSHM_INLINE_CROSS_FUN bool Any(int start, int length) const {
+  HSHM_INLINE_CROSS bool Any(int start, int length) const {
     int bf_idx = start / 32;
     int bf_idx_count = 32 - bf_idx;
     int rem = length;
@@ -145,7 +145,7 @@ struct big_bitfield {
     return false;
   }
 
-  HSHM_INLINE_CROSS_FUN bool All(int start, int length) const {
+  HSHM_INLINE_CROSS bool All(int start, int length) const {
     int bf_idx = start / 32;
     int bf_idx_count = 32 - bf_idx;
     int rem = length;
@@ -164,7 +164,7 @@ struct big_bitfield {
     return true;
   }
 
-  HSHM_INLINE_CROSS_FUN void Clear() {
+  HSHM_INLINE_CROSS void Clear() {
     memset((void*)bits_, 0, sizeof(bitfield32_t) * LEN::value);
   }
 } __attribute__((packed));

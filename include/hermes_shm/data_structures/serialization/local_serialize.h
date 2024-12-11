@@ -84,21 +84,21 @@ class LocalSerialize {
 
   /** left shift operator */
   template<typename T>
-  HSHM_ALWAYS_INLINE
+  HSHM_INLINE
   LocalSerialize& operator<<(const T &obj) {
     return base(obj);
   }
 
   /** & operator */
   template<typename T>
-  HSHM_ALWAYS_INLINE
+  HSHM_INLINE
   LocalSerialize& operator&(const T &obj) {
     return base(obj);
   }
 
   /** Call operator */
   template<typename ...Args>
-  HSHM_ALWAYS_INLINE
+  HSHM_INLINE
   LocalSerialize& operator()(Args&& ...args) {
     hshm::ForwardIterateArgpack::Apply(
         hshm::make_argpack(std::forward<Args>(args)...),
@@ -110,7 +110,7 @@ class LocalSerialize {
 
   /** Save function */
   template<typename T>
-  HSHM_ALWAYS_INLINE
+  HSHM_INLINE
   LocalSerialize& base(const T &obj) {
     static_assert(
         is_serializeable_v<LocalSerialize, T>,
@@ -130,7 +130,7 @@ class LocalSerialize {
   }
 
   /** Save function (binary data) */
-  HSHM_ALWAYS_INLINE
+  HSHM_INLINE
   LocalSerialize& write_binary(const char *data, size_t size) {
     size_t off = data_.size();
     data_.resize(off + size);
@@ -152,21 +152,21 @@ class LocalDeserialize {
 
   /** right shift operator */
   template<typename T>
-  HSHM_ALWAYS_INLINE
+  HSHM_INLINE
   LocalDeserialize& operator>>(T &obj) {
     return base(obj);
   }
 
   /** & operator */
   template<typename T>
-  HSHM_ALWAYS_INLINE
+  HSHM_INLINE
   LocalDeserialize& operator&(const T &obj) {
     return base(obj);
   }
 
   /** Call operator */
   template<typename ...Args>
-  HSHM_ALWAYS_INLINE
+  HSHM_INLINE
   LocalDeserialize& operator()(Args&& ...args) {
     hshm::ForwardIterateArgpack::Apply(
         hshm::make_argpack(std::forward<Args>(args)...),
@@ -178,7 +178,7 @@ class LocalDeserialize {
 
   /** Load function */
   template<typename T>
-  HSHM_ALWAYS_INLINE
+  HSHM_INLINE
   LocalDeserialize& base(T &obj) {
     static_assert(
         is_serializeable_v<LocalDeserialize, T>,
@@ -198,7 +198,7 @@ class LocalDeserialize {
   }
 
   /** Save function (binary data) */
-  HSHM_ALWAYS_INLINE
+  HSHM_INLINE
   LocalDeserialize& read_binary(char *data, size_t size) {
     memcpy(data, data_.data() + cur_off_, size);
     cur_off_ += size;

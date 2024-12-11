@@ -160,7 +160,7 @@ struct RwLock {
 
  private:
   /** Update the mode of the lock */
-  HSHM_INLINE_CROSS_FUN
+  HSHM_INLINE_CROSS
   void UpdateMode(RwLockMode::Type &mode) {
     // When # readers is 0, there is a lag to when the mode is updated
     // When # writers is 0, there is a lag to when the mode is updated

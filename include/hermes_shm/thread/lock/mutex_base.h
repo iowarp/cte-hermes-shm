@@ -26,21 +26,21 @@ struct MUTEX_CLASS_NAME {
 #endif
 
   /** Default constructor */
-  HSHM_INLINE_CROSS_FUN
+  HSHM_INLINE_CROSS
   MUTEX_CLASS_NAME() : lock_(0) {}
 
   /** Copy constructor */
-  HSHM_INLINE_CROSS_FUN
+  HSHM_INLINE_CROSS
   MUTEX_CLASS_NAME(const MUTEX_CLASS_NAME &other) {}
 
   /** Explicit initialization */
-  HSHM_INLINE_CROSS_FUN
+  HSHM_INLINE_CROSS
   void Init() {
     lock_ = 0;
   }
 
   /** Acquire lock */
-  HSHM_INLINE_CROSS_FUN
+  HSHM_INLINE_CROSS
   void Lock(uint32_t owner) {
     do {
       for (int i = 0; i < 1; ++i) {
@@ -53,7 +53,7 @@ struct MUTEX_CLASS_NAME {
   }
 
   /** Try to acquire the lock */
-  HSHM_INLINE_CROSS_FUN
+  HSHM_INLINE_CROSS
   bool TryLock(uint32_t owner) {
     if (lock_.load() != 0) {
       return false;
@@ -70,7 +70,7 @@ struct MUTEX_CLASS_NAME {
   }
 
   /** Unlock */
-  HSHM_INLINE_CROSS_FUN
+  HSHM_INLINE_CROSS
   void Unlock() {
 #ifdef HERMES_DEBUG_LOCK
     owner_ = 0;
@@ -84,7 +84,7 @@ struct SCOPED_MUTEX_CLASS_NAME {
   bool is_locked_;
 
   /** Acquire the mutex */
-  HSHM_INLINE_CROSS_FUN explicit
+  HSHM_INLINE_CROSS explicit
   SCOPED_MUTEX_CLASS_NAME(MUTEX_CLASS_NAME &lock,
                           uint32_t owner)
       : lock_(lock), is_locked_(false) {
@@ -92,13 +92,13 @@ struct SCOPED_MUTEX_CLASS_NAME {
   }
 
   /** Release the mutex */
-  HSHM_INLINE_CROSS_FUN
+  HSHM_INLINE_CROSS
   ~SCOPED_MUTEX_CLASS_NAME() {
     Unlock();
   }
 
   /** Explicitly acquire the mutex */
-  HSHM_INLINE_CROSS_FUN
+  HSHM_INLINE_CROSS
   void Lock(uint32_t owner) {
     if (!is_locked_) {
       lock_.Lock(owner);
@@ -107,7 +107,7 @@ struct SCOPED_MUTEX_CLASS_NAME {
   }
 
   /** Explicitly try to lock the mutex */
-  HSHM_INLINE_CROSS_FUN
+  HSHM_INLINE_CROSS
   bool TryLock(uint32_t owner) {
     if (!is_locked_) {
       is_locked_ = lock_.TryLock(owner);
@@ -116,7 +116,7 @@ struct SCOPED_MUTEX_CLASS_NAME {
   }
 
   /** Explicitly unlock the mutex */
-  HSHM_INLINE_CROSS_FUN
+  HSHM_INLINE_CROSS
   void Unlock() {
     if (is_locked_) {
       lock_.Unlock();

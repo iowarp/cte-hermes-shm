@@ -25,7 +25,7 @@ namespace hshm::thread {
 class Argobots : public ThreadModel {
  public:
   /** Default constructor */
-  HSHM_INLINE_CROSS_FUN
+  HSHM_INLINE_CROSS
   Argobots() : ThreadModel(ThreadType::kArgobots) {}
 
   /** Virtual destructor */

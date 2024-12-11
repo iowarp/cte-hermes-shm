@@ -15,6 +15,7 @@ include_directories(${HERMES_SHM_ROOT}/include)
 #------------------------------------------------------------------------------
 # Options
 #------------------------------------------------------------------------------
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 option(BUILD_SHARED_LIBS "Build shared libraries (.dll/.so) instead of static ones (.lib/.a)" ON)
 option(BUILD_HSHM_TESTS "Build tests" ON)
 option(BUILD_HSHM_BENCHMARKS "Build benchmarks" ON)
@@ -90,6 +91,7 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     message("IN DEBUG MODE")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O0")
+    add_compile_definitions(HSHM_DEBUG)
 else()
     message("IN RELEASE MODE")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O3")

@@ -94,7 +94,7 @@ class _StackAllocator : public Allocator {
    * Allocate a memory of \a size size. The page allocator cannot allocate
    * memory larger than the page size.
    * */
-  HSHM_INLINE_CROSS_FUN
+  HSHM_INLINE_CROSS
   OffsetPointer SubAllocateOffset(size_t size) {
     return heap_->AllocateOffset(size);
   }

@@ -61,9 +61,8 @@ using unordered_map = HSHM_NS::unordered_map<Key, T, Hash, ALLOC_T>;
 template <typename T>
 using vector = HSHM_NS::vector<T, ALLOC_T>;
 
-template <typename T>
-using key_set = HSHM_NS::key_set<T, ALLOC_T>;
+template <typename T> using key_set = HSHM_NS::key_set<T, ALLOC_T>;
 
 template <typename T>
-using key_queue = HSHM_NS::key_queue<T, ALLOC_T>;
+using dynamic_queue = HSHM_NS::dynamic_queue<T, ALLOC_T>;
 }  // namespace NS

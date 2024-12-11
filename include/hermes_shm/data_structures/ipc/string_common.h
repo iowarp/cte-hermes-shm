@@ -12,7 +12,7 @@
 
 namespace hshm {
 
-HSHM_INLINE_CROSS_FUN static
+HSHM_INLINE_CROSS static
 size_t strlen(const char *buf) {
   size_t length = 0;
   while (buf[length] != 0) {
@@ -21,7 +21,7 @@ size_t strlen(const char *buf) {
   return length;
 }
 
-HSHM_INLINE_CROSS_FUN static
+HSHM_INLINE_CROSS static
 size_t strnlen(const char *buf, size_t max_len) {
   size_t length = 0;
   for (; length < max_len; ++length) {
@@ -32,7 +32,7 @@ size_t strnlen(const char *buf, size_t max_len) {
   return length;
 }
 
-HSHM_INLINE_CROSS_FUN static
+HSHM_INLINE_CROSS static
 int strncmp(const char *a, size_t len_a,
             const char *b, size_t len_b) {
   if (len_a != len_b) {

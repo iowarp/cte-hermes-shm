@@ -76,8 +76,12 @@
 /**
  * Ensure that the compiler ALWAYS inlines a particular function.
  * */
-#define HSHM_ALWAYS_INLINE \
-  inline __attribute__((always_inline))
+#ifndef HSHM_DEBUG
+#define HSHM_INLINE inline __attribute__((always_inline))
+#warning "INLINE"
+#else
+#define HSHM_INLINE __attribute__ ((noinline))
+#endif
 
 /** Function decorators */
 #define HSHM_REG_FUN CUDA_HOST
@@ -93,9 +97,9 @@
 #endif
 
 /** Macro for inline function */
-#define HSHM_INLINE_CROSS_FUN HSHM_ALWAYS_INLINE HSHM_CROSS_FUN
-#define HSHM_INLINE_GPU_FUN CUDA_DEVICE HSHM_ALWAYS_INLINE
-#define HSHM_INLINE_HOST_FUN CUDA_HOST HSHM_ALWAYS_INLINE
+#define HSHM_INLINE_CROSS HSHM_INLINE HSHM_CROSS_FUN
+#define HSHM_INLINE_GPU CUDA_DEVICE HSHM_INLINE
+#define HSHM_INLINE_HOST CUDA_HOST HSHM_INLINE
 
 /** Bitfield macros */
 #define MARK_FIRST_BIT_MASK(T) ((T)1 << (sizeof(T) * 8 - 1))

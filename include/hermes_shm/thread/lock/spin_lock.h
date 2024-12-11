@@ -17,21 +17,21 @@ struct SpinLock {
 #endif
 
   /** Default constructor */
-  HSHM_INLINE_CROSS_FUN
+  HSHM_INLINE_CROSS
   SpinLock() : lock_(0) {}
 
   /** Copy constructor */
-  HSHM_INLINE_CROSS_FUN
+  HSHM_INLINE_CROSS
   SpinLock(const SpinLock &other) {}
 
   /** Explicit initialization */
-  HSHM_INLINE_CROSS_FUN
+  HSHM_INLINE_CROSS
   void Init() {
     lock_ = 0;
   }
 
   /** Acquire lock */
-  HSHM_INLINE_CROSS_FUN
+  HSHM_INLINE_CROSS
   void Lock(uint32_t owner) {
     do {
       for (int i = 0; i < 1; ++i) {
@@ -44,7 +44,7 @@ struct SpinLock {
   }
 
   /** Try to acquire the lock */
-  HSHM_INLINE_CROSS_FUN
+  HSHM_INLINE_CROSS
   bool TryLock(uint32_t owner) {
     if (lock_.load() != 0) {
       return false;
@@ -61,7 +61,7 @@ struct SpinLock {
   }
 
   /** Unlock */
-  HSHM_INLINE_CROSS_FUN
+  HSHM_INLINE_CROSS
   void Unlock() {
 #ifdef HERMES_DEBUG_LOCK
     owner_ = 0;
@@ -75,7 +75,7 @@ struct ScopedSpinLock {
   bool is_locked_;
 
   /** Acquire the mutex */
-  HSHM_INLINE_CROSS_FUN explicit
+  HSHM_INLINE_CROSS explicit
   ScopedSpinLock(SpinLock &lock,
                           uint32_t owner)
       : lock_(lock), is_locked_(false) {
@@ -83,13 +83,13 @@ struct ScopedSpinLock {
   }
 
   /** Release the mutex */
-  HSHM_INLINE_CROSS_FUN
+  HSHM_INLINE_CROSS
   ~ScopedSpinLock() {
     Unlock();
   }
 
   /** Explicitly acquire the mutex */
-  HSHM_INLINE_CROSS_FUN
+  HSHM_INLINE_CROSS
   void Lock(uint32_t owner) {
     if (!is_locked_) {
       lock_.Lock(owner);
@@ -98,7 +98,7 @@ struct ScopedSpinLock {
   }
 
   /** Explicitly try to lock the mutex */
-  HSHM_INLINE_CROSS_FUN
+  HSHM_INLINE_CROSS
   bool TryLock(uint32_t owner) {
     if (!is_locked_) {
       is_locked_ = lock_.TryLock(owner);
@@ -107,7 +107,7 @@ struct ScopedSpinLock {
   }
 
   /** Explicitly unlock the mutex */
-  HSHM_INLINE_CROSS_FUN
+  HSHM_INLINE_CROSS
   void Unlock() {
     if (is_locked_) {
       lock_.Unlock();

@@ -210,7 +210,7 @@ class MemoryManager {
    * Convert a process-independent pointer into a process-specific pointer.
    * */
   template<typename T, typename POINTER_T = Pointer>
-  HSHM_INLINE_CROSS_FUN T* Convert(const POINTER_T &p) {
+  HSHM_INLINE_CROSS T* Convert(const POINTER_T &p) {
     if (p.IsNull()) {
       return nullptr;
     }
@@ -225,7 +225,7 @@ class MemoryManager {
    * @param ptr the pointer to convert
    * */
   template<typename T, typename POINTER_T = Pointer>
-  HSHM_INLINE_CROSS_FUN POINTER_T Convert(AllocatorId allocator_id, T *ptr) {
+  HSHM_INLINE_CROSS POINTER_T Convert(AllocatorId allocator_id, T *ptr) {
     return GetAllocator<NullAllocator>(allocator_id)
         ->template Convert<T, POINTER_T>(ptr);
   }
@@ -237,7 +237,7 @@ class MemoryManager {
    * @param ptr the pointer to convert
    * */
   template<typename T, typename POINTER_T = Pointer>
-  HSHM_INLINE_CROSS_FUN POINTER_T Convert(T *ptr) {
+  HSHM_INLINE_CROSS POINTER_T Convert(T *ptr) {
     for (auto &alloc : HERMES_MEMORY_MANAGER->allocators_) {
       if (alloc && alloc->ContainsPtr(ptr)) {
         return alloc->template

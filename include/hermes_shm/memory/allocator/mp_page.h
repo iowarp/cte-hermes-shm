@@ -24,15 +24,15 @@ struct MpPage : public iqueue_entry {
   ThreadId tid_;        /**< The thread ID that allocated the page */
   size_t page_size_;    /**< The total size of the page allocated */
 
-  HSHM_INLINE_CROSS_FUN void SetAllocated() {
+  HSHM_INLINE_CROSS void SetAllocated() {
     flags_.SetBits(0x1);
   }
 
-  HSHM_INLINE_CROSS_FUN void UnsetAllocated() {
+  HSHM_INLINE_CROSS void UnsetAllocated() {
     flags_.Clear();
   }
 
-  HSHM_INLINE_CROSS_FUN bool IsAllocated() const {
+  HSHM_INLINE_CROSS bool IsAllocated() const {
     return flags_.All(0x1);
   }
 };

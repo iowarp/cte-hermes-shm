@@ -176,7 +176,7 @@ class ticket_queue : public ShmContainer {
 
   /** Construct an element at \a pos position in the queue */
   template<typename ...Args>
-  HSHM_INLINE_CROSS_FUN qtok_t emplace(T &tkt) {
+  HSHM_INLINE_CROSS qtok_t emplace(T &tkt) {
     lock_.Lock(0);
     auto qtok = queue_->emplace(tkt);
     lock_.Unlock();
@@ -185,7 +185,7 @@ class ticket_queue : public ShmContainer {
 
  public:
   /** Pop an element from the queue */
-  HSHM_INLINE_CROSS_FUN qtok_t pop(T &tkt) {
+  HSHM_INLINE_CROSS qtok_t pop(T &tkt) {
     lock_.Lock(0);
     auto qtok = queue_->pop(tkt);
     lock_.Unlock();

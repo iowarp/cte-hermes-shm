@@ -24,7 +24,7 @@ namespace hshm::thread {
 class Pthread : public ThreadModel {
  public:
   /** Default constructor */
-  HSHM_INLINE_CROSS_FUN
+  HSHM_INLINE_CROSS
   Pthread() : ThreadModel(ThreadType::kPthread) {}
 
   /** Virtual destructor */

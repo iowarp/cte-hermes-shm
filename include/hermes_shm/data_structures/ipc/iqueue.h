@@ -314,7 +314,7 @@ class iqueue : public ShmContainer {
   }
 
   /** Wrapper for enqueue */
-  HSHM_INLINE_CROSS_FUN
+  HSHM_INLINE_CROSS
   void push(T *entry) {
     enqueue(entry);
   }
@@ -331,7 +331,7 @@ class iqueue : public ShmContainer {
   }
 
   /** Wrapper for dequeue */
-  HSHM_INLINE_CROSS_FUN
+  HSHM_INLINE_CROSS
   T* pop() {
     return dequeue();
   }
@@ -351,7 +351,7 @@ class iqueue : public ShmContainer {
   }
 
   /** Wrapper for dequeue */
-  HSHM_INLINE_CROSS_FUN
+  HSHM_INLINE_CROSS
   T* pop(iterator_t pos) {
     return dequeue(pos);
   }

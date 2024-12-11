@@ -25,7 +25,7 @@ HSHM_CROSS_FUN size_t string_hash(const StringT &text) {
 
 /** Integer hash function */
 template<typename T>
-HSHM_INLINE_CROSS_FUN static size_t number_hash(const T &val) {
+HSHM_INLINE_CROSS static size_t number_hash(const T &val) {
   if constexpr (sizeof(T) == 1) {
     return static_cast<size_t>(val);
   } else if constexpr (sizeof(T) == 2) {

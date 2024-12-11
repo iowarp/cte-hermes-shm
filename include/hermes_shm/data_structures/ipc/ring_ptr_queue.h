@@ -74,7 +74,7 @@ class ring_ptr_queue_base : public ShmContainer {
     shm_init(alloc, depth);
   }
 
-  HSHM_INLINE_CROSS_FUN
+  HSHM_INLINE_CROSS
   void shm_init(const hipc::CtxAllocator<AllocT> &alloc,
                 size_t depth = 1024) {
     init_shm_container(alloc);
@@ -205,7 +205,7 @@ class ring_ptr_queue_base : public ShmContainer {
   }
 
   /** Resize (wrapper) */
-  HSHM_INLINE_CROSS_FUN
+  HSHM_INLINE_CROSS
   void Resize(size_t new_depth) {
     resize(new_depth);
   }
@@ -359,13 +359,13 @@ class ring_ptr_queue_base : public ShmContainer {
   }
 
   /** Get size (wrapper) */
-  HSHM_INLINE_CROSS_FUN
+  HSHM_INLINE_CROSS
   size_t size() {
     return GetSize();
   }
 
   /** Get size (wrapper) */
-  HSHM_INLINE_CROSS_FUN
+  HSHM_INLINE_CROSS
   size_t Size() {
     return GetSize();
   }

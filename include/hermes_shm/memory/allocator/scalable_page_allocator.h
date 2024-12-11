@@ -56,7 +56,7 @@ struct PageId {
    * Round the size of the requested memory region + sizeof(MpPage)
    * to the nearest power of two.
    * */
-  HSHM_INLINE_CROSS_FUN
+  HSHM_INLINE_CROSS
   PageId(size_t size) {
     orig_ = size;
 #ifdef HSHM_IS_HOST
@@ -92,20 +92,20 @@ class PageAllocator {
   TLS tls_info_;
 
  public:
-  HSHM_INLINE_CROSS_FUN
+  HSHM_INLINE_CROSS
   explicit PageAllocator(StackAllocator *alloc) {
     for (size_t i = 0; i < PageId::num_free_lists_; ++i) {
       HSHM_MAKE_AR0(free_lists_[i], alloc);
     }
   }
 
-  HSHM_INLINE_CROSS_FUN
+  HSHM_INLINE_CROSS
   PageAllocator(const PageAllocator &other) {}
 
-  HSHM_INLINE_CROSS_FUN
+  HSHM_INLINE_CROSS
   PageAllocator(PageAllocator &&other) {}
 
-  HSHM_INLINE_CROSS_FUN
+  HSHM_INLINE_CROSS
   MpPage* Allocate(const PageId &page_id) {
     // Allocate small page size
     if (page_id.exp_ < PageId::num_caches_) {
@@ -126,7 +126,7 @@ class PageAllocator {
     return nullptr;
   }
 
-  HSHM_INLINE_CROSS_FUN
+  HSHM_INLINE_CROSS
   void Free(MpPage *page) {
     PageId page_id(page->page_size_);
     if (page_id.exp_ < PageId::num_caches_) {
@@ -164,7 +164,7 @@ struct _ScalablePageAllocatorHeader : public AllocatorHeader {
     total_alloc_ = 0;
   }
 
-  HSHM_INLINE_CROSS_FUN
+  HSHM_INLINE_CROSS
   hshm::ThreadId CreateTid() {
     hshm::min_u64 tid = 0;
     if (free_tids_->pop(tid).IsNull()) {
@@ -173,12 +173,12 @@ struct _ScalablePageAllocatorHeader : public AllocatorHeader {
     return hshm::ThreadId(tid);
   }
 
-  HSHM_INLINE_CROSS_FUN
+  HSHM_INLINE_CROSS
   void FreeTid(hshm::ThreadId tid) {
     free_tids_->emplace(tid.tid_);
   }
 
-  HSHM_INLINE_CROSS_FUN
+  HSHM_INLINE_CROSS
   TLS* GetTls(hshm::ThreadId tid) {
     return &(*tls_)[tid.tid_].tls_info_;
   }
@@ -246,7 +246,7 @@ class _ScalablePageAllocator : public Allocator {
   }
 
   /** Get or create TID */
-  HSHM_INLINE_CROSS_FUN
+  HSHM_INLINE_CROSS
   hshm::ThreadId GetOrCreateTid(const hipc::MemContext &ctx) {
     hshm::ThreadId tid = ctx.tid_;
     if (tid.IsNull()) {
