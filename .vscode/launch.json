@@ -67,7 +67,29 @@
             "request": "launch",
             "program": "${workspaceFolder}/build/bin/test_data_structure_exec",
             "args": [
-                ""
+                "FullPtr"
+            ],
+            "miDebuggerPath": "/usr/bin/gdb",
+            "cwd": "${workspaceFolder}",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ],
+            "externalConsole": false,
+            "logging": {
+                "engineLogging": false
+            }
+        },
+        {
+            "name": "test-allocators",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/bin/test_allocator_exec",
+            "args": [
+                "FullPtr"
             ],
             "miDebuggerPath": "/usr/bin/gdb",
             "cwd": "${workspaceFolder}",

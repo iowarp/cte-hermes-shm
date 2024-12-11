@@ -373,14 +373,64 @@ struct LPointer {
   T *ptr_;
   PointerT shm_;
 
+  /** Default constructor */
+  HSHM_INLINE_CROSS LPointer() = default;
+
+  /** Full constructor */
+  HSHM_INLINE_CROSS LPointer(T *ptr, const PointerT &shm)
+      : ptr_(ptr), shm_(shm) {}
+
+  /** SHM constructor (in memory_manager.h) */
+  HSHM_INLINE_CROSS explicit LPointer(const PointerT &shm);
+
+  /** Private constructor (in memory_manager.h) */
+  HSHM_INLINE_CROSS explicit LPointer(T *ptr);
+  
+  /** Copy constructor */
+  HSHM_INLINE_CROSS LPointer(const LPointer &other)
+      : ptr_(other.ptr_), shm_(other.shm_) {}
+
+  /** Move constructor */
+  HSHM_INLINE_CROSS LPointer(LPointer &&other) noexcept
+      : ptr_(other.ptr_), shm_(other.shm_) {
+    other.SetNull();
+  }
+
+  /** Copy assignment operator */
+  HSHM_INLINE_CROSS LPointer& operator=(const LPointer &other) {
+    if (this != &other) {
+      ptr_ = other.ptr_;
+      shm_ = other.shm_;
+    }
+    return *this;
+  }
+
+  /** Move assignment operator */
+  HSHM_INLINE_CROSS LPointer& operator=(LPointer &&other) {
+    if (this != &other) {
+      ptr_ = other.ptr_;
+      shm_ = other.shm_;
+      other.SetNull();
+    }
+    return *this;
+  }
+
   /** Overload arrow */
   HSHM_INLINE_CROSS T* operator->() const {
     return ptr_;
   }
 
   /** Overload dereference */
-  HSHM_INLINE_CROSS T& operator*() const {
-    return *ptr_;
+  HSHM_INLINE_CROSS T &operator*() const { return *ptr_; }
+
+  /** Equality operator */
+  HSHM_INLINE_CROSS bool operator==(const LPointer &other) const {
+    return ptr_ == other.ptr_ && shm_ == other.shm_;
+  }
+
+  /** Inequality operator */
+  HSHM_INLINE_CROSS bool operator!=(const LPointer &other) const {
+    return ptr_ != other.ptr_ || shm_ != other.shm_;
   }
 
   /** Check if null */

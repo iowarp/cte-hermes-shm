@@ -17,6 +17,16 @@ TEST_CASE("FullPtr") {
   hipc::FullPtr<int> x;
   hipc::FullPtr<std::string> y;
   y = x.Cast<std::string>();
+
+  auto alloc = Pretest<hipc::PosixShmMmap, hipc::StackAllocator>();
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+  hipc::FullPtr<int> ret = alloc->NewObjLocal<int>(HSHM_DEFAULT_MEM_CTX);
+  hipc::FullPtr<int> ret2(ret.ptr_);
+  REQUIRE(ret == ret2);
+  hipc::FullPtr<int> ret3(ret.shm_);
+  REQUIRE(ret == ret3);
+  alloc->DelObjLocal(HSHM_DEFAULT_MEM_CTX, ret);
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
 }
 
 TEST_CASE("StackAllocator") {

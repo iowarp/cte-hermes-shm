@@ -18,6 +18,7 @@
 #include "hermes_shm/memory/memory_manager_.h"
 #include "hermes_shm/constants/macros.h"
 #include "hermes_shm/util/logging.h"
+#include "memory.h"
 
 namespace hshm::ipc {
 
@@ -55,6 +56,16 @@ AllocT* MemoryManager::CreateAllocator(const MemoryBackendId &backend_id,
       alloc_id, custom_header_size, backend, std::forward<Args>(args)...);
   RegisterAllocator(alloc);
   return GetAllocator<AllocT>(alloc_id);
+}
+
+template <typename T, typename PointerT>
+LPointer<T, PointerT>::LPointer(const PointerT &shm) : shm_(shm) {
+  ptr_ = HERMES_MEMORY_MANAGER->Convert<T, PointerT>(shm);
+}
+
+template <typename T, typename PointerT>
+LPointer<T, PointerT>::LPointer(T *ptr) : ptr_(ptr) {
+  shm_ = HERMES_MEMORY_MANAGER->Convert<T, PointerT>(ptr);
 }
 
 }  // namespace hshm::ipc
