@@ -6,6 +6,7 @@
 #define HERMES_SHM_INCLUDE_HERMES_SHM_DATA_STRUCTURES_IPC_ring_queue_base_H_
 
 
+#include "hermes_shm/constants/macros.h"
 #include "hermes_shm/data_structures/internal/shm_internal.h"
 #include "hermes_shm/thread/lock.h"
 #include "vector.h"
@@ -275,7 +276,13 @@ class ring_queue_base : public ShmContainer {
     return qtok_t(tail);
   }
 
- public:
+  /** Push an elemnt in the list (wrapper) */
+  template <typename... Args>
+  HSHM_INLINE_CROSS
+  qtok_t push(Args&&... args) {
+    return emplace(std::forward<Args>(args)...);
+  }
+
   /** Consumer pops the head object */
   HSHM_CROSS_FUN
   qtok_t pop(T &val) {

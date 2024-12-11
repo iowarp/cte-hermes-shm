@@ -52,6 +52,8 @@ class key_set_templ : public ShmContainer {
     erase(key);
   }
 
+  void pop(size_t key) { erase(key); }
+
   void erase(size_t key) { keys_.emplace(key); }
   
  private:

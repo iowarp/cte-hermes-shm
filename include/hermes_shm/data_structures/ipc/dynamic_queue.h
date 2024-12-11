@@ -176,6 +176,13 @@ class dynamic_queue : public ShmContainer {
     return qtok_t(tail);
   }
 
+  /** Push an elemnt in the list (wrapper) */
+  template <typename... Args>
+  HSHM_INLINE_CROSS
+  qtok_t push(Args &&...args) {
+    return emplace(std::forward<Args>(args)...);
+  }
+  
   /** Consumer pops the head object */
   HSHM_CROSS_FUN
   qtok_t pop(T &val) {

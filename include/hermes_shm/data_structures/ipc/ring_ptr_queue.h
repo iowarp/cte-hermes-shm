@@ -268,6 +268,13 @@ class ring_ptr_queue_base : public ShmContainer {
     return qtok_t(tail);
   }
 
+  /** Push an elemnt in the list (wrapper) */
+  template <typename... Args>
+  HSHM_INLINE_CROSS
+  qtok_t push(Args&&... args) {
+    return emplace(std::forward<Args>(args)...);
+  }
+  
  public:
   /** Consumer pops the head object */
   HSHM_CROSS_FUN
