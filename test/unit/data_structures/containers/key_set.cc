@@ -8,8 +8,8 @@
 
 #include "hermes_shm/data_structures/all.h"
 
-TEST_CASE("key_set") {
-  hshm::key_set<size_t> count;
+TEST_CASE("SpscKeySet") {
+  hshm::spsc_key_set<size_t> count;
   count.Init(32);
   std::vector<size_t> keys(64);
 
@@ -19,6 +19,23 @@ TEST_CASE("key_set") {
   }
 
   for (int i = 0; i < 64; ++i) {
+    size_t entry;
+    count.pop(keys[i], entry);
+    REQUIRE(entry == i);
+  }
+}
+
+TEST_CASE("MpmcKeySet") {
+  hshm::spsc_key_set<size_t> count;
+  count.Init(32);
+  std::vector<size_t> keys(32);
+
+  for (int i = 0; i < 32; ++i) {
+    size_t entry = i;
+    count.emplace(keys[i], entry);
+  }
+
+  for (int i = 0; i < 32; ++i) {
     size_t entry;
     count.pop(keys[i], entry);
     REQUIRE(entry == i);

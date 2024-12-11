@@ -78,7 +78,6 @@
  * */
 #ifndef HSHM_DEBUG
 #define HSHM_INLINE inline __attribute__((always_inline))
-#warning "INLINE"
 #else
 #define HSHM_INLINE __attribute__ ((noinline))
 #endif

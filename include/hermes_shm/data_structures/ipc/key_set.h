@@ -85,14 +85,20 @@ class key_set_templ : public ShmContainer {
 };
 
 template<typename T, HSHM_CLASS_TEMPL_WITH_DEFAULTS>
-using key_set = key_set_templ<T, RING_BUFFER_FIXED_SPSC_FLAGS, HSHM_CLASS_TEMPL_ARGS>;
+using spsc_key_set = key_set_templ<T, RING_BUFFER_FIXED_MPMC_FLAGS, HSHM_CLASS_TEMPL_ARGS>;
+
+template<typename T, HSHM_CLASS_TEMPL_WITH_DEFAULTS>
+using mpmc_key_set = key_set_templ<T, RING_BUFFER_FIXED_MPMC_FLAGS, HSHM_CLASS_TEMPL_ARGS>;
 
 }  // namespace hshm::ipc
 
 namespace hshm {
 
 template<typename T, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
-using key_set = ipc::key_set_templ<T, HSHM_CLASS_TEMPL_ARGS>;
+using spsc_key_set = ipc::key_set_templ<T, RING_BUFFER_FIXED_SPSC_FLAGS, HSHM_CLASS_TEMPL_ARGS>;
+
+template<typename T, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
+using mpmc_key_set = ipc::key_set_templ<T, RING_BUFFER_FIXED_MPMC_FLAGS, HSHM_CLASS_TEMPL_ARGS>;
 
 }  // namespace hshm
 
