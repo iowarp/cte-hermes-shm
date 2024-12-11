@@ -10,7 +10,8 @@ add_executable(test_types_exec
         ${TEST_MAIN}/main.cc
         test_init.cc
         test_argpack.cc
-        test_util.cc)
+        test_util.cc
+        test_atomics.cc)
 add_dependencies(test_types_exec hermes_shm_data_structures)
 target_link_libraries(test_types_exec
         hermes_shm_data_structures Catch2::Catch2 MPI::MPI_CXX OpenMP::OpenMP_CXX)

@@ -38,7 +38,7 @@ struct nonatomic {
   HSHM_INLINE_CROSS nonatomic() = default;
 
   /** Full constructor */
-  HSHM_INLINE_CROSS explicit nonatomic(T def) : x(def) {}
+  HSHM_INLINE_CROSS nonatomic(T def) : x(def) {}
 
   /** Copy constructor */
   HSHM_INLINE_CROSS nonatomic(const nonatomic &other) : x(other.x) {}
@@ -160,6 +160,12 @@ struct nonatomic {
     return *this;
   }
 
+  /** Equality check (number) */
+  HSHM_INLINE_CROSS bool operator==(T other) const { return (other == x); }
+
+  /** Inequality check (number) */
+  HSHM_INLINE_CROSS bool operator!=(T other) const { return (other != x); }
+
   /** Equality check */
   HSHM_INLINE_CROSS bool operator==(const nonatomic &other) const {
     return (other.x == x);
@@ -181,7 +187,7 @@ struct cuda_atomic {
   HSHM_INLINE_GPU cuda_atomic() = default;
 
   /** Full constructor */
-  HSHM_INLINE_GPU explicit cuda_atomic(T def) : x(def) {}
+  HSHM_INLINE_GPU cuda_atomic(T def) : x(def) {}
 
   /** Copy constructor */
   HSHM_INLINE_GPU cuda_atomic(const cuda_atomic &other) : x(other.x) {}
@@ -286,6 +292,16 @@ struct cuda_atomic {
     return *this;
   }
 
+  /** Equality check (number) */
+  HSHM_INLINE_GPU bool operator==(T other) const {
+    return atomicCAS(&x, other, other);
+  }
+
+  /** Inequality check (number) */
+  HSHM_INLINE_GPU bool operator!=(T other) const {
+    return !atomicCAS(&x, other, other);
+  }
+
   /** Equality check */
   HSHM_INLINE_GPU bool operator==(const cuda_atomic &other) const {
     return atomicCAS(&x, other.x, other.x);
@@ -313,23 +329,23 @@ struct std_atomic {
   HSHM_INLINE std_atomic() = default;
 
   /** Full constructor */
-  HSHM_INLINE explicit std_atomic(T def) : x(def) {}
+  HSHM_INLINE std_atomic(T def) : x(def) {}
 
   /** Copy constructor */
-  HSHM_INLINE std_atomic(const std_atomic &other) : x(other.x) {}
+  HSHM_INLINE std_atomic(const std_atomic &other) : x(other.x.load()) {}
 
   /* Move constructor */
-  HSHM_INLINE std_atomic(std_atomic &&other) : x(std::move(other.x)) {}
+  HSHM_INLINE std_atomic(std_atomic &&other) : x(other.x.load()) {}
 
   /** Copy assign operator */
   HSHM_INLINE std_atomic& operator=(const std_atomic &other) {
-    x = other.x;
+    x = other.x.load();
     return *this;
   }
 
   /** Move assign operator */
   HSHM_INLINE std_atomic& operator=(std_atomic &&other) {
-    x = std::move(other.x);
+    x = other.x.load();
     return *this;
   }
 
@@ -426,6 +442,12 @@ struct std_atomic {
     x.exchange(count);
     return *this;
   }
+
+  /** Equality check (number) */
+  HSHM_INLINE bool operator==(T other) const { return (other == x); }
+
+  /** Inequality check (number) */
+  HSHM_INLINE bool operator!=(T other) const { return (other != x); }
 
   /** Equality check */
   HSHM_INLINE bool operator==(const std_atomic &other) const {
