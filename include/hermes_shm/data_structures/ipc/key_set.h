@@ -52,6 +52,8 @@ class key_set_templ : public ShmContainer {
     erase(key);
   }
 
+  void erase(size_t key) { keys_.emplace(key); }
+  
  private:
   void resize() {
     size_t new_size = set_.capacity() * 2;
@@ -77,10 +79,6 @@ class key_set_templ : public ShmContainer {
       HERMES_THROW_ERROR(KEY_SET_OUT_OF_BOUNDS, "Key set is full");
     }
     key = heap_++;
-  }
-
-  void erase(size_t key) {
-    keys_.emplace(key);
   }
 };
 
