@@ -29,15 +29,6 @@
 
 namespace hshm {
 
-/**
- * A macro to indicate the verbosity of the logger.
- * Verbosity indicates how much data will be printed.
- * The higher the verbosity, the more data will be printed.
- * */
-#ifndef HERMES_LOG_EXCLUDE
-#define HERMES_LOG_EXCLUDE 10
-#endif
-
 /** Prints log verbosity at compile time */
 #define XSTR(s) STR(s)
 #define STR(s) #s
@@ -46,23 +37,24 @@ namespace hshm {
 /** Simplify access to Logger singleton */
 #define HERMES_LOG hshm::EasySingleton<hshm::Logger>::GetInstance()
 
-/** Information Logging levels */
-#ifndef kDebug
-#define kDebug 10 /**< Low-priority debugging information*/
-#endif
-#ifndef kInfo
-#define kInfo 1 /**< Useful information the user should know */
-#endif
+/** Max number of log codes */
+#define HSHM_MAX_LOGGING_CODES 256
 
-/** Error Logging Levels */
+/** Given Information Logging levels */
+#ifndef kInfo
+#define kInfo 251 /**< Useful information the user should know */
+#endif
 #ifndef kWarning
-#define kWarning 253 /**< Something might be wrong */
+#define kWarning 252 /**< Something might be wrong */
 #endif
 #ifndef kError
-#define kError 254 /**< A non-fatal error has occurred */
+#define kError 253 /**< A non-fatal error has occurred */
 #endif
 #ifndef kFatal
-#define kFatal 255 /**< A fatal error has occurred */
+#define kFatal 254 /**< A fatal error has occurred */
+#endif
+#ifndef kDebug
+#define kDebug 255 /**< Low-priority debugging information*/
 #endif
 
 /**
@@ -71,34 +63,21 @@ namespace hshm {
 #define HIPRINT(...) HERMES_LOG->Print(__VA_ARGS__)
 
 /**
- * Hermes Info (HI) Log
- * LOG_LEVEL indicates the priority of the log.
- * LOG_LEVEL 0 is considered required
- * LOG_LEVEL 10 is considered debugging priority.
+ * Hermes SHM Log
  * */
-#define HILOG(LOG_CODE, ...)                                      \
-  do {                                                            \
-    if constexpr (LOG_CODE >= 0) {                                \
-      HERMES_LOG->InfoLog<LOG_CODE>(__FILE__, __func__, __LINE__, \
-                                    __VA_ARGS__);                 \
-    }                                                             \
+#define HLOG(LOG_CODE, SUB_CODE, ...)                                   \
+  do {                                                                  \
+    if constexpr (LOG_CODE >= 0 && SUB_CODE >= 0) {                     \
+      HERMES_LOG->Log<LOG_CODE, SUB_CODE>(__FILE__, __func__, __LINE__, \
+                                          __VA_ARGS__);                 \
+    }                                                                   \
   } while (false)
 
-/**
- * Hermes Error (HE) Log
- * LOG_LEVEL indicates the priority of the log.
- * LOG_LEVEL 0 is considered required
- * LOG_LEVEL 10 is considered debugging priority.
- * */
-#define HELOG(LOG_CODE, ...)                                       \
-  do {                                                             \
-    if constexpr (LOG_CODE >= 0) {                                 \
-      HERMES_LOG->ErrorLog<LOG_CODE>(__FILE__, __func__, __LINE__, \
-                                     __VA_ARGS__);                 \
-    }                                                              \
-  } while (false)
+/** Hermes info log */
+#define HILOG(SUB_CODE, ...) HLOG(kInfo, SUB_CODE, __VA_ARGS__)
 
-#define HSHM_MAX_LOGGING_CODES 256
+/** Hermes error log */
+#define HELOG(LOG_CODE, ...) HLOG(LOG_CODE, LOG_CODE, __VA_ARGS__)
 
 class Logger {
  public:
@@ -149,67 +128,50 @@ class Logger {
 #endif
   }
 
-  template <int LOG_CODE, typename... Args>
-  HSHM_CROSS_FUN void InfoLog(const char *path, const char *func, int line,
-                              const char *fmt, Args &&...args) {
+  template <int LOG_CODE, int SUB_CODE, typename... Args>
+  HSHM_CROSS_FUN void Log(const char *path, const char *func, int line,
+                          const char *fmt, Args &&...args) {
 #ifdef HSHM_IS_HOST
-    if constexpr (LOG_CODE >= 0) {
-      if (disabled_[LOG_CODE]) {
-        return;
+    if (disabled_[LOG_CODE] || disabled_[SUB_CODE]) {
+      return;
+    }
+    std::string level;
+    switch (LOG_CODE) {
+      case kInfo: {
+        level = "INFO";
       }
-      std::string msg =
-          hshm::Formatter::format(fmt, std::forward<Args>(args)...);
-      int tid = GetTid();
-      std::string out = hshm::Formatter::format("{}:{} {} {} {}\n", path, line,
-                                                tid, func, msg);
-      std::cerr << out;
-      if (fout_) {
-        fwrite(out.data(), 1, out.size(), fout_);
+      case kWarning: {
+        level = "WARNING";
+        break;
+      }
+      case kError: {
+        level = "ERROR";
+        break;
+      }
+      case kFatal: {
+        level = "FATAL";
+        break;
+      }
+      default: {
+        level = "WARNING";
+        break;
       }
     }
-#endif
-  }
 
-  template <int LOG_CODE, typename... Args>
-  HSHM_CROSS_FUN void ErrorLog(const char *path, const char *func, int line,
-                               const char *fmt, Args &&...args) {
-#ifdef HSHM_IS_HOST
-    if constexpr (LOG_CODE >= 0) {
-      if (disabled_[LOG_CODE]) {
-        return;
-      }
-      std::string level;
-      switch (LOG_CODE) {
-        case kWarning: {
-          level = "Warning";
-          break;
-        }
-        case kError: {
-          level = "ERROR";
-          break;
-        }
-        case kFatal: {
-          level = "FATAL";
-          break;
-        }
-        default: {
-          level = "WARNING";
-          break;
-        }
-      }
-
-      std::string msg =
-          hshm::Formatter::format(fmt, std::forward<Args>(args)...);
-      int tid = GetTid();
-      std::string out = hshm::Formatter::format("{}:{} {} {} {} {}\n", path,
-                                                line, level, tid, func, msg);
+    std::string msg = hshm::Formatter::format(fmt, std::forward<Args>(args)...);
+    int tid = GetTid();
+    std::string out = hshm::Formatter::format("{}:{} {} {} {} {}\n", path, line,
+                                              level, tid, func, msg);
+    if (LOG_CODE == kInfo) {
+      std::cout << out;
+    } else {
       std::cerr << out;
-      if (fout_) {
-        fwrite(out.data(), 1, out.size(), fout_);
-      }
-      if (LOG_CODE == kFatal) {
-        exit(1);
-      }
+    }
+    if (fout_) {
+      fwrite(out.data(), 1, out.size(), fout_);
+    }
+    if (LOG_CODE == kFatal) {
+      exit(1);
     }
 #endif
   }
