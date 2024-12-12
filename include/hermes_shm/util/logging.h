@@ -139,6 +139,7 @@ class Logger {
     switch (LOG_CODE) {
       case kInfo: {
         level = "INFO";
+        break;
       }
       case kWarning: {
         level = "WARNING";
