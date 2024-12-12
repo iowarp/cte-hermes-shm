@@ -21,21 +21,21 @@
 #include <unordered_map>
 
 // hermes
-#include "hermes_shm/data_structures/ipc/string.h"
 #include <hermes_shm/data_structures/ipc/unordered_map.h>
 
-template<typename Key, typename T>
-using bipc_unordered_map = boost::unordered_map<
-    Key, T,
-    std::hash<size_t>, std::equal_to<size_t>,
-    typename BoostAllocator<T>::alloc_t>;
+#include "hermes_shm/data_structures/ipc/string.h"
+
+template <typename Key, typename T>
+using bipc_unordered_map =
+    boost::unordered_map<Key, T, std::hash<size_t>, std::equal_to<size_t>,
+                         typename BoostAllocator<T>::alloc_t>;
 
 /**
  * A series of performance tests for unordered_maps
  * OUTPUT:
  * [test_name] [map_type] [internal_type] [time_ms]
  * */
-template<typename T, typename MapT>
+template <typename T, typename MapT>
 class UnorderedMapTest {
  public:
   std::string map_type_;
@@ -49,15 +49,15 @@ class UnorderedMapTest {
 
   /** Test case constructor */
   UnorderedMapTest() {
-    if constexpr(std::is_same_v<std::unordered_map<size_t, T>, MapT>) {
+    if constexpr (std::is_same_v<std::unordered_map<size_t, T>, MapT>) {
       map_type_ = "std::unordered_map";
-    } else if constexpr(std::is_same_v<hipc::unordered_map<size_t, T>, MapT>) {
+    } else if constexpr (std::is_same_v<hipc::unordered_map<size_t, T>, MapT>) {
       map_type_ = "hipc::unordered_map";
-    } else if constexpr(std::is_same_v<bipc_unordered_map<size_t, T>, MapT>) {
+    } else if constexpr (std::is_same_v<bipc_unordered_map<size_t, T>, MapT>) {
       map_type_ = "bipc::unordered_map";
     } else {
       std::cout << "INVALID: none of the unordered_map tests matched"
-      << std::endl;
+                << std::endl;
       return;
     }
     internal_type_ = InternalTypeName<T>::Get();
@@ -179,19 +179,18 @@ class UnorderedMapTest {
 
   /** Output as CSV */
   void TestOutput(const std::string &test_name, Timer &t) {
-    HIPRINT("{},{},{},{}\n",
-            test_name, map_type_, internal_type_, t.GetMsec())
+    HIPRINT("{},{},{},{}\n", test_name, map_type_, internal_type_, t.GetMsec());
   }
 
   /** Get element at position i */
   void Get(size_t i) {
-    if constexpr(std::is_same_v<MapT, std::unordered_map<size_t, T>>) {
+    if constexpr (std::is_same_v<MapT, std::unordered_map<size_t, T>>) {
       T &x = (*map_)[i];
       USE(x);
-    } else if constexpr(std::is_same_v<MapT, bipc_unordered_map<size_t, T>>) {
+    } else if constexpr (std::is_same_v<MapT, bipc_unordered_map<size_t, T>>) {
       auto iter = (*map_).find(i);
       USE(*iter);
-    } else if constexpr(std::is_same_v<MapT, hipc::unordered_map<size_t, T>>) {
+    } else if constexpr (std::is_same_v<MapT, hipc::unordered_map<size_t, T>>) {
       T &x = (*map_)[i];
       USE(x);
     }
@@ -201,11 +200,13 @@ class UnorderedMapTest {
   void Emplace(size_t count) {
     StringOrInt<T> var(124);
     for (size_t i = 0; i < count; ++i) {
-      if constexpr(std::is_same_v<MapT, std::unordered_map<size_t, T>>) {
+      if constexpr (std::is_same_v<MapT, std::unordered_map<size_t, T>>) {
         map_->emplace(i, var.Get());
-      } else if constexpr(std::is_same_v<MapT, bipc_unordered_map<size_t, T>>) {
+      } else if constexpr (std::is_same_v<MapT,
+                                          bipc_unordered_map<size_t, T>>) {
         map_->emplace(i, var.Get());
-      } else if constexpr(std::is_same_v<MapT, hipc::unordered_map<size_t, T>>) {
+      } else if constexpr (std::is_same_v<MapT,
+                                          hipc::unordered_map<size_t, T>>) {
         map_->emplace(i, var.Get());
       }
     }
@@ -214,9 +215,9 @@ class UnorderedMapTest {
   /** Allocate an arbitrary unordered_map for the test cases */
   void Allocate() {
     auto alloc = HSHM_DEFAULT_ALLOC;
-    if constexpr(std::is_same_v<MapT, hipc::unordered_map<size_t, T>>) {
+    if constexpr (std::is_same_v<MapT, hipc::unordered_map<size_t, T>>) {
       map_ = alloc->template NewObjLocal<MapT>(HSHM_DEFAULT_MEM_CTX, 5000).ptr_;
-    } else if constexpr(std::is_same_v<MapT, std::unordered_map<size_t, T>>) {
+    } else if constexpr (std::is_same_v<MapT, std::unordered_map<size_t, T>>) {
       map_ = new std::unordered_map<size_t, T>();
     } else if constexpr (std::is_same_v<MapT, bipc_unordered_map<size_t, T>>) {
       map_ = BOOST_SEGMENT->construct<MapT>("BoostMap")(
@@ -227,9 +228,9 @@ class UnorderedMapTest {
   /** Destroy the unordered_map */
   void Destroy() {
     auto alloc = HSHM_DEFAULT_ALLOC;
-    if constexpr(std::is_same_v<MapT, hipc::unordered_map<size_t, T>>) {
+    if constexpr (std::is_same_v<MapT, hipc::unordered_map<size_t, T>>) {
       alloc->DelObj(HSHM_DEFAULT_MEM_CTX, map_);
-    } else if constexpr(std::is_same_v<MapT, std::unordered_map<size_t, T>>) {
+    } else if constexpr (std::is_same_v<MapT, std::unordered_map<size_t, T>>) {
       delete map_;
     } else if constexpr (std::is_same_v<MapT, bipc_unordered_map<size_t, T>>) {
       BOOST_SEGMENT->destroy<MapT>("BoostMap");
@@ -240,19 +241,22 @@ class UnorderedMapTest {
 void FullUnorderedMapTest() {
   // std::unordered_map tests
   UnorderedMapTest<size_t, std::unordered_map<size_t, size_t>>().Test();
-  UnorderedMapTest<std::string, std::unordered_map<size_t, std::string>>().Test();
+  UnorderedMapTest<std::string, std::unordered_map<size_t, std::string>>()
+      .Test();
 
   // boost::unordered_map tests
   UnorderedMapTest<size_t, bipc_unordered_map<size_t, size_t>>().Test();
-  UnorderedMapTest<std::string, bipc_unordered_map<size_t, std::string>>().Test();
-  UnorderedMapTest<bipc_string, bipc_unordered_map<size_t, bipc_string>>().Test();
+  UnorderedMapTest<std::string, bipc_unordered_map<size_t, std::string>>()
+      .Test();
+  UnorderedMapTest<bipc_string, bipc_unordered_map<size_t, bipc_string>>()
+      .Test();
 
   // hipc::unordered_map tests
   UnorderedMapTest<size_t, hipc::unordered_map<size_t, size_t>>().Test();
-  UnorderedMapTest<std::string, hipc::unordered_map<size_t, std::string>>().Test();
-  UnorderedMapTest<hipc::string, hipc::unordered_map<size_t, hipc::string>>().Test();
+  UnorderedMapTest<std::string, hipc::unordered_map<size_t, std::string>>()
+      .Test();
+  UnorderedMapTest<hipc::string, hipc::unordered_map<size_t, hipc::string>>()
+      .Test();
 }
 
-TEST_CASE("UnorderedMapBenchmark") {
-  FullUnorderedMapTest();
-}
+TEST_CASE("UnorderedMapBenchmark") { FullUnorderedMapTest(); }

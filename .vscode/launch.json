@@ -46,7 +46,9 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/build/bin/test_shm_exec",
-            "args": ["SerializeHshm"],
+            "args": [
+                "SerializeHshm"
+            ],
             "miDebuggerPath": "/usr/bin/gdb",
             "cwd": "${workspaceFolder}",
             "setupCommands": [

@@ -21,10 +21,11 @@
 #include <vector>
 
 // hermes
-#include "hermes_shm/data_structures/ipc/string.h"
 #include <hermes_shm/data_structures/ipc/vector.h>
 
-template<typename T>
+#include "hermes_shm/data_structures/ipc/string.h"
+
+template <typename T>
 using bipc_vector = bipc::vector<T, typename BoostAllocator<T>::alloc_t>;
 
 /**
@@ -32,7 +33,7 @@ using bipc_vector = bipc::vector<T, typename BoostAllocator<T>::alloc_t>;
  * OUTPUT:
  * [test_name] [vec_type] [internal_type] [time_ms]
  * */
-template<typename T, typename VecT>
+template <typename T, typename VecT>
 class VectorTest {
  public:
   std::string vec_type_;
@@ -46,11 +47,11 @@ class VectorTest {
 
   /** Test case constructor */
   VectorTest() {
-    if constexpr(std::is_same_v<std::vector<T>, VecT>) {
+    if constexpr (std::is_same_v<std::vector<T>, VecT>) {
       vec_type_ = "std::vector";
-    } else if constexpr(std::is_same_v<hipc::vector<T>, VecT>) {
+    } else if constexpr (std::is_same_v<hipc::vector<T>, VecT>) {
       vec_type_ = "hipc::vector";
-    } else if constexpr(std::is_same_v<bipc_vector<T>, VecT>) {
+    } else if constexpr (std::is_same_v<bipc_vector<T>, VecT>) {
       vec_type_ = "bipc_vector";
     } else {
       std::cout << "INVALID: none of the vector tests matched" << std::endl;
@@ -148,7 +149,7 @@ class VectorTest {
     Emplace(count);
 
     t.Resume();
-    if constexpr(IS_SHM_ARCHIVEABLE(VecT)) {
+    if constexpr (IS_SHM_ARCHIVEABLE(VecT)) {
       auto iter = vec_->begin();
       USE(iter);
     } else {
@@ -171,7 +172,7 @@ class VectorTest {
     Emplace(count);
 
     t.Resume();
-    if constexpr(IS_SHM_ARCHIVEABLE(VecT)) {
+    if constexpr (IS_SHM_ARCHIVEABLE(VecT)) {
       auto iter = vec_->end();
       USE(iter);
     } else {
@@ -236,7 +237,7 @@ class VectorTest {
     Emplace(count);
 
     t.Resume();
-    if constexpr(IS_SHM_ARCHIVEABLE(VecT)) {
+    if constexpr (IS_SHM_ARCHIVEABLE(VecT)) {
       auto vec2 = VecT(std::move(*vec_));
       USE(vec2)
     } else {
@@ -256,22 +257,23 @@ class VectorTest {
 
   /** Output as CSV */
   void TestOutput(const std::string &test_name, Timer &t) {
-    HIPRINT("{},{},{},{}\n",
-            test_name, vec_type_, internal_type_, t.GetMsec())
+    HIPRINT("{},{},{},{}\n", test_name, vec_type_, internal_type_, t.GetMsec());
   }
 
   /** Get element at position i */
   void Get(size_t i) {
-    if constexpr(std::is_same_v<std::vector<T>, VecT>) {
+    if constexpr (std::is_same_v<std::vector<T>, VecT>) {
       T &x = (*vec_)[i];
       USE(x);
-    } else if constexpr(std::is_same_v<hipc::vector<T>, VecT>) {
+    } else if constexpr (std::is_same_v<hipc::vector<T>, VecT>) {
       T &x = (*vec_)[i];
       USE(x);
-    } else if constexpr(std::is_same_v<bipc_vector<T>, VecT>) {
+    } else if constexpr (std::is_same_v<bipc_vector<T>, VecT>) {
       T &x = (*vec_)[i];
       USE(x);
-      if (!ptr_) { std::cout << "h" << std::endl; }
+      if (!ptr_) {
+        std::cout << "h" << std::endl;
+      }
     }
   }
 
@@ -279,11 +281,11 @@ class VectorTest {
   void Emplace(size_t count) {
     StringOrInt<T> var(124);
     for (size_t i = 0; i < count; ++i) {
-      if constexpr(std::is_same_v<std::vector<T>, VecT>) {
+      if constexpr (std::is_same_v<std::vector<T>, VecT>) {
         vec_->emplace_back(var.Get());
-      } else if constexpr(std::is_same_v<hipc::vector<T>, VecT>) {
+      } else if constexpr (std::is_same_v<hipc::vector<T>, VecT>) {
         vec_->emplace_back(var.Get());
-      } else if constexpr(std::is_same_v<bipc_vector<T>, VecT>) {
+      } else if constexpr (std::is_same_v<bipc_vector<T>, VecT>) {
         vec_->emplace_back(var.Get());
       }
     }
@@ -292,23 +294,23 @@ class VectorTest {
   /** Allocate an arbitrary vector for the test cases */
   void Allocate() {
     auto alloc = HSHM_DEFAULT_ALLOC;
-    if constexpr(std::is_same_v<std::vector<T>, VecT>) {
+    if constexpr (std::is_same_v<std::vector<T>, VecT>) {
       vec_ = new std::vector<T>();
-    } else if constexpr(std::is_same_v<hipc::vector<T>, VecT>) {
+    } else if constexpr (std::is_same_v<hipc::vector<T>, VecT>) {
       vec_ = alloc->template NewObjLocal<VecT>(HSHM_DEFAULT_MEM_CTX).ptr_;
-    } else if constexpr(std::is_same_v<bipc_vector<T>, VecT>) {
+    } else if constexpr (std::is_same_v<bipc_vector<T>, VecT>) {
       vec_ = BOOST_SEGMENT->construct<VecT>("BoostVector")(
-        BOOST_ALLOCATOR((std::pair<int, T>)));
+          BOOST_ALLOCATOR((std::pair<int, T>)));
     }
   }
 
   /** Destroy the vector */
   void Destroy() {
-    if constexpr(std::is_same_v<std::vector<T>, VecT>) {
+    if constexpr (std::is_same_v<std::vector<T>, VecT>) {
       delete vec_;
-    } else if constexpr(std::is_same_v<hipc::vector<T>, VecT>) {
+    } else if constexpr (std::is_same_v<hipc::vector<T>, VecT>) {
       HSHM_DEFAULT_ALLOC->DelObj(HSHM_DEFAULT_MEM_CTX, vec_);
-    } else if constexpr(std::is_same_v<bipc_vector<T>, VecT>) {
+    } else if constexpr (std::is_same_v<bipc_vector<T>, VecT>) {
       BOOST_SEGMENT->destroy<VecT>("BoostVector");
     }
   }
@@ -332,7 +334,4 @@ void FullVectorTest() {
   VectorTest<hipc::string, hipc::vector<hipc::string>>().Test();
 }
 
-
-TEST_CASE("VectorBenchmark") {
-  FullVectorTest();
-}
+TEST_CASE("VectorBenchmark") { FullVectorTest(); }

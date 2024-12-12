@@ -17,15 +17,16 @@
 #include <boost/interprocess/containers/list.hpp>
 
 // Std
-#include <string>
 #include <list>
+#include <string>
 
 // hermes
-#include "hermes_shm/data_structures/ipc/string.h"
 #include <hermes_shm/data_structures/ipc/list.h>
 #include <hermes_shm/data_structures/ipc/slist.h>
 
-template<typename T>
+#include "hermes_shm/data_structures/ipc/string.h"
+
+template <typename T>
 using bipc_list = bipc::list<T, typename BoostAllocator<T>::alloc_t>;
 
 /**
@@ -47,16 +48,16 @@ class ListTest {
 
   /** Test case constructor */
   ListTest() {
-    if constexpr(std::is_same_v<std::list<T>, ListT>) {
+    if constexpr (std::is_same_v<std::list<T>, ListT>) {
       list_type_ = "std::list";
-    } else if constexpr(std::is_same_v<hipc::list<T>, ListT>) {
+    } else if constexpr (std::is_same_v<hipc::list<T>, ListT>) {
       list_type_ = "hipc::list";
-    } else if constexpr(std::is_same_v<bipc_list<T>, ListT>) {
+    } else if constexpr (std::is_same_v<bipc_list<T>, ListT>) {
       list_type_ = "bipc_list";
-    } else if constexpr(std::is_same_v<hipc::slist<T>, ListT>) {
+    } else if constexpr (std::is_same_v<hipc::slist<T>, ListT>) {
       list_type_ = "hipc::slist";
     } else {
-      HELOG(kFatal, "none of the list tests matched")
+      HELOG(kFatal, "none of the list tests matched");
     }
     internal_type_ = InternalTypeName<T>::Get();
   }
@@ -131,7 +132,7 @@ class ListTest {
     Emplace(count);
 
     t.Resume();
-    if constexpr(IS_SHM_ARCHIVEABLE(ListT)) {
+    if constexpr (IS_SHM_ARCHIVEABLE(ListT)) {
       auto vec2 = ListT(*lp_);
       USE(vec2);
     } else {
@@ -152,7 +153,7 @@ class ListTest {
     Emplace(count);
 
     t.Resume();
-    if constexpr(IS_SHM_ARCHIVEABLE(ListT)) {
+    if constexpr (IS_SHM_ARCHIVEABLE(ListT)) {
       auto vec2 = ListT(std::move(*lp_));
       USE(vec2)
     } else {
@@ -172,22 +173,22 @@ class ListTest {
 
   /** Output as CSV */
   void TestOutput(const std::string &test_name, Timer &t) {
-    HIPRINT("{},{},{},{}\n",
-            test_name, list_type_, internal_type_, t.GetMsec())
+    HIPRINT("{},{},{},{}\n", test_name, list_type_, internal_type_,
+            t.GetMsec());
   }
 
   /** Get element at position i */
   void Get(size_t i) {
-    if constexpr(std::is_same_v<ListT, std::list<T>>) {
+    if constexpr (std::is_same_v<ListT, std::list<T>>) {
       T &x = (*lp_)[i];
       USE(x);
-    } else if constexpr(std::is_same_v<ListT, bipc_list<T>>) {
+    } else if constexpr (std::is_same_v<ListT, bipc_list<T>>) {
       T &x = (*lp_)[i];
       USE(x);
-    } else if constexpr(std::is_same_v<ListT, hipc::list<T>>) {
+    } else if constexpr (std::is_same_v<ListT, hipc::list<T>>) {
       T &x = (*lp_)[i];
       USE(x);
-    } else if constexpr(std::is_same_v<ListT, hipc::slist<T>>) {
+    } else if constexpr (std::is_same_v<ListT, hipc::slist<T>>) {
       T &x = (*lp_)[i];
       USE(x);
     }
@@ -197,13 +198,13 @@ class ListTest {
   void Emplace(size_t count) {
     StringOrInt<T> var(124);
     for (size_t i = 0; i < count; ++i) {
-      if constexpr(std::is_same_v<ListT, std::list<T>>) {
+      if constexpr (std::is_same_v<ListT, std::list<T>>) {
         lp_->emplace_back(var.Get());
-      } else if constexpr(std::is_same_v<ListT, bipc_list<T>>) {
+      } else if constexpr (std::is_same_v<ListT, bipc_list<T>>) {
         lp_->emplace_back(var.Get());
-      } else if constexpr(std::is_same_v<ListT, hipc::list<T>>) {
+      } else if constexpr (std::is_same_v<ListT, hipc::list<T>>) {
         lp_->emplace_back(var.Get());
-      } else if constexpr(std::is_same_v<ListT, hipc::slist<T>>) {
+      } else if constexpr (std::is_same_v<ListT, hipc::slist<T>>) {
         lp_->emplace_back(var.Get());
       }
     }
@@ -260,6 +261,4 @@ void FullListTest() {
   ListTest<hipc::string, hipc::slist<hipc::string>>().Test();
 }
 
-TEST_CASE("ListBenchmark") {
-  FullListTest();
-}
+TEST_CASE("ListBenchmark") { FullListTest(); }

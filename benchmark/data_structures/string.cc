@@ -10,13 +10,14 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+#include "hermes_shm/data_structures/ipc/string.h"
+
+#include <string>
+
 #include "basic_test.h"
 #include "test_init.h"
 
-#include <string>
-#include "hermes_shm/data_structures/ipc/string.h"
-
-template<typename T>
+template <typename T>
 class StringTestSuite {
  public:
   std::string str_type_;
@@ -28,11 +29,11 @@ class StringTestSuite {
 
   /** Constructor */
   StringTestSuite() {
-    if constexpr(std::is_same_v<std::string, T>) {
+    if constexpr (std::is_same_v<std::string, T>) {
       str_type_ = "std::string";
-    } else if constexpr(std::is_same_v<hipc::string, T>) {
+    } else if constexpr (std::is_same_v<hipc::string, T>) {
       str_type_ = "hipc::string";
-    } else if constexpr(std::is_same_v<bipc_string, T>) {
+    } else if constexpr (std::is_same_v<bipc_string, T>) {
       str_type_ = "bipc::string";
     }
   }
@@ -44,15 +45,15 @@ class StringTestSuite {
     Timer t;
     t.Resume();
     for (size_t i = 0; i < count; ++i) {
-      if constexpr(std::is_same_v<std::string, T>) {
+      if constexpr (std::is_same_v<std::string, T>) {
         T hello(data);
         USE(hello);
-      } else if constexpr(std::is_same_v<hipc::string, T>) {
+      } else if constexpr (std::is_same_v<hipc::string, T>) {
         hipc::string hello(data);
         USE(hello);
-      } else if constexpr(std::is_same_v<bipc_string, T>) {
+      } else if constexpr (std::is_same_v<bipc_string, T>) {
         auto hello = BOOST_SEGMENT->find_or_construct<bipc_string>("MyString")(
-          BOOST_ALLOCATOR(bipc_string));
+            BOOST_ALLOCATOR(bipc_string));
         BOOST_SEGMENT->destroy<bipc_string>("MyString");
         USE(hello);
       }
@@ -67,20 +68,20 @@ class StringTestSuite {
     std::string data(length, 1);
     std::string *test1 = &data;
     auto test2 = hipc::string(data);
-    bipc_string *test3 = BOOST_SEGMENT->find_or_construct<bipc_string>("MyString")(
-      BOOST_ALLOCATOR(bipc_string));
+    bipc_string *test3 = BOOST_SEGMENT->find_or_construct<bipc_string>(
+        "MyString")(BOOST_ALLOCATOR(bipc_string));
     test3->assign(data);
 
     Timer t;
     t.Resume();
     for (size_t i = 0; i < count; ++i) {
-      if constexpr(std::is_same_v<std::string, T>) {
+      if constexpr (std::is_same_v<std::string, T>) {
         auto info = test1->data();
         USE(info);
-      } else if constexpr(std::is_same_v<hipc::string, T>) {
+      } else if constexpr (std::is_same_v<hipc::string, T>) {
         auto info = test2.data();
         USE(info);
-      } else if constexpr(std::is_same_v<bipc_string, T>) {
+      } else if constexpr (std::is_same_v<bipc_string, T>) {
         auto info = test3->c_str();
         USE(info);
       }
@@ -96,12 +97,11 @@ class StringTestSuite {
 
   /** Output test results */
   void TestOutput(const std::string &test_name, Timer &t, size_t length) {
-    HIPRINT("{},{},{},{}\n",
-            test_name, str_type_, length, t.GetMsec())
+    HIPRINT("{},{},{},{}\n", test_name, str_type_, length, t.GetMsec());
   }
 };
 
-template<typename T>
+template <typename T>
 void StringTest() {
   size_t count = 100000;
   StringTestSuite<T>().ConstructDestructTest(count, 16);
@@ -115,6 +115,4 @@ void FullStringTest() {
   StringTest<bipc_string>();
 }
 
-TEST_CASE("StringBenchmark") {
-  FullStringTest();
-}
+TEST_CASE("StringBenchmark") { FullStringTest(); }

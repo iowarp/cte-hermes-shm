@@ -10,13 +10,13 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+#include <string>
+
 #include "basic_test.h"
+#include "hermes_shm/data_structures/ipc/string.h"
 #include "test_init.h"
 
-#include <string>
-#include "hermes_shm/data_structures/ipc/string.h"
-
-template<typename T, bool SHM>
+template <typename T, bool SHM>
 void TestCase() {
   std::string str_type = InternalTypeName<T>::Get();
   /*size_t count = 1000000;
@@ -30,8 +30,7 @@ void TestCase() {
   t.Resume();
   t.Pause();
 
-  HIPRINT("{},{},{}\n",
-          str_type, SHM, t.GetMsec())
+  HIPRINT("{},{},{}\n", str_type, SHM, t.GetMsec());
 }
 
 TEST_CASE("RefBenchmark") {

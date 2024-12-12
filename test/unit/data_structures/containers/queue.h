@@ -1,14 +1,14 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-* Distributed under BSD 3-Clause license.                                   *
-* Copyright by The HDF Group.                                               *
-* Copyright by the Illinois Institute of Technology.                        *
-* All rights reserved.                                                      *
-*                                                                           *
-* This file is part of Hermes. The full Hermes copyright notice, including  *
-* terms governing use, modification, and redistribution, is contained in    *
-* the COPYING file, which can be found at the top directory. If you do not  *
-* have access to the file, you may request a copy from help@hdfgroup.org.   *
-* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+ * Distributed under BSD 3-Clause license.                                   *
+ * Copyright by The HDF Group.                                               *
+ * Copyright by the Illinois Institute of Technology.                        *
+ * All rights reserved.                                                      *
+ *                                                                           *
+ * This file is part of Hermes. The full Hermes copyright notice, including  *
+ * terms governing use, modification, and redistribution, is contained in    *
+ * the COPYING file, which can be found at the top directory. If you do not  *
+ * have access to the file, you may request a copy from help@hdfgroup.org.   *
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #ifndef HERMES_SHM_TEST_UNIT_DATA_STRUCTURES_CONTAINERS_QUEUE_H_
 #define HERMES_SHM_TEST_UNIT_DATA_STRUCTURES_CONTAINERS_QUEUE_H_
@@ -16,15 +16,14 @@
 #include "hermes_shm/data_structures/all.h"
 #include "omp.h"
 
-template<typename QueueT, typename T>
+template <typename QueueT, typename T>
 class QueueTestSuite {
  public:
   QueueT &queue_;
 
  public:
   /** Constructor */
-  explicit QueueTestSuite(QueueT &queue)
-    : queue_(queue) {}
+  explicit QueueTestSuite(QueueT &queue) : queue_(queue) {}
 
   /** Producer method */
   void Produce(size_t count_per_rank) {
@@ -36,10 +35,11 @@ class QueueTestSuite {
         CREATE_SET_VAR_TO_INT_OR_STRING(T, var, idx);
         CREATE_GET_INT_FROM_VAR(T, entry_int, var)
         idxs.emplace_back(entry_int);
-        while (queue_.emplace(var).IsNull()) {}
+        while (queue_.emplace(var).IsNull()) {
+        }
       }
     } catch (hshm::Error &e) {
-      HELOG(kFatal, e.what())
+      HELOG(kFatal, e.what());
     }
     REQUIRE(idxs.size() == count_per_rank);
     std::sort(idxs.begin(), idxs.end());
@@ -50,8 +50,7 @@ class QueueTestSuite {
   }
 
   /** Consumer method */
-  void Consume(std::atomic<size_t> &count,
-               size_t total_count,
+  void Consume(std::atomic<size_t> &count, size_t total_count,
                std::vector<size_t> &entries) {
     auto entry = T();
     auto &entry_ref = entry;
@@ -86,11 +85,9 @@ class QueueTestSuite {
   }
 };
 
-template<typename QueueT, typename T>
-void ProduceThenConsume(size_t nproducers,
-                        size_t nconsumers,
-                        size_t count_per_rank,
-                        size_t depth) {
+template <typename QueueT, typename T>
+void ProduceThenConsume(size_t nproducers, size_t nconsumers,
+                        size_t count_per_rank, size_t depth) {
   QueueT queue(depth);
   QueueTestSuite<QueueT, T> q(queue);
   std::atomic<size_t> count = 0;
@@ -99,28 +96,28 @@ void ProduceThenConsume(size_t nproducers,
 
   // Produce all the data
   omp_set_dynamic(0);
-#pragma omp parallel shared(nproducers, count_per_rank, q, count, entries) num_threads(nproducers)  // NOLINT
-  {  // NOLINT
+#pragma omp parallel shared(nproducers, count_per_rank, q, count, entries) \
+    num_threads(nproducers)  // NOLINT
+  {                          // NOLINT
 #pragma omp barrier
     q.Produce(count_per_rank);
 #pragma omp barrier
   }
 
   omp_set_dynamic(0);
-#pragma omp parallel shared(nproducers, count_per_rank, q) num_threads(nconsumers)  // NOLINT
-  {  // NOLINT
+#pragma omp parallel shared(nproducers, count_per_rank, q) \
+    num_threads(nconsumers)  // NOLINT
+  {                          // NOLINT
 #pragma omp barrier
-    // Consume all the data
+     // Consume all the data
     q.Consume(count, count_per_rank * nproducers, entries);
 #pragma omp barrier
   }
 }
 
-template<typename QueueT, typename T>
-void ProduceAndConsume(size_t nproducers,
-                       size_t nconsumers,
-                       size_t count_per_rank,
-                       size_t depth) {
+template <typename QueueT, typename T>
+void ProduceAndConsume(size_t nproducers, size_t nconsumers,
+                       size_t count_per_rank, size_t depth) {
   QueueT queue(depth);
   size_t nthreads = nproducers + nconsumers;
   QueueTestSuite<QueueT, T> q(queue);
@@ -130,8 +127,9 @@ void ProduceAndConsume(size_t nproducers,
 
   // Produce all the data
   omp_set_dynamic(0);
-#pragma omp parallel shared(nproducers, count_per_rank, q, count) num_threads(nthreads)  // NOLINT
-  {  // NOLINT
+#pragma omp parallel shared(nproducers, count_per_rank, q, count) \
+    num_threads(nthreads)  // NOLINT
+  {                        // NOLINT
 #pragma omp barrier
     size_t rank = omp_get_thread_num();
     if (rank < nproducers) {

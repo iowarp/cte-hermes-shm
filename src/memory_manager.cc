@@ -10,28 +10,25 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-
 #include "hermes_shm/memory/memory_manager.h"
-#include "hermes_shm/memory/backend/memory_backend_factory.h"
-#include "hermes_shm/memory/allocator/allocator_factory.h"
+
+#include "hermes_shm/data_structures/ipc/unordered_map.h"
 #include "hermes_shm/introspect/system_info.h"
+#include "hermes_shm/memory/allocator/allocator_factory.h"
+#include "hermes_shm/memory/backend/memory_backend_factory.h"
+#include "hermes_shm/thread/thread_model_manager.h"
 #include "hermes_shm/util/errors.h"
 #include "hermes_shm/util/logging.h"
-#include "hermes_shm/thread/thread_model_manager.h"
-#include "hermes_shm/data_structures/ipc/unordered_map.h"
 
 namespace hshm::ipc {
 
 #ifdef HERMES_ENABLE_CUDA
-__global__ void Init() {
-}
+__global__ void Init() {}
 #endif
 
 /** Create the root allocator */
 HSHM_CROSS_FUN
-MemoryManager::MemoryManager() {
-  Init();
-}
+MemoryManager::MemoryManager() { Init(); }
 
 /** Initialize memory manager */
 HSHM_CROSS_FUN
@@ -44,10 +41,9 @@ void MemoryManager::Init() {
   memset(allocators_, 0, sizeof(allocators_));
 
   // Root backend
-  ArrayBackend *root_backend = (ArrayBackend*)root_backend_space_;
+  ArrayBackend *root_backend = (ArrayBackend *)root_backend_space_;
   Allocator::ConstructObj(*root_backend);
-  root_backend->shm_init(MemoryBackendId::GetRoot(),
-                         sizeof(root_alloc_data_),
+  root_backend->shm_init(MemoryBackendId::GetRoot(), sizeof(root_alloc_data_),
                          root_alloc_data_);
   root_backend->Own();
   root_backend_ = root_backend;
@@ -55,12 +51,10 @@ void MemoryManager::Init() {
   // Root allocator
   root_allocator_id_.bits_.major_ = 3;
   root_allocator_id_.bits_.minor_ = 3;
-  StackAllocator *root_alloc = (StackAllocator*)root_alloc_space_;
+  StackAllocator *root_alloc = (StackAllocator *)root_alloc_space_;
   Allocator::ConstructObj(*root_alloc);
-  root_alloc->shm_init(
-      root_allocator_id_, 0,
-      root_backend_->data_,
-      root_backend_->data_size_);
+  root_alloc->shm_init(root_allocator_id_, 0, root_backend_->data_,
+                       root_backend_->data_size_);
   root_alloc_ = root_alloc;
   default_allocator_ = root_alloc_;
 
@@ -82,7 +76,7 @@ size_t MemoryManager::GetDefaultBackendSize() {
  * Attaches to an existing memory backend located at \a url url.
  * */
 HSHM_CROSS_FUN
-MemoryBackend* MemoryManager::AttachBackend(MemoryBackendType type,
+MemoryBackend *MemoryManager::AttachBackend(MemoryBackendType type,
                                             const hshm::chararr &url) {
 #ifdef HSHM_IS_HOST
   MemoryBackend *backend = MemoryBackendFactory::shm_deserialize(type, url);
@@ -94,7 +88,7 @@ MemoryBackend* MemoryManager::AttachBackend(MemoryBackendType type,
 }
 
 #ifdef HERMES_ENABLE_CUDA
-template<typename BackendT>
+template <typename BackendT>
 __global__ void AttachBackendKernel(BackendT *pack, BackendT *cpy) {
   HERMES_MEMORY_MANAGER;
   HERMES_THREAD_MODEL;
@@ -107,12 +101,12 @@ __global__ void AttachBackendKernel(BackendT *pack, BackendT *cpy) {
 /** Check if a backend is cuda-compatible */
 void AllocateCudaBackend(int dev, MemoryBackend *other) {
   cudaSetDevice(dev);
-  switch(other->header_->type_) {
+  switch (other->header_->type_) {
     case MemoryBackendType::kCudaMalloc: {
       CudaMalloc *pack, *cpy;
       cudaMallocManaged(&pack, sizeof(CudaMalloc));
       cudaMallocManaged(&cpy, sizeof(CudaMalloc));
-      memcpy((char*)pack, (char*)other, sizeof(CudaMalloc));
+      memcpy((char *)pack, (char *)other, sizeof(CudaMalloc));
       pack->UnsetScanned();
       pack->Disown();
       AttachBackendKernel<<<1, 1>>>(pack, cpy);
@@ -123,7 +117,7 @@ void AllocateCudaBackend(int dev, MemoryBackend *other) {
       CudaShmMmap *pack, *cpy;
       cudaMallocManaged(&pack, sizeof(CudaShmMmap));
       cudaMallocManaged(&cpy, sizeof(CudaShmMmap));
-      memcpy((char*)pack, (char*)other, sizeof(CudaShmMmap));
+      memcpy((char *)pack, (char *)other, sizeof(CudaShmMmap));
       pack->UnsetScanned();
       pack->Disown();
       AttachBackendKernel<<<1, 1>>>(pack, cpy);
@@ -172,20 +166,19 @@ void MemoryManager::ScanBackends(bool find_allocs) {
  * also be used externally.
  * */
 HSHM_CROSS_FUN
-Allocator* MemoryManager::RegisterAllocator(Allocator *alloc, bool do_scan) {
+Allocator *MemoryManager::RegisterAllocator(Allocator *alloc, bool do_scan) {
   if (alloc == nullptr) {
     return nullptr;
   }
   if (do_scan) {
-    if (default_allocator_ == nullptr ||
-        default_allocator_ == root_alloc_ ||
+    if (default_allocator_ == nullptr || default_allocator_ == root_alloc_ ||
         default_allocator_->GetId() == alloc->GetId()) {
       default_allocator_ = alloc;
     }
   }
   uint32_t idx = alloc->GetId().ToIndex();
   if (idx > MAX_ALLOCATORS) {
-    HILOG(kError, "Allocator index out of range: {}", idx)
+    HILOG(kError, "Allocator index out of range: {}", idx);
     HERMES_THROW_ERROR(TOO_MANY_ALLOCATORS);
   }
   allocators_[idx] = alloc;

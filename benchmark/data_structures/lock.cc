@@ -14,9 +14,9 @@
 #include "test_init.h"
 
 // Std
-#include <string>
-#include <queue>
 #include <mutex>
+#include <queue>
+#include <string>
 
 // hermes
 #include "hermes_shm/thread/lock.h"
@@ -26,7 +26,7 @@
  * OUTPUT:
  * [test_name] [vec_type] [internal_type] [time_ms]
  * */
-template<typename LockT>
+template <typename LockT>
 class LockTest {
  public:
   std::string lock_type_;
@@ -39,14 +39,14 @@ class LockTest {
 
   /** Test case constructor */
   LockTest() {
-    if constexpr(std::is_same_v<std::mutex, LockT>) {
+    if constexpr (std::is_same_v<std::mutex, LockT>) {
       lock_type_ = "std::mutex";
-    } else if constexpr(std::is_same_v<hshm::RwLock, LockT>) {
+    } else if constexpr (std::is_same_v<hshm::RwLock, LockT>) {
       lock_type_ = "hshm::RwLock";
-    } else if constexpr(std::is_same_v<hshm::Mutex, LockT>) {
+    } else if constexpr (std::is_same_v<hshm::Mutex, LockT>) {
       lock_type_ = "hshm::Mutex";
     } else {
-      HELOG(kFatal, "none of the queue tests matched")
+      HELOG(kFatal, "none of the queue tests matched");
     }
   }
 
@@ -91,11 +91,10 @@ class LockTest {
    * ===================================*/
 
   /** Output as CSV */
-  void TestOutput(const std::string &test_name, Timer &t,
-                  size_t count, int nthreads) {
-    HIPRINT("{},{},{},{},{}\n",
-            test_name, lock_type_, nthreads, t.GetMsec(),
-            (float)count / t.GetUsec())
+  void TestOutput(const std::string &test_name, Timer &t, size_t count,
+                  int nthreads) {
+    HIPRINT("{},{},{},{},{}\n", test_name, lock_type_, nthreads, t.GetMsec(),
+            (float)count / t.GetUsec());
   }
 
   /** Emplace elements into the queue */
@@ -104,15 +103,15 @@ class LockTest {
 #pragma omp parallel num_threads(nthreads)
     {
       for (size_t i = 0; i < count_per_rank; ++i) {
-        if constexpr(std::is_same_v<LockT, std::mutex>) {
+        if constexpr (std::is_same_v<LockT, std::mutex>) {
           lock_.lock();
           queue_.emplace(1);
           lock_.unlock();
-        } else if constexpr(std::is_same_v<LockT, hshm::Mutex>) {
+        } else if constexpr (std::is_same_v<LockT, hshm::Mutex>) {
           lock_.Lock(0);
           queue_.emplace(1);
           lock_.Unlock();
-        } else if constexpr(std::is_same_v<LockT, hshm::RwLock>) {
+        } else if constexpr (std::is_same_v<LockT, hshm::RwLock>) {
           lock_.WriteLock(0);
           queue_.emplace(1);
           lock_.WriteUnlock();
@@ -129,15 +128,15 @@ class LockTest {
     {
       size_t sum = 0;
       for (size_t i = 0; i < count_per_rank; ++i) {
-        if constexpr(std::is_same_v<LockT, std::mutex>) {
+        if constexpr (std::is_same_v<LockT, std::mutex>) {
           lock_.lock();
           sum += data[i];
           lock_.unlock();
-        } else if constexpr(std::is_same_v<LockT, hshm::Mutex>) {
+        } else if constexpr (std::is_same_v<LockT, hshm::Mutex>) {
           lock_.Lock(0);
           sum += data[i];
           lock_.Unlock();
-        } else if constexpr(std::is_same_v<LockT, hshm::RwLock>) {
+        } else if constexpr (std::is_same_v<LockT, hshm::RwLock>) {
           lock_.ReadLock(0);
           sum += data[i];
           lock_.ReadUnlock();

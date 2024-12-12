@@ -13,20 +13,21 @@
 #ifndef HERMES_CONFIG_PARSE_PARSER_H
 #define HERMES_CONFIG_PARSE_PARSER_H
 
-#include <cstdlib>
-#include <string>
-#include <regex>
-#include <list>
-#include "formatter.h"
-#include "logging.h"
-#include "hermes_shm/constants/macros.h"
-#include "yaml-cpp/yaml.h"
-
-#include <iomanip>
 #include <float.h>
 #include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
+
+#include <cstdlib>
+#include <iomanip>
+#include <list>
+#include <regex>
+#include <string>
+
+#include "formatter.h"
+#include "hermes_shm/constants/macros.h"
+#include "logging.h"
+#include "yaml-cpp/yaml.h"
 
 namespace hshm {
 
@@ -147,11 +148,12 @@ class ConfigParse {
       }
       break;
     }
-    return std::string(num_text.begin() + i, num_text.end());;
+    return std::string(num_text.begin() + i, num_text.end());
+    ;
   }
 
   /** parse the number of \a num_text NUMBER text */
-  template<typename T>
+  template <typename T>
   static T ParseNumber(const std::string &num_text) {
     T size;
     if (num_text == "inf") {
@@ -181,7 +183,7 @@ class ConfigParse {
     } else if (suffix[0] == 'p' || suffix[0] == 'P') {
       return PETABYTES(size);
     } else {
-      HELOG(kFatal, "Could not parse the size: {}", size_text)
+      HELOG(kFatal, "Could not parse the size: {}", size_text);
       exit(1);
     }
   }
@@ -206,7 +208,7 @@ class ConfigParse {
     } else if (suffix[0] == 's' || suffix[0] == 'S') {
       return GIGABYTES(size);
     }
-    HELOG(kFatal, "Could not parse the latency: {}", latency_text)
+    HELOG(kFatal, "Could not parse the latency: {}", latency_text);
     return 0;
   }
 
@@ -228,7 +230,7 @@ class ConfigParse {
         } else {
           continue;
         }
-      } catch(...) {
+      } catch (...) {
       }
       std::regex replace_expr("\\$\\{" + env_name + "\\}");
       path = std::regex_replace(path, replace_expr, env_val);
@@ -247,7 +249,7 @@ class ConfigParse {
       }
       file.close();
     } else {
-      HELOG(kError, "Could not open the hostfile: {}", path)
+      HELOG(kError, "Could not open the hostfile: {}", path);
     }
     return hosts;
   }
@@ -283,7 +285,7 @@ class BaseConfig {
       YAML::Node yaml_conf = YAML::LoadFile(real_path);
       ParseYAML(yaml_conf);
     } catch (std::exception &e) {
-      HELOG(kFatal, e.what())
+      HELOG(kFatal, e.what());
     }
   }
 
