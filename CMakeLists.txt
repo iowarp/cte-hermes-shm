@@ -31,7 +31,7 @@ option(HERMES_DEBUG_LOCK "Used for debugging locks" OFF)
 option(HERMES_ENABLE_PROFILING "View profiling logs" OFF)
 option(HERMES_ENABLE_COMPRESS "Enable compression" OFF)
 option(HERMES_ENABLE_ENCRYPT "Enable encryption" OFF)
-option(HERMES_USE_ELF "Enable encryption" ON)
+option(HERMES_USE_ELF "Enable ELF" ON)
 
 if (HERMES_PTHREADS_ENABLED)
     add_compile_definitions(HERMES_PTHREADS_ENABLED)
