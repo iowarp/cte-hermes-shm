@@ -125,7 +125,10 @@ class Logger {
   template <typename... Args>
   HSHM_CROSS_FUN void Print(const char *fmt, Args &&...args) {
 #ifdef HSHM_IS_HOST
-    std::string out = hshm::Formatter::format(fmt, std::forward<Args>(args)...);
+
+    std::string msg = hshm::Formatter::format(fmt, std::forward<Args>(args)...);
+    int tid = GetTid();
+    std::string out = hshm::Formatter::format("{}\n", msg);
     std::cout << out;
     if (fout_) {
       fwrite(out.data(), 1, out.size(), fout_);
@@ -170,8 +173,10 @@ class Logger {
                                               level, tid, func, msg);
     if (LOG_CODE == kInfo) {
       std::cout << out;
+      fflush(stdout);
     } else {
       std::cerr << out;
+      fflush(stderr);
     }
     if (fout_) {
       fwrite(out.data(), 1, out.size(), fout_);
