@@ -53,8 +53,12 @@ namespace hshm {
 #ifndef kFatal
 #define kFatal 254 /**< A fatal error has occurred */
 #endif
-#ifndef kDebug
-#define kDebug 255 /**< Low-priority debugging information*/
+#ifndef kDebug /**< Low-priority debugging information*/
+#ifndef HSHM_DEBUG
+#define kDebug -1
+#else
+#define kDebug 255
+#endif
 #endif
 
 /**
