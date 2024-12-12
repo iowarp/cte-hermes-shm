@@ -92,6 +92,7 @@ class Logger {
   HSHM_CROSS_FUN
   Logger() {
 #ifdef HSHM_IS_HOST
+    memset(disabled_, 0, sizeof(disabled_));
     // exe_name_ = std::filesystem::path(exe_path_).filename().string();
     auto verbosity_env = getenv("HERMES_LOG_EXCLUDE");
     if (verbosity_env && strlen(verbosity_env)) {
