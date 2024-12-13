@@ -7,19 +7,15 @@
 
 #include "hermes_shm/data_structures/internal/shm_internal.h"
 #include "hermes_shm/thread/lock.h"
-#include "vector.h"
-#include "pair.h"
 #include "hermes_shm/types/qtok.h"
+#include "pair.h"
+#include "vector.h"
 
 namespace hshm::ipc {
 
 /** Forward declaration of ring_ptr_queue_base */
-template<
-    typename T,
-    bool IsPushAtomic,
-    bool IsPopAtomic,
-    bool IsFixedSize,
-    HSHM_CLASS_TEMPL_WITH_DEFAULTS>
+template <typename T, bool IsPushAtomic, bool IsPopAtomic, bool HasFixedReqs,
+          HSHM_CLASS_TEMPL_WITH_DEFAULTS>
 class ring_ptr_queue_base;
 
 /**
@@ -27,19 +23,14 @@ class ring_ptr_queue_base;
  * Used as inputs to the HIPC_CONTAINER_TEMPLATE
  * */
 #define CLASS_NAME ring_ptr_queue_base
-#define CLASS_NEW_ARGS \
-  T, IsPushAtomic, IsPopAtomic, IsFixedSize
+#define CLASS_NEW_ARGS T, IsPushAtomic, IsPopAtomic, HasFixedReqs
 
 /**
  * A queue optimized for multiple producers (emplace) with a single
  * consumer (pop).
  * */
-template<
-    typename T,
-    bool IsPushAtomic,
-    bool IsPopAtomic,
-    bool IsFixedSize,
-    HSHM_CLASS_TEMPL>
+template <typename T, bool IsPushAtomic, bool IsPopAtomic, bool HasFixedReqs,
+          HSHM_CLASS_TEMPL>
 class ring_ptr_queue_base : public ShmContainer {
  public:
   HIPC_CONTAINER_TEMPLATE((CLASS_NAME), (CLASS_NEW_ARGS))
@@ -70,13 +61,12 @@ class ring_ptr_queue_base : public ShmContainer {
   /** SHM constructor. Default. */
   HSHM_CROSS_FUN
   explicit ring_ptr_queue_base(const hipc::CtxAllocator<AllocT> &alloc,
-                          size_t depth = 1024) {
+                               size_t depth = 1024) {
     shm_init(alloc, depth);
   }
 
   HSHM_INLINE_CROSS
-  void shm_init(const hipc::CtxAllocator<AllocT> &alloc,
-                size_t depth = 1024) {
+  void shm_init(const hipc::CtxAllocator<AllocT> &alloc, size_t depth = 1024) {
     init_shm_container(alloc);
     HSHM_MAKE_AR(queue_, GetCtxAllocator(), depth);
     flags_.Clear();
@@ -98,7 +88,7 @@ class ring_ptr_queue_base : public ShmContainer {
   /** SHM copy constructor */
   HSHM_CROSS_FUN
   explicit ring_ptr_queue_base(const hipc::CtxAllocator<AllocT> &alloc,
-                          const ring_ptr_queue_base &other) {
+                               const ring_ptr_queue_base &other) {
     init_shm_container(alloc);
     SetNull();
     shm_strong_copy_op(other);
@@ -106,7 +96,7 @@ class ring_ptr_queue_base : public ShmContainer {
 
   /** SHM copy assignment operator */
   HSHM_CROSS_FUN
-  ring_ptr_queue_base& operator=(const ring_ptr_queue_base &other) {
+  ring_ptr_queue_base &operator=(const ring_ptr_queue_base &other) {
     if (this != &other) {
       shm_destroy();
       shm_strong_copy_op(other);
@@ -136,14 +126,13 @@ class ring_ptr_queue_base : public ShmContainer {
   /** SHM move constructor. */
   HSHM_CROSS_FUN
   ring_ptr_queue_base(const hipc::CtxAllocator<AllocT> &alloc,
-                 ring_ptr_queue_base &&other) noexcept {
-    shm_move_op<false>(alloc,
-                       std::forward<ring_ptr_queue_base>(other));
+                      ring_ptr_queue_base &&other) noexcept {
+    shm_move_op<false>(alloc, std::forward<ring_ptr_queue_base>(other));
   }
 
   /** SHM move assignment operator. */
   HSHM_CROSS_FUN
-  ring_ptr_queue_base& operator=(ring_ptr_queue_base &&other) noexcept {
+  ring_ptr_queue_base &operator=(ring_ptr_queue_base &&other) noexcept {
     if (this != &other) {
       shm_move_op<true>(other.GetCtxAllocator(),
                         std::forward<ring_ptr_queue_base>(other));
@@ -152,9 +141,9 @@ class ring_ptr_queue_base : public ShmContainer {
   }
 
   /** Base shm move operator */
-  template<bool IS_ASSIGN>
-  HSHM_CROSS_FUN
-  void shm_move_op(const hipc::CtxAllocator<AllocT> &alloc, ring_ptr_queue_base &&other) {
+  template <bool IS_ASSIGN>
+  HSHM_CROSS_FUN void shm_move_op(const hipc::CtxAllocator<AllocT> &alloc,
+                                  ring_ptr_queue_base &&other) {
     if constexpr (IS_ASSIGN) {
       shm_destroy();
     } else {
@@ -177,15 +166,11 @@ class ring_ptr_queue_base : public ShmContainer {
 
   /** SHM destructor.  */
   HSHM_CROSS_FUN
-  void shm_destroy_main() {
-    (*queue_).shm_destroy();
-  }
+  void shm_destroy_main() { (*queue_).shm_destroy(); }
 
   /** Check if the list is empty */
   HSHM_CROSS_FUN
-  bool IsNull() const {
-    return (*queue_).IsNull();
-  }
+  bool IsNull() const { return (*queue_).IsNull(); }
 
   /** Sets this list as empty */
   HSHM_CROSS_FUN
@@ -200,68 +185,54 @@ class ring_ptr_queue_base : public ShmContainer {
 
   /** Resize */
   HSHM_CROSS_FUN
-  void resize(size_t new_depth) {
-    queue_->resize(new_depth);
-  }
+  void resize(size_t new_depth) { queue_->resize(new_depth); }
 
   /** Resize (wrapper) */
   HSHM_INLINE_CROSS
-  void Resize(size_t new_depth) {
-    resize(new_depth);
-  }
+  void Resize(size_t new_depth) { resize(new_depth); }
 
   /** Construct an element at \a pos position in the list */
-  template<typename ...Args>
-  HSHM_CROSS_FUN
-  qtok_t emplace(const T &val) {
+  template <typename... Args>
+  HSHM_CROSS_FUN qtok_t emplace(const T &val) {
     // Allocate a slot in the queue
     // The slot is marked NULL, so pop won't do anything if context switch
     qtok_id head = head_.load();
-    qtok_id tail;
+    qtok_id tail = tail_.fetch_add(1);
     vector_t &queue = (*queue_);
 
-    // Get the tail
-    if constexpr (IsPushAtomic) {
-      tail = tail_.fetch_add(1);
-    } else {
-      tail = tail_.load();
-    }
-
     // Check if there's space in the queue.
-    if constexpr (!IsFixedSize) {
-      size_t size = tail - head + 1;
-      if (size > queue.size()) {
-        while (true) {
-          head = head_.load();
-          size = tail - head + 1;
-          if (size <= GetDepth()) {
-            break;
+    if constexpr (IsPushAtomic) {
+      if constexpr (!HasFixedReqs) {
+        size_t size = tail - head + 1;
+        if (size > queue.size()) {
+          while (true) {
+            head = head_.load();
+            size = tail - head + 1;
+            if (size <= GetDepth()) {
+              break;
+            }
+            HERMES_THREAD_MODEL->Yield();
           }
-          HERMES_THREAD_MODEL->Yield();
         }
       }
-    } else if constexpr (!IsPushAtomic) {
+    } else {
       size_t size = tail - head + 1;
       if (size > queue.size()) {
+        tail_.fetch_sub(1);
         return qtok_t::GetNull();
       }
-    }
-
-    // Increment tail
-    if constexpr (!IsPushAtomic) {
-      tail_.fetch_add(1);
     }
 
     // Emplace into queue at our slot
     size_t depth = queue.size();
     uint32_t idx = tail % depth;
-    if constexpr(std::is_arithmetic<T>::value) {
+    if constexpr (std::is_arithmetic<T>::value) {
       queue[idx] = MARK_FIRST_BIT(T, val);
-    } else if constexpr(IS_SHM_OFFSET_POINTER(T)) {
+    } else if constexpr (IS_SHM_OFFSET_POINTER(T)) {
       queue[idx] = T(MARK_FIRST_BIT(size_t, val.off_.load()));
-    } else if constexpr(IS_SHM_POINTER(T)) {
-      queue[idx] = T(val.allocator_id_,
-                     MARK_FIRST_BIT(size_t, val.off_.load()));
+    } else if constexpr (IS_SHM_POINTER(T)) {
+      queue[idx] =
+          T(val.allocator_id_, MARK_FIRST_BIT(size_t, val.off_.load()));
     }
 
     // Let pop know that the data is fully prepared
@@ -270,11 +241,10 @@ class ring_ptr_queue_base : public ShmContainer {
 
   /** Push an elemnt in the list (wrapper) */
   template <typename... Args>
-  HSHM_INLINE_CROSS
-  qtok_t push(Args&&... args) {
+  HSHM_INLINE_CROSS qtok_t push(Args &&...args) {
     return emplace(std::forward<Args>(args)...);
   }
-  
+
  public:
   /** Consumer pops the head object */
   HSHM_CROSS_FUN
@@ -292,7 +262,7 @@ class ring_ptr_queue_base : public ShmContainer {
 
     // Check if bit is marked
     bool is_marked;
-    if constexpr(std::is_arithmetic<T>::value) {
+    if constexpr (std::is_arithmetic_v<T> || std::is_pointer_v<T>) {
       is_marked = IS_FIRST_BIT_MARKED(T, entry);
     } else {
       is_marked = IS_FIRST_BIT_MARKED(size_t, entry.off_.load());
@@ -300,15 +270,15 @@ class ring_ptr_queue_base : public ShmContainer {
 
     // Complete dequeue if marked
     if (is_marked) {
-      if constexpr(std::is_arithmetic<T>::value) {
+      if constexpr (std::is_arithmetic<T>::value) {
         val = UNMARK_FIRST_BIT(T, entry);
         entry = 0;
-      } else if constexpr(IS_SHM_OFFSET_POINTER(T)) {
+      } else if constexpr (IS_SHM_OFFSET_POINTER(T)) {
         val = T(UNMARK_FIRST_BIT(size_t, entry.off_.load()));
         entry.off_ = 0;
-      } else if constexpr(IS_SHM_POINTER(T)) {
-        val = T(entry.allocator_id_,
-                UNMARK_FIRST_BIT(size_t, entry.off_.load()));
+      } else if constexpr (IS_SHM_POINTER(T)) {
+        val =
+            T(entry.allocator_id_, UNMARK_FIRST_BIT(size_t, entry.off_.load()));
         entry.off_ = 0;
       }
       head_.fetch_add(1);
@@ -334,7 +304,7 @@ class ring_ptr_queue_base : public ShmContainer {
 
     // Check if bit is marked
     bool is_marked;
-    if constexpr(std::is_arithmetic<T>::value) {
+    if constexpr (std::is_arithmetic<T>::value) {
       is_marked = IS_FIRST_BIT_MARKED(T, entry);
     } else {
       is_marked = IS_FIRST_BIT_MARKED(size_t, entry.off_.load());
@@ -350,9 +320,7 @@ class ring_ptr_queue_base : public ShmContainer {
 
   /** Get queue depth */
   HSHM_CROSS_FUN
-  size_t GetDepth() {
-    return queue_->size();
-  }
+  size_t GetDepth() { return queue_->size(); }
 
   /** Get size at this moment */
   HSHM_CROSS_FUN
@@ -367,15 +335,11 @@ class ring_ptr_queue_base : public ShmContainer {
 
   /** Get size (wrapper) */
   HSHM_INLINE_CROSS
-  size_t size() {
-    return GetSize();
-  }
+  size_t size() { return GetSize(); }
 
   /** Get size (wrapper) */
   HSHM_INLINE_CROSS
-  size_t Size() {
-    return GetSize();
-  }
+  size_t Size() { return GetSize(); }
 };
 
 template <typename T, HSHM_CLASS_TEMPL_WITH_DEFAULTS>

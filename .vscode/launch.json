@@ -69,7 +69,7 @@
             "request": "launch",
             "program": "${workspaceFolder}/build/bin/test_data_structure_exec",
             "args": [
-                "FullPtr"
+                ""
             ],
             "miDebuggerPath": "/usr/bin/gdb",
             "cwd": "${workspaceFolder}",
