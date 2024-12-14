@@ -51,7 +51,7 @@
   using list = HSHM_NS::list<T, ALLOC_T>;                                    \
                                                                              \
   template <typename T>                                                      \
-  using mpmc_fifo_list_queue = HSHM_NS::mpmc_fifo_list_queue<T, ALLOC_T>;    \
+  using mpmc_lifo_list_queue = HSHM_NS::mpmc_lifo_list_queue<T, ALLOC_T>;    \
                                                                              \
   template <typename T>                                                      \
   using spsc_fifo_list_queue = HSHM_NS::spsc_fifo_list_queue<T, ALLOC_T>;    \

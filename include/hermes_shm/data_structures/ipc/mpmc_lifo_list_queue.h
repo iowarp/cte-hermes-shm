@@ -18,22 +18,22 @@
 
 namespace hshm::ipc {
 
-/** forward pointer for mpmc_fifo_list_queue */
+/** forward pointer for mpmc_lifo_list_queue */
 template <typename T, HSHM_CLASS_TEMPL_WITH_DEFAULTS>
-class mpmc_fifo_list_queue;
+class mpmc_lifo_list_queue;
 
 /**
- * MACROS used to simplify the mpmc_fifo_list_queue namespace
+ * MACROS used to simplify the mpmc_lifo_list_queue namespace
  * Used as inputs to the HIPC_CONTAINER_TEMPLATE
  * */
-#define CLASS_NAME mpmc_fifo_list_queue
+#define CLASS_NAME mpmc_lifo_list_queue
 #define CLASS_NEW_ARGS T
 
 /**
  * A singly-linked lock-free queue implementation
  * */
 template <typename T, HSHM_CLASS_TEMPL>
-class mpmc_fifo_list_queue : public ShmContainer {
+class mpmc_lifo_list_queue : public ShmContainer {
  public:
   HIPC_CONTAINER_TEMPLATE((CLASS_NAME), (CLASS_NEW_ARGS))
   AtomicOffsetPointer tail_shm_;
@@ -46,25 +46,25 @@ class mpmc_fifo_list_queue : public ShmContainer {
 
   /** Constructor. Default. */
   HSHM_CROSS_FUN
-  mpmc_fifo_list_queue() {
+  mpmc_lifo_list_queue() {
     shm_init(HERMES_MEMORY_MANAGER->GetDefaultAllocator<AllocT>());
   }
 
   /** Constructor. Int */
   HSHM_CROSS_FUN
-  explicit mpmc_fifo_list_queue(size_t depth) {
+  explicit mpmc_lifo_list_queue(size_t depth) {
     shm_init(HERMES_MEMORY_MANAGER->GetDefaultAllocator<AllocT>());
   }
 
   /** SHM constructor. Default. */
   HSHM_CROSS_FUN
-  explicit mpmc_fifo_list_queue(const hipc::CtxAllocator<AllocT> &alloc) {
+  explicit mpmc_lifo_list_queue(const hipc::CtxAllocator<AllocT> &alloc) {
     shm_init(alloc);
   }
 
   /** SHM constructor. Int */
   HSHM_CROSS_FUN
-  mpmc_fifo_list_queue(const hipc::CtxAllocator<AllocT> &alloc, size_t depth) {
+  mpmc_lifo_list_queue(const hipc::CtxAllocator<AllocT> &alloc, size_t depth) {
     shm_init(alloc);
   }
 
@@ -82,22 +82,22 @@ class mpmc_fifo_list_queue : public ShmContainer {
 
   /** Copy constructor */
   HSHM_CROSS_FUN
-  explicit mpmc_fifo_list_queue(const mpmc_fifo_list_queue &other) {
+  explicit mpmc_lifo_list_queue(const mpmc_lifo_list_queue &other) {
     init_shm_container(HERMES_MEMORY_MANAGER->GetDefaultAllocator<AllocT>());
     shm_strong_copy_op(other);
   }
 
   /** SHM copy constructor */
   HSHM_CROSS_FUN
-  explicit mpmc_fifo_list_queue(const hipc::CtxAllocator<AllocT> &alloc,
-                                const mpmc_fifo_list_queue &other) {
+  explicit mpmc_lifo_list_queue(const hipc::CtxAllocator<AllocT> &alloc,
+                                const mpmc_lifo_list_queue &other) {
     init_shm_container(alloc);
     shm_strong_copy_op(other);
   }
 
   /** SHM copy assignment operator */
   HSHM_CROSS_FUN
-  mpmc_fifo_list_queue &operator=(const mpmc_fifo_list_queue &other) {
+  mpmc_lifo_list_queue &operator=(const mpmc_lifo_list_queue &other) {
     if (this != &other) {
       shm_destroy();
       shm_strong_copy_op(other);
@@ -107,7 +107,7 @@ class mpmc_fifo_list_queue : public ShmContainer {
 
   /** SHM copy constructor + operator */
   HSHM_CROSS_FUN
-  void shm_strong_copy_op(const mpmc_fifo_list_queue &other) {
+  void shm_strong_copy_op(const mpmc_lifo_list_queue &other) {
     memcpy((void *)this, (void *)&other, sizeof(*this));
   }
 
@@ -117,7 +117,7 @@ class mpmc_fifo_list_queue : public ShmContainer {
 
   /** Move constructor. */
   HSHM_CROSS_FUN
-  mpmc_fifo_list_queue(mpmc_fifo_list_queue &&other) noexcept {
+  mpmc_lifo_list_queue(mpmc_lifo_list_queue &&other) noexcept {
     init_shm_container(other.GetAllocator());
     memcpy((void *)this, (void *)&other, sizeof(*this));
     other.SetNull();
@@ -125,8 +125,8 @@ class mpmc_fifo_list_queue : public ShmContainer {
 
   /** SHM move constructor. */
   HSHM_CROSS_FUN
-  mpmc_fifo_list_queue(const hipc::CtxAllocator<AllocT> &alloc,
-                       mpmc_fifo_list_queue &&other) noexcept {
+  mpmc_lifo_list_queue(const hipc::CtxAllocator<AllocT> &alloc,
+                       mpmc_lifo_list_queue &&other) noexcept {
     init_shm_container(alloc);
     if (GetAllocator() == other.GetAllocator()) {
       memcpy((void *)this, (void *)&other, sizeof(*this));
@@ -139,7 +139,7 @@ class mpmc_fifo_list_queue : public ShmContainer {
 
   /** SHM move assignment operator. */
   HSHM_CROSS_FUN
-  mpmc_fifo_list_queue &operator=(mpmc_fifo_list_queue &&other) noexcept {
+  mpmc_lifo_list_queue &operator=(mpmc_lifo_list_queue &&other) noexcept {
     if (this != &other) {
       shm_destroy();
       if (this != &other) {
@@ -157,11 +157,11 @@ class mpmc_fifo_list_queue : public ShmContainer {
    * Destructor
    * ===================================*/
 
-  /** Check if the mpmc_fifo_list_queue is null */
+  /** Check if the mpmc_lifo_list_queue is null */
   HSHM_CROSS_FUN
   bool IsNull() { return false; }
 
-  /** Set the mpmc_fifo_list_queue to null */
+  /** Set the mpmc_lifo_list_queue to null */
   HSHM_CROSS_FUN
   void SetNull() {}
 
@@ -170,10 +170,10 @@ class mpmc_fifo_list_queue : public ShmContainer {
   void shm_destroy_main() { clear(); }
 
   /**====================================
-   * mpmc_fifo_list_queue Methods
+   * mpmc_lifo_list_queue Methods
    * ===================================*/
 
-  /** Construct an element at \a pos position in the mpmc_fifo_list_queue */
+  /** Construct an element at \a pos position in the mpmc_lifo_list_queue */
   HSHM_CROSS_FUN
   qtok_t enqueue(T *entry) {
     OffsetPointer entry_shm =
@@ -246,7 +246,7 @@ class mpmc_fifo_list_queue : public ShmContainer {
     return reinterpret_cast<T *>(entry);
   }
 
-  /** Destroy all elements in the mpmc_fifo_list_queue */
+  /** Destroy all elements in the mpmc_lifo_list_queue */
   HSHM_CROSS_FUN
   void clear() {
     while (size()) {
@@ -254,7 +254,7 @@ class mpmc_fifo_list_queue : public ShmContainer {
     }
   }
 
-  /** Get the number of elements in the mpmc_fifo_list_queue */
+  /** Get the number of elements in the mpmc_lifo_list_queue */
   HSHM_CROSS_FUN
   size_t size() const { return count_.load(); }
 };
@@ -264,8 +264,8 @@ class mpmc_fifo_list_queue : public ShmContainer {
 namespace hshm {
 
 template <typename T, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
-using mpmc_fifo_list_queue =
-    hshm::ipc::mpmc_fifo_list_queue<T, HSHM_CLASS_TEMPL_ARGS>;
+using mpmc_lifo_list_queue =
+    hshm::ipc::mpmc_lifo_list_queue<T, HSHM_CLASS_TEMPL_ARGS>;
 
 }  // namespace hshm
 
