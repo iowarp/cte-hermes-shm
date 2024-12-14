@@ -175,22 +175,34 @@ class spsc_fifo_list_queue : public ShmContainer {
    * spsc_fifo_list_queue Methods
    * ===================================*/
 
+  /** Construct an element (FullPtr) */
+  HSHM_CROSS_FUN
+  qtok_t enqueue(const FullPtr<T> &entry) {
+    entry->next_shm_ = OffsetPointer::GetNull();
+    size_t tail_id = tail_.fetch_add(1);
+    if (!head_shm_.IsNull()) {
+      auto tail = GetAllocator()->template Convert<T>(tail_shm_);
+      tail->next_shm_ = entry.shm_.off_;
+    } else {
+      head_shm_ = entry.shm_.off_;
+    }
+    tail_shm_ = entry.shm_.off_;
+    return qtok_t(tail_id);
+  }
+
+  /** Emplace. wrapper for enqueue (FullPtr) */
+  HSHM_CROSS_FUN
+  qtok_t emplace(const FullPtr<T> &entry) { return enqueue(entry); }
+
+  /** Push. wrapper for enqueue (FullPtr) */
+  HSHM_INLINE_CROSS_FUN
+  qtok_t push(const FullPtr<T> &entry) { return enqueue(entry); }
+
   /** Construct an element at \a pos position in the spsc_fifo_list_queue */
   HSHM_CROSS_FUN
   qtok_t enqueue(T *entry) {
-    OffsetPointer entry_shm =
-        GetAllocator()->template Convert<T, OffsetPointer>(entry);
-    reinterpret_cast<list_queue_entry *>(entry)->next_shm_ =
-        OffsetPointer::GetNull();
-    size_t tail_id = tail_.fetch_add(1);
-    if (!head_shm_.IsNull()) {
-      auto tail = GetAllocator()->template Convert<list_queue_entry>(tail_shm_);
-      tail->next_shm_ = entry_shm;
-    } else {
-      head_shm_ = entry_shm;
-    }
-    tail_shm_ = entry_shm;
-    return qtok_t(tail_id);
+    FullPtr<T> ptr(GetAllocator(), entry);
+    return enqueue(ptr);
   }
 
   /** Emplace. wrapper for enqueue */
@@ -217,19 +229,31 @@ class spsc_fifo_list_queue : public ShmContainer {
 
   /** Dequeue the element (qtok_t) */
   HSHM_INLINE_CROSS_FUN
-  qtok_t dequeue(T *&val) {
+  qtok_t dequeue(FullPtr<T> &val) {
     size_t cur_size = size();
     if (cur_size == 0) {
       return qtok_t::GetNull();
     }
-    auto head = GetAllocator()->template Convert<list_queue_entry>(head_shm_);
-    if (head->next_shm_.IsNull() && cur_size > 1) {
+    val = FullPtr<T>(GetAllocator(), head_shm_);
+    if (val.ptr_->next_shm_.IsNull() && cur_size > 1) {
       return qtok_t::GetNull();
     }
-    head_shm_ = head->next_shm_;
-    val = reinterpret_cast<T *>(head);
+    head_shm_ = val.ptr_->next_shm_;
     size_t head_id = head_.fetch_add(1);
     return qtok_t(head_id);
+  }
+
+  /** Pop the element (qtok_t) */
+  HSHM_INLINE_CROSS_FUN
+  qtok_t pop(FullPtr<T> &val) { return dequeue(val); }
+
+  /** Dequeue the element (qtok_t) */
+  HSHM_INLINE_CROSS_FUN
+  qtok_t dequeue(T *&val) {
+    FullPtr<T> entry;
+    qtok_t ret = dequeue(entry);
+    val = entry.ptr_;
+    return ret;
   }
 
   /** Pop the element (qtok_t) */
