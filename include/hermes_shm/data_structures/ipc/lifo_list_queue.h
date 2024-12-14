@@ -10,60 +10,64 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_DATA_STRUCTURES_THREAD_UNSAFE_IQUEUE_H
-#define HERMES_DATA_STRUCTURES_THREAD_UNSAFE_IQUEUE_H
+#ifndef HERMES_DATA_STRUCTURES_THREAD_UNSAFE_lifo_list_queue_H
+#define HERMES_DATA_STRUCTURES_THREAD_UNSAFE_lifo_list_queue_H
 
 #include "hermes_shm/data_structures/internal/shm_internal.h"
 #include "hermes_shm/types/qtok.h"
 
 namespace hshm::ipc {
 
-/** forward pointer for iqueue */
+/** forward pointer for lifo_list_queue */
 template <typename T, HSHM_CLASS_TEMPL_WITH_DEFAULTS>
-class iqueue;
+class lifo_list_queue;
 
-/** represents an object within a iqueue */
-struct iqueue_entry {
+/** represents an object within a lifo_list_queue */
+struct list_queue_entry {
   OffsetPointer next_shm_;
 };
 
 /**
- * The iqueue iterator
+ * The lifo_list_queue iterator
  * */
 template <typename T, HSHM_CLASS_TEMPL>
-struct iqueue_iterator_templ {
+struct lifo_list_queue_iterator_templ {
  public:
-  /**< A shm reference to the containing iqueue object. */
-  iqueue<T, HSHM_CLASS_TEMPL_ARGS> *iqueue_;
+  /**< A shm reference to the containing lifo_list_queue object. */
+  lifo_list_queue<T, HSHM_CLASS_TEMPL_ARGS> *lifo_list_queue_;
   /**< A pointer to the entry in shared memory */
-  iqueue_entry *entry_;
+  list_queue_entry *entry_;
   /**< A pointer to the entry prior to this one */
-  iqueue_entry *prior_entry_;
+  list_queue_entry *prior_entry_;
 
   /** Default constructor */
   HSHM_CROSS_FUN
-  iqueue_iterator_templ() = default;
+  lifo_list_queue_iterator_templ() = default;
 
   /** Construct begin iterator  */
   HSHM_CROSS_FUN
-  explicit iqueue_iterator_templ(iqueue<T, HSHM_CLASS_TEMPL_ARGS> &iqueue,
-                                 iqueue_entry *entry)
-      : iqueue_(&iqueue), entry_(entry), prior_entry_(nullptr) {}
+  explicit lifo_list_queue_iterator_templ(
+      lifo_list_queue<T, HSHM_CLASS_TEMPL_ARGS> &lifo_list_queue,
+      list_queue_entry *entry)
+      : lifo_list_queue_(&lifo_list_queue),
+        entry_(entry),
+        prior_entry_(nullptr) {}
 
   /** Copy constructor */
   HSHM_CROSS_FUN
-  iqueue_iterator_templ(const iqueue_iterator_templ &other)
-      : iqueue_(other.iqueue_) {
-    iqueue_ = other.iqueue_;
+  lifo_list_queue_iterator_templ(const lifo_list_queue_iterator_templ &other)
+      : lifo_list_queue_(other.lifo_list_queue_) {
+    lifo_list_queue_ = other.lifo_list_queue_;
     entry_ = other.entry_;
     prior_entry_ = other.prior_entry_;
   }
 
   /** Assign this iterator from another iterator */
   HSHM_CROSS_FUN
-  iqueue_iterator_templ &operator=(const iqueue_iterator_templ &other) {
+  lifo_list_queue_iterator_templ &operator=(
+      const lifo_list_queue_iterator_templ &other) {
     if (this != &other) {
-      iqueue_ = other.iqueue_;
+      lifo_list_queue_ = other.lifo_list_queue_;
       entry_ = other.entry_;
       prior_entry_ = other.prior_entry_;
     }
@@ -80,28 +84,29 @@ struct iqueue_iterator_templ {
 
   /** Get the next iterator (in place) */
   HSHM_CROSS_FUN
-  iqueue_iterator_templ &operator++() {
+  lifo_list_queue_iterator_templ &operator++() {
     if (is_end()) {
       return *this;
     }
     prior_entry_ = entry_;
-    entry_ = iqueue_->GetAllocator()->template Convert<iqueue_entry>(
-        entry_->next_shm_);
+    entry_ =
+        lifo_list_queue_->GetAllocator()->template Convert<list_queue_entry>(
+            entry_->next_shm_);
     return *this;
   }
 
   /** Return the next iterator */
   HSHM_CROSS_FUN
-  iqueue_iterator_templ operator++(int) const {
-    iqueue_iterator_templ next_iter(*this);
+  lifo_list_queue_iterator_templ operator++(int) const {
+    lifo_list_queue_iterator_templ next_iter(*this);
     ++next_iter;
     return next_iter;
   }
 
   /** Return the iterator at count after this one */
   HSHM_CROSS_FUN
-  iqueue_iterator_templ operator+(size_t count) const {
-    iqueue_iterator_templ pos(*this);
+  lifo_list_queue_iterator_templ operator+(size_t count) const {
+    lifo_list_queue_iterator_templ pos(*this);
     for (size_t i = 0; i < count; ++i) {
       ++pos;
     }
@@ -111,22 +116,22 @@ struct iqueue_iterator_templ {
   /** Get the iterator at count after this one (in-place) */
   HSHM_CROSS_FUN
   void operator+=(size_t count) {
-    iqueue_iterator_templ pos = (*this) + count;
+    lifo_list_queue_iterator_templ pos = (*this) + count;
     entry_ = pos.entry_;
     prior_entry_ = pos.prior_entry_;
   }
 
   /** Determine if two iterators are equal */
   HSHM_CROSS_FUN
-  friend bool operator==(const iqueue_iterator_templ &a,
-                         const iqueue_iterator_templ &b) {
+  friend bool operator==(const lifo_list_queue_iterator_templ &a,
+                         const lifo_list_queue_iterator_templ &b) {
     return (a.is_end() && b.is_end()) || (a.entry_ == b.entry_);
   }
 
   /** Determine if two iterators are inequal */
   HSHM_CROSS_FUN
-  friend bool operator!=(const iqueue_iterator_templ &a,
-                         const iqueue_iterator_templ &b) {
+  friend bool operator!=(const lifo_list_queue_iterator_templ &a,
+                         const lifo_list_queue_iterator_templ &b) {
     return !(a.is_end() && b.is_end()) && (a.entry_ != b.entry_);
   }
 
@@ -146,20 +151,20 @@ struct iqueue_iterator_templ {
 };
 
 /**
- * MACROS used to simplify the iqueue namespace
+ * MACROS used to simplify the lifo_list_queue namespace
  * Used as inputs to the HIPC_CONTAINER_TEMPLATE
  * */
-#define CLASS_NAME iqueue
+#define CLASS_NAME lifo_list_queue
 #define CLASS_NEW_ARGS T
 
 /**
- * Doubly linked iqueue implementation
+ * Doubly linked lifo_list_queue implementation
  * */
 template <typename T, HSHM_CLASS_TEMPL>
-class iqueue : public ShmContainer {
+class lifo_list_queue : public ShmContainer {
  public:
   HIPC_CONTAINER_TEMPLATE((CLASS_NAME), (CLASS_NEW_ARGS))
-  OffsetPointer head_shm_, tail_shm_;
+  OffsetPointer tail_shm_;
   size_t length_;
 
   /**====================================
@@ -167,9 +172,9 @@ class iqueue : public ShmContainer {
    * ===================================*/
 
   /** forward iterator typedef */
-  typedef iqueue_iterator_templ<T, HSHM_CLASS_TEMPL_ARGS> iterator_t;
+  typedef lifo_list_queue_iterator_templ<T, HSHM_CLASS_TEMPL_ARGS> iterator_t;
   /** const forward iterator typedef */
-  typedef iqueue_iterator_templ<T, HSHM_CLASS_TEMPL_ARGS> citerator_t;
+  typedef lifo_list_queue_iterator_templ<T, HSHM_CLASS_TEMPL_ARGS> citerator_t;
 
  public:
   /**====================================
@@ -178,18 +183,21 @@ class iqueue : public ShmContainer {
 
   /** Constructor. Default. */
   HSHM_CROSS_FUN
-  iqueue() { shm_init(HERMES_MEMORY_MANAGER->GetDefaultAllocator<AllocT>()); }
+  lifo_list_queue() {
+    shm_init(HERMES_MEMORY_MANAGER->GetDefaultAllocator<AllocT>());
+  }
 
   /** SHM constructor. Default. */
   HSHM_CROSS_FUN
-  explicit iqueue(const hipc::CtxAllocator<AllocT> &alloc) { shm_init(alloc); }
+  explicit lifo_list_queue(const hipc::CtxAllocator<AllocT> &alloc) {
+    shm_init(alloc);
+  }
 
   /** SHM constructor. Default. */
   HSHM_CROSS_FUN
   void shm_init(const hipc::CtxAllocator<AllocT> &alloc) {
     init_shm_container(alloc);
     length_ = 0;
-    head_shm_.SetNull();
     tail_shm_.SetNull();
   }
 
@@ -199,22 +207,22 @@ class iqueue : public ShmContainer {
 
   /** Copy constructor */
   HSHM_CROSS_FUN
-  explicit iqueue(const iqueue &other) {
+  explicit lifo_list_queue(const lifo_list_queue &other) {
     init_shm_container(HERMES_MEMORY_MANAGER->GetDefaultAllocator<AllocT>());
     shm_strong_copy_op(other);
   }
 
   /** SHM copy constructor */
   HSHM_CROSS_FUN
-  explicit iqueue(const hipc::CtxAllocator<AllocT> &alloc,
-                  const iqueue &other) {
+  explicit lifo_list_queue(const hipc::CtxAllocator<AllocT> &alloc,
+                           const lifo_list_queue &other) {
     init_shm_container(alloc);
     shm_strong_copy_op(other);
   }
 
   /** SHM copy assignment operator */
   HSHM_CROSS_FUN
-  iqueue &operator=(const iqueue &other) {
+  lifo_list_queue &operator=(const lifo_list_queue &other) {
     if (this != &other) {
       shm_destroy();
       shm_strong_copy_op(other);
@@ -224,7 +232,7 @@ class iqueue : public ShmContainer {
 
   /** SHM copy constructor + operator */
   HSHM_CROSS_FUN
-  void shm_strong_copy_op(const iqueue &other) {
+  void shm_strong_copy_op(const lifo_list_queue &other) {
     memcpy((void *)this, (void *)&other, sizeof(*this));
   }
 
@@ -234,7 +242,7 @@ class iqueue : public ShmContainer {
 
   /** Move constructor. */
   HSHM_CROSS_FUN
-  iqueue(iqueue &&other) noexcept {
+  lifo_list_queue(lifo_list_queue &&other) noexcept {
     init_shm_container(other.GetAllocator());
     memcpy((void *)this, (void *)&other, sizeof(*this));
     other.SetNull();
@@ -242,7 +250,8 @@ class iqueue : public ShmContainer {
 
   /** SHM move constructor. */
   HSHM_CROSS_FUN
-  iqueue(const hipc::CtxAllocator<AllocT> &alloc, iqueue &&other) noexcept {
+  lifo_list_queue(const hipc::CtxAllocator<AllocT> &alloc,
+                  lifo_list_queue &&other) noexcept {
     init_shm_container(alloc);
     if (GetAllocator() == other.GetAllocator()) {
       memcpy((void *)this, (void *)&other, sizeof(*this));
@@ -255,7 +264,7 @@ class iqueue : public ShmContainer {
 
   /** SHM move assignment operator. */
   HSHM_CROSS_FUN
-  iqueue &operator=(iqueue &&other) noexcept {
+  lifo_list_queue &operator=(lifo_list_queue &&other) noexcept {
     if (this != &other) {
       shm_destroy();
       if (this != &other) {
@@ -273,11 +282,11 @@ class iqueue : public ShmContainer {
    * Destructor
    * ===================================*/
 
-  /** Check if the iqueue is null */
+  /** Check if the lifo_list_queue is null */
   HSHM_CROSS_FUN
   bool IsNull() { return length_ == 0; }
 
-  /** Set the iqueue to null */
+  /** Set the lifo_list_queue to null */
   HSHM_CROSS_FUN
   void SetNull() { length_ = 0; }
 
@@ -286,24 +295,37 @@ class iqueue : public ShmContainer {
   void shm_destroy_main() { clear(); }
 
   /**====================================
-   * iqueue Methods
+   * lifo_list_queue Methods
    * ===================================*/
 
-  /** Construct an element at \a pos position in the iqueue */
+  /** Construct an element at tail. FullPtr */
   HSHM_CROSS_FUN
-  void enqueue(T *entry) {
-    OffsetPointer entry_ptr =
-        GetAllocator()->template Convert<T, OffsetPointer>(entry);
-    reinterpret_cast<iqueue_entry *>(entry)->next_shm_ = head_shm_;
-    head_shm_ = entry_ptr;
+  void enqueue(const FullPtr<T> &entry) {
+    entry.ptr_->next_shm_ = tail_shm_;
+    tail_shm_ = entry.shm_.off_;
     ++length_;
   }
 
-  /** Emplace. wrapper for enqueue */
+  /** Emplace. wrapper for enqueue. FullPtr */
+  HSHM_CROSS_FUN
+  void emplace(const FullPtr<T> &entry) { enqueue(entry); }
+
+  /** Push. wrapper for enqueue. FullPtr */
+  HSHM_INLINE_CROSS_FUN
+  void push(const FullPtr<T> &entry) { enqueue(entry); }
+
+  /** Construct an element at tail. Raw Ptr */
+  HSHM_CROSS_FUN
+  void enqueue(T *entry) {
+    FullPtr<T> entry_ptr(GetAllocator(), entry);
+    enqueue(entry_ptr);
+  }
+
+  /** Emplace. wrapper for enqueue. Raw Ptr */
   HSHM_CROSS_FUN
   void emplace(T *entry) { enqueue(entry); }
 
-  /** Push. wrapper for enqueue */
+  /** Push. wrapper for enqueue. Raw Ptr */
   HSHM_INLINE_CROSS_FUN
   void push(T *entry) { enqueue(entry); }
 
@@ -321,17 +343,29 @@ class iqueue : public ShmContainer {
   HSHM_INLINE_CROSS_FUN
   T *pop() { return dequeue(); }
 
-  /** Dequeue the element (qtok_t) */
+  /** Dequeue the element (qtok_t, FullPtr) */
   HSHM_INLINE_CROSS_FUN
-  qtok_t dequeue(T *&val) {
+  qtok_t dequeue(FullPtr<T> &val) {
     if (size() == 0) {
       return qtok_t::GetNull();
     }
-    auto entry = GetAllocator()->template Convert<iqueue_entry>(head_shm_);
-    head_shm_ = entry->next_shm_;
+    val = FullPtr<T>(GetAllocator(), tail_shm_);
+    tail_shm_ = val.ptr_->next_shm_;
     --length_;
-    val = reinterpret_cast<T *>(entry);
     return qtok_t(1);
+  }
+
+  /** Pop the element (qtok_t, FullPtr) */
+  HSHM_INLINE_CROSS_FUN
+  qtok_t pop(FullPtr<T> &val) { return dequeue(val); }
+
+  /** Dequeue the element (qtok_t) */
+  HSHM_INLINE_CROSS_FUN
+  qtok_t dequeue(T *&val) {
+    FullPtr<T> entry;
+    qtok_t ret = dequeue(entry);
+    val = entry.ptr_;
+    return ret;
   }
 
   /** Pop the element (qtok_t) */
@@ -345,14 +379,14 @@ class iqueue : public ShmContainer {
       return dequeue();
     }
     auto entry = *pos;
-    auto prior_cast = reinterpret_cast<iqueue_entry *>(pos.prior_entry_);
-    auto pos_cast = reinterpret_cast<iqueue_entry *>(pos.entry_);
+    auto prior_cast = reinterpret_cast<T *>(pos.prior_entry_);
+    auto pos_cast = reinterpret_cast<T *>(pos.entry_);
     prior_cast->next_shm_ = pos_cast->next_shm_;
     --length_;
-    return reinterpret_cast<T *>(entry);
+    return entry;
   }
 
-  /** Wrapper for dequeue */
+  /** Dequeue at position */
   HSHM_INLINE_CROSS_FUN
   T *pop(iterator_t pos) { return dequeue(pos); }
 
@@ -362,11 +396,11 @@ class iqueue : public ShmContainer {
     if (size() == 0) {
       return nullptr;
     }
-    auto entry = GetAllocator()->template Convert<iqueue_entry>(head_shm_);
+    auto entry = GetAllocator()->template Convert<list_queue_entry>(tail_shm_);
     return reinterpret_cast<T *>(entry);
   }
 
-  /** Destroy all elements in the iqueue */
+  /** Destroy all elements in the lifo_list_queue */
   HSHM_CROSS_FUN
   void clear() {
     while (size()) {
@@ -374,7 +408,7 @@ class iqueue : public ShmContainer {
     }
   }
 
-  /** Get the number of elements in the iqueue */
+  /** Get the number of elements in the lifo_list_queue */
   HSHM_CROSS_FUN
   size_t size() const { return length_; }
 
@@ -388,7 +422,7 @@ class iqueue : public ShmContainer {
     if (size() == 0) {
       return end();
     }
-    auto head = GetAllocator()->template Convert<iqueue_entry>(head_shm_);
+    auto head = GetAllocator()->template Convert<list_queue_entry>(tail_shm_);
     return iterator_t(*this, head);
   }
 
@@ -402,14 +436,14 @@ class iqueue : public ShmContainer {
     if (size() == 0) {
       return cend();
     }
-    auto head = GetAllocator()->template Convert<iqueue_entry>(head_shm_);
-    return citerator_t(const_cast<iqueue &>(*this), head);
+    auto head = GetAllocator()->template Convert<list_queue_entry>(tail_shm_);
+    return citerator_t(const_cast<lifo_list_queue &>(*this), head);
   }
 
   /** Constant forward iterator end */
   HSHM_CROSS_FUN
   citerator_t const cend() const {
-    return citerator_t(const_cast<iqueue &>(*this), nullptr);
+    return citerator_t(const_cast<lifo_list_queue &>(*this), nullptr);
   }
 };
 
@@ -418,11 +452,11 @@ class iqueue : public ShmContainer {
 namespace hshm {
 
 template <typename T, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
-using iqueue = hshm::ipc::iqueue<T, HSHM_CLASS_TEMPL_ARGS>;
+using lifo_list_queue = hshm::ipc::lifo_list_queue<T, HSHM_CLASS_TEMPL_ARGS>;
 
 }  // namespace hshm
 
 #undef CLASS_NAME
 #undef CLASS_NEW_ARGS
 
-#endif  // HERMES_DATA_STRUCTURES_THREAD_UNSAFE_IQUEUE_H
+#endif  // HERMES_DATA_STRUCTURES_THREAD_UNSAFE_lifo_list_queue_H

@@ -88,7 +88,8 @@ union AllocatorId {
   }
 };
 
-typedef AllocatorId allocator_id_t;
+typedef AllocatorId alloc_id_t;
+class Allocator;
 
 /** Pointer type base */
 class ShmPointer {};
@@ -118,6 +119,20 @@ struct OffsetPointerBase : public ShmPointer {
                                                    size_t off)
       : off_(off) {
     (void)alloc_id;
+  }
+
+  /** Pointer constructor (alloc + atomic offset)*/
+  HSHM_INLINE_CROSS_FUN explicit OffsetPointerBase(AllocatorId id,
+                                                   OffsetPointerBase<true> off)
+      : off_(off.load()) {
+    (void)id;
+  }
+
+  /** Pointer constructor (alloc + non-offeset) */
+  HSHM_INLINE_CROSS_FUN explicit OffsetPointerBase(AllocatorId id,
+                                                   OffsetPointerBase<false> off)
+      : off_(off.load()) {
+    (void)id;
   }
 
   /** Copy constructor */
@@ -285,7 +300,7 @@ using TypedAtomicOffsetPointer = AtomicOffsetPointer;
  * */
 template <bool ATOMIC = false>
 struct PointerBase : public ShmPointer {
-  AllocatorId allocator_id_;       /// Allocator the pointer comes from
+  AllocatorId alloc_id_;           /// Allocator the pointer comes from
   OffsetPointerBase<ATOMIC> off_;  /// Offset within the allocator's slot
 
   /** Default constructor */
@@ -293,23 +308,23 @@ struct PointerBase : public ShmPointer {
 
   /** Full constructor */
   HSHM_INLINE_CROSS_FUN explicit PointerBase(AllocatorId id, size_t off)
-      : allocator_id_(id), off_(off) {}
+      : alloc_id_(id), off_(off) {}
 
   /** Full constructor using offset pointer */
   HSHM_INLINE_CROSS_FUN explicit PointerBase(AllocatorId id, OffsetPointer off)
-      : allocator_id_(id), off_(off) {}
+      : alloc_id_(id), off_(off) {}
 
   /** Copy constructor */
   HSHM_INLINE_CROSS_FUN PointerBase(const PointerBase &other)
-      : allocator_id_(other.allocator_id_), off_(other.off_) {}
+      : alloc_id_(other.alloc_id_), off_(other.off_) {}
 
   /** Other copy constructor */
   HSHM_INLINE_CROSS_FUN PointerBase(const PointerBase<!ATOMIC> &other)
-      : allocator_id_(other.allocator_id_), off_(other.off_.load()) {}
+      : alloc_id_(other.alloc_id_), off_(other.off_.load()) {}
 
   /** Move constructor */
   HSHM_INLINE_CROSS_FUN PointerBase(PointerBase &&other) noexcept
-      : allocator_id_(other.allocator_id_), off_(other.off_) {
+      : alloc_id_(other.alloc_id_), off_(other.off_) {
     other.SetNull();
   }
 
@@ -319,10 +334,10 @@ struct PointerBase : public ShmPointer {
   }
 
   /** Set to null */
-  HSHM_INLINE_CROSS_FUN void SetNull() { allocator_id_.SetNull(); }
+  HSHM_INLINE_CROSS_FUN void SetNull() { alloc_id_.SetNull(); }
 
   /** Check if null */
-  HSHM_INLINE_CROSS_FUN bool IsNull() const { return allocator_id_.IsNull(); }
+  HSHM_INLINE_CROSS_FUN bool IsNull() const { return alloc_id_.IsNull(); }
 
   /** Get the null pointer */
   HSHM_INLINE_CROSS_FUN static PointerBase GetNull() {
@@ -334,7 +349,7 @@ struct PointerBase : public ShmPointer {
   /** Copy assignment operator */
   HSHM_INLINE_CROSS_FUN PointerBase &operator=(const PointerBase &other) {
     if (this != &other) {
-      allocator_id_ = other.allocator_id_;
+      alloc_id_ = other.alloc_id_;
       off_ = other.off_;
     }
     return *this;
@@ -343,7 +358,7 @@ struct PointerBase : public ShmPointer {
   /** Move assignment operator */
   HSHM_INLINE_CROSS_FUN PointerBase &operator=(PointerBase &&other) {
     if (this != &other) {
-      allocator_id_ = other.allocator_id_;
+      alloc_id_ = other.alloc_id_;
       off_.exchange(other.off_.load());
       other.SetNull();
     }
@@ -353,7 +368,7 @@ struct PointerBase : public ShmPointer {
   /** Addition operator */
   HSHM_INLINE_CROSS_FUN PointerBase operator+(size_t size) const {
     PointerBase p;
-    p.allocator_id_ = allocator_id_;
+    p.alloc_id_ = alloc_id_;
     p.off_ = off_ + size;
     return p;
   }
@@ -361,7 +376,7 @@ struct PointerBase : public ShmPointer {
   /** Subtraction operator */
   HSHM_INLINE_CROSS_FUN PointerBase operator-(size_t size) const {
     PointerBase p;
-    p.allocator_id_ = allocator_id_;
+    p.alloc_id_ = alloc_id_;
     p.off_ = off_ - size;
     return p;
   }
@@ -406,17 +421,17 @@ struct PointerBase : public ShmPointer {
 
   /** Equality check */
   HSHM_INLINE_CROSS_FUN bool operator==(const PointerBase &other) const {
-    return (other.allocator_id_ == allocator_id_ && other.off_ == off_);
+    return (other.alloc_id_ == alloc_id_ && other.off_ == off_);
   }
 
   /** Inequality check */
   HSHM_INLINE_CROSS_FUN bool operator!=(const PointerBase &other) const {
-    return (other.allocator_id_ != allocator_id_ || other.off_ != off_);
+    return (other.alloc_id_ != alloc_id_ || other.off_ != off_);
   }
 
   /** Mark first bit */
   HSHM_INLINE_CROSS_FUN PointerBase Mark() const {
-    return PointerBase(allocator_id_, off_.Mark());
+    return PointerBase(alloc_id_, off_.Mark());
   }
 
   /** Check if first bit is marked */
@@ -424,7 +439,7 @@ struct PointerBase : public ShmPointer {
 
   /** Unmark first bit */
   HSHM_INLINE_CROSS_FUN PointerBase Unmark() const {
-    return PointerBase(allocator_id_, off_.Unmark());
+    return PointerBase(alloc_id_, off_.Unmark());
   }
 
   /** Set to 0 */
@@ -461,8 +476,15 @@ struct LPointer : public ShmPointer {
   /** SHM constructor (in memory_manager.h) */
   HSHM_INLINE_CROSS_FUN explicit LPointer(const PointerT &shm);
 
-  /** Private constructor (in memory_manager.h) */
+  /** Private half constructor (in memory_manager.h) */
   HSHM_INLINE_CROSS_FUN explicit LPointer(T *ptr);
+
+  /** Private half + alloc constructor (in memory_manager.h) */
+  HSHM_INLINE_CROSS_FUN explicit LPointer(hipc::Allocator *alloc, T *ptr);
+
+  /** Shared half + alloc constructor (in memory_manager.h) */
+  HSHM_INLINE_CROSS_FUN explicit LPointer(hipc::Allocator *alloc,
+                                          const OffsetPointer &shm);
 
   /** Copy constructor */
   HSHM_INLINE_CROSS_FUN LPointer(const LPointer &other)

@@ -10,11 +10,11 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_DATA_STRUCTURES__MPMC_LIST_IQUEUE_H
-#define HERMES_DATA_STRUCTURES__MPMC_LIST_IQUEUE_H
+#ifndef HERMES_DATA_STRUCTURES__MPMC_LIST_lifo_list_queue_H
+#define HERMES_DATA_STRUCTURES__MPMC_LIST_lifo_list_queue_H
 
 #include "hermes_shm/memory/memory.h"
-#include "iqueue.h"
+#include "lifo_list_queue.h"
 
 namespace hshm::ipc {
 
@@ -175,17 +175,22 @@ class mpmc_lifo_list_queue : public ShmContainer {
 
   /** Construct an element at \a pos position in the mpmc_lifo_list_queue */
   HSHM_CROSS_FUN
-  qtok_t enqueue(T *entry) {
-    OffsetPointer entry_shm =
-        GetAllocator()->template Convert<T, OffsetPointer>(entry);
+  qtok_t enqueue(const LPointer<T> &entry) {
     bool ret;
     do {
       size_t tail_shm = tail_shm_.load();
-      reinterpret_cast<iqueue_entry *>(entry)->next_shm_ = tail_shm;
-      ret = tail_shm_.compare_exchange_weak(tail_shm, entry_shm.off_.ref());
+      entry.ptr_->next_shm_ = tail_shm;
+      ret = tail_shm_.compare_exchange_weak(tail_shm, entry.shm_.off_.load());
     } while (!ret);
     ++count_;
     return qtok_t(1);
+  }
+
+  /** Construct an element at \a pos position in the mpmc_lifo_list_queue */
+  HSHM_CROSS_FUN
+  qtok_t enqueue(T *entry) {
+    FullPtr<T> entry_ptr(GetAllocator(), entry);
+    return enqueue(entry_ptr);
   }
 
   /** Emplace. wrapper for enqueue */
@@ -196,7 +201,7 @@ class mpmc_lifo_list_queue : public ShmContainer {
   HSHM_INLINE_CROSS_FUN
   qtok_t push(T *entry) { return enqueue(entry); }
 
-  /** Dequeue the element (qtok_t) */
+  /** Dequeue the element */
   HSHM_INLINE_CROSS_FUN
   T *dequeue() {
     T *val;
@@ -206,13 +211,13 @@ class mpmc_lifo_list_queue : public ShmContainer {
     return val;
   }
 
-  /** Pop the element (qtok_t) */
+  /** Pop the element */
   HSHM_INLINE_CROSS_FUN
   T *pop() { return dequeue(); }
 
-  /** Dequeue the element (qtok_t) */
+  /** Dequeue the element (FullPtr, qtok_t) */
   HSHM_CROSS_FUN
-  qtok_t dequeue(T *&val) {
+  qtok_t dequeue(FullPtr<T> &val) {
     size_t cur_size = size();
     if (cur_size == 0) {
       return qtok_t::GetNull();
@@ -220,8 +225,10 @@ class mpmc_lifo_list_queue : public ShmContainer {
     bool ret;
     do {
       OffsetPointer tail_shm(tail_shm_.load());
-      val = GetAllocator()->template Convert<T>(tail_shm);
-      if (val == nullptr) {
+      val.shm_.off_ = tail_shm_.load();
+      val.shm_.alloc_id_ = GetAllocator()->GetId();
+      val.ptr_ = GetAllocator()->template Convert<T>(tail_shm);
+      if (val.IsNull()) {
         return qtok_t::GetNull();
       }
       auto next_tail = val->next_shm_;
@@ -230,6 +237,19 @@ class mpmc_lifo_list_queue : public ShmContainer {
     } while (!ret);
     --count_;
     return qtok_t(1);
+  }
+
+  /** Pop the element (FullPtr, qtok_t) */
+  HSHM_INLINE_CROSS_FUN
+  qtok_t pop(FullPtr<T> &val) { return dequeue(val); }
+
+  /** Dequeue the element (qtok_t) */
+  HSHM_CROSS_FUN
+  qtok_t dequeue(T *&val) {
+    FullPtr<T> entry;
+    qtok_t ret = dequeue(entry);
+    val = entry.ptr_;
+    return ret;
   }
 
   /** Pop the element (qtok_t) */
@@ -242,7 +262,7 @@ class mpmc_lifo_list_queue : public ShmContainer {
     if (size() == 0) {
       return nullptr;
     }
-    auto entry = GetAllocator()->template Convert<iqueue_entry>(tail_shm_);
+    auto entry = GetAllocator()->template Convert<list_queue_entry>(tail_shm_);
     return reinterpret_cast<T *>(entry);
   }
 
@@ -272,4 +292,4 @@ using mpmc_lifo_list_queue =
 #undef CLASS_NAME
 #undef CLASS_NEW_ARGS
 
-#endif  // HERMES_DATA_STRUCTURES__MPMC_LIST_IQUEUE_H
+#endif  // HERMES_DATA_STRUCTURES__MPMC_LIST_lifo_list_queue_H

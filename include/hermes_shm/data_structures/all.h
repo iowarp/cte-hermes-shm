@@ -18,8 +18,8 @@
 #include "ipc/chararr.h"
 #include "ipc/dynamic_queue.h"
 #include "ipc/functional.h"
-#include "ipc/iqueue.h"
 #include "ipc/key_set.h"
+#include "ipc/lifo_list_queue.h"
 #include "ipc/list.h"
 #include "ipc/mpmc_lifo_list_queue.h"
 #include "ipc/pair.h"
@@ -45,7 +45,7 @@
   using HSHM_NS::chararr;                                                    \
                                                                              \
   template <typename T>                                                      \
-  using iqueue = HSHM_NS::iqueue<T, ALLOC_T>;                                \
+  using lifo_list_queue = HSHM_NS::lifo_list_queue<T, ALLOC_T>;              \
                                                                              \
   template <typename T>                                                      \
   using list = HSHM_NS::list<T, ALLOC_T>;                                    \

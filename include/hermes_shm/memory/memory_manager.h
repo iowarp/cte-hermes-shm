@@ -13,10 +13,10 @@
 #ifndef HERMES_MEMORY_MEMORY_MANAGER_H_
 #define HERMES_MEMORY_MEMORY_MANAGER_H_
 
-#include "hermes_shm/memory/backend/memory_backend_factory.h"
-#include "hermes_shm/memory/allocator/allocator_factory.h"
-#include "hermes_shm/memory/memory_manager_.h"
 #include "hermes_shm/constants/macros.h"
+#include "hermes_shm/memory/allocator/allocator_factory.h"
+#include "hermes_shm/memory/backend/memory_backend_factory.h"
+#include "hermes_shm/memory/memory_manager_.h"
 #include "hermes_shm/util/logging.h"
 #include "memory.h"
 
@@ -28,11 +28,9 @@ namespace hshm::ipc {
  * There can be multiple slots per-backend, enabling multiple allocation
  * policies over a single memory region.
  * */
-template<typename BackendT, typename ...Args>
-MemoryBackend* MemoryManager::CreateBackend(
-    const MemoryBackendId &backend_id,
-    size_t size,
-    Args&& ...args) {
+template <typename BackendT, typename... Args>
+MemoryBackend *MemoryManager::CreateBackend(const MemoryBackendId &backend_id,
+                                            size_t size, Args &&...args) {
   auto backend = MemoryBackendFactory::shm_init<BackendT>(
       backend_id, size, std::forward<Args>(args)...);
   RegisterBackend(backend);
@@ -43,11 +41,11 @@ MemoryBackend* MemoryManager::CreateBackend(
 /**
  * Create and register a memory allocator for a particular backend.
  * */
-template<typename AllocT, typename ...Args>
-AllocT* MemoryManager::CreateAllocator(const MemoryBackendId &backend_id,
-                                          const AllocatorId &alloc_id,
-                                          size_t custom_header_size,
-                                          Args&& ...args) {
+template <typename AllocT, typename... Args>
+AllocT *MemoryManager::CreateAllocator(const MemoryBackendId &backend_id,
+                                       const AllocatorId &alloc_id,
+                                       size_t custom_header_size,
+                                       Args &&...args) {
   MemoryBackend *backend = GetBackend(backend_id);
   if (alloc_id.IsNull()) {
     HELOG(kFatal, "Allocator cannot be created with a NIL ID");
@@ -66,6 +64,18 @@ LPointer<T, PointerT>::LPointer(const PointerT &shm) : shm_(shm) {
 template <typename T, typename PointerT>
 LPointer<T, PointerT>::LPointer(T *ptr) : ptr_(ptr) {
   shm_ = HERMES_MEMORY_MANAGER->Convert<T, PointerT>(ptr);
+}
+
+template <typename T, typename PointerT>
+LPointer<T, PointerT>::LPointer(hipc::Allocator *alloc, T *ptr) : ptr_(ptr) {
+  shm_ = alloc->Convert<T, PointerT>(ptr);
+}
+
+template <typename T, typename PointerT>
+LPointer<T, PointerT>::LPointer(hipc::Allocator *alloc,
+                                const OffsetPointer &shm) {
+  ptr_ = alloc->Convert<T, OffsetPointer>(shm);
+  shm_ = PointerT(alloc->GetId(), shm);
 }
 
 }  // namespace hshm::ipc

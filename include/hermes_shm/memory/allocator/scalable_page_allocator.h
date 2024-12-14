@@ -85,7 +85,7 @@ class PageAllocator {
  public:
   typedef StackAllocator Alloc_;
   typedef TlsAllocatorInfo<_ScalablePageAllocator> TLS;
-  typedef hipc::iqueue<MpPage, Alloc_> LIST;
+  typedef hipc::lifo_list_queue<MpPage, Alloc_> LIST;
 
  public:
   hipc::delay_ar<LIST> free_lists_[PageId::num_free_lists_];
@@ -225,7 +225,7 @@ class _ScalablePageAllocator : public Allocator {
     buffer_size_ = buffer_size;
     header_ = reinterpret_cast<_ScalablePageAllocatorHeader *>(buffer_);
     type_ = header_->allocator_type_;
-    id_ = header_->allocator_id_;
+    id_ = header_->alloc_id_;
     custom_header_ = reinterpret_cast<char *>(header_ + 1);
     size_t region_off =
         (custom_header_ - buffer_) + header_->custom_header_size_;

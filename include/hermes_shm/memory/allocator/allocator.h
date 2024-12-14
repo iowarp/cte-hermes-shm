@@ -39,7 +39,7 @@ enum class AllocatorType {
  * */
 struct AllocatorHeader {
   AllocatorType allocator_type_;
-  AllocatorId allocator_id_;
+  AllocatorId alloc_id_;
   size_t custom_header_size_;
 
   HSHM_CROSS_FUN
@@ -49,7 +49,7 @@ struct AllocatorHeader {
   void Configure(AllocatorId allocator_id, AllocatorType type,
                  size_t custom_header_size) {
     allocator_type_ = type;
-    allocator_id_ = allocator_id;
+    alloc_id_ = allocator_id;
     custom_header_size_ = custom_header_size;
   }
 };

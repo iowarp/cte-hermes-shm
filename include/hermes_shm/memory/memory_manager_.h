@@ -26,7 +26,7 @@ namespace hshm::ipc {
 /** Memory manager class */
 class MemoryManager {
  public:
-  AllocatorId root_allocator_id_;
+  AllocatorId root_alloc_id_;
   MemoryBackend *root_backend_;
   Allocator *root_alloc_;
   MemoryBackend *backends_[MAX_BACKENDS];
@@ -211,7 +211,7 @@ class MemoryManager {
     if (p.IsNull()) {
       return nullptr;
     }
-    return GetAllocator<NullAllocator>(p.allocator_id_)
+    return GetAllocator<NullAllocator>(p.alloc_id_)
         ->template Convert<T, POINTER_T>(p);
   }
 

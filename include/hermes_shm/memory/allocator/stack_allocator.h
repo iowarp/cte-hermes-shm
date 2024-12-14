@@ -79,7 +79,7 @@ class _StackAllocator : public Allocator {
     buffer_size_ = buffer_size;
     header_ = reinterpret_cast<_StackAllocatorHeader *>(buffer_);
     type_ = header_->allocator_type_;
-    id_ = header_->allocator_id_;
+    id_ = header_->alloc_id_;
     custom_header_ = reinterpret_cast<char *>(header_ + 1);
     heap_ = &header_->heap_;
   }

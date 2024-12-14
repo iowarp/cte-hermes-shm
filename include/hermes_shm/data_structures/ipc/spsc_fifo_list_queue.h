@@ -10,11 +10,11 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_DATA_STRUCTURES__SPSC_LIST_IQUEUE_H
-#define HERMES_DATA_STRUCTURES__SPSC_LIST_IQUEUE_H
+#ifndef HERMES_DATA_STRUCTURES__SPSC_LIST_lifo_list_queue_H
+#define HERMES_DATA_STRUCTURES__SPSC_LIST_lifo_list_queue_H
 
 #include "hermes_shm/memory/memory.h"
-#include "iqueue.h"
+#include "lifo_list_queue.h"
 
 namespace hshm::ipc {
 
@@ -180,11 +180,11 @@ class spsc_fifo_list_queue : public ShmContainer {
   qtok_t enqueue(T *entry) {
     OffsetPointer entry_shm =
         GetAllocator()->template Convert<T, OffsetPointer>(entry);
-    reinterpret_cast<iqueue_entry *>(entry)->next_shm_ =
+    reinterpret_cast<list_queue_entry *>(entry)->next_shm_ =
         OffsetPointer::GetNull();
     size_t tail_id = tail_.fetch_add(1);
     if (!head_shm_.IsNull()) {
-      auto tail = GetAllocator()->template Convert<iqueue_entry>(tail_shm_);
+      auto tail = GetAllocator()->template Convert<list_queue_entry>(tail_shm_);
       tail->next_shm_ = entry_shm;
     } else {
       head_shm_ = entry_shm;
@@ -222,7 +222,7 @@ class spsc_fifo_list_queue : public ShmContainer {
     if (cur_size == 0) {
       return qtok_t::GetNull();
     }
-    auto head = GetAllocator()->template Convert<iqueue_entry>(head_shm_);
+    auto head = GetAllocator()->template Convert<list_queue_entry>(head_shm_);
     if (head->next_shm_.IsNull() && cur_size > 1) {
       return qtok_t::GetNull();
     }
@@ -242,7 +242,7 @@ class spsc_fifo_list_queue : public ShmContainer {
     if (size() == 0) {
       return nullptr;
     }
-    auto entry = GetAllocator()->template Convert<iqueue_entry>(head_shm_);
+    auto entry = GetAllocator()->template Convert<list_queue_entry>(head_shm_);
     return reinterpret_cast<T *>(entry);
   }
 
@@ -279,4 +279,4 @@ using spsc_fifo_list_queue =
 #undef CLASS_NAME
 #undef CLASS_NEW_ARGS
 
-#endif  // HERMES_DATA_STRUCTURES__SPSC_LIST_IQUEUE_H
+#endif  // HERMES_DATA_STRUCTURES__SPSC_LIST_lifo_list_queue_H

@@ -17,7 +17,7 @@
 #include "omp.h"
 #include "test_init.h"
 
-struct IntEntry : public hipc::iqueue_entry {
+struct IntEntry : public hipc::list_queue_entry {
   int value;
 
   /** Default constructor */

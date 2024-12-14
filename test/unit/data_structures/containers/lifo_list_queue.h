@@ -10,30 +10,33 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_TEST_UNIT_DATA_STRUCTURES_CONTAINERS_IQUEUE_H_
-#define HERMES_TEST_UNIT_DATA_STRUCTURES_CONTAINERS_IQUEUE_H_
+#ifndef HERMES_TEST_UNIT_DATA_STRUCTURES_CONTAINERS_lifo_list_queue_H_
+#define HERMES_TEST_UNIT_DATA_STRUCTURES_CONTAINERS_lifo_list_queue_H_
+
+#include <hermes_shm/memory/allocator/mp_page.h>
 
 #include "basic_test.h"
 #include "test_init.h"
-#include <hermes_shm/memory/allocator/mp_page.h>
 
 using hipc::MpPage;
 
-template<typename T, typename Container, typename AllocT = HSHM_DEFAULT_ALLOC_T>
-class IqueueTestSuite {
+template <typename T, typename Container,
+          typename AllocT = HSHM_DEFAULT_ALLOC_T>
+class lifo_list_queueTestSuite {
  public:
   Container &obj_;
   AllocT *alloc_;
 
   /// Constructor
-  IqueueTestSuite(Container &obj, AllocT *alloc) : obj_(obj), alloc_(alloc) {}
+  lifo_list_queueTestSuite(Container &obj, AllocT *alloc)
+      : obj_(obj), alloc_(alloc) {}
 
   /// Enqueue elements
   void EnqueueTest(size_t count = 30) {
     for (size_t i = 0; i < count; ++i) {
       hipc::OffsetPointer p;
-      auto page = alloc_->template
-        AllocateConstructObjs<T>(HSHM_DEFAULT_MEM_CTX, 1, p);
+      auto page =
+          alloc_->template AllocateConstructObjs<T>(HSHM_DEFAULT_MEM_CTX, 1, p);
       page->page_size_ = count - i - 1;
       obj_.enqueue(page);
     }
@@ -42,7 +45,7 @@ class IqueueTestSuite {
 
   /// Dequeue and then re-enqueue
   void DequeueTest(size_t count = 30) {
-    std::vector<T*> tmp(count);
+    std::vector<T *> tmp(count);
     for (size_t i = 0; i < count; ++i) {
       tmp[i] = obj_.dequeue();
     }
@@ -92,7 +95,7 @@ class IqueueTestSuite {
 
   /// Verify erase
   void EraseTest() {
-    std::vector<T*> tmp;
+    std::vector<T *> tmp;
     for (T *page : obj_) {
       tmp.emplace_back(page);
     }
@@ -104,4 +107,4 @@ class IqueueTestSuite {
   }
 };
 
-#endif  // HERMES_TEST_UNIT_DATA_STRUCTURES_CONTAINERS_IQUEUE_H_
+#endif  // HERMES_TEST_UNIT_DATA_STRUCTURES_CONTAINERS_lifo_list_queue_H_

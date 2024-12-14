@@ -16,7 +16,7 @@ add_executable(test_data_structure_exec
         list.cc
         slist.cc
         vector.cc
-        iqueue.cc
+        lifo_list_queue.cc
         unordered_map.cc
         ring_queue.cc
         charwrap.cc
@@ -76,9 +76,9 @@ add_test(NAME test_unordered_map COMMAND
 add_test(NAME test_pair COMMAND
         ${CMAKE_BINARY_DIR}/bin/test_data_structure_exec "Pair*")
 
-# IQUEUE TESTS
-add_test(NAME test_iqueue COMMAND
-        ${CMAKE_BINARY_DIR}/bin/test_data_structure_exec "IqueueOfMpPage")
+# lifo_list_queue TESTS
+add_test(NAME test_lifo_list_queue COMMAND
+        ${CMAKE_BINARY_DIR}/bin/test_data_structure_exec "lifo_list_queueOfMpPage")
 
 # SPSC TESTS
 add_test(NAME test_spsc COMMAND

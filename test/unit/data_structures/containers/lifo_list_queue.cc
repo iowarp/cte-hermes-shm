@@ -11,17 +11,17 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include "basic_test.h"
+#include "hermes_shm/data_structures/ipc/lifo_list_queue.h"
+#include "lifo_list_queue.h"
 #include "test_init.h"
-#include "iqueue.h"
-#include "hermes_shm/data_structures/ipc/iqueue.h"
 
-using hshm::ipc::iqueue;
+using hshm::ipc::lifo_list_queue;
 
-template<typename T>
-void IqueueTest() {
+template <typename T>
+void lifo_list_queueTest() {
   auto *alloc = HSHM_DEFAULT_ALLOC;
-  iqueue<T> lp(alloc);
-  IqueueTestSuite<T, iqueue<T>> test(lp, alloc);
+  lifo_list_queue<T> lp(alloc);
+  lifo_list_queueTestSuite<T, lifo_list_queue<T>> test(lp, alloc);
 
   test.EnqueueTest(30);
   test.ForwardIteratorTest();
@@ -31,9 +31,9 @@ void IqueueTest() {
   test.EraseTest();
 }
 
-TEST_CASE("IqueueOfMpPage") {
+TEST_CASE("lifo_list_queueOfMpPage") {
   auto *alloc = HSHM_DEFAULT_ALLOC;
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
-  IqueueTest<MpPage>();
+  lifo_list_queueTest<MpPage>();
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
 }
