@@ -186,6 +186,14 @@ class mpmc_lifo_list_queue : public ShmContainer {
     return qtok_t(1);
   }
 
+  /** Emplace. wrapper for enqueue */
+  HSHM_CROSS_FUN
+  qtok_t emplace(const LPointer<T> &entry) { return enqueue(entry); }
+
+  /** Push. wrapper for enqueue */
+  HSHM_INLINE_CROSS_FUN
+  qtok_t push(const LPointer<T> &entry) { return enqueue(entry); }
+
   /** Construct an element at \a pos position in the mpmc_lifo_list_queue */
   HSHM_CROSS_FUN
   qtok_t enqueue(T *entry) {
