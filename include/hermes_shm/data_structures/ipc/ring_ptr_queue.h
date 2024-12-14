@@ -226,16 +226,7 @@ class ring_ptr_queue_base : public ShmContainer {
     // Emplace into queue at our slot
     size_t depth = queue.size();
     uint32_t idx = tail % depth;
-    if constexpr (std::is_arithmetic<T>::value) {
-      queue[idx] = MARK_FIRST_BIT(T, val);
-    } else if constexpr (std::is_pointer_v<T>) {
-      queue[idx] = (T)MARK_FIRST_BIT(size_t, (size_t)val);
-    } else if constexpr (IS_SHM_OFFSET_POINTER(T)) {
-      queue[idx] = T(MARK_FIRST_BIT(size_t, val.off_.load()));
-    } else if constexpr (IS_SHM_POINTER(T)) {
-      queue[idx] =
-          T(val.allocator_id_, MARK_FIRST_BIT(size_t, val.off_.load()));
-    }
+    Mark(val, queue[idx]);
 
     // Let pop know that the data is fully prepared
     return qtok_t(tail);
@@ -327,18 +318,36 @@ class ring_ptr_queue_base : public ShmContainer {
     }
   }
 
+  /** Mark an entry */
+  HSHM_INLINE_CROSS
+  void Mark(const T &val, T &entry) {
+    if constexpr (std::is_arithmetic_v<T>) {
+      entry = MARK_FIRST_BIT(T, val);
+    } else if constexpr (std::is_pointer_v<T>) {
+      entry = (T)MARK_FIRST_BIT(size_t, (size_t)val);
+    } else if constexpr (IS_SHM_POINTER(T)) {
+      entry = val.Mark();
+    } else {
+      static_assert(false, "Unsupported type");
+    }
+  }
+
   /** Check if a pointer is marked */
+  HSHM_INLINE_CROSS
   bool IsMarked(T &entry) {
     if constexpr (std::is_arithmetic_v<T>) {
       return IS_FIRST_BIT_MARKED(T, entry);
     } else if constexpr (std::is_pointer_v<T>) {
       return IS_FIRST_BIT_MARKED(size_t, (size_t)entry);
+    } else if constexpr (IS_SHM_POINTER(T)) {
+      return entry.IsMarked();
     } else {
-      return IS_FIRST_BIT_MARKED(size_t, entry.off_.load());
+      static_assert(false, "Unsupported type");
     }
   }
 
   /** Unmark pointer */
+  HSHM_INLINE_CROSS
   void Unmark(T &val, T &entry) {
     if constexpr (std::is_arithmetic<T>::value) {
       val = UNMARK_FIRST_BIT(T, entry);
@@ -346,21 +355,20 @@ class ring_ptr_queue_base : public ShmContainer {
     } else if constexpr (std::is_pointer_v<T>) {
       val = (T)UNMARK_FIRST_BIT(size_t, (size_t)entry);
       entry = 0;
-    } else if constexpr (IS_SHM_OFFSET_POINTER(T)) {
-      val = T(UNMARK_FIRST_BIT(size_t, entry.off_.load()));
-      entry.off_ = 0;
     } else if constexpr (IS_SHM_POINTER(T)) {
-      val = T(entry.allocator_id_, UNMARK_FIRST_BIT(size_t, entry.off_.load()));
-      entry.off_ = 0;
+      val = entry.Unmark();
+      entry.SetZero();
+    } else {
+      static_assert(false, "Unsupported type");
     }
   }
 
   /** Get queue depth */
-  HSHM_CROSS_FUN
+  HSHM_INLINE_CROSS
   size_t GetDepth() { return queue_->size(); }
 
   /** Get size at this moment */
-  HSHM_CROSS_FUN
+  HSHM_INLINE_CROSS
   size_t GetSize() {
     size_t tail = tail_.load();
     size_t head = head_.load();

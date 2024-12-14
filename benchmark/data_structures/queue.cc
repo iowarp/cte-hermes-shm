@@ -130,7 +130,7 @@ class QueueTest {
   /** Output as CSV */
   void TestOutput(const std::string &test_name, Timer &t, size_t count,
                   int nthreads) {
-    HIPRINT("{},{},{},{},{},{}\n", test_name, queue_type_, internal_type_,
+    HIPRINT("{},{},{},{},{}ms,{}MOps\n", test_name, queue_type_, internal_type_,
             nthreads, t.GetMsec(), (float)count / t.GetUsec());
   }
 

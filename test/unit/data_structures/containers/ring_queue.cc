@@ -174,22 +174,31 @@ TEST_CASE("TestSpscQueuePopBack") {
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
 }
 
+template <typename T>
+void PointerQueueTest(T base_val) {
+  auto *alloc = HSHM_DEFAULT_ALLOC;
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+  hshm::spsc_ptr_queue<T> queue(alloc);
+  queue.emplace(base_val + 1);
+  queue.emplace(base_val + 2);
+  queue.emplace(base_val + 3);
+  T val;
+  queue.pop_back(val);
+  REQUIRE(val == base_val + 3);
+  queue.pop_back(val);
+  REQUIRE(val == base_val + 2);
+  queue.pop_back(val);
+  REQUIRE(val == base_val + 1);
+  REQUIRE(queue.pop_back(val).IsNull());
+}
+
 TEST_CASE("TestSpscPtrQueuePopBack") {
   auto *alloc = HSHM_DEFAULT_ALLOC;
-  PAGE_DIVIDE("TEST") {
-    REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
-    hshm::spsc_ptr_queue<void *> queue(alloc);
-    queue.emplace((void *)1);
-    queue.emplace((void *)2);
-    queue.emplace((void *)3);
-    void *val;
-    queue.pop_back(val);
-    REQUIRE(val == (void *)3);
-    queue.pop_back(val);
-    REQUIRE(val == (void *)2);
-    queue.pop_back(val);
-    REQUIRE(val == (void *)1);
-    REQUIRE(queue.pop_back(val).IsNull());
-  }
+  PointerQueueTest<int>(0);
+  PointerQueueTest<size_t>(0);
+  PointerQueueTest<hipc::Pointer>(hipc::Pointer(alloc->id_, 0));
+  PointerQueueTest<hipc::OffsetPointer>(hipc::OffsetPointer(0));
+  PointerQueueTest<hipc::LPointer<char>>(
+      hipc::LPointer<char>(nullptr, hipc::Pointer(alloc->id_, 0)));
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
 }

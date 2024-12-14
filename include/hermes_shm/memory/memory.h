@@ -10,16 +10,16 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-
 #ifndef HERMES_MEMORY_MEMORY_H_
 #define HERMES_MEMORY_MEMORY_H_
 
-#include <hermes_shm/types/real_number.h>
-#include <hermes_shm/introspect/system_info.h>
-#include <hermes_shm/types/bitfield.h>
-#include <hermes_shm/types/atomic.h>
 #include <hermes_shm/constants/macros.h>
 #include <hermes_shm/data_structures/ipc/hash.h>
+#include <hermes_shm/introspect/system_info.h>
+#include <hermes_shm/types/atomic.h>
+#include <hermes_shm/types/bitfield.h>
+#include <hermes_shm/types/real_number.h>
+
 #include <cstdio>
 
 namespace hshm::ipc {
@@ -47,9 +47,7 @@ union AllocatorId {
   /**
    * Set this allocator to null
    * */
-  HSHM_INLINE_CROSS void SetNull() {
-    int_ = 0;
-  }
+  HSHM_INLINE_CROSS void SetNull() { int_ = 0; }
 
   /**
    * Check if this is the null allocator
@@ -67,9 +65,7 @@ union AllocatorId {
   }
 
   /** Get the null allocator */
-  HSHM_INLINE_CROSS static AllocatorId GetNull() {
-    return AllocatorId(0, 0);
-  }
+  HSHM_INLINE_CROSS static AllocatorId GetNull() { return AllocatorId(0, 0); }
 
   /** To index */
   HSHM_INLINE_CROSS uint32_t ToIndex() const {
@@ -78,28 +74,31 @@ union AllocatorId {
 
   /** Serialize an hipc::allocator_id */
   template <typename Ar>
-  HSHM_INLINE_CROSS
-  void serialize(Ar &ar) {
-    ar &int_;
+  HSHM_INLINE_CROSS void serialize(Ar &ar) {
+    ar & int_;
   }
 
   /** Print */
   HSHM_CROSS_FUN
   void Print() const {
-    printf("(%s) Allocator ID: %u.%u\n",
-           kCurrentDevice, bits_.major_, bits_.minor_);
+    printf("(%s) Allocator ID: %u.%u\n", kCurrentDevice, bits_.major_,
+           bits_.minor_);
   }
 };
 
 typedef AllocatorId allocator_id_t;
 
+/** Pointer type base */
+class ShmPointer {};
+
 /**
  * Stores an offset into a memory region. Assumes the developer knows
  * which allocator the pointer comes from.
  * */
-template<bool ATOMIC = false>
-struct OffsetPointerBase {
-  hipc::opt_atomic<size_t, ATOMIC> off_; /**< Offset within the allocator's slot */
+template <bool ATOMIC = false>
+struct OffsetPointerBase : public ShmPointer {
+  hipc::opt_atomic<size_t, ATOMIC>
+      off_; /**< Offset within the allocator's slot */
 
   /** Default constructor */
   HSHM_INLINE_CROSS OffsetPointerBase() = default;
@@ -110,26 +109,25 @@ struct OffsetPointerBase {
   /** Full constructor */
   HSHM_INLINE_CROSS explicit OffsetPointerBase(
       hipc::opt_atomic<size_t, ATOMIC> off)
-  : off_(off.load()) {}
+      : off_(off.load()) {}
 
   /** Pointer constructor */
-  HSHM_INLINE_CROSS explicit OffsetPointerBase(AllocatorId alloc_id,
-                                                size_t off)
-  : off_(off) {
-    (void) alloc_id;
+  HSHM_INLINE_CROSS explicit OffsetPointerBase(AllocatorId alloc_id, size_t off)
+      : off_(off) {
+    (void)alloc_id;
   }
 
   /** Copy constructor */
   HSHM_INLINE_CROSS OffsetPointerBase(const OffsetPointerBase &other)
-  : off_(other.off_.load()) {}
+      : off_(other.off_.load()) {}
 
   /** Other copy constructor */
   HSHM_INLINE_CROSS OffsetPointerBase(const OffsetPointerBase<!ATOMIC> &other)
-  : off_(other.off_.load()) {}
+      : off_(other.off_.load()) {}
 
   /** Move constructor */
   HSHM_INLINE_CROSS OffsetPointerBase(OffsetPointerBase &&other) noexcept
-    : off_(other.off_.load()) {
+      : off_(other.off_.load()) {
     other.SetNull();
   }
 
@@ -138,15 +136,11 @@ struct OffsetPointerBase {
     return OffsetPointerBase<false>(off_.load());
   }
 
-  /** Set to null */
-  HSHM_INLINE_CROSS void SetNull() {
-    off_ = (size_t)-1;
-  }
+  /** Set to null (offsets can be 0, so not 0) */
+  HSHM_INLINE_CROSS void SetNull() { off_ = (size_t)-1; }
 
   /** Check if null */
-  HSHM_INLINE_CROSS bool IsNull() const {
-    return off_.load() == (size_t)-1;
-  }
+  HSHM_INLINE_CROSS bool IsNull() const { return off_.load() == (size_t)-1; }
 
   /** Get the null pointer */
   HSHM_INLINE_CROSS static OffsetPointerBase GetNull() {
@@ -154,28 +148,28 @@ struct OffsetPointerBase {
   }
 
   /** Atomic load wrapper */
-  HSHM_INLINE_CROSS size_t load(
-    std::memory_order order = std::memory_order_seq_cst) const {
+  HSHM_INLINE_CROSS size_t
+  load(std::memory_order order = std::memory_order_seq_cst) const {
     return off_.load(order);
   }
 
   /** Atomic exchange wrapper */
   HSHM_INLINE_CROSS void exchange(
-    size_t count, std::memory_order order = std::memory_order_seq_cst) {
+      size_t count, std::memory_order order = std::memory_order_seq_cst) {
     off_.exchange(count, order);
   }
 
   /** Atomic compare exchange weak wrapper */
   HSHM_INLINE_CROSS bool compare_exchange_weak(
-    size_t& expected, size_t desired,
-    std::memory_order order = std::memory_order_seq_cst) {
+      size_t &expected, size_t desired,
+      std::memory_order order = std::memory_order_seq_cst) {
     return off_.compare_exchange_weak(expected, desired, order);
   }
 
   /** Atomic compare exchange strong wrapper */
   HSHM_INLINE_CROSS bool compare_exchange_strong(
-    size_t& expected, size_t desired,
-    std::memory_order order = std::memory_order_seq_cst) {
+      size_t &expected, size_t desired,
+      std::memory_order order = std::memory_order_seq_cst) {
     return off_.compare_exchange_weak(expected, desired, order);
   }
 
@@ -190,26 +184,48 @@ struct OffsetPointerBase {
   }
 
   /** Atomic add assign operator */
-  HSHM_INLINE_CROSS OffsetPointerBase& operator+=(size_t count) {
+  HSHM_INLINE_CROSS OffsetPointerBase &operator+=(size_t count) {
     off_ += count;
     return *this;
   }
 
   /** Atomic subtract assign operator */
-  HSHM_INLINE_CROSS OffsetPointerBase& operator-=(size_t count) {
+  HSHM_INLINE_CROSS OffsetPointerBase &operator-=(size_t count) {
     off_ -= count;
     return *this;
   }
 
+  /** Atomic increment (post) */
+  HSHM_INLINE_CROSS OffsetPointerBase operator++(int) {
+    return OffsetPointerBase(off_++);
+  }
+
+  /** Atomic increment (pre) */
+  HSHM_INLINE_CROSS OffsetPointerBase &operator++() {
+    ++off_;
+    return *this;
+  }
+
+  /** Atomic decrement (post) */
+  HSHM_INLINE_CROSS OffsetPointerBase operator--(int) {
+    return OffsetPointerBase(off_--);
+  }
+
+  /** Atomic decrement (pre) */
+  HSHM_INLINE_CROSS OffsetPointerBase &operator--() {
+    --off_;
+    return *this;
+  }
+
   /** Atomic assign operator */
-  HSHM_INLINE_CROSS OffsetPointerBase& operator=(size_t count) {
+  HSHM_INLINE_CROSS OffsetPointerBase &operator=(size_t count) {
     off_ = count;
     return *this;
   }
 
   /** Atomic copy assign operator */
-  HSHM_INLINE_CROSS OffsetPointerBase& operator=(
-    const OffsetPointerBase &count) {
+  HSHM_INLINE_CROSS OffsetPointerBase &operator=(
+      const OffsetPointerBase &count) {
     off_ = count.load();
     return *this;
   }
@@ -223,6 +239,24 @@ struct OffsetPointerBase {
   HSHM_INLINE_CROSS bool operator!=(const OffsetPointerBase &other) const {
     return off_ != other.off_;
   }
+
+  /** Mark first bit */
+  HSHM_INLINE_CROSS OffsetPointerBase Mark() const {
+    return OffsetPointerBase(MARK_FIRST_BIT(size_t, off_.load()));
+  }
+
+  /** Check if first bit is marked */
+  HSHM_INLINE_CROSS bool IsMarked() const {
+    return IS_FIRST_BIT_MARKED(size_t, off_.load());
+  }
+
+  /** Unmark first bit */
+  HSHM_INLINE_CROSS OffsetPointerBase Unmark() const {
+    return OffsetPointerBase(UNMARK_FIRST_BIT(size_t, off_.load()));
+  }
+
+  /** Set to 0 */
+  HSHM_INLINE_CROSS void SetZero() { off_ = 0; }
 };
 
 /** Non-atomic offset */
@@ -232,44 +266,44 @@ typedef OffsetPointerBase<false> OffsetPointer;
 typedef OffsetPointerBase<true> AtomicOffsetPointer;
 
 /** Typed offset pointer */
-template<typename T>
+template <typename T>
 using TypedOffsetPointer = OffsetPointer;
 
 /** Typed atomic pointer */
-template<typename T>
+template <typename T>
 using TypedAtomicOffsetPointer = AtomicOffsetPointer;
 
 /**
  * A process-independent pointer, which stores both the allocator's
  * information and the offset within the allocator's region
  * */
-template<bool ATOMIC = false>
-struct PointerBase {
-  AllocatorId allocator_id_;     /// Allocator the pointer comes from
-  OffsetPointerBase<ATOMIC> off_;   /// Offset within the allocator's slot
+template <bool ATOMIC = false>
+struct PointerBase : public ShmPointer {
+  AllocatorId allocator_id_;       /// Allocator the pointer comes from
+  OffsetPointerBase<ATOMIC> off_;  /// Offset within the allocator's slot
 
   /** Default constructor */
   HSHM_INLINE_CROSS PointerBase() = default;
 
   /** Full constructor */
   HSHM_INLINE_CROSS explicit PointerBase(AllocatorId id, size_t off)
-  : allocator_id_(id), off_(off) {}
+      : allocator_id_(id), off_(off) {}
 
   /** Full constructor using offset pointer */
   HSHM_INLINE_CROSS explicit PointerBase(AllocatorId id, OffsetPointer off)
-  : allocator_id_(id), off_(off) {}
+      : allocator_id_(id), off_(off) {}
 
   /** Copy constructor */
   HSHM_INLINE_CROSS PointerBase(const PointerBase &other)
-  : allocator_id_(other.allocator_id_), off_(other.off_) {}
+      : allocator_id_(other.allocator_id_), off_(other.off_) {}
 
   /** Other copy constructor */
   HSHM_INLINE_CROSS PointerBase(const PointerBase<!ATOMIC> &other)
-  : allocator_id_(other.allocator_id_), off_(other.off_.load()) {}
+      : allocator_id_(other.allocator_id_), off_(other.off_.load()) {}
 
   /** Move constructor */
   HSHM_INLINE_CROSS PointerBase(PointerBase &&other) noexcept
-  : allocator_id_(other.allocator_id_), off_(other.off_) {
+      : allocator_id_(other.allocator_id_), off_(other.off_) {
     other.SetNull();
   }
 
@@ -279,14 +313,10 @@ struct PointerBase {
   }
 
   /** Set to null */
-  HSHM_INLINE_CROSS void SetNull() {
-    allocator_id_.SetNull();
-  }
+  HSHM_INLINE_CROSS void SetNull() { allocator_id_.SetNull(); }
 
   /** Check if null */
-  HSHM_INLINE_CROSS bool IsNull() const {
-    return allocator_id_.IsNull();
-  }
+  HSHM_INLINE_CROSS bool IsNull() const { return allocator_id_.IsNull(); }
 
   /** Get the null pointer */
   HSHM_INLINE_CROSS static PointerBase GetNull() {
@@ -296,7 +326,7 @@ struct PointerBase {
   }
 
   /** Copy assignment operator */
-  HSHM_INLINE_CROSS PointerBase& operator=(const PointerBase &other) {
+  HSHM_INLINE_CROSS PointerBase &operator=(const PointerBase &other) {
     if (this != &other) {
       allocator_id_ = other.allocator_id_;
       off_ = other.off_;
@@ -305,7 +335,7 @@ struct PointerBase {
   }
 
   /** Move assignment operator */
-  HSHM_INLINE_CROSS PointerBase& operator=(PointerBase &&other) {
+  HSHM_INLINE_CROSS PointerBase &operator=(PointerBase &&other) {
     if (this != &other) {
       allocator_id_ = other.allocator_id_;
       off_.exchange(other.off_.load());
@@ -331,15 +361,41 @@ struct PointerBase {
   }
 
   /** Addition assignment operator */
-  HSHM_INLINE_CROSS PointerBase& operator+=(size_t size) {
+  HSHM_INLINE_CROSS PointerBase &operator+=(size_t size) {
     off_ += size;
     return *this;
   }
 
   /** Subtraction assignment operator */
-  HSHM_INLINE_CROSS PointerBase& operator-=(size_t size) {
+  HSHM_INLINE_CROSS PointerBase &operator-=(size_t size) {
     off_ -= size;
     return *this;
+  }
+
+  /** Increment operator (pre) */
+  HSHM_INLINE_CROSS PointerBase &operator++() {
+    off_++;
+    return *this;
+  }
+
+  /** Decrement operator (pre) */
+  HSHM_INLINE_CROSS PointerBase &operator--() {
+    off_--;
+    return *this;
+  }
+
+  /** Increment operator (post) */
+  HSHM_INLINE_CROSS PointerBase operator++(int) {
+    PointerBase tmp(*this);
+    operator++();
+    return tmp;
+  }
+
+  /** Decrement operator (post) */
+  HSHM_INLINE_CROSS PointerBase operator--(int) {
+    PointerBase tmp(*this);
+    operator--();
+    return tmp;
   }
 
   /** Equality check */
@@ -351,6 +407,22 @@ struct PointerBase {
   HSHM_INLINE_CROSS bool operator!=(const PointerBase &other) const {
     return (other.allocator_id_ != allocator_id_ || other.off_ != off_);
   }
+
+  /** Mark first bit */
+  HSHM_INLINE_CROSS PointerBase Mark() const {
+    return PointerBase(allocator_id_, off_.Mark());
+  }
+
+  /** Check if first bit is marked */
+  HSHM_INLINE_CROSS bool IsMarked() const { return off_.IsMarked(); }
+
+  /** Unmark first bit */
+  HSHM_INLINE_CROSS PointerBase Unmark() const {
+    return PointerBase(allocator_id_, off_.Unmark());
+  }
+
+  /** Set to 0 */
+  HSHM_INLINE_CROSS void SetZero() { off_.SetZero(); }
 };
 
 /** Non-atomic pointer */
@@ -360,16 +432,16 @@ typedef PointerBase<false> Pointer;
 typedef PointerBase<true> AtomicPointer;
 
 /** Typed pointer */
-template<typename T>
+template <typename T>
 using TypedPointer = Pointer;
 
 /** Typed atomic pointer */
-template<typename T>
+template <typename T>
 using TypedAtomicPointer = AtomicPointer;
 
 /** Struct containing both private and shared pointer */
-template<typename T = char, typename PointerT = Pointer>
-struct LPointer {
+template <typename T = char, typename PointerT = Pointer>
+struct LPointer : public ShmPointer {
   T *ptr_;
   PointerT shm_;
 
@@ -385,7 +457,7 @@ struct LPointer {
 
   /** Private constructor (in memory_manager.h) */
   HSHM_INLINE_CROSS explicit LPointer(T *ptr);
-  
+
   /** Copy constructor */
   HSHM_INLINE_CROSS LPointer(const LPointer &other)
       : ptr_(other.ptr_), shm_(other.shm_) {}
@@ -397,7 +469,7 @@ struct LPointer {
   }
 
   /** Copy assignment operator */
-  HSHM_INLINE_CROSS LPointer& operator=(const LPointer &other) {
+  HSHM_INLINE_CROSS LPointer &operator=(const LPointer &other) {
     if (this != &other) {
       ptr_ = other.ptr_;
       shm_ = other.shm_;
@@ -406,7 +478,7 @@ struct LPointer {
   }
 
   /** Move assignment operator */
-  HSHM_INLINE_CROSS LPointer& operator=(LPointer &&other) {
+  HSHM_INLINE_CROSS LPointer &operator=(LPointer &&other) {
     if (this != &other) {
       ptr_ = other.ptr_;
       shm_ = other.shm_;
@@ -416,9 +488,7 @@ struct LPointer {
   }
 
   /** Overload arrow */
-  HSHM_INLINE_CROSS T* operator->() const {
-    return ptr_;
-  }
+  HSHM_INLINE_CROSS T *operator->() const { return ptr_; }
 
   /** Overload dereference */
   HSHM_INLINE_CROSS T &operator*() const { return *ptr_; }
@@ -433,9 +503,64 @@ struct LPointer {
     return ptr_ != other.ptr_ || shm_ != other.shm_;
   }
 
+  /** Addition operator */
+  HSHM_INLINE_CROSS LPointer operator+(size_t size) const {
+    return LPointer(ptr_ + size, shm_ + size);
+  }
+
+  /** Subtraction operator */
+  HSHM_INLINE_CROSS LPointer operator-(size_t size) const {
+    return LPointer(ptr_ - size, shm_ - size);
+  }
+
+  /** Addition assignment operator */
+  HSHM_INLINE_CROSS LPointer &operator+=(size_t size) {
+    ptr_ += size;
+    shm_ += size;
+    return *this;
+  }
+
+  /** Subtraction assignment operator */
+  HSHM_INLINE_CROSS LPointer &operator-=(size_t size) {
+    ptr_ -= size;
+    shm_ -= size;
+    return *this;
+  }
+
+  /** Increment operator (pre) */
+  HSHM_INLINE_CROSS LPointer &operator++() {
+    ptr_++;
+    shm_++;
+    return *this;
+  }
+
+  /** Decrement operator (pre) */
+  HSHM_INLINE_CROSS LPointer &operator--() {
+    ptr_--;
+    shm_--;
+    return *this;
+  }
+
+  /** Increment operator (post) */
+  HSHM_INLINE_CROSS LPointer operator++(int) {
+    LPointer tmp(*this);
+    operator++();
+    return tmp;
+  }
+
+  /** Decrement operator (post) */
+  HSHM_INLINE_CROSS LPointer operator--(int) {
+    LPointer tmp(*this);
+    operator--();
+    return tmp;
+  }
+
   /** Check if null */
-  HSHM_INLINE_CROSS bool IsNull() const {
-    return ptr_ == nullptr;
+  HSHM_INLINE_CROSS bool IsNull() const { return ptr_ == nullptr; }
+
+  /** Get null */
+  HSHM_INLINE_CROSS static LPointer GetNull() {
+    return LPointer(nullptr, Pointer::GetNull());
   }
 
   /** Set to null */
@@ -443,8 +568,7 @@ struct LPointer {
 
   /** Reintrepret cast to other internal type */
   template <typename U>
-  HSHM_INLINE_CROSS
-  LPointer<U, PointerT>& Cast() {
+  HSHM_INLINE_CROSS LPointer<U, PointerT> &Cast() {
     return DeepCast<LPointer<U, PointerT>>();
   }
 
@@ -456,46 +580,56 @@ struct LPointer {
 
   /** Reintrepret cast to another LPointer */
   template <typename LPointerT>
-  HSHM_INLINE_CROSS
-  LPointerT& DeepCast() {
-    return *((LPointerT*)this);
+  HSHM_INLINE_CROSS LPointerT &DeepCast() {
+    return *((LPointerT *)this);
   }
 
   /** Reintrepret cast to another LPointer (const) */
   template <typename LPointerT>
-  HSHM_INLINE_CROSS
-  const LPointerT& DeepCast() const {
-    return *((LPointerT*)this);
+  HSHM_INLINE_CROSS const LPointerT &DeepCast() const {
+    return *((LPointerT *)this);
   }
+
+  /** Mark first bit */
+  HSHM_INLINE_CROSS LPointer Mark() const {
+    return LPointer(ptr_, shm_.Mark());
+  }
+
+  /** Check if first bit is marked */
+  HSHM_INLINE_CROSS bool IsMarked() const { return shm_.IsMarked(); }
+
+  /** Unmark first bit */
+  HSHM_INLINE_CROSS LPointer Unmark() const {
+    return LPointer(ptr_, shm_.Unmark());
+  }
+
+  /** Set to 0 */
+  HSHM_INLINE_CROSS void SetZero() { shm_.SetZero(); }
 };
 
 /** Alias to local pointer */
-template<typename T = char, typename PointerT = Pointer>
+template <typename T = char, typename PointerT = Pointer>
 using FullPtr = LPointer<T, PointerT>;
 
 /** Struct containing both a pointer and its size */
-template<typename PointerT = Pointer>
+template <typename PointerT = Pointer>
 struct Array {
   PointerT shm_;
   size_t size_;
 };
 
 /** Struct containing a shared pointer, private pointer, and the data size */
-template<typename T = char, typename PointerT = Pointer>
+template <typename T = char, typename PointerT = Pointer>
 struct LArray {
   PointerT shm_;
   size_t size_;
   T *ptr_;
 
   /** Overload arrow */
-  HSHM_INLINE_CROSS T* operator->() const {
-    return ptr_;
-  }
+  HSHM_INLINE_CROSS T *operator->() const { return ptr_; }
 
   /** Overload dereference */
-  HSHM_INLINE_CROSS T& operator*() const {
-    return *ptr_;
-  }
+  HSHM_INLINE_CROSS T &operator*() const { return *ptr_; }
 };
 
 class MemoryAlignment {
@@ -506,8 +640,7 @@ class MemoryAlignment {
    * @param size the size to make a multiple of alignment (e.g., 4097)
    * @return the new size  (e.g., 8192)
    * */
-  static size_t AlignTo(size_t alignment,
-                        size_t size) {
+  static size_t AlignTo(size_t alignment, size_t size) {
     auto page_size = HERMES_SYSTEM_INFO->page_size_;
     size_t new_size = size;
     size_t page_off = size % alignment;
@@ -536,19 +669,13 @@ namespace std {
 template <>
 struct hash<hshm::ipc::AllocatorId> {
   HSHM_INLINE_CROSS std::size_t operator()(
-    const hshm::ipc::AllocatorId &key) const {
+      const hshm::ipc::AllocatorId &key) const {
     return hshm::hash<uint64_t>{}(key.int_);
   }
 };
 
 }  // namespace std
 
-#define IS_SHM_OFFSET_POINTER(T) \
-  std::is_same_v<T, OffsetPointer> || \
-  std::is_same_v<T, AtomicOffsetPointer>
-
-#define IS_SHM_POINTER(T) \
-  std::is_same_v<T, Pointer> || \
-  std::is_same_v<T, AtomicPointer>
+#define IS_SHM_POINTER(T) std::is_base_of_v<hipc::ShmPointer, T>
 
 #endif  // HERMES_MEMORY_MEMORY_H_
