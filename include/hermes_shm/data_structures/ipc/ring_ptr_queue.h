@@ -228,6 +228,8 @@ class ring_ptr_queue_base : public ShmContainer {
     uint32_t idx = tail % depth;
     if constexpr (std::is_arithmetic<T>::value) {
       queue[idx] = MARK_FIRST_BIT(T, val);
+    } else if constexpr (std::is_pointer_v<T>) {
+      queue[idx] = (T)MARK_FIRST_BIT(size_t, (size_t)val);
     } else if constexpr (IS_SHM_OFFSET_POINTER(T)) {
       queue[idx] = T(MARK_FIRST_BIT(size_t, val.off_.load()));
     } else if constexpr (IS_SHM_POINTER(T)) {
@@ -261,26 +263,11 @@ class ring_ptr_queue_base : public ShmContainer {
     T &entry = (*queue_)[idx];
 
     // Check if bit is marked
-    bool is_marked;
-    if constexpr (std::is_arithmetic_v<T> || std::is_pointer_v<T>) {
-      is_marked = IS_FIRST_BIT_MARKED(T, entry);
-    } else {
-      is_marked = IS_FIRST_BIT_MARKED(size_t, entry.off_.load());
-    }
+    bool is_marked = IsMarked(entry);
 
     // Complete dequeue if marked
     if (is_marked) {
-      if constexpr (std::is_arithmetic<T>::value) {
-        val = UNMARK_FIRST_BIT(T, entry);
-        entry = 0;
-      } else if constexpr (IS_SHM_OFFSET_POINTER(T)) {
-        val = T(UNMARK_FIRST_BIT(size_t, entry.off_.load()));
-        entry.off_ = 0;
-      } else if constexpr (IS_SHM_POINTER(T)) {
-        val =
-            T(entry.allocator_id_, UNMARK_FIRST_BIT(size_t, entry.off_.load()));
-        entry.off_ = 0;
-      }
+      Unmark(val, entry);
       head_.fetch_add(1);
       return qtok_t(head);
     } else {
@@ -303,18 +290,68 @@ class ring_ptr_queue_base : public ShmContainer {
     T &entry = (*queue_)[idx];
 
     // Check if bit is marked
-    bool is_marked;
-    if constexpr (std::is_arithmetic<T>::value) {
-      is_marked = IS_FIRST_BIT_MARKED(T, entry);
-    } else {
-      is_marked = IS_FIRST_BIT_MARKED(size_t, entry.off_.load());
-    }
-
+    bool is_marked = IsMarked(entry);
     if (is_marked) {
       head_.fetch_add(1);
       return qtok_t(head);
     } else {
       return qtok_t::GetNull();
+    }
+  }
+
+  /** Consumer pops the tail object */
+  HSHM_CROSS_FUN
+  qtok_t pop_back(T &val) {
+    // Don't pop if there's no entries
+    qtok_id head = head_.load();
+    qtok_id tail = tail_.load();
+    if (head >= tail) {
+      return qtok_t::GetNull();
+    }
+    tail -= 1;
+
+    // Pop the element at tail
+    qtok_id idx = tail % (*queue_).size();
+    T &entry = (*queue_)[idx];
+
+    // Check if bit is marked
+    bool is_marked = IsMarked(entry);
+
+    // Complete dequeue if marked
+    if (is_marked) {
+      Unmark(val, entry);
+      tail_.fetch_sub(1);
+      return qtok_t(tail);
+    } else {
+      return qtok_t::GetNull();
+    }
+  }
+
+  /** Check if a pointer is marked */
+  bool IsMarked(T &entry) {
+    if constexpr (std::is_arithmetic_v<T>) {
+      return IS_FIRST_BIT_MARKED(T, entry);
+    } else if constexpr (std::is_pointer_v<T>) {
+      return IS_FIRST_BIT_MARKED(size_t, (size_t)entry);
+    } else {
+      return IS_FIRST_BIT_MARKED(size_t, entry.off_.load());
+    }
+  }
+
+  /** Unmark pointer */
+  void Unmark(T &val, T &entry) {
+    if constexpr (std::is_arithmetic<T>::value) {
+      val = UNMARK_FIRST_BIT(T, entry);
+      entry = 0;
+    } else if constexpr (std::is_pointer_v<T>) {
+      val = (T)UNMARK_FIRST_BIT(size_t, (size_t)entry);
+      entry = 0;
+    } else if constexpr (IS_SHM_OFFSET_POINTER(T)) {
+      val = T(UNMARK_FIRST_BIT(size_t, entry.off_.load()));
+      entry.off_ = 0;
+    } else if constexpr (IS_SHM_POINTER(T)) {
+      val = T(entry.allocator_id_, UNMARK_FIRST_BIT(size_t, entry.off_.load()));
+      entry.off_ = 0;
     }
   }
 

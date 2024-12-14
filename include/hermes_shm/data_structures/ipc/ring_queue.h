@@ -292,6 +292,30 @@ class ring_queue_base : public ShmContainer {
     }
   }
 
+  /** Consumer pops the tail object */
+  HSHM_CROSS_FUN
+  qtok_t pop_back(T &val) {
+    // Don't pop if there's no entries
+    qtok_id head = head_.load();
+    qtok_id tail = tail_.load();
+    if (head >= tail) {
+      return qtok_t::GetNull();
+    }
+    tail -= 1;
+
+    // Pop the element at tail
+    qtok_id idx = tail % (*queue_).size();
+    pair_t &entry = (*queue_)[idx];
+    if (entry.GetFirst().Any(1)) {
+      val = std::move(entry.GetSecond());
+      entry.GetFirst().Clear();
+      tail_.fetch_sub(1);
+      return qtok_t(tail);
+    } else {
+      return qtok_t::GetNull();
+    }
+  }
+
   /** Consumer peeks an object */
   HSHM_CROSS_FUN
   qtok_t peek(T *&val, int off = 0) {

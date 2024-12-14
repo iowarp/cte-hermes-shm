@@ -1,18 +1,18 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-* Distributed under BSD 3-Clause license.                                   *
-* Copyright by The HDF Group.                                               *
-* Copyright by the Illinois Institute of Technology.                        *
-* All rights reserved.                                                      *
-*                                                                           *
-* This file is part of Hermes. The full Hermes copyright notice, including  *
-* terms governing use, modification, and redistribution, is contained in    *
-* the COPYING file, which can be found at the top directory. If you do not  *
-* have access to the file, you may request a copy from help@hdfgroup.org.   *
-* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+ * Distributed under BSD 3-Clause license.                                   *
+ * Copyright by The HDF Group.                                               *
+ * Copyright by the Illinois Institute of Technology.                        *
+ * All rights reserved.                                                      *
+ *                                                                           *
+ * This file is part of Hermes. The full Hermes copyright notice, including  *
+ * terms governing use, modification, and redistribution, is contained in    *
+ * the COPYING file, which can be found at the top directory. If you do not  *
+ * have access to the file, you may request a copy from help@hdfgroup.org.   *
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include "basic_test.h"
-#include "test_init.h"
 #include "queue.h"
+#include "test_init.h"
 
 /**
  * TEST DYNAMIC QUEUE
@@ -28,8 +28,8 @@ TEST_CASE("TestDynamicQueueInt") {
 TEST_CASE("TestDynamicQueueString") {
   auto *alloc = HSHM_DEFAULT_ALLOC;
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
-  ProduceThenConsume<hipc::dynamic_queue<hipc::string>, hipc::string>(
-    1, 1, 32, 32);
+  ProduceThenConsume<hipc::dynamic_queue<hipc::string>, hipc::string>(1, 1, 32,
+                                                                      32);
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
 }
 
@@ -43,11 +43,10 @@ TEST_CASE("TestDynamicQueueIntMultiThreaded") {
 TEST_CASE("TestDynamicQueueStringMultiThreaded") {
   auto *alloc = HSHM_DEFAULT_ALLOC;
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
-  ProduceAndConsume<hipc::dynamic_queue<hipc::string>, hipc::string>(
-    8, 1, 8192, 32);
+  ProduceAndConsume<hipc::dynamic_queue<hipc::string>, hipc::string>(8, 1, 8192,
+                                                                     32);
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
 }
-
 
 /**
  * TEST MPSC QUEUE
@@ -63,8 +62,8 @@ TEST_CASE("TestMpscQueueInt") {
 TEST_CASE("TestMpscQueueString") {
   auto *alloc = HSHM_DEFAULT_ALLOC;
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
-  ProduceThenConsume<hipc::mpsc_queue<hipc::string>, hipc::string>(
-    1, 1, 32, 32);
+  ProduceThenConsume<hipc::mpsc_queue<hipc::string>, hipc::string>(1, 1, 32,
+                                                                   32);
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
 }
 
@@ -78,8 +77,8 @@ TEST_CASE("TestMpscQueueIntMultiThreaded") {
 TEST_CASE("TestMpscQueueStringMultiThreaded") {
   auto *alloc = HSHM_DEFAULT_ALLOC;
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
-  ProduceAndConsume<hipc::mpsc_queue<hipc::string>, hipc::string>(
-    8, 1, 8192, 32);
+  ProduceAndConsume<hipc::mpsc_queue<hipc::string>, hipc::string>(8, 1, 8192,
+                                                                  32);
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
 }
 
@@ -136,7 +135,6 @@ TEST_CASE("TestMpscPointerQueueCompile") {
   REQUIRE(off_p == hipc::Pointer(AllocatorId(5, 2), 1));
 }
 
-
 /**
  * TEST SPSC QUEUE
  * */
@@ -151,7 +149,47 @@ TEST_CASE("TestSpscQueueInt") {
 TEST_CASE("TestSpscQueueString") {
   auto *alloc = HSHM_DEFAULT_ALLOC;
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
-  ProduceThenConsume<hipc::spsc_queue<hipc::string>, hipc::string>(
-    1, 1, 32, 32);
+  ProduceThenConsume<hipc::spsc_queue<hipc::string>, hipc::string>(1, 1, 32,
+                                                                   32);
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+}
+
+TEST_CASE("TestSpscQueuePopBack") {
+  auto *alloc = HSHM_DEFAULT_ALLOC;
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+  PAGE_DIVIDE("TEST") {
+    hshm::spsc_queue<int> queue(alloc);
+    queue.emplace(1);
+    queue.emplace(2);
+    queue.emplace(3);
+    int val;
+    queue.pop_back(val);
+    REQUIRE(val == 3);
+    queue.pop_back(val);
+    REQUIRE(val == 2);
+    queue.pop_back(val);
+    REQUIRE(val == 1);
+    REQUIRE(queue.pop_back(val).IsNull());
+  }
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+}
+
+TEST_CASE("TestSpscPtrQueuePopBack") {
+  auto *alloc = HSHM_DEFAULT_ALLOC;
+  PAGE_DIVIDE("TEST") {
+    REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+    hshm::spsc_ptr_queue<void *> queue(alloc);
+    queue.emplace((void *)1);
+    queue.emplace((void *)2);
+    queue.emplace((void *)3);
+    void *val;
+    queue.pop_back(val);
+    REQUIRE(val == (void *)3);
+    queue.pop_back(val);
+    REQUIRE(val == (void *)2);
+    queue.pop_back(val);
+    REQUIRE(val == (void *)1);
+    REQUIRE(queue.pop_back(val).IsNull());
+  }
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
 }
