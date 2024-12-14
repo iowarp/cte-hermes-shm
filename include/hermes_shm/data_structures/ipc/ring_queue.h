@@ -194,7 +194,7 @@ class ring_queue_base : public ShmContainer {
   void resize(size_t new_depth) { queue_->resize(new_depth); }
 
   /** Resize (wrapper) */
-  HSHM_INLINE_CROSS
+  HSHM_INLINE_CROSS_FUN
   void Resize(size_t new_depth) { resize(new_depth); }
 
   /** Construct an element at \a pos position in the list */
@@ -243,7 +243,7 @@ class ring_queue_base : public ShmContainer {
 
   /** Push an elemnt in the list (wrapper) */
   template <typename... Args>
-  HSHM_INLINE_CROSS qtok_t push(Args &&...args) {
+  HSHM_INLINE_CROSS_FUN qtok_t push(Args &&...args) {
     return emplace(std::forward<Args>(args)...);
   }
 
@@ -374,11 +374,11 @@ class ring_queue_base : public ShmContainer {
   }
 
   /** Get size (wrapper) */
-  HSHM_INLINE_CROSS
+  HSHM_INLINE_CROSS_FUN
   size_t size() { return GetSize(); }
 
   /** Get size (wrapper) */
-  HSHM_INLINE_CROSS
+  HSHM_INLINE_CROSS_FUN
   size_t Size() { return GetSize(); }
 };
 

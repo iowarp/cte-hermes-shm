@@ -11,7 +11,7 @@
 
 namespace hshm::ipc {
 
-template<int LENGTH, bool WithNull, int FULL_LENGTH = LENGTH + WithNull>
+template <int LENGTH, bool WithNull, int FULL_LENGTH = LENGTH + WithNull>
 class chararr_templ {
  public:
   char buf_[FULL_LENGTH];
@@ -26,9 +26,7 @@ class chararr_templ {
   chararr_templ() = default;
 
   /** Size-based constructor */
-  HSHM_INLINE_CROSS explicit chararr_templ(size_t size) {
-    resize(size);
-  }
+  HSHM_INLINE_CROSS_FUN explicit chararr_templ(size_t size) { resize(size); }
 
   /**====================================
    * Copy Constructors
@@ -77,7 +75,7 @@ class chararr_templ {
   }
 
   /** Copy assignment operator */
-  HSHM_INLINE_CROSS chararr_templ& operator=(const chararr_templ &other) {
+  HSHM_INLINE_CROSS_FUN chararr_templ &operator=(const chararr_templ &other) {
     if (this != &other) {
       length_ = other.size();
       memcpy(buf_, other.data(), length_);
@@ -102,7 +100,7 @@ class chararr_templ {
   }
 
   /** Move assignment operator */
-  HSHM_CROSS_FUN chararr_templ& operator=(chararr_templ &&other) noexcept {
+  HSHM_CROSS_FUN chararr_templ &operator=(chararr_templ &&other) noexcept {
     if (this != &other) {
       length_ = other.length_;
       memcpy(buf_, other.buf_, length_);
@@ -118,34 +116,22 @@ class chararr_templ {
    * ===================================*/
 
   /** Destroy and resize */
-  HSHM_CROSS_FUN void resize(size_t new_size) {
-    length_ = new_size;
-  }
+  HSHM_CROSS_FUN void resize(size_t new_size) { length_ = new_size; }
 
   /** Reference data */
-  HSHM_INLINE_CROSS char* data() {
-    return buf_;
-  }
+  HSHM_INLINE_CROSS_FUN char *data() { return buf_; }
 
   /** Reference data */
-  HSHM_INLINE_CROSS const char* data() const {
-    return buf_;
-  }
+  HSHM_INLINE_CROSS_FUN const char *data() const { return buf_; }
 
   /** Reference data */
-  HSHM_INLINE_CROSS char* c_str() {
-    return buf_;
-  }
+  HSHM_INLINE_CROSS_FUN char *c_str() { return buf_; }
 
   /** Reference data */
-  HSHM_INLINE_CROSS const char* c_str() const {
-    return buf_;
-  }
+  HSHM_INLINE_CROSS_FUN const char *c_str() const { return buf_; }
 
   /** Reference size */
-  HSHM_INLINE_CROSS size_t size() const {
-    return length_;
-  }
+  HSHM_INLINE_CROSS_FUN size_t size() const { return length_; }
 
   /** Convert to std::string */
   HSHM_INLINE_HOST const std::string str() const {
@@ -157,12 +143,10 @@ class chararr_templ {
    * ===================================*/
 
   /** Index operator */
-  HSHM_INLINE_CROSS char& operator[](size_t idx) {
-    return buf_[idx];
-  }
+  HSHM_INLINE_CROSS_FUN char &operator[](size_t idx) { return buf_[idx]; }
 
   /** Const index operator */
-  HSHM_INLINE_CROSS const char& operator[](size_t idx) const {
+  HSHM_INLINE_CROSS_FUN const char &operator[](size_t idx) const {
     return buf_[idx];
   }
 
@@ -191,24 +175,24 @@ class chararr_templ {
    * Comparison Operators
    * ===================================*/
 
-#define HERMES_STR_CMP_OPERATOR(op) \
-  HSHM_CROSS_FUN\
-  bool operator TYPE_UNWRAP(op)(const char *other) const { \
+#define HERMES_STR_CMP_OPERATOR(op)                                        \
+  HSHM_CROSS_FUN                                                           \
+  bool operator TYPE_UNWRAP(op)(const char *other) const {                 \
     return hshm::strncmp(data(), size(), other, hshm::strlen(other)) op 0; \
-  } \
-  HSHM_HOST_FUN \
-  bool operator op(const std::string &other) const { \
+  }                                                                        \
+  HSHM_HOST_FUN                                                            \
+  bool operator op(const std::string &other) const {                       \
     return hshm::strncmp(data(), size(), other.data(), other.size()) op 0; \
-  } \
-  HSHM_CROSS_FUN \
-  bool operator op(const chararr_templ &other) const { \
+  }                                                                        \
+  HSHM_CROSS_FUN                                                           \
+  bool operator op(const chararr_templ &other) const {                     \
     return hshm::strncmp(data(), size(), other.data(), other.size()) op 0; \
   }
 
   HERMES_STR_CMP_OPERATOR(==)  // NOLINT
   HERMES_STR_CMP_OPERATOR(!=)  // NOLINT
-  HERMES_STR_CMP_OPERATOR(<)  // NOLINT
-  HERMES_STR_CMP_OPERATOR(>)  // NOLINT
+  HERMES_STR_CMP_OPERATOR(<)   // NOLINT
+  HERMES_STR_CMP_OPERATOR(>)   // NOLINT
   HERMES_STR_CMP_OPERATOR(<=)  // NOLINT
   HERMES_STR_CMP_OPERATOR(>=)  // NOLINT
 #undef HERMES_STR_CMP_OPERATOR
@@ -220,7 +204,7 @@ typedef chararr_templ<4095, true> chararr;
 typedef chararr_templ<31, true> chararr;
 #endif
 
-}  // namespace hshm
+}  // namespace hshm::ipc
 
 namespace hshm {
 template <int LENGTH, bool WithNull>
@@ -230,9 +214,10 @@ using hshm::ipc::chararr;
 
 /** std::hash function for string */
 namespace std {
-template<int LENGTH, bool WithNull>
+template <int LENGTH, bool WithNull>
 struct hash<hshm::chararr_templ<LENGTH, WithNull>> {
-  HSHM_CROSS_FUN size_t operator()(const hshm::chararr_templ<LENGTH, WithNull> &text) const {
+  HSHM_CROSS_FUN size_t
+  operator()(const hshm::chararr_templ<LENGTH, WithNull> &text) const {
     return text.Hash();
   }
 };
@@ -240,9 +225,10 @@ struct hash<hshm::chararr_templ<LENGTH, WithNull>> {
 
 /** hshm::hash function for string */
 namespace hshm {
-template<int LENGTH, bool WithNull>
+template <int LENGTH, bool WithNull>
 struct hash<hshm::chararr_templ<LENGTH, WithNull>> {
-  HSHM_CROSS_FUN size_t operator()(const hshm::chararr_templ<LENGTH, WithNull> &text) const {
+  HSHM_CROSS_FUN size_t
+  operator()(const hshm::chararr_templ<LENGTH, WithNull> &text) const {
     return text.Hash();
   }
 };

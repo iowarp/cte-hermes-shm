@@ -30,7 +30,7 @@ struct HeapAllocator {
   /** Emplace constructor */
   HSHM_CROSS_FUN
   explicit HeapAllocator(size_t region_off, size_t heap_size)
-  : region_off_(region_off), heap_off_(0), heap_size_(heap_size) {}
+      : region_off_(region_off), heap_off_(0), heap_size_(heap_size) {}
 
   /** Explicit initialization */
   HSHM_CROSS_FUN
@@ -49,7 +49,7 @@ struct HeapAllocator {
   }
 
   /** Allocate off heap */
-  HSHM_INLINE_CROSS OffsetPointer AllocateOffset(size_t size) {
+  HSHM_INLINE_CROSS_FUN OffsetPointer AllocateOffset(size_t size) {
     // if (size % 64 != 0) {
     //   size = (size + 63) & ~63;
     // }
@@ -60,10 +60,10 @@ struct HeapAllocator {
     }
     return OffsetPointer(region_off_ + off);
   }
-  
+
   /** Copy assignment operator */
   HSHM_CROSS_FUN
-  HeapAllocator& operator=(const HeapAllocator &other) {
+  HeapAllocator &operator=(const HeapAllocator &other) {
     region_off_ = other.region_off_;
     heap_off_ = other.heap_off_.load();
     heap_size_ = other.heap_size_;

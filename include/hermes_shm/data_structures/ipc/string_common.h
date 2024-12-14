@@ -6,14 +6,14 @@
 #define STRING_COMMON_H
 
 #include <cstdint>
-#include "hermes_shm/constants/macros.h"
-#include <string>
 #include <cstring>
+#include <string>
+
+#include "hermes_shm/constants/macros.h"
 
 namespace hshm {
 
-HSHM_INLINE_CROSS static
-size_t strlen(const char *buf) {
+HSHM_INLINE_CROSS_FUN static size_t strlen(const char *buf) {
   size_t length = 0;
   while (buf[length] != 0) {
     ++length;
@@ -21,8 +21,7 @@ size_t strlen(const char *buf) {
   return length;
 }
 
-HSHM_INLINE_CROSS static
-size_t strnlen(const char *buf, size_t max_len) {
+HSHM_INLINE_CROSS_FUN static size_t strnlen(const char *buf, size_t max_len) {
   size_t length = 0;
   for (; length < max_len; ++length) {
     if (buf[length] == 0) {
@@ -32,9 +31,8 @@ size_t strnlen(const char *buf, size_t max_len) {
   return length;
 }
 
-HSHM_INLINE_CROSS static
-int strncmp(const char *a, size_t len_a,
-            const char *b, size_t len_b) {
+HSHM_INLINE_CROSS_FUN static int strncmp(const char *a, size_t len_a,
+                                         const char *b, size_t len_b) {
   if (len_a != len_b) {
     return int((int64_t)len_a - (int64_t)len_b);
   }
@@ -48,4 +46,4 @@ int strncmp(const char *a, size_t len_a,
 
 }  // namespace hshm
 
-#endif //STRING_COMMON_H
+#endif  // STRING_COMMON_H

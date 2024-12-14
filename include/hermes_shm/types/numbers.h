@@ -14,6 +14,7 @@
 #define HERMES_SHM_INCLUDE_HERMES_SHM_TYPES_NUMBERS_H_
 
 #include <cstdint>
+
 #include "hermes_shm/constants/macros.h"
 
 namespace hshm {
@@ -29,68 +30,50 @@ typedef int64_t i64;  /**< 64-bit signed integer */
 typedef float f32;    /**< 32-bit float */
 typedef double f64;   /**< 64-bit float */
 
-typedef char byte; /**< Signed char */
-typedef unsigned char ubyte; /**< Unsigned char */
-typedef short short_int; /**< Signed int */
-typedef unsigned short short_uint; /**< Unsigned int */
-typedef int reg_int; /**< Signed int */
-typedef unsigned reg_uint; /**< Unsigned int */
-typedef long long big_int; /**< Long long */
+typedef char byte;                   /**< Signed char */
+typedef unsigned char ubyte;         /**< Unsigned char */
+typedef short short_int;             /**< Signed int */
+typedef unsigned short short_uint;   /**< Unsigned int */
+typedef int reg_int;                 /**< Signed int */
+typedef unsigned reg_uint;           /**< Unsigned int */
+typedef long long big_int;           /**< Long long */
 typedef unsigned long long big_uint; /**< Unsigned long long */
 
 struct ThreadId {
   hshm::u64 tid_;
 
-  HSHM_INLINE_CROSS
+  HSHM_INLINE_CROSS_FUN
   ThreadId() = default;
 
-  HSHM_INLINE_CROSS
+  HSHM_INLINE_CROSS_FUN
   explicit ThreadId(hshm::u64 tid) : tid_(tid) {}
 
-  HSHM_INLINE_CROSS
-  static ThreadId GetNull() {
-    return ThreadId{(hshm::u64)-1};
-  }
+  HSHM_INLINE_CROSS_FUN
+  static ThreadId GetNull() { return ThreadId{(hshm::u64)-1}; }
 
-  HSHM_INLINE_CROSS
-  bool IsNull() const {
-    return tid_ == (hshm::u64)-1;
-  }
+  HSHM_INLINE_CROSS_FUN
+  bool IsNull() const { return tid_ == (hshm::u64)-1; }
 
-  HSHM_INLINE_CROSS
-  void SetNull() {
-    tid_ = (hshm::u64)-1;
-  }
+  HSHM_INLINE_CROSS_FUN
+  void SetNull() { tid_ = (hshm::u64)-1; }
 
-  HSHM_INLINE_CROSS
-  bool operator==(const ThreadId &other) const {
-    return tid_ == other.tid_;
-  }
+  HSHM_INLINE_CROSS_FUN
+  bool operator==(const ThreadId &other) const { return tid_ == other.tid_; }
 
-  HSHM_INLINE_CROSS
-  bool operator!=(const ThreadId &other) const {
-    return tid_ != other.tid_;
-  }
+  HSHM_INLINE_CROSS_FUN
+  bool operator!=(const ThreadId &other) const { return tid_ != other.tid_; }
 
-  HSHM_INLINE_CROSS
-  bool operator<(const ThreadId &other) const {
-    return tid_ < other.tid_;
-  }
+  HSHM_INLINE_CROSS_FUN
+  bool operator<(const ThreadId &other) const { return tid_ < other.tid_; }
 
-  HSHM_INLINE_CROSS
-  bool operator>(const ThreadId &other) const {
-    return tid_ > other.tid_;
-  }
+  HSHM_INLINE_CROSS_FUN
+  bool operator>(const ThreadId &other) const { return tid_ > other.tid_; }
 
-  HSHM_INLINE_CROSS
-  bool operator<=(const ThreadId &other) const {
-    return tid_ <= other.tid_;
-  }
+  HSHM_INLINE_CROSS_FUN
+  bool operator<=(const ThreadId &other) const { return tid_ <= other.tid_; }
 
-  HSHM_INLINE_CROSS
-  bool operator>=(const ThreadId &other) const {
-    return tid_ >= other.tid_;
-  }
+  HSHM_INLINE_CROSS_FUN
+  bool operator>=(const ThreadId &other) const { return tid_ >= other.tid_; }
 };
 
 #ifndef HERMES_ENABLE_CUDA

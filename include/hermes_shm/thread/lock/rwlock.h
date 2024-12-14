@@ -10,11 +10,11 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-
 #ifndef HERMES_THREAD_RWLOCK_H_
 #define HERMES_THREAD_RWLOCK_H_
 
 #include <hermes_shm/constants/macros.h>
+
 #include "hermes_shm/thread/lock.h"
 #include "hermes_shm/thread/thread_model_manager.h"
 #include "hermes_shm/types/atomic.h"
@@ -44,11 +44,11 @@ struct RwLock {
   /** Default constructor */
   HSHM_CROSS_FUN
   RwLock()
-  : readers_(0),
-    writers_(0),
-    ticket_(0),
-    mode_(RwLockMode::kNone),
-    cur_writer_(0) {}
+      : readers_(0),
+        writers_(0),
+        ticket_(0),
+        mode_(RwLockMode::kNone),
+        cur_writer_(0) {}
 
   /** Explicit constructor */
   HSHM_CROSS_FUN
@@ -67,15 +67,15 @@ struct RwLock {
   /** Move constructor */
   HSHM_CROSS_FUN
   RwLock(RwLock &&other) noexcept
-  : readers_(other.readers_.load()),
-    writers_(other.writers_.load()),
-    ticket_(other.ticket_.load()),
-    mode_(other.mode_.load()),
-    cur_writer_(other.cur_writer_.load()) {}
+      : readers_(other.readers_.load()),
+        writers_(other.writers_.load()),
+        ticket_(other.ticket_.load()),
+        mode_(other.mode_.load()),
+        cur_writer_(other.cur_writer_.load()) {}
 
   /** Move assignment operator */
   HSHM_CROSS_FUN
-  RwLock& operator=(RwLock &&other) noexcept {
+  RwLock &operator=(RwLock &&other) noexcept {
     if (this != &other) {
       readers_ = other.readers_.load();
       writers_ = other.writers_.load();
@@ -105,7 +105,7 @@ struct RwLock {
         if (ret) {
 #ifdef HERMES_DEBUG_LOCK
           owner_ = owner;
-        HILOG(kDebug, "Acquired read lock for {}", owner);
+          HILOG(kDebug, "Acquired read lock for {}", owner);
 #endif
           return;
         }
@@ -116,9 +116,7 @@ struct RwLock {
 
   /** Release read lock */
   HSHM_CROSS_FUN
-  void ReadUnlock() {
-    readers_.fetch_sub(1);
-  }
+  void ReadUnlock() { readers_.fetch_sub(1); }
 
   /** Acquire write lock */
   HSHM_CROSS_FUN
@@ -142,7 +140,7 @@ struct RwLock {
         if (cur_writer == tkt) {
 #ifdef HERMES_DEBUG_LOCK
           owner_ = owner;
-        HILOG(kDebug, "Acquired write lock for {}", owner);
+          HILOG(kDebug, "Acquired write lock for {}", owner);
 #endif
           return;
         }
@@ -160,7 +158,7 @@ struct RwLock {
 
  private:
   /** Update the mode of the lock */
-  HSHM_INLINE_CROSS
+  HSHM_INLINE_CROSS_FUN
   void UpdateMode(RwLockMode::Type &mode) {
     // When # readers is 0, there is a lag to when the mode is updated
     // When # writers is 0, there is a lag to when the mode is updated
@@ -180,15 +178,13 @@ struct ScopedRwReadLock {
   /** Acquire the read lock */
   HSHM_CROSS_FUN
   explicit ScopedRwReadLock(RwLock &lock, uint32_t owner)
-    : lock_(lock), is_locked_(false) {
+      : lock_(lock), is_locked_(false) {
     Lock(owner);
   }
 
   /** Release the read lock */
   HSHM_CROSS_FUN
-  ~ScopedRwReadLock() {
-    Unlock();
-  }
+  ~ScopedRwReadLock() { Unlock(); }
 
   /** Explicitly acquire read lock */
   HSHM_CROSS_FUN
@@ -217,15 +213,13 @@ struct ScopedRwWriteLock {
   /** Acquire the write lock */
   HSHM_CROSS_FUN
   explicit ScopedRwWriteLock(RwLock &lock, uint32_t owner)
-  : lock_(lock), is_locked_(false) {
+      : lock_(lock), is_locked_(false) {
     Lock(owner);
   }
 
   /** Release the write lock */
   HSHM_CROSS_FUN
-  ~ScopedRwWriteLock() {
-    Unlock();
-  }
+  ~ScopedRwWriteLock() { Unlock(); }
 
   /** Explicity acquire the write lock */
   HSHM_CROSS_FUN

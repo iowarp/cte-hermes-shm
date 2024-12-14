@@ -13,10 +13,11 @@
 #ifndef HERMES_THREAD_THREAD_H_
 #define HERMES_THREAD_THREAD_H_
 
-#include <vector>
+#include <atomic>
 #include <cstdint>
 #include <memory>
-#include <atomic>
+#include <vector>
+
 #include "hermes_shm/types/bitfield.h"
 #include "hermes_shm/types/numbers.h"
 
@@ -33,12 +34,7 @@
 namespace hshm {
 
 /** Available threads that are mapped */
-enum class ThreadType {
-  kNone,
-  kPthread,
-  kArgobots,
-  kCuda
-};
+enum class ThreadType { kNone, kPthread, kArgobots, kCuda };
 
 }  // namespace hshm
 
@@ -49,9 +45,8 @@ class ThreadLocalData {
   // HSHM_CROSS_FUN
   // virtual void destroy() = 0;
 
-  template<typename TLS>
-  HSHM_CROSS_FUN
-  static void destroy_wrap(void *data) {
+  template <typename TLS>
+  HSHM_CROSS_FUN static void destroy_wrap(void *data) {
     if (data) {
       static_cast<TLS *>(data)->destroy();
     }
@@ -75,7 +70,7 @@ class ThreadModel {
 
  public:
   /** Initializer */
-  HSHM_INLINE_CROSS
+  HSHM_INLINE_CROSS_FUN
   ThreadModel(ThreadType type) : type_(type) {}
 
   /** Sleep thread for a period of time */
@@ -91,10 +86,8 @@ class ThreadModel {
   virtual ThreadId GetTid() = 0;
 
   /** Get the thread model type */
-  HSHM_INLINE_CROSS
-  ThreadType GetType() {
-    return type_;
-  }
+  HSHM_INLINE_CROSS_FUN
+  ThreadType GetType() { return type_; }
 };
 
 }  // namespace hshm::thread

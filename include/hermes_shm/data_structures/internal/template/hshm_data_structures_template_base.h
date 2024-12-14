@@ -14,6 +14,9 @@ using iqueue = HSHM_NS::iqueue<T, ALLOC_T>;
 template <typename T>
 using list = HSHM_NS::list<T, ALLOC_T>;
 
+template <typename T>
+using spsc_fifo_list_queue = HSHM_NS::spsc_fifo_list_queue<T, ALLOC_T>;
+
 template <typename FirstT, typename SecondT>
 using pair = HSHM_NS::pair<FirstT, SecondT, ALLOC_T>;
 
@@ -61,9 +64,11 @@ using unordered_map = HSHM_NS::unordered_map<Key, T, Hash, ALLOC_T>;
 template <typename T>
 using vector = HSHM_NS::vector<T, ALLOC_T>;
 
-template <typename T> using spsc_key_set = HSHM_NS::spsc_key_set<T, ALLOC_T>;
+template <typename T>
+using spsc_key_set = HSHM_NS::spsc_key_set<T, ALLOC_T>;
 
-template <typename T> using mpmc_key_set = HSHM_NS::mpmc_key_set<T, ALLOC_T>;
+template <typename T>
+using mpmc_key_set = HSHM_NS::mpmc_key_set<T, ALLOC_T>;
 
 template <typename T>
 using dynamic_queue = HSHM_NS::dynamic_queue<T, ALLOC_T>;

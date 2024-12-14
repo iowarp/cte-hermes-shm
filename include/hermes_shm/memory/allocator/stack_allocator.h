@@ -10,14 +10,14 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-
 #ifndef HERMES_MEMORY_ALLOCATOR_STACK_ALLOCATOR_H_
 #define HERMES_MEMORY_ALLOCATOR_STACK_ALLOCATOR_H_
+
+#include <hermes_shm/memory/allocator/mp_page.h>
 
 #include "allocator.h"
 #include "heap.h"
 #include "hermes_shm/thread/lock.h"
-#include <hermes_shm/memory/allocator/mp_page.h>
 
 namespace hshm::ipc {
 
@@ -29,10 +29,8 @@ struct _StackAllocatorHeader : public AllocatorHeader {
   _StackAllocatorHeader() = default;
 
   HSHM_CROSS_FUN
-  void Configure(AllocatorId alloc_id,
-                 size_t custom_header_size,
-                 size_t region_off,
-                 size_t region_size) {
+  void Configure(AllocatorId alloc_id, size_t custom_header_size,
+                 size_t region_off, size_t region_size) {
     AllocatorHeader::Configure(alloc_id, AllocatorType::kStackAllocator,
                                custom_header_size);
     heap_.shm_init(region_off, region_size);
@@ -51,23 +49,20 @@ class _StackAllocator : public Allocator {
    * Allocator constructor
    * */
   HSHM_CROSS_FUN
-  _StackAllocator()
-  : header_(nullptr) {}
+  _StackAllocator() : header_(nullptr) {}
 
   /**
    * Initialize the allocator in shared memory
    * */
   HSHM_CROSS_FUN
-  void shm_init(AllocatorId id,
-                size_t custom_header_size,
-                char *buffer,
+  void shm_init(AllocatorId id, size_t custom_header_size, char *buffer,
                 size_t buffer_size) {
     type_ = AllocatorType::kStackAllocator;
     id_ = id;
     buffer_ = buffer;
     buffer_size_ = buffer_size;
-    header_ = reinterpret_cast<_StackAllocatorHeader*>(buffer_);
-    custom_header_ = reinterpret_cast<char*>(header_ + 1);
+    header_ = reinterpret_cast<_StackAllocatorHeader *>(buffer_);
+    custom_header_ = reinterpret_cast<char *>(header_ + 1);
     size_t region_off = (custom_header_ - buffer_) + custom_header_size;
     size_t region_size = buffer_size_ - region_off;
     header_->Configure(id, custom_header_size, region_off, region_size);
@@ -79,14 +74,13 @@ class _StackAllocator : public Allocator {
    * Attach an existing allocator from shared memory
    * */
   HSHM_CROSS_FUN
-  void shm_deserialize(char *buffer,
-                       size_t buffer_size) {
+  void shm_deserialize(char *buffer, size_t buffer_size) {
     buffer_ = buffer;
     buffer_size_ = buffer_size;
-    header_ = reinterpret_cast<_StackAllocatorHeader*>(buffer_);
+    header_ = reinterpret_cast<_StackAllocatorHeader *>(buffer_);
     type_ = header_->allocator_type_;
     id_ = header_->allocator_id_;
-    custom_header_ = reinterpret_cast<char*>(header_ + 1);
+    custom_header_ = reinterpret_cast<char *>(header_ + 1);
     heap_ = &header_->heap_;
   }
 
@@ -94,7 +88,7 @@ class _StackAllocator : public Allocator {
    * Allocate a memory of \a size size. The page allocator cannot allocate
    * memory larger than the page size.
    * */
-  HSHM_INLINE_CROSS
+  HSHM_INLINE_CROSS_FUN
   OffsetPointer SubAllocateOffset(size_t size) {
     return heap_->AllocateOffset(size);
   }
@@ -113,8 +107,7 @@ class _StackAllocator : public Allocator {
    * memory larger than the page size.
    * */
   HSHM_CROSS_FUN
-  OffsetPointer AllocateOffset(const hipc::MemContext &ctx,
-                               size_t size) {
+  OffsetPointer AllocateOffset(const hipc::MemContext &ctx, size_t size) {
     size += sizeof(MpPage);
     OffsetPointer p = heap_->AllocateOffset(size);
     auto hdr = Convert<MpPage>(p);
@@ -130,8 +123,8 @@ class _StackAllocator : public Allocator {
    * alignment.
    * */
   HSHM_CROSS_FUN
-  OffsetPointer AlignedAllocateOffset(const hipc::MemContext &ctx,
-                                      size_t size, size_t alignment) {
+  OffsetPointer AlignedAllocateOffset(const hipc::MemContext &ctx, size_t size,
+                                      size_t alignment) {
     HERMES_THROW_ERROR(NOT_IMPLEMENTED, "AlignedAllocateOffset");
   }
 
@@ -141,16 +134,15 @@ class _StackAllocator : public Allocator {
    * @return whether or not the pointer p was changed
    * */
   HSHM_CROSS_FUN
-  OffsetPointer ReallocateOffsetNoNullCheck(
-      const hipc::MemContext &ctx,
-      OffsetPointer p, size_t new_size) {
+  OffsetPointer ReallocateOffsetNoNullCheck(const hipc::MemContext &ctx,
+                                            OffsetPointer p, size_t new_size) {
     OffsetPointer new_p;
     void *src = Convert<void>(p);
     auto hdr = Convert<MpPage>(p - sizeof(MpPage));
     size_t old_size = hdr->page_size_ - sizeof(MpPage);
-    void *dst = ((AllocT*)this)->AllocatePtr<void, OffsetPointer>(
-      ctx, new_size, new_p);
-    memcpy((void*)dst, (void*)src, old_size);
+    void *dst = ((AllocT *)this)
+                    ->AllocatePtr<void, OffsetPointer>(ctx, new_size, new_p);
+    memcpy((void *)dst, (void *)src, old_size);
     ((AllocT *)this)->Free(ctx, p);
     return new_p;
   }
@@ -159,8 +151,7 @@ class _StackAllocator : public Allocator {
    * Free \a ptr pointer. Null check is performed elsewhere.
    * */
   HSHM_CROSS_FUN
-  void FreeOffsetNoNullCheck(const hipc::MemContext &ctx,
-                             OffsetPointer p) {
+  void FreeOffsetNoNullCheck(const hipc::MemContext &ctx, OffsetPointer p) {
     auto hdr = Convert<MpPage>(p - sizeof(MpPage));
     if (!hdr->IsAllocated()) {
       HERMES_THROW_ERROR(DOUBLE_FREE);
@@ -174,23 +165,19 @@ class _StackAllocator : public Allocator {
    * checking.
    * */
   HSHM_CROSS_FUN
-  size_t GetCurrentlyAllocatedSize() {
-    return header_->total_alloc_.load();
-  }
+  size_t GetCurrentlyAllocatedSize() { return header_->total_alloc_.load(); }
 
   /**
    * Create a globally-unique thread ID
    * */
   HSHM_CROSS_FUN
-  void CreateTls(MemContext &ctx) {
-  }
+  void CreateTls(MemContext &ctx) {}
 
   /**
    * Free a thread-local memory storage
    * */
   HSHM_CROSS_FUN
-  void FreeTls(const hipc::MemContext &ctx) {
-  }
+  void FreeTls(const hipc::MemContext &ctx) {}
 };
 
 typedef BaseAllocator<_StackAllocator> StackAllocator;

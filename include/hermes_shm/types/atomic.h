@@ -13,9 +13,11 @@
 #ifndef HERMES_INCLUDE_HERMES_TYPES_ATOMIC_H_
 #define HERMES_INCLUDE_HERMES_TYPES_ATOMIC_H_
 
-#include <atomic>
 #include <hermes_shm/constants/macros.h>
+
+#include <atomic>
 #include <type_traits>
+
 #include "numbers.h"
 #ifdef HERMES_ENABLE_CUDA
 #include <cuda/atomic>
@@ -24,162 +26,168 @@
 namespace hshm::ipc {
 
 /** Provides the API of an atomic, without being atomic */
-template<typename T>
+template <typename T>
 struct nonatomic {
   T x;
 
   /** Serialization */
   template <typename Ar>
-  void serialize(Ar &ar) {
+  void serialize(Ar& ar) {
     ar(x);
   }
 
   /** Constructor */
-  HSHM_INLINE_CROSS nonatomic() = default;
+  HSHM_INLINE_CROSS_FUN nonatomic() = default;
 
   /** Full constructor */
-  HSHM_INLINE_CROSS nonatomic(T def) : x(def) {}
+  HSHM_INLINE_CROSS_FUN nonatomic(T def) : x(def) {}
 
   /** Copy constructor */
-  HSHM_INLINE_CROSS nonatomic(const nonatomic &other) : x(other.x) {}
+  HSHM_INLINE_CROSS_FUN nonatomic(const nonatomic& other) : x(other.x) {}
 
   /* Move constructor */
-  HSHM_INLINE_CROSS nonatomic(nonatomic &&other) : x(std::move(other.x)) {}
+  HSHM_INLINE_CROSS_FUN nonatomic(nonatomic&& other) : x(std::move(other.x)) {}
 
   /** Copy assign operator */
-  HSHM_INLINE_CROSS nonatomic& operator=(const nonatomic &other) {
+  HSHM_INLINE_CROSS_FUN nonatomic& operator=(const nonatomic& other) {
     x = other.x;
     return *this;
   }
 
   /** Move assign operator */
-  HSHM_INLINE_CROSS nonatomic& operator=(nonatomic &&other) {
+  HSHM_INLINE_CROSS_FUN nonatomic& operator=(nonatomic&& other) {
     x = std::move(other.x);
     return *this;
   }
 
   /** Atomic fetch_add wrapper*/
-  HSHM_INLINE_CROSS T fetch_add(
-      T count, std::memory_order order = std::memory_order_seq_cst) {
-    (void) order;
+  HSHM_INLINE_CROSS_FUN T
+  fetch_add(T count, std::memory_order order = std::memory_order_seq_cst) {
+    (void)order;
     T orig_x = x;
     x += count;
     return orig_x;
   }
 
   /** Atomic fetch_sub wrapper*/
-  HSHM_INLINE_CROSS T fetch_sub(
-      T count, std::memory_order order = std::memory_order_seq_cst) {
-    (void) order;
+  HSHM_INLINE_CROSS_FUN T
+  fetch_sub(T count, std::memory_order order = std::memory_order_seq_cst) {
+    (void)order;
     T orig_x = x;
     x -= count;
     return orig_x;
   }
 
   /** Atomic load wrapper */
-  HSHM_INLINE_CROSS T load(
-      std::memory_order order = std::memory_order_seq_cst) const {
-    (void) order;
+  HSHM_INLINE_CROSS_FUN T
+  load(std::memory_order order = std::memory_order_seq_cst) const {
+    (void)order;
     return x;
   }
 
+  /** Get reference to x */
+  HSHM_INLINE_CROSS_FUN T& ref() { return x; }
+
+  /** Get const reference to x */
+  HSHM_INLINE_CROSS_FUN const T& ref() const { return x; }
+
   /** Atomic exchange wrapper */
-  HSHM_INLINE_CROSS void exchange(
+  HSHM_INLINE_CROSS_FUN void exchange(
       T count, std::memory_order order = std::memory_order_seq_cst) {
-    (void) order;
+    (void)order;
     x = count;
   }
 
   /** Atomic compare exchange weak wrapper */
-  HSHM_INLINE_CROSS bool compare_exchange_weak(T& expected, T desired,
-                                                   std::memory_order order =
-                                                   std::memory_order_seq_cst) {
-    (void) expected; (void) order;
+  HSHM_INLINE_CROSS_FUN bool compare_exchange_weak(
+      T& expected, T desired,
+      std::memory_order order = std::memory_order_seq_cst) {
+    (void)expected;
+    (void)order;
     x = desired;
     return true;
   }
 
   /** Atomic compare exchange strong wrapper */
-  HSHM_INLINE_CROSS bool compare_exchange_strong(T& expected, T desired,
-                                                     std::memory_order order =
-                                                     std::memory_order_seq_cst) {
-    (void) expected; (void) order;
+  HSHM_INLINE_CROSS_FUN bool compare_exchange_strong(
+      T& expected, T desired,
+      std::memory_order order = std::memory_order_seq_cst) {
+    (void)expected;
+    (void)order;
     x = desired;
     return true;
   }
 
   /** Atomic pre-increment operator */
-  HSHM_INLINE_CROSS nonatomic& operator++() {
+  HSHM_INLINE_CROSS_FUN nonatomic& operator++() {
     ++x;
     return *this;
   }
 
   /** Atomic post-increment operator */
-  HSHM_INLINE_CROSS nonatomic operator++(int) {
-    return atomic(x+1);
-  }
+  HSHM_INLINE_CROSS_FUN nonatomic operator++(int) { return atomic(x + 1); }
 
   /** Atomic pre-decrement operator */
-  HSHM_INLINE_CROSS nonatomic& operator--() {
+  HSHM_INLINE_CROSS_FUN nonatomic& operator--() {
     --x;
     return *this;
   }
 
   /** Atomic post-decrement operator */
-  HSHM_INLINE_CROSS nonatomic operator--(int) {
+  HSHM_INLINE_CROSS_FUN nonatomic operator--(int) {
     nonatomic orig_x(x);
     --x;
     return orig_x;
   }
 
   /** Atomic add operator */
-  HSHM_INLINE_CROSS nonatomic operator+(T count) const {
+  HSHM_INLINE_CROSS_FUN nonatomic operator+(T count) const {
     return nonatomic(x + count);
   }
 
   /** Atomic subtract operator */
-  HSHM_INLINE_CROSS nonatomic operator-(T count) const {
+  HSHM_INLINE_CROSS_FUN nonatomic operator-(T count) const {
     return nonatomic(x - count);
   }
 
   /** Atomic add assign operator */
-  HSHM_INLINE_CROSS nonatomic& operator+=(T count) {
+  HSHM_INLINE_CROSS_FUN nonatomic& operator+=(T count) {
     x += count;
     return *this;
   }
 
   /** Atomic subtract assign operator */
-  HSHM_INLINE_CROSS nonatomic& operator-=(T count) {
+  HSHM_INLINE_CROSS_FUN nonatomic& operator-=(T count) {
     x -= count;
     return *this;
   }
 
   /** Atomic assign operator */
-  HSHM_INLINE_CROSS nonatomic& operator=(T count) {
+  HSHM_INLINE_CROSS_FUN nonatomic& operator=(T count) {
     x = count;
     return *this;
   }
 
   /** Equality check (number) */
-  HSHM_INLINE_CROSS bool operator==(T other) const { return (other == x); }
+  HSHM_INLINE_CROSS_FUN bool operator==(T other) const { return (other == x); }
 
   /** Inequality check (number) */
-  HSHM_INLINE_CROSS bool operator!=(T other) const { return (other != x); }
+  HSHM_INLINE_CROSS_FUN bool operator!=(T other) const { return (other != x); }
 
   /** Equality check */
-  HSHM_INLINE_CROSS bool operator==(const nonatomic &other) const {
+  HSHM_INLINE_CROSS_FUN bool operator==(const nonatomic& other) const {
     return (other.x == x);
   }
 
   /** Inequality check */
-  HSHM_INLINE_CROSS bool operator!=(const nonatomic &other) const {
+  HSHM_INLINE_CROSS_FUN bool operator!=(const nonatomic& other) const {
     return (other.x != x);
   }
 };
 
 /** A wrapper for CUDA atomic operations */
 #ifdef HSHM_IS_GPU
-template<typename T>
+template <typename T>
 struct cuda_atomic {
   T x;
 
@@ -190,47 +198,37 @@ struct cuda_atomic {
   HSHM_INLINE_GPU cuda_atomic(T def) : x(def) {}
 
   /** Copy constructor */
-  HSHM_INLINE_GPU cuda_atomic(const cuda_atomic &other) : x(other.x) {}
+  HSHM_INLINE_GPU cuda_atomic(const cuda_atomic& other) : x(other.x) {}
 
   /* Move constructor */
-  HSHM_INLINE_GPU cuda_atomic(cuda_atomic &&other) : x(std::move(other.x)) {}
+  HSHM_INLINE_GPU cuda_atomic(cuda_atomic&& other) : x(std::move(other.x)) {}
 
   /** Copy assign operator */
-  HSHM_INLINE_GPU cuda_atomic& operator=(const cuda_atomic &other) {
+  HSHM_INLINE_GPU cuda_atomic& operator=(const cuda_atomic& other) {
     x = other.x;
     return *this;
   }
 
   /** Move assign operator */
-  HSHM_INLINE_GPU cuda_atomic& operator=(cuda_atomic &&other) {
+  HSHM_INLINE_GPU cuda_atomic& operator=(cuda_atomic&& other) {
     x = std::move(other.x);
     return *this;
   }
 
   /** Atomic fetch_add wrapper*/
-  HSHM_INLINE_GPU T fetch_add(T count) {
-    return atomicAdd(&x, count);
-  }
+  HSHM_INLINE_GPU T fetch_add(T count) { return atomicAdd(&x, count); }
 
   /** Atomic fetch_sub wrapper*/
-  HSHM_INLINE_GPU T fetch_sub(T count) {
-    return atomicAdd(&x, -count);
-  }
+  HSHM_INLINE_GPU T fetch_sub(T count) { return atomicAdd(&x, -count); }
 
   /** Atomic load wrapper */
-  HSHM_INLINE_GPU T load() const {
-    return x;
-  }
+  HSHM_INLINE_GPU T load() const { return x; }
 
   /** Atomic store wrapper */
-  HSHM_INLINE_GPU void store(T count) {
-    exchange(count);
-  }
+  HSHM_INLINE_GPU void store(T count) { exchange(count); }
 
   /** Atomic exchange wrapper */
-  HSHM_INLINE_GPU T exchange(T count) {
-    return atomicExch(&x, count);
-  }
+  HSHM_INLINE_GPU T exchange(T count) { return atomicExch(&x, count); }
 
   /** Atomic compare exchange weak wrapper */
   HSHM_INLINE_GPU bool compare_exchange_weak(T& expected, T desired) {
@@ -249,9 +247,7 @@ struct cuda_atomic {
   }
 
   /** Atomic post-increment operator */
-  HSHM_INLINE_GPU cuda_atomic operator++(int) {
-    return atomic(x + 1);
-  }
+  HSHM_INLINE_GPU cuda_atomic operator++(int) { return atomic(x + 1); }
 
   /** Atomic pre-decrement operator */
   HSHM_INLINE_GPU cuda_atomic& operator--() {
@@ -260,9 +256,7 @@ struct cuda_atomic {
   }
 
   /** Atomic post-decrement operator */
-  HSHM_INLINE_GPU cuda_atomic operator--(int) {
-    return atomic(x - 1);
-  }
+  HSHM_INLINE_GPU cuda_atomic operator--(int) { return atomic(x - 1); }
 
   /** Atomic add operator */
   HSHM_INLINE_GPU cuda_atomic operator+(T count) const {
@@ -303,25 +297,25 @@ struct cuda_atomic {
   }
 
   /** Equality check */
-  HSHM_INLINE_GPU bool operator==(const cuda_atomic &other) const {
+  HSHM_INLINE_GPU bool operator==(const cuda_atomic& other) const {
     return atomicCAS(&x, other.x, other.x);
   }
 
   /** Inequality check */
-  HSHM_INLINE_GPU bool operator!=(const cuda_atomic &other) const {
+  HSHM_INLINE_GPU bool operator!=(const cuda_atomic& other) const {
     return !atomicCAS(&x, other.x, other.x);
   }
 };
 #endif
 
 /** A wrapper around std::atomic */
-template<typename T>
+template <typename T>
 struct std_atomic {
   std::atomic<T> x;
 
   /** Serialization */
   template <typename Ar>
-  void serialize(Ar &ar) {
+  void serialize(Ar& ar) {
     ar(x);
   }
 
@@ -332,44 +326,44 @@ struct std_atomic {
   HSHM_INLINE std_atomic(T def) : x(def) {}
 
   /** Copy constructor */
-  HSHM_INLINE std_atomic(const std_atomic &other) : x(other.x.load()) {}
+  HSHM_INLINE std_atomic(const std_atomic& other) : x(other.x.load()) {}
 
   /* Move constructor */
-  HSHM_INLINE std_atomic(std_atomic &&other) : x(other.x.load()) {}
+  HSHM_INLINE std_atomic(std_atomic&& other) : x(other.x.load()) {}
 
   /** Copy assign operator */
-  HSHM_INLINE std_atomic& operator=(const std_atomic &other) {
+  HSHM_INLINE std_atomic& operator=(const std_atomic& other) {
     x = other.x.load();
     return *this;
   }
 
   /** Move assign operator */
-  HSHM_INLINE std_atomic& operator=(std_atomic &&other) {
+  HSHM_INLINE std_atomic& operator=(std_atomic&& other) {
     x = other.x.load();
     return *this;
   }
 
   /** Atomic fetch_add wrapper*/
-  HSHM_INLINE T fetch_add(
-      T count, std::memory_order order = std::memory_order_seq_cst) {
+  HSHM_INLINE T fetch_add(T count,
+                          std::memory_order order = std::memory_order_seq_cst) {
     return x.fetch_add(count, order);
   }
 
   /** Atomic fetch_sub wrapper*/
-  HSHM_INLINE T fetch_sub(
-      T count, std::memory_order order = std::memory_order_seq_cst) {
+  HSHM_INLINE T fetch_sub(T count,
+                          std::memory_order order = std::memory_order_seq_cst) {
     return x.fetch_sub(count, order);
   }
 
   /** Atomic load wrapper */
-  HSHM_INLINE T load(
-      std::memory_order order = std::memory_order_seq_cst) const {
+  HSHM_INLINE T
+  load(std::memory_order order = std::memory_order_seq_cst) const {
     return x.load(order);
   }
 
   /** Atomic store wrapper */
   HSHM_INLINE void store(T count,
-                                std::memory_order order = std::memory_order_seq_cst) {
+                         std::memory_order order = std::memory_order_seq_cst) {
     x.store(count, order);
   }
 
@@ -380,16 +374,16 @@ struct std_atomic {
   }
 
   /** Atomic compare exchange weak wrapper */
-  HSHM_INLINE bool compare_exchange_weak(T& expected, T desired,
-                                                std::memory_order order =
-                                                std::memory_order_seq_cst) {
+  HSHM_INLINE bool compare_exchange_weak(
+      T& expected, T desired,
+      std::memory_order order = std::memory_order_seq_cst) {
     return x.compare_exchange_weak(expected, desired, order);
   }
 
   /** Atomic compare exchange strong wrapper */
-  HSHM_INLINE bool compare_exchange_strong(T& expected, T desired,
-                                                  std::memory_order order =
-                                                  std::memory_order_seq_cst) {
+  HSHM_INLINE bool compare_exchange_strong(
+      T& expected, T desired,
+      std::memory_order order = std::memory_order_seq_cst) {
     return x.compare_exchange_strong(expected, desired, order);
   }
 
@@ -400,9 +394,7 @@ struct std_atomic {
   }
 
   /** Atomic post-increment operator */
-  HSHM_INLINE std_atomic operator++(int) {
-    return atomic(x + 1);
-  }
+  HSHM_INLINE std_atomic operator++(int) { return atomic(x + 1); }
 
   /** Atomic pre-decrement operator */
   HSHM_INLINE std_atomic& operator--() {
@@ -411,19 +403,13 @@ struct std_atomic {
   }
 
   /** Atomic post-decrement operator */
-  HSHM_INLINE std_atomic operator--(int) {
-    return atomic(x - 1);
-  }
+  HSHM_INLINE std_atomic operator--(int) { return atomic(x - 1); }
 
   /** Atomic add operator */
-  HSHM_INLINE std_atomic operator+(T count) const {
-    return x + count;
-  }
+  HSHM_INLINE std_atomic operator+(T count) const { return x + count; }
 
   /** Atomic subtract operator */
-  HSHM_INLINE std_atomic operator-(T count) const {
-    return x - count;
-  }
+  HSHM_INLINE std_atomic operator-(T count) const { return x - count; }
 
   /** Atomic add assign operator */
   HSHM_INLINE std_atomic& operator+=(T count) {
@@ -450,26 +436,27 @@ struct std_atomic {
   HSHM_INLINE bool operator!=(T other) const { return (other != x); }
 
   /** Equality check */
-  HSHM_INLINE bool operator==(const std_atomic &other) const {
+  HSHM_INLINE bool operator==(const std_atomic& other) const {
     return (other.x == x);
   }
 
   /** Inequality check */
-  HSHM_INLINE bool operator!=(const std_atomic &other) const {
+  HSHM_INLINE bool operator!=(const std_atomic& other) const {
     return (other.x != x);
   }
 };
 
 #ifdef HSHM_IS_HOST
-template<typename T>
+template <typename T>
 using atomic = std_atomic<T>;
 #else
-template<typename T>
+template <typename T>
 using atomic = cuda_atomic<T>;
 #endif
 
-template<typename T, bool is_atomic>
-using opt_atomic = typename std::conditional<is_atomic, atomic<T>, nonatomic<T>>::type;
+template <typename T, bool is_atomic>
+using opt_atomic =
+    typename std::conditional<is_atomic, atomic<T>, nonatomic<T>>::type;
 
 }  // namespace hshm::ipc
 

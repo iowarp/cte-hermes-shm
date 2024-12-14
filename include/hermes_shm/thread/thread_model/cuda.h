@@ -13,19 +13,21 @@
 #ifndef HERMES_SHM_INCLUDE_HERMES_SHM_THREAD_CUDA_H__
 #define HERMES_SHM_INCLUDE_HERMES_SHM_THREAD_CUDA_H__
 
-#include "thread_model.h"
-#include <thallium.hpp>
 #include <errno.h>
-#include "hermes_shm/util/errors.h"
 #include <omp.h>
+
+#include <thallium.hpp>
+
 #include "hermes_shm/introspect/system_info.h"
+#include "hermes_shm/util/errors.h"
+#include "thread_model.h"
 
 namespace hshm::thread {
 
 class Cuda : public ThreadModel {
  public:
   /** Default constructor */
-  HSHM_INLINE_CROSS
+  HSHM_INLINE_CROSS_FUN
   Cuda() : ThreadModel(ThreadType::kCuda) {}
 
   /** Virtual destructor */
@@ -34,40 +36,33 @@ class Cuda : public ThreadModel {
 
   /** Yield the current thread for a period of time */
   HSHM_CROSS_FUN
-  void SleepForUs(size_t us) override {
-  }
+  void SleepForUs(size_t us) override {}
 
   /** Yield thread time slice */
   HSHM_CROSS_FUN
-  void Yield() override {
-  }
+  void Yield() override {}
 
   /** Create thread-local storage */
-  template<typename TLS>
-  HSHM_CROSS_FUN
-  bool CreateTls(ThreadLocalKey &key, TLS *data) {
+  template <typename TLS>
+  HSHM_CROSS_FUN bool CreateTls(ThreadLocalKey &key, TLS *data) {
     return false;
   }
 
   /** Get thread-local storage */
-  template<typename TLS>
-  HSHM_CROSS_FUN
-  TLS* GetTls(const ThreadLocalKey &key) {
+  template <typename TLS>
+  HSHM_CROSS_FUN TLS *GetTls(const ThreadLocalKey &key) {
     return nullptr;
   }
 
   /** Create thread-local storage */
-  template<typename TLS>
-  HSHM_CROSS_FUN
-  bool SetTls(ThreadLocalKey &key, TLS *data) {
+  template <typename TLS>
+  HSHM_CROSS_FUN bool SetTls(ThreadLocalKey &key, TLS *data) {
     return false;
   }
 
   /** Get the TID of the current thread */
   HSHM_CROSS_FUN
-  ThreadId GetTid() override {
-    return ThreadId::GetNull();
-  }
+  ThreadId GetTid() override { return ThreadId::GetNull(); }
 };
 
 }  // namespace hshm::thread

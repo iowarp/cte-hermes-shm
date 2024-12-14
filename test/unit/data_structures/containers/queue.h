@@ -15,6 +15,58 @@
 
 #include "hermes_shm/data_structures/all.h"
 #include "omp.h"
+#include "test_init.h"
+
+struct IntEntry : public hipc::iqueue_entry {
+  int value;
+
+  /** Default constructor */
+  IntEntry() : value(0) {}
+
+  /** Constructor */
+  explicit IntEntry(int val) : value(val) {}
+};
+
+template <typename NewT>
+class VariableMaker {
+ public:
+  static NewT MakeVariable(size_t num) {
+    if constexpr (std::is_arithmetic_v<NewT>) {
+      return static_cast<NewT>(num);
+    } else if constexpr (std::is_same_v<NewT, std::string>) {
+      return std::to_string(num);
+    } else if constexpr (std::is_same_v<NewT, hipc::string>) {
+      return hipc::string(std::to_string(num));
+    } else if constexpr (std::is_same_v<NewT, IntEntry *>) {
+      auto alloc = HSHM_DEFAULT_ALLOC;
+      return alloc->template NewObjLocal<IntEntry>(HSHM_DEFAULT_MEM_CTX, num)
+          .ptr_;
+    } else {
+      static_assert(false, "Unsupported type");
+    }
+  }
+
+  static size_t GetIntFromVar(NewT &var) {
+    if constexpr (std::is_arithmetic_v<NewT>) {
+      return static_cast<size_t>(var);
+    } else if constexpr (std::is_same_v<NewT, std::string>) {
+      return std::stoi(var);
+    } else if constexpr (std::is_same_v<NewT, hipc::string>) {
+      return std::stoi(var.str());
+    } else if constexpr (std::is_same_v<NewT, IntEntry *>) {
+      return var->value;
+    } else {
+      static_assert(false, "Unsupported type");
+    }
+  }
+
+  static void FreeVariable(NewT &var) {
+    if constexpr (std::is_same_v<NewT, IntEntry *>) {
+      auto alloc = HSHM_DEFAULT_ALLOC;
+      alloc->DelObj(HSHM_DEFAULT_MEM_CTX, var);
+    }
+  }
+};
 
 template <typename QueueT, typename T>
 class QueueTestSuite {
@@ -32,9 +84,8 @@ class QueueTestSuite {
     try {
       for (size_t i = 0; i < count_per_rank; ++i) {
         size_t idx = rank * count_per_rank + i;
-        CREATE_SET_VAR_TO_INT_OR_STRING(T, var, idx);
-        CREATE_GET_INT_FROM_VAR(T, entry_int, var)
-        idxs.emplace_back(entry_int);
+        T var = VariableMaker<T>::MakeVariable(idx);
+        idxs.emplace_back(idx);
         while (queue_.emplace(var).IsNull()) {
         }
       }
@@ -52,28 +103,26 @@ class QueueTestSuite {
   /** Consumer method */
   void Consume(std::atomic<size_t> &count, size_t total_count,
                std::vector<size_t> &entries) {
-    auto entry = T();
-    auto &entry_ref = entry;
-
+    T entry;
     // Consume everything
     while (count < total_count) {
-      auto qtok = queue_.pop(entry_ref);
+      auto qtok = queue_.pop(entry);
       if (qtok.IsNull()) {
         continue;
       }
-      CREATE_GET_INT_FROM_VAR(T, entry_int, entry_ref)
+      size_t entry_int = VariableMaker<T>::GetIntFromVar(entry);
       size_t off = count.fetch_add(1);
       if (off >= total_count) {
         break;
       }
       entries[off] = entry_int;
+      VariableMaker<T>::FreeVariable(entry);
     }
 
     int rank = omp_get_thread_num();
     if (rank == 0) {
       // Ensure there's no data left in the queue
-      REQUIRE(queue_.pop(entry_ref).IsNull());
-
+      REQUIRE(queue_.pop(entry).IsNull());
       // Ensure the data is all correct
       REQUIRE(entries.size() == total_count);
       std::sort(entries.begin(), entries.end());

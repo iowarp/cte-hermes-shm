@@ -22,7 +22,7 @@ namespace hshm::ipc {
  * A vector which avoids memory allocation for a small number of objects
  * The array's size must remain fixed after the first modification to data.
  * */
-template<typename T, int SO = sizeof(hipc::vector<T>) / sizeof(T) + 1>
+template <typename T, int SO = sizeof(hipc::vector<T>) / sizeof(T) + 1>
 struct pod_array {
   int size_;
   union {
@@ -31,28 +31,27 @@ struct pod_array {
   };
 
   /** Default constructor */
-  HSHM_INLINE_CROSS
+  HSHM_INLINE_CROSS_FUN
   pod_array() : size_(0) {}
 
   /** Serialize */
-  template<typename Ar>
-  HSHM_CROSS_FUN
-  void serialize(Ar &ar) {
-    ar &size_;
+  template <typename Ar>
+  HSHM_CROSS_FUN void serialize(Ar& ar) {
+    ar & size_;
     resize(size_);
     if (size_ > SO) {
-      ar &vec_;
+      ar & vec_;
     } else {
       for (int i = 0; i < size_; ++i) {
-        ar &cache_[i];
+        ar& cache_[i];
       }
     }
   }
 
   /** Construct */
-  template<typename AllocT>
-  HSHM_INLINE_CROSS
-  void construct(const hipc::CtxAllocator<AllocT> &alloc, int size = 0) {
+  template <typename AllocT>
+  HSHM_INLINE_CROSS_FUN void construct(const hipc::CtxAllocator<AllocT>& alloc,
+                                       int size = 0) {
     HSHM_MAKE_AR0(vec_, alloc);
     if (size) {
       resize(size);
@@ -60,7 +59,7 @@ struct pod_array {
   }
 
   /** Reserve */
-  HSHM_INLINE_CROSS
+  HSHM_INLINE_CROSS_FUN
   void resize(int size) {
     if (size > SO) {
       vec_.get_ref().resize(size);
@@ -69,13 +68,11 @@ struct pod_array {
   }
 
   /** Destroy */
-  HSHM_INLINE_CROSS
-  void destroy() {
-    HSHM_DESTROY_AR(vec_);
-  }
+  HSHM_INLINE_CROSS_FUN
+  void destroy() { HSHM_DESTROY_AR(vec_); }
 
   /** Get */
-  HSHM_INLINE_CROSS
+  HSHM_INLINE_CROSS_FUN
   delay_ar<T>* get() {
     if (size_ > SO) {
       return vec_.get_ref().data_ar();
@@ -84,7 +81,7 @@ struct pod_array {
   }
 
   /** Get (const) */
-  HSHM_INLINE_CROSS
+  HSHM_INLINE_CROSS_FUN
   const delay_ar<T>* get() const {
     if (size_ > SO) {
       return vec_.get_ref().data_ar();
@@ -93,16 +90,14 @@ struct pod_array {
   }
 
   /** Index operator */
-  template<typename IdxType>
-  HSHM_INLINE_CROSS
-  T& operator[](IdxType i) {
+  template <typename IdxType>
+  HSHM_INLINE_CROSS_FUN T& operator[](IdxType i) {
     return *(get()[i]);
   }
 
   /** Index operator (const) */
-  template<typename IdxType>
-  HSHM_INLINE_CROSS
-  const T& operator[](IdxType i) const {
+  template <typename IdxType>
+  HSHM_INLINE_CROSS_FUN const T& operator[](IdxType i) const {
     return *(get()[i]);
   }
 };

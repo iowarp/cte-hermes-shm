@@ -57,7 +57,7 @@
 #define TYPE_UNWRAP(X) ESC(ISH X)
 #define ISH(...) ISH __VA_ARGS__
 #define ESC(...) ESC_(__VA_ARGS__)
-#define ESC_(...) VAN ## __VA_ARGS__
+#define ESC_(...) VAN##__VA_ARGS__
 #define VANISH
 #define __TU(X) TYPE_UNWRAP(X)
 
@@ -79,7 +79,7 @@
 #ifndef HSHM_DEBUG
 #define HSHM_INLINE inline __attribute__((always_inline))
 #else
-#define HSHM_INLINE __attribute__ ((noinline))
+#define HSHM_INLINE __attribute__((noinline))
 #endif
 
 /** Function decorators */
@@ -96,7 +96,7 @@
 #endif
 
 /** Macro for inline function */
-#define HSHM_INLINE_CROSS HSHM_INLINE HSHM_CROSS_FUN
+#define HSHM_INLINE_CROSS_FUN HSHM_INLINE HSHM_CROSS_FUN
 #define HSHM_INLINE_GPU CUDA_DEVICE HSHM_INLINE
 #define HSHM_INLINE_HOST CUDA_HOST HSHM_INLINE
 
@@ -155,6 +155,7 @@ namespace hipc = hshm::ipc;
 #endif
 
 /** Default memory context object */
-#define HSHM_DEFAULT_MEM_CTX {}
+#define HSHM_DEFAULT_MEM_CTX \
+  {}
 
 #endif  // HERMES_MACROS_H

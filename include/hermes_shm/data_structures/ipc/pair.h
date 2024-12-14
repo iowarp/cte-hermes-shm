@@ -1,38 +1,38 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-* Distributed under BSD 3-Clause license.                                   *
-* Copyright by The HDF Group.                                               *
-* Copyright by the Illinois Institute of Technology.                        *
-* All rights reserved.                                                      *
-*                                                                           *
-* This file is part of Hermes. The full Hermes copyright notice, including  *
-* terms governing use, modification, and redistribution, is contained in    *
-* the COPYING file, which can be found at the top directory. If you do not  *
-* have access to the file, you may request a copy from help@hdfgroup.org.   *
-* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+ * Distributed under BSD 3-Clause license.                                   *
+ * Copyright by The HDF Group.                                               *
+ * Copyright by the Illinois Institute of Technology.                        *
+ * All rights reserved.                                                      *
+ *                                                                           *
+ * This file is part of Hermes. The full Hermes copyright notice, including  *
+ * terms governing use, modification, and redistribution, is contained in    *
+ * the COPYING file, which can be found at the top directory. If you do not  *
+ * have access to the file, you may request a copy from help@hdfgroup.org.   *
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #ifndef HERMES_INCLUDE_HERMES_DATA_STRUCTURES_PAIR_H_
 #define HERMES_INCLUDE_HERMES_DATA_STRUCTURES_PAIR_H_
 
-#include "hermes_shm/data_structures/internal/shm_internal.h"
 #include "hermes_shm/constants/macros.h"
+#include "hermes_shm/data_structures/internal/shm_internal.h"
 
 namespace hshm::ipc {
 
 /** forward declaration for string */
-template<typename FirstT, typename SecondT, HSHM_CLASS_TEMPL_WITH_DEFAULTS>
+template <typename FirstT, typename SecondT, HSHM_CLASS_TEMPL_WITH_DEFAULTS>
 class pair;
 
 /**
-* MACROS used to simplify the string namespace
-* Used as inputs to the HIPC_CONTAINER_TEMPLATE
-* */
+ * MACROS used to simplify the string namespace
+ * Used as inputs to the HIPC_CONTAINER_TEMPLATE
+ * */
 #define CLASS_NAME pair
 #define CLASS_NEW_ARGS FirstT, SecondT
 
 /**
-* A pair of two objects.
-* */
-template<typename FirstT, typename SecondT, HSHM_CLASS_TEMPL>
+ * A pair of two objects.
+ * */
+template <typename FirstT, typename SecondT, HSHM_CLASS_TEMPL>
 class pair : public ShmContainer {
  public:
   /**====================================
@@ -55,9 +55,7 @@ class pair : public ShmContainer {
 
   /** SHM constructor. Default. */
   HSHM_CROSS_FUN
-  explicit pair(const hipc::CtxAllocator<AllocT> &alloc) {
-    shm_init(alloc);
-  }
+  explicit pair(const hipc::CtxAllocator<AllocT> &alloc) { shm_init(alloc); }
 
   /** SHM constructor */
   HSHM_CROSS_FUN
@@ -75,21 +73,17 @@ class pair : public ShmContainer {
   HSHM_CROSS_FUN
   explicit pair(FirstT &&first, SecondT &&second) {
     init_shm_container(HERMES_MEMORY_MANAGER->GetDefaultAllocator<AllocT>());
-    HSHM_MAKE_AR(first_, GetCtxAllocator(),
-                 std::forward<FirstT>(first))
-    HSHM_MAKE_AR(second_, GetCtxAllocator(),
-                 std::forward<SecondT>(second))
+    HSHM_MAKE_AR(first_, GetCtxAllocator(), std::forward<FirstT>(first))
+    HSHM_MAKE_AR(second_, GetCtxAllocator(), std::forward<SecondT>(second))
   }
 
   /** SHM constructor. Move parameters. */
   HSHM_CROSS_FUN
-  explicit pair(const hipc::CtxAllocator<AllocT> &alloc,
-                FirstT &&first, SecondT &&second) {
+  explicit pair(const hipc::CtxAllocator<AllocT> &alloc, FirstT &&first,
+                SecondT &&second) {
     init_shm_container(alloc);
-    HSHM_MAKE_AR(first_, GetCtxAllocator(),
-                 std::forward<FirstT>(first))
-    HSHM_MAKE_AR(second_, GetCtxAllocator(),
-                 std::forward<SecondT>(second))
+    HSHM_MAKE_AR(first_, GetCtxAllocator(), std::forward<FirstT>(first))
+    HSHM_MAKE_AR(second_, GetCtxAllocator(), std::forward<SecondT>(second))
   }
 
   /** Constructor. Copy parameters. */
@@ -102,19 +96,17 @@ class pair : public ShmContainer {
 
   /** SHM constructor. Copy parameters. */
   HSHM_CROSS_FUN
-  explicit pair(const hipc::CtxAllocator<AllocT> &alloc,
-                const FirstT &first, const SecondT &second) {
+  explicit pair(const hipc::CtxAllocator<AllocT> &alloc, const FirstT &first,
+                const SecondT &second) {
     init_shm_container(alloc);
     HSHM_MAKE_AR(first_, GetCtxAllocator(), first)
     HSHM_MAKE_AR(second_, GetCtxAllocator(), second)
   }
 
   /** SHM constructor. Piecewise emplace. */
-  template<typename FirstArgPackT, typename SecondArgPackT>
-  HSHM_CROSS_FUN
-  explicit pair(PiecewiseConstruct &&hint,
-                FirstArgPackT &&first,
-                SecondArgPackT &&second) {
+  template <typename FirstArgPackT, typename SecondArgPackT>
+  HSHM_CROSS_FUN explicit pair(PiecewiseConstruct &&hint, FirstArgPackT &&first,
+                               SecondArgPackT &&second) {
     init_shm_container(HERMES_MEMORY_MANAGER->GetDefaultAllocator<AllocT>());
     HSHM_MAKE_AR_PW(first_, GetCtxAllocator(),
                     std::forward<FirstArgPackT>(first))
@@ -123,12 +115,10 @@ class pair : public ShmContainer {
   }
 
   /** SHM constructor. Piecewise emplace. */
-  template<typename FirstArgPackT, typename SecondArgPackT>
-  HSHM_CROSS_FUN
-  explicit pair(const hipc::CtxAllocator<AllocT> &alloc,
-                PiecewiseConstruct &&hint,
-                FirstArgPackT &&first,
-                SecondArgPackT &&second) {
+  template <typename FirstArgPackT, typename SecondArgPackT>
+  HSHM_CROSS_FUN explicit pair(const hipc::CtxAllocator<AllocT> &alloc,
+                               PiecewiseConstruct &&hint, FirstArgPackT &&first,
+                               SecondArgPackT &&second) {
     init_shm_container(alloc);
     HSHM_MAKE_AR_PW(first_, GetCtxAllocator(),
                     std::forward<FirstArgPackT>(first))
@@ -156,14 +146,12 @@ class pair : public ShmContainer {
 
   /** SHM copy constructor main */
   HSHM_CROSS_FUN
-  void shm_strong_copy_construct(const pair &other) {
-    HSHM_MAKE_AR(first_, GetCtxAllocator(), *other.first_)
-    HSHM_MAKE_AR(second_, GetCtxAllocator(), *other.second_)
-  }
+  void shm_strong_copy_construct(const pair &other){
+      HSHM_MAKE_AR(first_, GetCtxAllocator(), *other.first_)
+          HSHM_MAKE_AR(second_, GetCtxAllocator(), *other.second_)}
 
   /** SHM copy assignment operator. From pair. */
-  HSHM_CROSS_FUN
-  pair& operator=(const pair &other) {
+  HSHM_CROSS_FUN pair &operator=(const pair &other) {
     if (this != &other) {
       shm_destroy();
       shm_strong_copy_assign_op(other);
@@ -214,7 +202,7 @@ class pair : public ShmContainer {
 
   /** SHM move assignment operator. From pair. */
   HSHM_CROSS_FUN
-  pair& operator=(pair &&other) noexcept {
+  pair &operator=(pair &&other) noexcept {
     if (this != &other) {
       shm_destroy();
       if (GetAllocator() == other.GetAllocator()) {
@@ -234,53 +222,52 @@ class pair : public ShmContainer {
    * ===================================*/
 
   /** Check if the pair is empty */
-  HSHM_INLINE_CROSS bool IsNull() const {
-    return false;
-  }
+  HSHM_INLINE_CROSS_FUN bool IsNull() const { return false; }
 
   /** Sets this pair as empty */
-  HSHM_INLINE_CROSS void SetNull() {}
+  HSHM_INLINE_CROSS_FUN void SetNull() {}
 
   /** Destroy the shared-memory data */
-  HSHM_INLINE_CROSS void shm_destroy_main() {
-    HSHM_DESTROY_AR(first_)
-    HSHM_DESTROY_AR(second_)
-  }
+  HSHM_INLINE_CROSS_FUN void shm_destroy_main(){HSHM_DESTROY_AR(first_)
+                                                    HSHM_DESTROY_AR(second_)}
 
   /**====================================
    * pair Methods
    * ===================================*/
 
   /** Get the first object */
-  HSHM_INLINE_CROSS FirstT& GetFirst() { return first_.get_ref(); }
+  HSHM_INLINE_CROSS_FUN FirstT &GetFirst() {
+    return first_.get_ref();
+  }
 
   /** Get the first object (const) */
-  HSHM_INLINE_CROSS FirstT& GetFirst() const { return first_.get_ref(); }
+  HSHM_INLINE_CROSS_FUN FirstT &GetFirst() const { return first_.get_ref(); }
 
   /** Get the second object */
-  HSHM_INLINE_CROSS SecondT& GetSecond() { return second_.get_ref(); }
+  HSHM_INLINE_CROSS_FUN SecondT &GetSecond() { return second_.get_ref(); }
 
   /** Get the second object (const) */
-  HSHM_INLINE_CROSS SecondT& GetSecond() const { return second_.get_ref(); }
+  HSHM_INLINE_CROSS_FUN SecondT &GetSecond() const { return second_.get_ref(); }
 
   /** Get the first object (treated as key) */
-  HSHM_INLINE_CROSS FirstT& GetKey() { return first_.get_ref(); }
+  HSHM_INLINE_CROSS_FUN FirstT &GetKey() { return first_.get_ref(); }
 
   /** Get the first object (treated as key) (const) */
-  HSHM_INLINE_CROSS FirstT& GetKey() const { return first_.get_ref(); }
+  HSHM_INLINE_CROSS_FUN FirstT &GetKey() const { return first_.get_ref(); }
 
   /** Get the second object (treated as value) */
-  HSHM_INLINE_CROSS SecondT& GetVal() { return second_.get_ref(); }
+  HSHM_INLINE_CROSS_FUN SecondT &GetVal() { return second_.get_ref(); }
 
   /** Get the second object (treated as value) (const) */
-  HSHM_INLINE_CROSS SecondT& GetVal() const { return second_.get_ref(); }
+  HSHM_INLINE_CROSS_FUN SecondT &GetVal() const { return second_.get_ref(); }
 };
 
 }  // namespace hshm::ipc
 
 namespace hshm {
 
-template<typename FirstT, typename SecondT, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
+template <typename FirstT, typename SecondT,
+          HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
 using pair = hipc::pair<FirstT, SecondT, HSHM_CLASS_TEMPL_ARGS>;
 
 }  // namespace hshm

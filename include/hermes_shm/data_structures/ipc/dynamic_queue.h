@@ -5,12 +5,13 @@
 #ifndef HERMES_SHM_INCLUDE_HERMES_SHM_DATA_STRUCTURES_IPC_DYNAMIC_QUEUE_H_
 #define HERMES_SHM_INCLUDE_HERMES_SHM_DATA_STRUCTURES_IPC_DYNAMIC_QUEUE_H_
 
+#include <utility>
+
 #include "hermes_shm/data_structures/internal/shm_internal.h"
 #include "hermes_shm/data_structures/ipc/functional.h"
 #include "hermes_shm/data_structures/serialization/serialize_common.h"
-#include "ring_queue.h"
 #include "list.h"
-#include <utility>
+#include "ring_queue.h"
 
 namespace hshm::ipc {
 
@@ -19,9 +20,7 @@ namespace hshm::ipc {
  * Used as inputs to the HIPC_CONTAINER_TEMPLATE
  * */
 #define CLASS_NAME dynamic_queue
-#define CLASS_NEW_ARGS \
-  T
-
+#define CLASS_NEW_ARGS T
 
 /**
  * An mpsc queue that changes in size dynamically
@@ -31,7 +30,7 @@ class dynamic_queue : public ShmContainer {
  public:
   HIPC_CONTAINER_TEMPLATE((CLASS_NAME), (CLASS_NEW_ARGS))
   typedef hipc::list<T, HSHM_CLASS_TEMPL_ARGS> Vector;
-  
+
  public:
   hshm::Mutex lock_;
   Vector splits_;
@@ -43,12 +42,10 @@ class dynamic_queue : public ShmContainer {
    * ===================================*/
  public:
   dynamic_queue(size_t block_size = 64) : splits_() {
-    shm_init(HERMES_MEMORY_MANAGER->GetDefaultAllocator<AllocT>(),
-             block_size);
+    shm_init(HERMES_MEMORY_MANAGER->GetDefaultAllocator<AllocT>(), block_size);
   }
 
-  dynamic_queue(const hipc::CtxAllocator<AllocT> &alloc,
-                size_t block_size = 64)
+  dynamic_queue(const hipc::CtxAllocator<AllocT> &alloc, size_t block_size = 64)
       : splits_(alloc), block_size_(block_size) {
     shm_init(alloc, block_size);
   }
@@ -60,16 +57,15 @@ class dynamic_queue : public ShmContainer {
     head_ = 0;
     tail_ = 0;
   }
-  
+
   /**====================================
    * Copy Constructors
    * ===================================*/
 
   /** SHM copy constructor */
   HSHM_CROSS_FUN
-  explicit dynamic_queue(
-      const hipc::CtxAllocator<AllocT> &alloc,
-      const dynamic_queue &other) {
+  explicit dynamic_queue(const hipc::CtxAllocator<AllocT> &alloc,
+                         const dynamic_queue &other) {
     init_shm_container(alloc);
     SetNull();
     shm_strong_copy_op(other);
@@ -77,7 +73,7 @@ class dynamic_queue : public ShmContainer {
 
   /** SHM copy assignment operator */
   HSHM_CROSS_FUN
-  dynamic_queue& operator=(const dynamic_queue &other) {
+  dynamic_queue &operator=(const dynamic_queue &other) {
     if (this != &other) {
       shm_destroy();
       shm_strong_copy_op(other);
@@ -108,13 +104,13 @@ class dynamic_queue : public ShmContainer {
   /** SHM move constructor. */
   HSHM_CROSS_FUN
   dynamic_queue(const hipc::CtxAllocator<AllocT> &alloc,
-             dynamic_queue &&other) noexcept {
+                dynamic_queue &&other) noexcept {
     shm_move_op<false>(alloc, std::forward<dynamic_queue>(other));
   }
 
   /** SHM move assignment operator. */
   HSHM_CROSS_FUN
-  dynamic_queue& operator=(dynamic_queue &&other) noexcept {
+  dynamic_queue &operator=(dynamic_queue &&other) noexcept {
     if (this != &other) {
       shm_move_op<true>(other.GetCtxAllocator(),
                         std::forward<dynamic_queue>(other));
@@ -123,9 +119,9 @@ class dynamic_queue : public ShmContainer {
   }
 
   /** SHM move assignment operator. */
-  template<bool IS_ASSIGN>
-  HSHM_CROSS_FUN
-  void shm_move_op(const hipc::CtxAllocator<AllocT> &alloc, dynamic_queue &&other) noexcept {
+  template <bool IS_ASSIGN>
+  HSHM_CROSS_FUN void shm_move_op(const hipc::CtxAllocator<AllocT> &alloc,
+                                  dynamic_queue &&other) noexcept {
     if constexpr (IS_ASSIGN) {
       shm_destroy();
     } else {
@@ -149,14 +145,11 @@ class dynamic_queue : public ShmContainer {
 
   /** SHM destructor.  */
   HSHM_CROSS_FUN
-  void shm_destroy_main() {
-  }
+  void shm_destroy_main() {}
 
   /** Check if the list is empty */
   HSHM_CROSS_FUN
-  bool IsNull() const {
-    return false;
-  }
+  bool IsNull() const { return false; }
 
   /** Sets this list as empty */
   HSHM_CROSS_FUN
@@ -168,8 +161,7 @@ class dynamic_queue : public ShmContainer {
 
   /** Construct an element at \a pos position in the list */
   template <typename... Args>
-  HSHM_CROSS_FUN
-  qtok_t emplace(Args &&...args) {
+  HSHM_CROSS_FUN qtok_t emplace(Args &&...args) {
     ScopedMutex lock(lock_, 0);
     qtok_id tail = tail_.fetch_add(1);
     splits_.emplace_back(std::forward<Args>(args)...);
@@ -178,11 +170,10 @@ class dynamic_queue : public ShmContainer {
 
   /** Push an elemnt in the list (wrapper) */
   template <typename... Args>
-  HSHM_INLINE_CROSS
-  qtok_t push(Args &&...args) {
+  HSHM_INLINE_CROSS_FUN qtok_t push(Args &&...args) {
     return emplace(std::forward<Args>(args)...);
   }
-  
+
   /** Consumer pops the head object */
   HSHM_CROSS_FUN
   qtok_t pop(T &val) {
@@ -210,9 +201,7 @@ class dynamic_queue : public ShmContainer {
 
   /** Get queue depth */
   HSHM_CROSS_FUN
-  size_t GetDepth() {
-    return splits_.size();
-  }
+  size_t GetDepth() { return splits_.size(); }
 
   /** Get size at this moment */
   HSHM_CROSS_FUN
@@ -226,26 +215,22 @@ class dynamic_queue : public ShmContainer {
   }
 
   /** Get size (wrapper) */
-  HSHM_INLINE_CROSS
-  size_t size() {
-    return GetSize();
-  }
+  HSHM_INLINE_CROSS_FUN
+  size_t size() { return GetSize(); }
 
   /** Get size (wrapper) */
-  HSHM_INLINE_CROSS
-  size_t Size() {
-    return GetSize();
-  }
+  HSHM_INLINE_CROSS_FUN
+  size_t Size() { return GetSize(); }
 };
 
 }  // namespace hshm::ipc
 
 namespace hshm {
 
-template<typename T, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
+template <typename T, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
 using dynamic_queue = ipc::dynamic_queue<T, HSHM_CLASS_TEMPL_ARGS>;
 
-} // namespace hshm
+}  // namespace hshm
 
 #undef CLASS_NAME
 #undef CLASS_NEW_ARGS

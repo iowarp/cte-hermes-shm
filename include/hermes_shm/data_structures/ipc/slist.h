@@ -10,9 +10,8 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-
-#ifndef HERMES_DATA_STRUCTURES_THREAD_UNSAFE_Sslist_H
-#define HERMES_DATA_STRUCTURES_THREAD_UNSAFE_Sslist_H
+#ifndef HERMES_DATA_STRUCTURES__Sslist_H
+#define HERMES_DATA_STRUCTURES__Sslist_H
 
 #include "hermes_shm/data_structures/internal/shm_internal.h"
 #include "hermes_shm/data_structures/ipc/functional.h"
@@ -21,20 +20,20 @@
 namespace hshm::ipc {
 
 /** forward pointer for slist */
-template<typename T, HSHM_CLASS_TEMPL_WITH_DEFAULTS>
+template <typename T, HSHM_CLASS_TEMPL_WITH_DEFAULTS>
 class slist;
 
 /** represents an object within a slist */
-template<typename T, HSHM_CLASS_TEMPL>
+template <typename T, HSHM_CLASS_TEMPL>
 struct slist_entry {
  public:
   OffsetPointer next_ptr_;
   delay_ar<T> data_;
 
   /** Constructor */
-  template<typename ...Args>
-  HSHM_CROSS_FUN
-  explicit slist_entry(const hipc::CtxAllocator<AllocT> &alloc, Args&& ...args) {
+  template <typename... Args>
+  HSHM_CROSS_FUN explicit slist_entry(const hipc::CtxAllocator<AllocT> &alloc,
+                                      Args &&...args) {
     HSHM_MAKE_AR(data_, alloc, std::forward<Args>(args)...)
   }
 };
@@ -42,7 +41,7 @@ struct slist_entry {
 /**
  * The slist iterator
  * */
-template<typename T, HSHM_CLASS_TEMPL>
+template <typename T, HSHM_CLASS_TEMPL>
 struct slist_iterator_templ {
  public:
   /**< A shm reference to the containing slist object. */
@@ -58,10 +57,10 @@ struct slist_iterator_templ {
 
   /** Construct an iterator */
   HSHM_CROSS_FUN
-  explicit slist_iterator_templ(slist<T, HSHM_CLASS_TEMPL_ARGS>& slist,
+  explicit slist_iterator_templ(slist<T, HSHM_CLASS_TEMPL_ARGS> &slist,
                                 slist_entry<T, HSHM_CLASS_TEMPL_ARGS> *entry,
                                 OffsetPointer entry_ptr)
-    : slist_(&slist), entry_(entry), entry_ptr_(entry_ptr) {}
+      : slist_(&slist), entry_(entry), entry_ptr_(entry_ptr) {}
 
   /** Copy constructor */
   HSHM_CROSS_FUN
@@ -73,7 +72,7 @@ struct slist_iterator_templ {
 
   /** Assign this iterator from another iterator */
   HSHM_CROSS_FUN
-  slist_iterator_templ& operator=(const slist_iterator_templ &other) {
+  slist_iterator_templ &operator=(const slist_iterator_templ &other) {
     if (this != &other) {
       slist_ = other.slist_;
       entry_ = other.entry_;
@@ -84,33 +83,35 @@ struct slist_iterator_templ {
 
   /** Get the object the iterator points to */
   HSHM_CROSS_FUN
-  T& operator*() {
-    return entry_->data_.get_ref();
-  }
+  T &operator*() { return entry_->data_.get_ref(); }
 
   /** Get the object the iterator points to */
   HSHM_CROSS_FUN
-  const T& operator*() const {
-    return entry_->data_.get_ref();
-  }
+  const T &operator*() const { return entry_->data_.get_ref(); }
 
   /** Get the next iterator (in place) */
   HSHM_CROSS_FUN
-  slist_iterator_templ& operator++() {
-    if (is_end()) { return *this; }
+  slist_iterator_templ &operator++() {
+    if (is_end()) {
+      return *this;
+    }
     entry_ptr_ = entry_->next_ptr_;
-    entry_ = slist_->GetAllocator()->template
-      Convert<slist_entry<T, HSHM_CLASS_TEMPL_ARGS>>(entry_->next_ptr_);
+    entry_ = slist_->GetAllocator()
+                 ->template Convert<slist_entry<T, HSHM_CLASS_TEMPL_ARGS>>(
+                     entry_->next_ptr_);
     return *this;
   }
 
   /** Get the prior iterator (in place) */
   HSHM_CROSS_FUN
-  slist_iterator_templ& operator--() {
-    if (is_end() || is_begin()) { return *this; }
+  slist_iterator_templ &operator--() {
+    if (is_end() || is_begin()) {
+      return *this;
+    }
     entry_ptr_ = entry_->prior_ptr_;
-    entry_ = slist_->GetAllocator()->template
-      Convert<slist_entry<T, HSHM_CLASS_TEMPL_ARGS>>(entry_->prior_ptr_);
+    entry_ = slist_->GetAllocator()
+                 ->template Convert<slist_entry<T, HSHM_CLASS_TEMPL_ARGS>>(
+                     entry_->prior_ptr_);
     return *this;
   }
 
@@ -182,9 +183,7 @@ struct slist_iterator_templ {
 
   /** Determine whether this iterator is the end iterator */
   HSHM_CROSS_FUN
-  bool is_end() const {
-    return entry_ == nullptr;
-  }
+  bool is_end() const { return entry_ == nullptr; }
 
   /** Determine whether this iterator is the begin iterator */
   HSHM_CROSS_FUN
@@ -207,7 +206,7 @@ struct slist_iterator_templ {
 /**
  * Doubly linked slist implementation
  * */
-template<typename T, HSHM_CLASS_TEMPL>
+template <typename T, HSHM_CLASS_TEMPL>
 class slist : public ShmContainer {
  public:
   /**====================================
@@ -247,7 +246,7 @@ class slist : public ShmContainer {
   /**====================================
    * Copy Constructors
    * ===================================*/
-  
+
   /** SHM copy constructor. From slist. */
   HSHM_CROSS_FUN
   explicit slist(const slist &other) {
@@ -256,11 +255,9 @@ class slist : public ShmContainer {
     shm_strong_copy_op<slist>(other);
   }
 
-
   /** SHM copy constructor. From slist. */
   HSHM_CROSS_FUN
-  explicit slist(const hipc::CtxAllocator<AllocT> &alloc,
-                 const slist &other) {
+  explicit slist(const hipc::CtxAllocator<AllocT> &alloc, const slist &other) {
     init_shm_container(alloc);
     SetNull();
     shm_strong_copy_op<slist>(other);
@@ -268,7 +265,7 @@ class slist : public ShmContainer {
 
   /** SHM copy assignment operator. From slist. */
   HSHM_CROSS_FUN
-  slist& operator=(const slist &other) {
+  slist &operator=(const slist &other) {
     if (this != &other) {
       shm_destroy();
       shm_strong_copy_op<slist>(other);
@@ -278,8 +275,7 @@ class slist : public ShmContainer {
 
   /** SHM copy constructor. From std::list */
   HSHM_CROSS_FUN
-  explicit slist(const hipc::CtxAllocator<AllocT> &alloc,
-                 std::list<T> &other) {
+  explicit slist(const hipc::CtxAllocator<AllocT> &alloc, std::list<T> &other) {
     init_shm_container(alloc);
     SetNull();
     shm_strong_copy_op<std::list<T>>(other);
@@ -287,7 +283,7 @@ class slist : public ShmContainer {
 
   /** SHM copy assignment operator. From std::list. */
   HSHM_HOST_FUN
-  slist& operator=(const std::list<T> &other) {
+  slist &operator=(const std::list<T> &other) {
     if (this != &other) {
       shm_destroy();
       shm_strong_copy_op<std::list<T>>(other);
@@ -302,11 +298,10 @@ class slist : public ShmContainer {
     tail_ptr_ = other.tail_ptr_;
     length_ = other.length_;
   }
-  
+
   /** SHM copy constructor + operator main */
-  template<typename ListT>
-  HSHM_CROSS_FUN
-  void shm_strong_copy_op(const ListT &other) {
+  template <typename ListT>
+  HSHM_CROSS_FUN void shm_strong_copy_op(const ListT &other) {
     for (auto iter = other.cbegin(); iter != other.cend(); ++iter) {
       emplace_back(*iter);
     }
@@ -330,7 +325,7 @@ class slist : public ShmContainer {
 
   /** SHM move assignment operator. From slist. */
   HSHM_CROSS_FUN
-  slist& operator=(slist &&other) noexcept {
+  slist &operator=(slist &&other) noexcept {
     if (this != &other) {
       shm_move_op<true>(GetCtxAllocator(), std::move(other));
     }
@@ -338,9 +333,9 @@ class slist : public ShmContainer {
   }
 
   /** SHM move operator. */
-  template<bool IS_ASSIGN>
-  HSHM_CROSS_FUN
-  void shm_move_op(const hipc::CtxAllocator<AllocT> &alloc, slist &&other) noexcept {
+  template <bool IS_ASSIGN>
+  HSHM_CROSS_FUN void shm_move_op(const hipc::CtxAllocator<AllocT> &alloc,
+                                  slist &&other) noexcept {
     if constexpr (IS_ASSIGN) {
       shm_destroy();
     } else {
@@ -356,14 +351,12 @@ class slist : public ShmContainer {
   }
 
   /**====================================
-  * Destructor
-  * ===================================*/
+   * Destructor
+   * ===================================*/
 
   /** Check if the list is empty */
   HSHM_CROSS_FUN
-  bool IsNull() const {
-    return length_ == 0;
-  }
+  bool IsNull() const { return length_ == 0; }
 
   /** Sets this list as empty */
   HSHM_CROSS_FUN
@@ -375,32 +368,27 @@ class slist : public ShmContainer {
 
   /** Destroy all shared memory allocated by the slist */
   HSHM_CROSS_FUN
-  void shm_destroy_main() {
-    clear();
-  }
+  void shm_destroy_main() { clear(); }
 
   /**====================================
    * slist Methods
    * ===================================*/
 
   /** Construct an element at the back of the slist */
-  template<typename... Args>
-  HSHM_CROSS_FUN
-  void emplace_back(Args&&... args) {
+  template <typename... Args>
+  HSHM_CROSS_FUN void emplace_back(Args &&...args) {
     emplace(end(), std::forward<Args>(args)...);
   }
 
   /** Construct an element at the beginning of the slist */
-  template<typename... Args>
-  HSHM_CROSS_FUN
-  void emplace_front(Args&&... args) {
+  template <typename... Args>
+  HSHM_CROSS_FUN void emplace_front(Args &&...args) {
     emplace(begin(), std::forward<Args>(args)...);
   }
 
   /** Construct an element at \a pos position in the slist */
-  template<typename ...Args>
-  HSHM_CROSS_FUN
-  void emplace(iterator_t pos, Args&&... args) {
+  template <typename... Args>
+  HSHM_CROSS_FUN void emplace(iterator_t pos, Args &&...args) {
     OffsetPointer entry_ptr;
     auto entry = _create_entry(entry_ptr, std::forward<Args>(args)...);
     if (size() == 0) {
@@ -412,8 +400,9 @@ class slist : public ShmContainer {
       head_ptr_ = entry_ptr;
     } else if (pos.is_end()) {
       entry->next_ptr_.SetNull();
-      auto tail = GetAllocator()->template
-        Convert<slist_entry<T, HSHM_CLASS_TEMPL_ARGS>>(tail_ptr_);
+      auto tail = GetAllocator()
+                      ->template Convert<slist_entry<T, HSHM_CLASS_TEMPL_ARGS>>(
+                          tail_ptr_);
       tail->next_ptr_ = entry_ptr;
       tail_ptr_ = entry_ptr;
     } else {
@@ -453,15 +442,14 @@ class slist : public ShmContainer {
 
   /** Erase the element at pos */
   HSHM_CROSS_FUN
-  void erase(iterator_t pos) {
-    erase(pos, pos+1);
-  }
+  void erase(iterator_t pos) { erase(pos, pos + 1); }
 
   /** Erase all elements between first and last */
   HSHM_CROSS_FUN
-  void erase(iterator_t first,
-             iterator_t last) {
-    if (first.is_end()) { return; }
+  void erase(iterator_t first, iterator_t last) {
+    if (first.is_end()) {
+      return;
+    }
     auto first_prior = find_prior(first);
     auto pos = first;
     while (pos != last) {
@@ -485,21 +473,15 @@ class slist : public ShmContainer {
 
   /** Destroy all elements in the slist */
   HSHM_CROSS_FUN
-  void clear() {
-    erase(begin(), end());
-  }
+  void clear() { erase(begin(), end()); }
 
   /** Get the object at the front of the slist */
   HSHM_CROSS_FUN
-  T& front() {
-    return *begin();
-  }
+  T &front() { return *begin(); }
 
   /** Get the object at the back of the slist */
   HSHM_CROSS_FUN
-  T& back() {
-    return *last();
-  }
+  T &back() { return *last(); }
 
   /** Get the number of elements in the slist */
   HSHM_CROSS_FUN
@@ -512,80 +494,85 @@ class slist : public ShmContainer {
 
   /** Find an element in this slist */
   HSHM_CROSS_FUN
-  iterator_t find(const T &entry) {
-    return hshm::find(begin(), end(), entry);
-  }
+  iterator_t find(const T &entry) { return hshm::find(begin(), end(), entry); }
 
   /**====================================
-  * Iterators
-  * ===================================*/
+   * Iterators
+   * ===================================*/
 
   /** Forward iterator begin */
   HSHM_CROSS_FUN
   iterator_t begin() {
-    if (size() == 0) { return end(); }
-    auto head = GetAllocator()->template
-      Convert<slist_entry<T, HSHM_CLASS_TEMPL_ARGS>>(head_ptr_);
+    if (size() == 0) {
+      return end();
+    }
+    auto head =
+        GetAllocator()->template Convert<slist_entry<T, HSHM_CLASS_TEMPL_ARGS>>(
+            head_ptr_);
     return iterator_t(*this, head, head_ptr_);
   }
 
   /** Forward iterator end */
   HSHM_CROSS_FUN
   iterator_t end() {
-    return iterator_t(*this,
-                      nullptr, OffsetPointer::GetNull());
+    return iterator_t(*this, nullptr, OffsetPointer::GetNull());
   }
 
   /** Forward iterator to last entry of list */
   HSHM_CROSS_FUN
   iterator_t last() {
-    if (size() == 0) { return end(); }
-    auto tail = GetAllocator()->template
-      Convert<slist_entry<T, HSHM_CLASS_TEMPL_ARGS>>(tail_ptr_);
+    if (size() == 0) {
+      return end();
+    }
+    auto tail =
+        GetAllocator()->template Convert<slist_entry<T, HSHM_CLASS_TEMPL_ARGS>>(
+            tail_ptr_);
     return iterator_t(*this, tail, tail_ptr_);
   }
 
   /** Constant forward iterator begin */
   HSHM_CROSS_FUN
   citerator_t cbegin() const {
-    if (size() == 0) { return cend(); }
-    auto head = GetAllocator()->template
-      Convert<slist_entry<T, HSHM_CLASS_TEMPL_ARGS>>(head_ptr_);
-    return citerator_t(const_cast<slist&>(*this), head, head_ptr_);
+    if (size() == 0) {
+      return cend();
+    }
+    auto head =
+        GetAllocator()->template Convert<slist_entry<T, HSHM_CLASS_TEMPL_ARGS>>(
+            head_ptr_);
+    return citerator_t(const_cast<slist &>(*this), head, head_ptr_);
   }
 
   /** Constant forward iterator end */
   HSHM_CROSS_FUN
   citerator_t cend() const {
-    return iterator_t(const_cast<slist&>(*this),
-                      nullptr, OffsetPointer::GetNull());
+    return iterator_t(const_cast<slist &>(*this), nullptr,
+                      OffsetPointer::GetNull());
   }
 
   /**====================================
-  * Serialization
-  * ===================================*/
+   * Serialization
+   * ===================================*/
 
   /** Serialize */
   template <typename Ar>
-  HSHM_CROSS_FUN
-  void save(Ar &ar) const {
+  HSHM_CROSS_FUN void save(Ar &ar) const {
     save_list<Ar, hipc::slist<T, HSHM_CLASS_TEMPL_ARGS>, T>(ar, *this);
   }
 
   /** Deserialize */
   template <typename Ar>
-  HSHM_CROSS_FUN
-  void load(Ar &ar) {
+  HSHM_CROSS_FUN void load(Ar &ar) {
     load_list<Ar, hipc::slist<T, HSHM_CLASS_TEMPL_ARGS>, T>(ar, *this);
   }
 
  private:
-  template<typename ...Args>
-  HSHM_CROSS_FUN
-  slist_entry<T, HSHM_CLASS_TEMPL_ARGS>* _create_entry(OffsetPointer &p, Args&& ...args) {
-    auto entry = GetAllocator()->template
-      AllocateObjs<slist_entry<T, HSHM_CLASS_TEMPL_ARGS>>(
-        GetMemCtx(), 1, p);
+  template <typename... Args>
+  HSHM_CROSS_FUN slist_entry<T, HSHM_CLASS_TEMPL_ARGS> *_create_entry(
+      OffsetPointer &p, Args &&...args) {
+    auto entry =
+        GetAllocator()
+            ->template AllocateObjs<slist_entry<T, HSHM_CLASS_TEMPL_ARGS>>(
+                GetMemCtx(), 1, p);
     HSHM_MAKE_AR(entry->data_, GetCtxAllocator(), std::forward<Args>(args)...)
     return entry;
   }
@@ -595,7 +582,7 @@ class slist : public ShmContainer {
 
 namespace hshm {
 
-template<typename T, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
+template <typename T, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
 using slist = hipc::slist<T, HSHM_CLASS_TEMPL_ARGS>;
 
 }  // namespace hshm
@@ -603,4 +590,4 @@ using slist = hipc::slist<T, HSHM_CLASS_TEMPL_ARGS>;
 #undef CLASS_NAME
 #undef CLASS_NEW_ARGS
 
-#endif  // HERMES_DATA_STRUCTURES_THREAD_UNSAFE_Sslist_H
+#endif  // HERMES_DATA_STRUCTURES__Sslist_H

@@ -10,21 +10,22 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-
 #ifndef HERMES_MEMORY_ALLOCATOR_SCALABLE_PAGE_ALLOCATOR_H
 #define HERMES_MEMORY_ALLOCATOR_SCALABLE_PAGE_ALLOCATOR_H
 
-#include "allocator.h"
-#include "hermes_shm/thread/lock.h"
-#include "hermes_shm/data_structures/ipc/pair.h"
-#include "hermes_shm/data_structures/ipc/vector.h"
-#include "hermes_shm/data_structures/ipc/list.h"
-#include "hermes_shm/data_structures/ipc/ring_queue.h"
 #include <hermes_shm/memory/allocator/stack_allocator.h>
+
 #include <cmath>
-#include "mp_page.h"
+
+#include "allocator.h"
+#include "hermes_shm/data_structures/ipc/list.h"
+#include "hermes_shm/data_structures/ipc/pair.h"
 #include "hermes_shm/data_structures/ipc/ring_ptr_queue.h"
+#include "hermes_shm/data_structures/ipc/ring_queue.h"
+#include "hermes_shm/data_structures/ipc/vector.h"
+#include "hermes_shm/thread/lock.h"
 #include "hermes_shm/util/timer.h"
+#include "mp_page.h"
 
 namespace hshm::ipc {
 
@@ -56,7 +57,7 @@ struct PageId {
    * Round the size of the requested memory region + sizeof(MpPage)
    * to the nearest power of two.
    * */
-  HSHM_INLINE_CROSS
+  HSHM_INLINE_CROSS_FUN
   PageId(size_t size) {
     orig_ = size;
 #ifdef HSHM_IS_HOST
@@ -87,26 +88,25 @@ class PageAllocator {
   typedef hipc::iqueue<MpPage, Alloc_> LIST;
 
  public:
-  hipc::delay_ar<LIST>
-    free_lists_[PageId::num_free_lists_];
+  hipc::delay_ar<LIST> free_lists_[PageId::num_free_lists_];
   TLS tls_info_;
 
  public:
-  HSHM_INLINE_CROSS
+  HSHM_INLINE_CROSS_FUN
   explicit PageAllocator(StackAllocator *alloc) {
     for (size_t i = 0; i < PageId::num_free_lists_; ++i) {
       HSHM_MAKE_AR0(free_lists_[i], alloc);
     }
   }
 
-  HSHM_INLINE_CROSS
+  HSHM_INLINE_CROSS_FUN
   PageAllocator(const PageAllocator &other) {}
 
-  HSHM_INLINE_CROSS
+  HSHM_INLINE_CROSS_FUN
   PageAllocator(PageAllocator &&other) {}
 
-  HSHM_INLINE_CROSS
-  MpPage* Allocate(const PageId &page_id) {
+  HSHM_INLINE_CROSS_FUN
+  MpPage *Allocate(const PageId &page_id) {
     // Allocate small page size
     if (page_id.exp_ < PageId::num_caches_) {
       LIST &free_list = *free_lists_[page_id.exp_];
@@ -126,7 +126,7 @@ class PageAllocator {
     return nullptr;
   }
 
-  HSHM_INLINE_CROSS
+  HSHM_INLINE_CROSS_FUN
   void Free(MpPage *page) {
     PageId page_id(page->page_size_);
     if (page_id.exp_ < PageId::num_caches_) {
@@ -140,7 +140,8 @@ class PageAllocator {
 struct _ScalablePageAllocatorHeader : public AllocatorHeader {
   typedef TlsAllocatorInfo<_ScalablePageAllocator> TLS;
   typedef hipc::vector<PageAllocator, StackAllocator> PageAllocVec;
-  typedef hipc::fixed_mpmc_ptr_queue<hshm::min_u64, StackAllocator> PageAllocIdVec;
+  typedef hipc::fixed_mpmc_ptr_queue<hshm::min_u64, StackAllocator>
+      PageAllocIdVec;
 
   hipc::delay_ar<PageAllocVec> tls_;
   hipc::delay_ar<PageAllocIdVec> free_tids_;
@@ -151,20 +152,17 @@ struct _ScalablePageAllocatorHeader : public AllocatorHeader {
   _ScalablePageAllocatorHeader() = default;
 
   HSHM_CROSS_FUN
-  void Configure(AllocatorId alloc_id,
-                 size_t custom_header_size,
-                 StackAllocator *alloc,
-                 size_t buffer_size,
+  void Configure(AllocatorId alloc_id, size_t custom_header_size,
+                 StackAllocator *alloc, size_t buffer_size,
                  size_t max_threads) {
-    AllocatorHeader::Configure(alloc_id,
-                               AllocatorType::kScalablePageAllocator,
+    AllocatorHeader::Configure(alloc_id, AllocatorType::kScalablePageAllocator,
                                custom_header_size);
     HSHM_MAKE_AR(tls_, alloc, max_threads, alloc);
     HSHM_MAKE_AR(free_tids_, alloc, max_threads);
     total_alloc_ = 0;
   }
 
-  HSHM_INLINE_CROSS
+  HSHM_INLINE_CROSS_FUN
   hshm::ThreadId CreateTid() {
     hshm::min_u64 tid = 0;
     if (free_tids_->pop(tid).IsNull()) {
@@ -173,15 +171,11 @@ struct _ScalablePageAllocatorHeader : public AllocatorHeader {
     return hshm::ThreadId(tid);
   }
 
-  HSHM_INLINE_CROSS
-  void FreeTid(hshm::ThreadId tid) {
-    free_tids_->emplace(tid.tid_);
-  }
+  HSHM_INLINE_CROSS_FUN
+  void FreeTid(hshm::ThreadId tid) { free_tids_->emplace(tid.tid_); }
 
-  HSHM_INLINE_CROSS
-  TLS* GetTls(hshm::ThreadId tid) {
-    return &(*tls_)[tid.tid_].tls_info_;
-  }
+  HSHM_INLINE_CROSS_FUN
+  TLS *GetTls(hshm::ThreadId tid) { return &(*tls_)[tid.tid_].tls_info_; }
 };
 
 class _ScalablePageAllocator : public Allocator {
@@ -197,31 +191,27 @@ class _ScalablePageAllocator : public Allocator {
    * Allocator constructor
    * */
   HSHM_CROSS_FUN
-  _ScalablePageAllocator()
-    : header_(nullptr) {}
+  _ScalablePageAllocator() : header_(nullptr) {}
 
   /**
    * Initialize the allocator in shared memory
    * */
   HSHM_CROSS_FUN
-  void shm_init(AllocatorId id,
-                size_t custom_header_size,
-                char *buffer,
-                size_t buffer_size,
-                size_t max_threads = 1024) {
+  void shm_init(AllocatorId id, size_t custom_header_size, char *buffer,
+                size_t buffer_size, size_t max_threads = 1024) {
     type_ = AllocatorType::kScalablePageAllocator;
     id_ = id;
     buffer_ = buffer;
     buffer_size_ = buffer_size;
-    header_ = reinterpret_cast<_ScalablePageAllocatorHeader*>(buffer_);
-    custom_header_ = reinterpret_cast<char*>(header_ + 1);
+    header_ = reinterpret_cast<_ScalablePageAllocatorHeader *>(buffer_);
+    custom_header_ = reinterpret_cast<char *>(header_ + 1);
     size_t region_off = (custom_header_ - buffer_) + custom_header_size;
     size_t region_size = buffer_size_ - region_off;
     AllocatorId sub_id(id.bits_.major_, id.bits_.minor_ + 1);
     alloc_.shm_init(sub_id, 0, buffer + region_off, region_size);
     HERMES_MEMORY_MANAGER->RegisterSubAllocator(&alloc_);
-    header_->Configure(id, custom_header_size, &alloc_,
-                       buffer_size, max_threads);
+    header_->Configure(id, custom_header_size, &alloc_, buffer_size,
+                       max_threads);
     HERMES_THREAD_MODEL->CreateTls<TLS>(tls_key_, nullptr);
     alloc_.Align();
   }
@@ -230,15 +220,15 @@ class _ScalablePageAllocator : public Allocator {
    * Attach an existing allocator from shared memory
    * */
   HSHM_CROSS_FUN
-  void shm_deserialize(char *buffer,
-                       size_t buffer_size) {
+  void shm_deserialize(char *buffer, size_t buffer_size) {
     buffer_ = buffer;
     buffer_size_ = buffer_size;
-    header_ = reinterpret_cast<_ScalablePageAllocatorHeader*>(buffer_);
+    header_ = reinterpret_cast<_ScalablePageAllocatorHeader *>(buffer_);
     type_ = header_->allocator_type_;
     id_ = header_->allocator_id_;
-    custom_header_ = reinterpret_cast<char*>(header_ + 1);
-    size_t region_off = (custom_header_ - buffer_) + header_->custom_header_size_;
+    custom_header_ = reinterpret_cast<char *>(header_ + 1);
+    size_t region_off =
+        (custom_header_ - buffer_) + header_->custom_header_size_;
     size_t region_size = buffer_size_ - region_off;
     alloc_.shm_deserialize(buffer + region_off, region_size);
     HERMES_MEMORY_MANAGER->RegisterSubAllocator(&alloc_);
@@ -246,7 +236,7 @@ class _ScalablePageAllocator : public Allocator {
   }
 
   /** Get or create TID */
-  HSHM_INLINE_CROSS
+  HSHM_INLINE_CROSS_FUN
   hshm::ThreadId GetOrCreateTid(const hipc::MemContext &ctx) {
     hshm::ThreadId tid = ctx.tid_;
     if (tid.IsNull()) {
@@ -269,8 +259,7 @@ class _ScalablePageAllocator : public Allocator {
    * memory larger than the page size.
    * */
   HSHM_CROSS_FUN
-  OffsetPointer AllocateOffset(const hipc::MemContext &ctx,
-                               size_t size) {
+  OffsetPointer AllocateOffset(const hipc::MemContext &ctx, size_t size) {
     MpPage *page = nullptr;
     PageId page_id(size + sizeof(MpPage));
 
@@ -292,8 +281,7 @@ class _ScalablePageAllocator : public Allocator {
 
     // Case 4: Completely out of memory
     if (page == nullptr) {
-      HERMES_THROW_ERROR(OUT_OF_MEMORY, size,
-                         GetCurrentlyAllocatedSize());
+      HERMES_THROW_ERROR(OUT_OF_MEMORY, size, GetCurrentlyAllocatedSize());
     }
 
     // Mark as allocated
@@ -312,8 +300,7 @@ class _ScalablePageAllocator : public Allocator {
    * alignment.
    * */
   HSHM_CROSS_FUN
-  OffsetPointer AlignedAllocateOffset(const hipc::MemContext &ctx,
-                                      size_t size,
+  OffsetPointer AlignedAllocateOffset(const hipc::MemContext &ctx, size_t size,
                                       size_t alignment) {
     HERMES_THROW_ERROR(NOT_IMPLEMENTED, "AlignedAllocateOffset");
   }
@@ -324,13 +311,12 @@ class _ScalablePageAllocator : public Allocator {
    * @return whether or not the pointer p was changed
    * */
   HSHM_CROSS_FUN
-  OffsetPointer ReallocateOffsetNoNullCheck(
-      const hipc::MemContext &ctx,
-      OffsetPointer p, size_t new_size) {
+  OffsetPointer ReallocateOffsetNoNullCheck(const hipc::MemContext &ctx,
+                                            OffsetPointer p, size_t new_size) {
     FullPtr<char, OffsetPointer> new_ptr =
-        ((AllocT*)this)->AllocateLocalPtr<char, OffsetPointer>(ctx, new_size);
+        ((AllocT *)this)->AllocateLocalPtr<char, OffsetPointer>(ctx, new_size);
     char *old = Convert<char, OffsetPointer>(p);
-    MpPage *old_hdr = (MpPage*)(old - sizeof(MpPage));
+    MpPage *old_hdr = (MpPage *)(old - sizeof(MpPage));
     memcpy(new_ptr.ptr_, old, old_hdr->page_size_ - sizeof(MpPage));
     FreeOffsetNoNullCheck(ctx.tid_, p);
     return new_ptr.shm_;
@@ -340,8 +326,7 @@ class _ScalablePageAllocator : public Allocator {
    * Free \a ptr pointer. Null check is performed elsewhere.
    * */
   HSHM_CROSS_FUN
-  void FreeOffsetNoNullCheck(const hipc::MemContext &ctx,
-                             OffsetPointer p) {
+  void FreeOffsetNoNullCheck(const hipc::MemContext &ctx, OffsetPointer p) {
     // Mark as free
     auto hdr_offset = p - sizeof(MpPage);
     MpPage *hdr = Convert<MpPage>(hdr_offset);
@@ -360,17 +345,13 @@ class _ScalablePageAllocator : public Allocator {
    * checking.
    * */
   HSHM_CROSS_FUN
-  size_t GetCurrentlyAllocatedSize() {
-    return header_->total_alloc_.load();
-  }
+  size_t GetCurrentlyAllocatedSize() { return header_->total_alloc_.load(); }
 
   /**
    * Create a globally-unique thread ID
    * */
   HSHM_CROSS_FUN
-  void CreateTls(MemContext &ctx) {
-    ctx.tid_ = GetOrCreateTid(ctx);
-  }
+  void CreateTls(MemContext &ctx) { ctx.tid_ = GetOrCreateTid(ctx); }
 
   /**
    * Free a thread-local memory storage
@@ -378,7 +359,7 @@ class _ScalablePageAllocator : public Allocator {
   HSHM_CROSS_FUN
   void FreeTls(const MemContext &ctx) {
     ThreadId tid = GetOrCreateTid(ctx);
-    if (tid.IsNull()){
+    if (tid.IsNull()) {
       return;
     }
     header_->FreeTid(tid);

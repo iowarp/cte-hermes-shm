@@ -10,26 +10,25 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-
 #ifndef HERMES_DATA_STRUCTURES_LOCKLESS_STRING_H_
 #define HERMES_DATA_STRUCTURES_LOCKLESS_STRING_H_
 
-#include "hermes_shm/data_structures/internal/shm_internal.h"
-#include "chararr.h"
-#include "hermes_shm/data_structures/serialization/serialize_common.h"
 #include <string>
+
+#include "chararr.h"
+#include "hermes_shm/data_structures/internal/shm_internal.h"
+#include "hermes_shm/data_structures/serialization/serialize_common.h"
 
 namespace hshm::ipc {
 
 class StringFlags {
-  public:
-    CLS_CONST u32 kWrap = BIT_OPT(u32, 0);
+ public:
+  CLS_CONST u32 kWrap = BIT_OPT(u32, 0);
 };
 #define HSHM_STRING_SSO 31
 
-
 /** forward declaration for string */
-template<size_t SSO, u32 FLAGS, HSHM_CLASS_TEMPL_WITH_DEFAULTS>
+template <size_t SSO, u32 FLAGS, HSHM_CLASS_TEMPL_WITH_DEFAULTS>
 class string_templ;
 
 /**
@@ -42,7 +41,7 @@ class string_templ;
 /**
  * A string of bytes.
  * */
-template<size_t SSO, u32 FLAGS, HSHM_CLASS_TEMPL>
+template <size_t SSO, u32 FLAGS, HSHM_CLASS_TEMPL>
 class string_templ : public ShmContainer {
  public:
   HIPC_CONTAINER_TEMPLATE((CLASS_NAME), (CLASS_NEW_ARGS))
@@ -162,23 +161,20 @@ class string_templ : public ShmContainer {
    */
 
   /** Copy constructor. From this string_templ. */
-  HSHM_CROSS_FUN explicit string_templ(
-      const string_templ &other) {
+  HSHM_CROSS_FUN explicit string_templ(const string_templ &other) {
     shm_strong_or_weak_copy_op<false, true>(other.GetCtxAllocator(),
                                             other.data(), other.size());
   }
 
   /** SHM copy constructor. From this string_templ. */
-  HSHM_INLINE_CROSS explicit string_templ(
-      const hipc::CtxAllocator<AllocT> &alloc,
-      const string_templ &other) {
+  HSHM_INLINE_CROSS_FUN explicit string_templ(
+      const hipc::CtxAllocator<AllocT> &alloc, const string_templ &other) {
     shm_strong_or_weak_copy_op<false, true>(alloc, other.data(), other.size());
   }
 
   /** SHM copy assignment operator. From this string_templ. */
-  HSHM_CROSS_FUN string_templ &operator=(
-      const string_templ &other) {
-    if ((char*)this != (char*)&other) {
+  HSHM_CROSS_FUN string_templ &operator=(const string_templ &other) {
+    if ((char *)this != (char *)&other) {
       shm_strong_or_weak_copy_op<true, true>(GetCtxAllocator(), other.data(),
                                              other.size());
     }
@@ -217,9 +213,9 @@ class string_templ : public ShmContainer {
 
   /** Strong or weak copy operation */
   template <bool IS_ASSIGN, bool HAS_LENGTH>
-  HSHM_CROSS_FUN
-  void shm_strong_or_weak_copy_op(const hipc::CtxAllocator<AllocT> &alloc,
-                                  const char *text, size_t length) {
+  HSHM_CROSS_FUN void shm_strong_or_weak_copy_op(
+      const hipc::CtxAllocator<AllocT> &alloc, const char *text,
+      size_t length) {
     if constexpr (FLAGS & StringFlags::kWrap) {
       shm_weak_wrap_op<IS_ASSIGN, HAS_LENGTH>(alloc, text, length);
     } else {
@@ -280,7 +276,7 @@ class string_templ : public ShmContainer {
 
   /** SHM move assignment operator. */
   HSHM_CROSS_FUN
-  string_templ& operator=(string_templ &&other) noexcept {
+  string_templ &operator=(string_templ &&other) noexcept {
     if (this != &other) {
       shm_move_op<true>(GetCtxAllocator(), std::move(other));
     }
@@ -288,10 +284,9 @@ class string_templ : public ShmContainer {
   }
 
   /** SHM move operator. */
-  template<bool IS_ASSIGN>
-  HSHM_CROSS_FUN
-  void shm_move_op(const hipc::CtxAllocator<AllocT> &alloc,
-                   string_templ &&other) noexcept {
+  template <bool IS_ASSIGN>
+  HSHM_CROSS_FUN void shm_move_op(const hipc::CtxAllocator<AllocT> &alloc,
+                                  string_templ &&other) noexcept {
     if constexpr (IS_ASSIGN) {
       shm_destroy();
     } else {
@@ -307,7 +302,7 @@ class string_templ : public ShmContainer {
   }
 
   /** Move copy */
-  HSHM_INLINE_CROSS
+  HSHM_INLINE_CROSS_FUN
   void move_copy(const string_templ &other) {
     length_ = other.length_;
     max_length_ = other.max_length_;
@@ -323,19 +318,17 @@ class string_templ : public ShmContainer {
    * ===================================*/
 
   /** Check if this string is NULL */
-  HSHM_INLINE_CROSS bool IsNull() const {
-    return length_ == 0;
-  }
+  HSHM_INLINE_CROSS_FUN bool IsNull() const { return length_ == 0; }
 
   /** Set this string to NULL */
-  HSHM_INLINE_CROSS void SetNull() {
+  HSHM_INLINE_CROSS_FUN void SetNull() {
     text_.SetNull();
     length_ = 0;
     is_wrap_ = false;
   }
 
   /** Destroy the shared-memory data. */
-  HSHM_INLINE_CROSS void shm_destroy_main() {
+  HSHM_INLINE_CROSS_FUN void shm_destroy_main() {
     if (max_length_ > SSO && !is_wrap_) {
       GetAllocator()->Free(GetMemCtx(), text_);
     }
@@ -346,12 +339,10 @@ class string_templ : public ShmContainer {
    * ===================================*/
 
   /** Get character at index i in the string */
-  HSHM_INLINE_CROSS char& operator[](size_t i) {
-    return data()[i];
-  }
+  HSHM_INLINE_CROSS_FUN char &operator[](size_t i) { return data()[i]; }
 
   /** Get character at index i in the string */
-  HSHM_INLINE_CROSS const char& operator[](size_t i) const {
+  HSHM_INLINE_CROSS_FUN const char &operator[](size_t i) const {
     return data()[i];
   }
 
@@ -361,22 +352,16 @@ class string_templ : public ShmContainer {
   }
 
   /** Convert into a std::string */
-  HSHM_INLINE_HOST std::string str() const {
-    return {c_str(), length_};
-  }
+  HSHM_INLINE_HOST std::string str() const { return {c_str(), length_}; }
 
   /** Get the size of the current string */
-  HSHM_INLINE_CROSS size_t size() const {
-    return length_;
-  }
+  HSHM_INLINE_CROSS_FUN size_t size() const { return length_; }
 
   /** Get a constant reference to the C-style string */
-  HSHM_INLINE_CROSS const char* c_str() const {
-    return data();
-  }
+  HSHM_INLINE_CROSS_FUN const char *c_str() const { return data(); }
 
   /** Get a constant reference to the C-style string */
-  HSHM_INLINE_CROSS const char* data() const {
+  HSHM_INLINE_CROSS_FUN const char *data() const {
     if constexpr (FLAGS & StringFlags::kWrap) {
       if (is_wrap_) {
         return data_;
@@ -390,7 +375,7 @@ class string_templ : public ShmContainer {
   }
 
   /** Get a mutable reference to the C-style string */
-  HSHM_INLINE_CROSS char* data() {
+  HSHM_INLINE_CROSS_FUN char *data() {
     if constexpr (FLAGS & StringFlags::kWrap) {
       if (is_wrap_) {
         return data_;
@@ -420,7 +405,7 @@ class string_templ : public ShmContainer {
       if (is_wrap_) {
         if (new_size < max_length_) {
         } else {
-        _create_str(orig_data, orig_length, new_size);
+          _create_str(orig_data, orig_length, new_size);
         }
         return;
       }
@@ -454,15 +439,13 @@ class string_templ : public ShmContainer {
 
   /** Serialize */
   template <typename Ar>
-  HSHM_CROSS_FUN
-  void save(Ar &ar) const {
+  HSHM_CROSS_FUN void save(Ar &ar) const {
     save_string<Ar, string_templ>(ar, *this);
   }
 
   /** Deserialize */
   template <typename Ar>
-  HSHM_CROSS_FUN
-  void load(Ar &ar) {
+  HSHM_CROSS_FUN void load(Ar &ar) {
     load_string<Ar, string_templ>(ar, *this);
   }
 
@@ -485,14 +468,14 @@ class string_templ : public ShmContainer {
 
   HERMES_STR_CMP_OPERATOR(==)  // NOLINT
   HERMES_STR_CMP_OPERATOR(!=)  // NOLINT
-  HERMES_STR_CMP_OPERATOR(<)  // NOLINT
-  HERMES_STR_CMP_OPERATOR(>)  // NOLINT
+  HERMES_STR_CMP_OPERATOR(<)   // NOLINT
+  HERMES_STR_CMP_OPERATOR(>)   // NOLINT
   HERMES_STR_CMP_OPERATOR(<=)  // NOLINT
   HERMES_STR_CMP_OPERATOR(>=)  // NOLINT
 #undef HERMES_STR_CMP_OPERATOR
 
  private:
-  HSHM_INLINE_CROSS void _create_str(size_t length) {
+  HSHM_INLINE_CROSS_FUN void _create_str(size_t length) {
     is_wrap_ = false;
     if (length <= SSO) {
       length_ = length;
@@ -504,14 +487,15 @@ class string_templ : public ShmContainer {
     }
   }
 
-  HSHM_INLINE_CROSS void _create_str(const char *text, size_t length) {
+  HSHM_INLINE_CROSS_FUN void _create_str(const char *text, size_t length) {
     _create_str(length);
     char *str = data();
     memcpy(str, text, length);
     // str[length] = 0;
   }
 
-  HSHM_INLINE_CROSS void _create_str(const char *text, size_t orig_length, size_t new_length) {
+  HSHM_INLINE_CROSS_FUN void _create_str(const char *text, size_t orig_length,
+                                         size_t new_length) {
     _create_str(new_length);
     char *str = data();
     memcpy(str, text, orig_length < new_length ? orig_length : new_length);
@@ -525,7 +509,7 @@ using charbuf = string;
 
 namespace hshm {
 
-template<size_t SSO, u32 FLAGS, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
+template <size_t SSO, u32 FLAGS, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
 using string_templ = ipc::string_templ<SSO, FLAGS, HSHM_CLASS_TEMPL_ARGS>;
 
 using string = string_templ<HSHM_STRING_SSO, 0>;

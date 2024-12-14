@@ -25,19 +25,16 @@ GetThreadLocal(const hipc::CtxAllocator<AllocT> &ctx_alloc) {
 HSHM_CROSS_FUN
 __TU(TYPED_CLASS_TLS)
 GetThreadLocal(const hshm::ThreadId &tid) {
-  return __TU(TYPED_CLASS_TLS)(
-      *this, tid, GetAllocator());
+  return __TU(TYPED_CLASS_TLS)(*this, tid, GetAllocator());
 }
 
-
 /** SHM constructor. Thread-local. */
-template<hipc::ShmFlagField OTHER_FLAGS>
-HSHM_CROSS_FUN
-explicit __TU(CLASS_NAME)(
-    const __TU(TYPED_CLASS_TLS2) &other,
-const hshm::ThreadId &tid, AllocT *alloc) {
-memcpy(this, &other, sizeof(*this));
-init_shm_container(tid, alloc);
+template <hipc::ShmFlagField OTHER_FLAGS>
+HSHM_CROSS_FUN explicit __TU(CLASS_NAME)(const __TU(TYPED_CLASS_TLS2) & other,
+                                         const hshm::ThreadId &tid,
+                                         AllocT *alloc) {
+  memcpy(this, &other, sizeof(*this));
+  init_shm_container(tid, alloc);
 }
 
 /** Initialize container */
@@ -72,7 +69,7 @@ void init_shm_container(const hipc::CtxAllocator<AllocT> &tls_alloc) {
  * Destructor
  * ===================================*/
 /** Destructor. */
-HSHM_INLINE_CROSS
+HSHM_INLINE_CROSS_FUN
 ~__TU(CLASS_NAME)() {
   if constexpr (!(HSHM_FLAGS & hipc::ShmFlag::kIsUndestructable)) {
     shm_destroy();
@@ -80,9 +77,11 @@ HSHM_INLINE_CROSS
 }
 
 /** Destruction operation */
-HSHM_INLINE_CROSS
+HSHM_INLINE_CROSS_FUN
 void shm_destroy() {
-  if (IsNull()) { return; }
+  if (IsNull()) {
+    return;
+  }
   shm_destroy_main();
   SetNull();
 }
@@ -92,11 +91,9 @@ void shm_destroy() {
  * ===================================*/
 
 /** Get a typed pointer to the object */
-template<typename POINTER_T>
-HSHM_INLINE_CROSS
-    POINTER_T GetShmPointer() const {
-  return GetAllocator()->template
-      Convert<__TU(TYPED_CLASS), POINTER_T>(this);
+template <typename POINTER_T>
+HSHM_INLINE_CROSS_FUN POINTER_T GetShmPointer() const {
+  return GetAllocator()->template Convert<__TU(TYPED_CLASS), POINTER_T>(this);
 }
 
 /**====================================
@@ -104,8 +101,8 @@ HSHM_INLINE_CROSS
  * ===================================*/
 
 /** Get the allocator for this container */
-HSHM_INLINE_CROSS
-    AllocT* GetAllocator() const {
+HSHM_INLINE_CROSS_FUN
+AllocT *GetAllocator() const {
   if constexpr (!(HSHM_FLAGS & hipc::ShmFlag::kIsPrivate)) {
     return HERMES_MEMORY_MANAGER->GetAllocator<AllocT>(alloc_info_);
   } else {
@@ -114,8 +111,8 @@ HSHM_INLINE_CROSS
 }
 
 /** Get the shared-memory allocator id */
-HSHM_INLINE_CROSS
-const hipc::AllocatorId& GetAllocatorId() const {
+HSHM_INLINE_CROSS_FUN
+const hipc::AllocatorId &GetAllocatorId() const {
   if constexpr (!(HSHM_FLAGS & hipc::ShmFlag::kIsPrivate)) {
     return alloc_info_;
   } else {
@@ -124,8 +121,8 @@ const hipc::AllocatorId& GetAllocatorId() const {
 }
 
 /** Get the shared-memory allocator id */
-HSHM_INLINE_CROSS
-    hipc::MemContext GetMemCtx() const {
+HSHM_INLINE_CROSS_FUN
+hipc::MemContext GetMemCtx() const {
   if constexpr (!(HSHM_FLAGS & hipc::ShmFlag::kIsPrivate)) {
     return HSHM_DEFAULT_MEM_CTX;
   } else {
@@ -134,8 +131,8 @@ HSHM_INLINE_CROSS
 }
 
 /** Get the shared-memory allocator id */
-HSHM_INLINE_CROSS
-    hipc::CtxAllocator<AllocT> GetCtxAllocator() const {
+HSHM_INLINE_CROSS_FUN
+hipc::CtxAllocator<AllocT> GetCtxAllocator() const {
   if constexpr (!(HSHM_FLAGS & hipc::ShmFlag::kIsPrivate)) {
     return hipc::CtxAllocator<AllocT>{GetMemCtx(), GetAllocator()};
   } else {

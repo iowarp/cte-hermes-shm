@@ -304,37 +304,38 @@ class iqueue : public ShmContainer {
   void emplace(T *entry) { enqueue(entry); }
 
   /** Push. wrapper for enqueue */
-  HSHM_INLINE_CROSS
+  HSHM_INLINE_CROSS_FUN
   void push(T *entry) { enqueue(entry); }
 
   /** Dequeue the first element */
-  HSHM_CROSS_FUN
+  HSHM_INLINE_CROSS_FUN
   T *dequeue() {
-    if (size() == 0) {
+    T *val;
+    if (dequeue(val).IsNull()) {
       return nullptr;
+    }
+    return val;
+  }
+
+  /** Wrapper for dequeue */
+  HSHM_INLINE_CROSS_FUN
+  T *pop() { return dequeue(); }
+
+  /** Dequeue the element (qtok_t) */
+  HSHM_INLINE_CROSS_FUN
+  qtok_t dequeue(T *&val) {
+    if (size() == 0) {
+      return qtok_t::GetNull();
     }
     auto entry = GetAllocator()->template Convert<iqueue_entry>(head_shm_);
     head_shm_ = entry->next_shm_;
     --length_;
-    return reinterpret_cast<T *>(entry);
-  }
-
-  /** Wrapper for dequeue */
-  HSHM_INLINE_CROSS
-  T *pop() { return dequeue(); }
-
-  /** Dequeue the element (qtok_t) */
-  HSHM_INLINE_CROSS
-  qtok_t dequeue(T *&val) {
-    val = dequeue();
-    if (!val) {
-      return qtok_t::GetNull();
-    }
-    return qtok_t(length_);
+    val = reinterpret_cast<T *>(entry);
+    return qtok_t(1);
   }
 
   /** Pop the element (qtok_t) */
-  HSHM_INLINE_CROSS
+  HSHM_INLINE_CROSS_FUN
   qtok_t pop(T *&val) { return dequeue(val); }
 
   /** Dequeue the element at the iterator position */
@@ -352,7 +353,7 @@ class iqueue : public ShmContainer {
   }
 
   /** Wrapper for dequeue */
-  HSHM_INLINE_CROSS
+  HSHM_INLINE_CROSS_FUN
   T *pop(iterator_t pos) { return dequeue(pos); }
 
   /** Peek the first element of the queue */

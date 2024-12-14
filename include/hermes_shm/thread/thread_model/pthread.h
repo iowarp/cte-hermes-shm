@@ -13,18 +13,19 @@
 #ifndef HERMES_THREAD_PTHREAD_H_
 #define HERMES_THREAD_PTHREAD_H_
 
-#include "thread_model.h"
 #include <errno.h>
-#include "hermes_shm/util/errors.h"
 #include <omp.h>
+
 #include "hermes_shm/introspect/system_info.h"
+#include "hermes_shm/util/errors.h"
+#include "thread_model.h"
 
 namespace hshm::thread {
 
 class Pthread : public ThreadModel {
  public:
   /** Default constructor */
-  HSHM_INLINE_CROSS
+  HSHM_INLINE_CROSS_FUN
   Pthread() : ThreadModel(ThreadType::kPthread) {}
 
   /** Virtual destructor */
@@ -47,9 +48,8 @@ class Pthread : public ThreadModel {
   }
 
   /** Create thread-local storage */
-  template<typename TLS>
-  HSHM_CROSS_FUN
-  bool CreateTls(ThreadLocalKey &key, TLS *data) {
+  template <typename TLS>
+  HSHM_CROSS_FUN bool CreateTls(ThreadLocalKey &key, TLS *data) {
 #ifdef HSHM_IS_HOST
     int ret = pthread_key_create(&key.pthread_key_,
                                  ThreadLocalData::destroy_wrap<TLS>);
@@ -63,9 +63,8 @@ class Pthread : public ThreadModel {
   }
 
   /** Create thread-local storage */
-  template<typename TLS>
-  HSHM_CROSS_FUN
-  bool SetTls(ThreadLocalKey &key, TLS *data) {
+  template <typename TLS>
+  HSHM_CROSS_FUN bool SetTls(ThreadLocalKey &key, TLS *data) {
 #ifdef HSHM_IS_HOST
     pthread_setspecific(key.pthread_key_, data);
     return true;
@@ -75,11 +74,10 @@ class Pthread : public ThreadModel {
   }
 
   /** Get thread-local storage */
-  template<typename TLS>
-  HSHM_CROSS_FUN
-  TLS* GetTls(const ThreadLocalKey &key) {
+  template <typename TLS>
+  HSHM_CROSS_FUN TLS *GetTls(const ThreadLocalKey &key) {
 #ifdef HSHM_IS_HOST
-    TLS *data = (TLS*)pthread_getspecific(key.pthread_key_);
+    TLS *data = (TLS *)pthread_getspecific(key.pthread_key_);
     return data;
 #else
     return nullptr;

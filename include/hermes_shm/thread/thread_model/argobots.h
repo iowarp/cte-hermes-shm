@@ -13,19 +13,21 @@
 #ifndef HERMES_SHM_INCLUDE_HERMES_SHM_THREAD_THALLIUM_H_
 #define HERMES_SHM_INCLUDE_HERMES_SHM_THREAD_THALLIUM_H_
 
-#include "thread_model.h"
-#include <thallium.hpp>
 #include <errno.h>
-#include "hermes_shm/util/errors.h"
 #include <omp.h>
+
+#include <thallium.hpp>
+
 #include "hermes_shm/introspect/system_info.h"
+#include "hermes_shm/util/errors.h"
+#include "thread_model.h"
 
 namespace hshm::thread {
 
 class Argobots : public ThreadModel {
  public:
   /** Default constructor */
-  HSHM_INLINE_CROSS
+  HSHM_INLINE_CROSS_FUN
   Argobots() : ThreadModel(ThreadType::kArgobots) {}
 
   /** Virtual destructor */
@@ -54,9 +56,8 @@ class Argobots : public ThreadModel {
   }
 
   /** Create thread-local storage */
-  template<typename TLS>
-  HSHM_CROSS_FUN
-  bool CreateTls(ThreadLocalKey &key, TLS *data) {
+  template <typename TLS>
+  HSHM_CROSS_FUN bool CreateTls(ThreadLocalKey &key, TLS *data) {
 #ifdef HSHM_IS_HOST
     int ret = ABT_key_create(ThreadLocalData::template destroy_wrap<TLS>,
                              &key.argobots_key_);
@@ -70,9 +71,8 @@ class Argobots : public ThreadModel {
   }
 
   /** Create thread-local storage */
-  template<typename TLS>
-  HSHM_CROSS_FUN
-  bool SetTls(ThreadLocalKey &key, TLS *data) {
+  template <typename TLS>
+  HSHM_CROSS_FUN bool SetTls(ThreadLocalKey &key, TLS *data) {
 #ifdef HSHM_IS_HOST
     int ret = ABT_key_set(key.argobots_key_, data);
     return ret == ABT_SUCCESS;
@@ -82,13 +82,12 @@ class Argobots : public ThreadModel {
   }
 
   /** Get thread-local storage */
-  template<typename TLS>
-  HSHM_CROSS_FUN
-  TLS* GetTls(const ThreadLocalKey &key) {
+  template <typename TLS>
+  HSHM_CROSS_FUN TLS *GetTls(const ThreadLocalKey &key) {
 #ifdef HSHM_IS_HOST
     TLS *data;
     ABT_key_get(key.argobots_key_, (void **)&data);
-    return (TLS*)data;
+    return (TLS *)data;
 #else
     return nullptr;
 #endif

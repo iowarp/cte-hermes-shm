@@ -10,13 +10,12 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-
 #ifndef HERMES_THREAD_MUTEX_H_
 #define HERMES_THREAD_MUTEX_H_
 
+#include "hermes_shm/thread/thread_model_manager.h"
 #include "hermes_shm/types/atomic.h"
 #include "hermes_shm/types/numbers.h"
-#include "hermes_shm/thread/thread_model_manager.h"
 
 namespace hshm {
 
@@ -27,32 +26,32 @@ struct Mutex {
 #endif
 
   /** Default constructor */
-  HSHM_INLINE_CROSS
+  HSHM_INLINE_CROSS_FUN
   Mutex() : lock_(0) {}
 
   /** Copy constructor */
-  HSHM_INLINE_CROSS
+  HSHM_INLINE_CROSS_FUN
   Mutex(const Mutex &other) {}
 
   /** Explicit initialization */
-  HSHM_INLINE_CROSS
-  void Init() {
-    lock_ = 0;
-  }
+  HSHM_INLINE_CROSS_FUN
+  void Init() { lock_ = 0; }
 
   /** Acquire lock */
-  HSHM_INLINE_CROSS
+  HSHM_INLINE_CROSS_FUN
   void Lock(uint32_t owner) {
     do {
       for (int i = 0; i < 1; ++i) {
-        if (TryLock(owner)) { return; }
+        if (TryLock(owner)) {
+          return;
+        }
       }
       HERMES_THREAD_MODEL->Yield();
     } while (true);
   }
 
   /** Try to acquire the lock */
-  HSHM_INLINE_CROSS
+  HSHM_INLINE_CROSS_FUN
   bool TryLock(uint32_t owner) {
     if (lock_.load() != 0) {
       return false;
@@ -69,7 +68,7 @@ struct Mutex {
   }
 
   /** Unlock */
-  HSHM_INLINE_CROSS
+  HSHM_INLINE_CROSS_FUN
   void Unlock() {
 #ifdef HERMES_DEBUG_LOCK
     owner_ = 0;
@@ -83,21 +82,17 @@ struct ScopedMutex {
   bool is_locked_;
 
   /** Acquire the mutex */
-  HSHM_INLINE_CROSS explicit
-  ScopedMutex(Mutex &lock,
-                          uint32_t owner)
+  HSHM_INLINE_CROSS_FUN explicit ScopedMutex(Mutex &lock, uint32_t owner)
       : lock_(lock), is_locked_(false) {
     Lock(owner);
   }
 
   /** Release the mutex */
-  HSHM_INLINE_CROSS
-  ~ScopedMutex() {
-    Unlock();
-  }
+  HSHM_INLINE_CROSS_FUN
+  ~ScopedMutex() { Unlock(); }
 
   /** Explicitly acquire the mutex */
-  HSHM_INLINE_CROSS
+  HSHM_INLINE_CROSS_FUN
   void Lock(uint32_t owner) {
     if (!is_locked_) {
       lock_.Lock(owner);
@@ -106,7 +101,7 @@ struct ScopedMutex {
   }
 
   /** Explicitly try to lock the mutex */
-  HSHM_INLINE_CROSS
+  HSHM_INLINE_CROSS_FUN
   bool TryLock(uint32_t owner) {
     if (!is_locked_) {
       is_locked_ = lock_.TryLock(owner);
@@ -115,7 +110,7 @@ struct ScopedMutex {
   }
 
   /** Explicitly unlock the mutex */
-  HSHM_INLINE_CROSS
+  HSHM_INLINE_CROSS_FUN
   void Unlock() {
     if (is_locked_) {
       lock_.Unlock();

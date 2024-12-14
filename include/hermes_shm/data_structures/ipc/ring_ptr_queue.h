@@ -65,7 +65,7 @@ class ring_ptr_queue_base : public ShmContainer {
     shm_init(alloc, depth);
   }
 
-  HSHM_INLINE_CROSS
+  HSHM_INLINE_CROSS_FUN
   void shm_init(const hipc::CtxAllocator<AllocT> &alloc, size_t depth = 1024) {
     init_shm_container(alloc);
     HSHM_MAKE_AR(queue_, GetCtxAllocator(), depth);
@@ -188,7 +188,7 @@ class ring_ptr_queue_base : public ShmContainer {
   void resize(size_t new_depth) { queue_->resize(new_depth); }
 
   /** Resize (wrapper) */
-  HSHM_INLINE_CROSS
+  HSHM_INLINE_CROSS_FUN
   void Resize(size_t new_depth) { resize(new_depth); }
 
   /** Construct an element at \a pos position in the list */
@@ -234,7 +234,7 @@ class ring_ptr_queue_base : public ShmContainer {
 
   /** Push an elemnt in the list (wrapper) */
   template <typename... Args>
-  HSHM_INLINE_CROSS qtok_t push(Args &&...args) {
+  HSHM_INLINE_CROSS_FUN qtok_t push(Args &&...args) {
     return emplace(std::forward<Args>(args)...);
   }
 
@@ -319,7 +319,7 @@ class ring_ptr_queue_base : public ShmContainer {
   }
 
   /** Mark an entry */
-  HSHM_INLINE_CROSS
+  HSHM_INLINE_CROSS_FUN
   void Mark(const T &val, T &entry) {
     if constexpr (std::is_arithmetic_v<T>) {
       entry = MARK_FIRST_BIT(T, val);
@@ -333,7 +333,7 @@ class ring_ptr_queue_base : public ShmContainer {
   }
 
   /** Check if a pointer is marked */
-  HSHM_INLINE_CROSS
+  HSHM_INLINE_CROSS_FUN
   bool IsMarked(T &entry) {
     if constexpr (std::is_arithmetic_v<T>) {
       return IS_FIRST_BIT_MARKED(T, entry);
@@ -347,7 +347,7 @@ class ring_ptr_queue_base : public ShmContainer {
   }
 
   /** Unmark pointer */
-  HSHM_INLINE_CROSS
+  HSHM_INLINE_CROSS_FUN
   void Unmark(T &val, T &entry) {
     if constexpr (std::is_arithmetic<T>::value) {
       val = UNMARK_FIRST_BIT(T, entry);
@@ -364,11 +364,11 @@ class ring_ptr_queue_base : public ShmContainer {
   }
 
   /** Get queue depth */
-  HSHM_INLINE_CROSS
+  HSHM_INLINE_CROSS_FUN
   size_t GetDepth() { return queue_->size(); }
 
   /** Get size at this moment */
-  HSHM_INLINE_CROSS
+  HSHM_INLINE_CROSS_FUN
   size_t GetSize() {
     size_t tail = tail_.load();
     size_t head = head_.load();
@@ -379,11 +379,11 @@ class ring_ptr_queue_base : public ShmContainer {
   }
 
   /** Get size (wrapper) */
-  HSHM_INLINE_CROSS
+  HSHM_INLINE_CROSS_FUN
   size_t size() { return GetSize(); }
 
   /** Get size (wrapper) */
-  HSHM_INLINE_CROSS
+  HSHM_INLINE_CROSS_FUN
   size_t Size() { return GetSize(); }
 };
 

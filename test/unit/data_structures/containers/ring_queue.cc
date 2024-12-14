@@ -49,6 +49,38 @@ TEST_CASE("TestDynamicQueueStringMultiThreaded") {
 }
 
 /**
+ * TEST SPSC LIST QUEUE
+ * */
+
+TEST_CASE("TestSpscListQueueInt") {
+  auto *alloc = HSHM_DEFAULT_ALLOC;
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+  ProduceThenConsume<hipc::spsc_fifo_list_queue<IntEntry>, IntEntry *>(1, 1, 32,
+                                                                       32);
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+}
+
+/**
+ * TEST MPMC LIST QUEUE
+ * */
+
+TEST_CASE("TestMpmcListQueueInt") {
+  auto *alloc = HSHM_DEFAULT_ALLOC;
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+  ProduceThenConsume<hipc::mpmc_fifo_list_queue<IntEntry>, IntEntry *>(1, 1, 32,
+                                                                       32);
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+}
+
+TEST_CASE("TestMpmcListQueueIntMultithreaded") {
+  auto *alloc = HSHM_DEFAULT_ALLOC;
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+  ProduceThenConsume<hipc::mpmc_fifo_list_queue<IntEntry>, IntEntry *>(
+      8, 1, 8192, 32);
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+}
+
+/**
  * TEST MPSC QUEUE
  * */
 

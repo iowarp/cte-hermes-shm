@@ -1,14 +1,14 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-* Distributed under BSD 3-Clause license.                                   *
-* Copyright by The HDF Group.                                               *
-* Copyright by the Illinois Institute of Technology.                        *
-* All rights reserved.                                                      *
-*                                                                           *
-* This file is part of Hermes. The full Hermes copyright notice, including  *
-* terms governing use, modification, and redistribution, is contained in    *
-* the COPYING file, which can be found at the top directory. If you do not  *
-* have access to the file, you may request a copy from help@hdfgroup.org.   *
-* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+ * Distributed under BSD 3-Clause license.                                   *
+ * Copyright by The HDF Group.                                               *
+ * Copyright by the Illinois Institute of Technology.                        *
+ * All rights reserved.                                                      *
+ *                                                                           *
+ * This file is part of Hermes. The full Hermes copyright notice, including  *
+ * terms governing use, modification, and redistribution, is contained in    *
+ * the COPYING file, which can be found at the top directory. If you do not  *
+ * have access to the file, you may request a copy from help@hdfgroup.org.   *
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #ifndef HERMES_SHM_INCLUDE_HERMES_SHM_DATA_STRUCTURES_IPC_TICKET_QUEUE_H_
 #define HERMES_SHM_INCLUDE_HERMES_SHM_DATA_STRUCTURES_IPC_TICKET_QUEUE_H_
@@ -21,7 +21,7 @@
 namespace hshm::ipc {
 
 /** Forward declaration of ticket_queue */
-template<typename T, HSHM_CLASS_TEMPL_WITH_DEFAULTS>
+template <typename T, HSHM_CLASS_TEMPL_WITH_DEFAULTS>
 class ticket_queue;
 
 /**
@@ -35,7 +35,7 @@ class ticket_queue;
  * A MPMC queue for allocating tickets. Handles concurrency
  * without blocking.
  * */
-template<typename T, HSHM_CLASS_TEMPL>
+template <typename T, HSHM_CLASS_TEMPL>
 class ticket_queue : public ShmContainer {
  public:
   HIPC_CONTAINER_TEMPLATE((CLASS_NAME), (CLASS_NEW_ARGS))
@@ -61,8 +61,7 @@ class ticket_queue : public ShmContainer {
   }
 
   /** SHM Constructor. */
-  void shm_init(const hipc::CtxAllocator<AllocT> &alloc,
-                size_t depth = 1024) {
+  void shm_init(const hipc::CtxAllocator<AllocT> &alloc, size_t depth = 1024) {
     init_shm_container(alloc);
     HSHM_MAKE_AR(queue_, GetCtxAllocator(), depth);
     lock_.Init();
@@ -92,7 +91,7 @@ class ticket_queue : public ShmContainer {
 
   /** SHM copy assignment operator */
   HSHM_CROSS_FUN
-  ticket_queue& operator=(const ticket_queue &other) {
+  ticket_queue &operator=(const ticket_queue &other) {
     if (this != &other) {
       shm_destroy();
       shm_strong_copy_op(other);
@@ -125,7 +124,7 @@ class ticket_queue : public ShmContainer {
 
   /** SHM move assignment operator. */
   HSHM_CROSS_FUN
-  ticket_queue& operator=(ticket_queue &&other) noexcept {
+  ticket_queue &operator=(ticket_queue &&other) noexcept {
     if (this != &other) {
       shm_move_op<true>(GetCtxAllocator(), std::move(other));
     }
@@ -133,9 +132,9 @@ class ticket_queue : public ShmContainer {
   }
 
   /** SHM move operator. */
-  template<bool IS_ASSIGN>
-  HSHM_CROSS_FUN
-  void shm_move_op(const hipc::CtxAllocator<AllocT> &alloc, ticket_queue &&other) noexcept {
+  template <bool IS_ASSIGN>
+  HSHM_CROSS_FUN void shm_move_op(const hipc::CtxAllocator<AllocT> &alloc,
+                                  ticket_queue &&other) noexcept {
     if constexpr (IS_ASSIGN) {
       shm_destroy();
     } else {
@@ -156,15 +155,11 @@ class ticket_queue : public ShmContainer {
 
   /** SHM destructor. */
   HSHM_CROSS_FUN
-  void shm_destroy_main() {
-    (*queue_).shm_destroy();
-  }
+  void shm_destroy_main() { (*queue_).shm_destroy(); }
 
   /** Check if the list is empty */
   HSHM_CROSS_FUN
-  bool IsNull() const {
-    return (*queue_).IsNull();
-  }
+  bool IsNull() const { return (*queue_).IsNull(); }
 
   /** Sets this list as empty */
   HSHM_CROSS_FUN
@@ -175,8 +170,8 @@ class ticket_queue : public ShmContainer {
    * ===================================*/
 
   /** Construct an element at \a pos position in the queue */
-  template<typename ...Args>
-  HSHM_INLINE_CROSS qtok_t emplace(T &tkt) {
+  template <typename... Args>
+  HSHM_INLINE_CROSS_FUN qtok_t emplace(T &tkt) {
     lock_.Lock(0);
     auto qtok = queue_->emplace(tkt);
     lock_.Unlock();
@@ -185,7 +180,7 @@ class ticket_queue : public ShmContainer {
 
  public:
   /** Pop an element from the queue */
-  HSHM_INLINE_CROSS qtok_t pop(T &tkt) {
+  HSHM_INLINE_CROSS_FUN qtok_t pop(T &tkt) {
     lock_.Lock(0);
     auto qtok = queue_->pop(tkt);
     lock_.Unlock();
@@ -197,7 +192,7 @@ class ticket_queue : public ShmContainer {
 
 namespace hshm {
 
-template<typename T, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
+template <typename T, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
 using ticket_queue = hipc::ticket_queue<T, HSHM_CLASS_TEMPL_ARGS>;
 
 }  // namespace hshm
