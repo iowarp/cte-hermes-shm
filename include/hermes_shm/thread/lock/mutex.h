@@ -121,6 +121,13 @@ struct ScopedMutex {
 
 }  // namespace hshm
 
+namespace hshm::ipc {
+
+using hshm::Mutex;
+using hshm::ScopedMutex;
+
+}  // namespace hshm::ipc
+
 #undef Mutex
 #undef ScopedMutex
 

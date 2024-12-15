@@ -14,6 +14,7 @@
 #define HERMES_INCLUDE_HERMES_MEMORY_ALLOCATOR_MP_PAGE_H_
 
 #include "hermes_shm/data_structures/ipc/lifo_list_queue.h"
+#include "hermes_shm/data_structures/ipc/mpmc_lifo_list_queue.h"
 
 namespace hshm::ipc {
 

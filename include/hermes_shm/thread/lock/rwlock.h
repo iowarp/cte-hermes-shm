@@ -242,4 +242,12 @@ struct ScopedRwWriteLock {
 
 }  // namespace hshm
 
+namespace hshm::ipc {
+
+using hshm::RwLock;
+using hshm::ScopedRwReadLock;
+using hshm::ScopedRwWriteLock;
+
+}  // namespace hshm::ipc
+
 #endif  // HERMES_THREAD_RWLOCK_H_

@@ -114,4 +114,11 @@ struct ScopedSpinLock {
 
 }  // namespace hshm
 
+namespace hshm::ipc {
+
+using hshm::ScopedSpinLock;
+using hshm::SpinLock;
+
+}  // namespace hshm::ipc
+
 #endif  // HERMES_SHM_INCLUDE_HERMES_SHM_THREAD_LOCK_SPIN_LOCK_H_

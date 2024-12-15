@@ -31,6 +31,7 @@ enum class AllocatorType {
   kMallocAllocator,
   kFixedPageAllocator,
   kScalablePageAllocator,
+  kThreadLocalAllocator,
 };
 
 /**
