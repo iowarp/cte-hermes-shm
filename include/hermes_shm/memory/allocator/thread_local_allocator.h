@@ -55,6 +55,7 @@ struct _ThreadLocalAllocatorHeader : public AllocatorHeader {
     HSHM_MAKE_AR(tls_, alloc, max_threads, alloc);
     HSHM_MAKE_AR(free_tids_, alloc, max_threads);
     total_alloc_ = 0;
+    tid_heap_ = 0;
   }
 
   HSHM_INLINE_CROSS_FUN

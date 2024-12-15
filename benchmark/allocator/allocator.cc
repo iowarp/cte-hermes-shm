@@ -50,6 +50,10 @@ class AllocatorTestSuite {
         alloc_type_ = "hipc::ScalablePageAllocator";
         break;
       }
+      case AllocatorType::kThreadLocalAllocator: {
+        alloc_type_ = "hipc::ThreadLocalAllocator";
+        break;
+      }
       default: {
         HELOG(kFatal, "Could not find this allocator type");
         break;
@@ -201,7 +205,7 @@ void Posttest() {
   if (rank == 0) {
     AllocatorId alloc_id(0, minor);
     HERMES_MEMORY_MANAGER->UnregisterAllocator(alloc_id);
-    HERMES_MEMORY_MANAGER->DestroyBackend(hipc::MemoryBackendId::Get(0));
+    HERMES_MEMORY_MANAGER->UnregisterBackend(hipc::MemoryBackendId::Get(0));
     minor += 1;
   }
 #pragma omp barrier
@@ -217,7 +221,7 @@ void AllocatorTest(AllocatorType alloc_type, MemoryBackendType backend_type,
   //  if (alloc_type == AllocatorType::kScalablePageAllocator) {
   //    printf("TID: %llu\n", (*scoped_tls).ctx_.tid_);
   //  }
-  size_t count = (1 << 20);
+  size_t count = (1 << 16);
   // Allocate many and then free many
   //  AllocatorTestSuite<AllocT>((alloc_type,
   //  *scoped_tls).AllocateThenFreeFixedSize(
@@ -235,11 +239,15 @@ void AllocatorTest(AllocatorType alloc_type, MemoryBackendType backend_type,
 /** Test different allocators on a particular thread */
 void FullAllocatorTestPerThread() {
   // Malloc allocator
-  AllocatorTest<hipc::MallocBackend, hipc::MallocAllocator>(
-      AllocatorType::kMallocAllocator, MemoryBackendType::kMallocBackend);
+  // AllocatorTest<hipc::MallocBackend, hipc::MallocAllocator>(
+  //     AllocatorType::kMallocAllocator, MemoryBackendType::kMallocBackend);
   // Scalable page allocator
-  AllocatorTest<hipc::PosixShmMmap, hipc::ScalablePageAllocator>(
-      AllocatorType::kScalablePageAllocator, MemoryBackendType::kMallocBackend);
+  // AllocatorTest<hipc::PosixShmMmap, hipc::ScalablePageAllocator>(
+  //     AllocatorType::kScalablePageAllocator,
+  //     MemoryBackendType::kMallocBackend);
+  // Thread-local allocator
+  AllocatorTest<hipc::PosixShmMmap, hipc::ThreadLocalAllocator>(
+      AllocatorType::kThreadLocalAllocator, MemoryBackendType::kMallocBackend);
   // Stack allocator
   //  AllocatorTest<hipc::PosixShmMmap, hipc::StackAllocator>(
   //    AllocatorType::kStackAllocator,
