@@ -35,7 +35,7 @@ class _ScalablePageAllocator;
 struct _ScalablePageAllocatorHeader : public AllocatorHeader {
   typedef hipc::PageAllocator<_ScalablePageAllocator, true> PageAllocator;
   hipc::atomic<hshm::min_u64> total_alloc_;
-  PageAllocator global_;
+  hipc::delay_ar<PageAllocator> global_;
 
   HSHM_CROSS_FUN
   _ScalablePageAllocatorHeader() = default;
@@ -46,6 +46,7 @@ struct _ScalablePageAllocatorHeader : public AllocatorHeader {
     AllocatorHeader::Configure(alloc_id, AllocatorType::kScalablePageAllocator,
                                custom_header_size);
     total_alloc_ = 0;
+    HSHM_MAKE_AR(global_, alloc, alloc);
   }
 };
 
@@ -112,7 +113,7 @@ class _ScalablePageAllocator : public Allocator {
     PageId page_id(size + sizeof(MpPage));
 
     // Case 1: Can we re-use an existing page?
-    PageAllocator &page_alloc = header_->global_;
+    PageAllocator &page_alloc = *header_->global_;
     page = page_alloc.Allocate(page_id);
 
     // Case 2: Coalesce if enough space is being wasted
@@ -180,7 +181,7 @@ class _ScalablePageAllocator : public Allocator {
     }
     hdr->UnsetAllocated();
     header_->total_alloc_.fetch_sub(hdr->page_size_);
-    PageAllocator &page_alloc = header_->global_;
+    PageAllocator &page_alloc = *header_->global_;
     page_alloc.Free(hdr);
   }
 

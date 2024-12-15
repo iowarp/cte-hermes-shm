@@ -76,6 +76,7 @@ struct _ThreadLocalAllocatorHeader : public AllocatorHeader {
 class _ThreadLocalAllocator : public Allocator {
  private:
   typedef TlsAllocatorInfo<_ThreadLocalAllocator> TLS;
+  typedef hipc::PageAllocator<_ThreadLocalAllocator, false> PageAllocator;
   typedef BaseAllocator<_ThreadLocalAllocator> AllocT;
   _ThreadLocalAllocatorHeader *header_;
   StackAllocator alloc_;

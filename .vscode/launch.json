@@ -91,7 +91,7 @@
             "request": "launch",
             "program": "${workspaceFolder}/build/bin/test_allocator_exec",
             "args": [
-                "FullPtr"
+                "StackAllocatorMultithreaded"
             ],
             "miDebuggerPath": "/usr/bin/gdb",
             "cwd": "${workspaceFolder}",

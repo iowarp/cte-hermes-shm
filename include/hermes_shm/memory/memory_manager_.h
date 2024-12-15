@@ -34,7 +34,7 @@ class MemoryManager {
   Allocator *default_allocator_;
   char root_backend_space_[64];
   char root_alloc_space_[64];
-  char root_alloc_data_[KILOBYTES(32)];
+  char root_alloc_data_[KILOBYTES(64)];
 
  public:
   /** Create the root allocator */

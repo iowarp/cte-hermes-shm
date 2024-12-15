@@ -29,6 +29,9 @@ typedef BaseAllocator<_ScalablePageAllocator> ScalablePageAllocator;
 class _StackAllocator;
 typedef BaseAllocator<_StackAllocator> StackAllocator;
 
+class _ThreadLocalAllocator;
+typedef BaseAllocator<_ThreadLocalAllocator> ThreadLocalAllocator;
+
 }  // namespace hshm::ipc
 
 #endif  // HERMES_MEMORY_ALLOCATOR_ALLOCATOR_FACTORY__H_

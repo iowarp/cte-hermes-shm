@@ -24,8 +24,6 @@ struct PageId {
   /** The number of well-defined caches */
   static const size_t num_caches_ =
       max_cached_size_exp_ - min_cached_size_exp_ + 1;
-  /** An arbitrary free list */
-  static const size_t num_free_lists_ = num_caches_ + 1;
 
  public:
   size_t orig_;
@@ -64,21 +62,25 @@ class PageAllocator {
  public:
   typedef StackAllocator Alloc_;
   typedef TlsAllocatorInfo<AllocT> TLS;
-  typedef typename std::conditional<
-      THREAD_SAFE, hipc::lifo_list_queue<MpPage, Alloc_>,
-      hipc::mpmc_lifo_list_queue<MpPage, Alloc_>>::type LIST;
+  typedef hipc::lifo_list_queue<MpPage, Alloc_> LIFO_LIST;
+  typedef hipc::mpmc_lifo_list_queue<MpPage, Alloc_> MPMC_LIFO_LIST;
+  typedef
+      typename std::conditional<THREAD_SAFE, LIFO_LIST, MPMC_LIFO_LIST>::type
+          LIST;
   hipc::Mutex lock_;
 
  public:
-  hipc::delay_ar<LIST> free_lists_[PageId::num_free_lists_];
+  hipc::delay_ar<LIST> free_lists_[PageId::num_caches_];
+  hipc::delay_ar<LIFO_LIST> fallback_list_;
   TLS tls_info_;
 
  public:
   HSHM_INLINE_CROSS_FUN
   explicit PageAllocator(StackAllocator *alloc) {
-    for (size_t i = 0; i < PageId::num_free_lists_; ++i) {
+    for (size_t i = 0; i < PageId::num_caches_; ++i) {
       HSHM_MAKE_AR0(free_lists_[i], alloc);
     }
+    HSHM_MAKE_AR0(fallback_list_, alloc);
   }
 
   HSHM_INLINE_CROSS_FUN
@@ -98,20 +100,20 @@ class PageAllocator {
     // Allocate a large page size
     if constexpr (THREAD_SAFE) {
       hipc::ScopedMutex lock(lock_, 0);
-      for (auto it = free_lists_[PageId::num_caches_]->begin();
-           it != free_lists_[PageId::num_caches_]->end(); ++it) {
+      for (auto it = fallback_list_->begin(); it != fallback_list_->end();
+           ++it) {
         MpPage *page = *it;
         if (page->page_size_ >= page_id.round_) {
-          free_lists_[PageId::num_caches_]->dequeue(it);
+          fallback_list_->dequeue(it);
           return page;
         }
       }
     } else {
-      for (auto it = free_lists_[PageId::num_caches_]->begin();
-           it != free_lists_[PageId::num_caches_]->end(); ++it) {
+      for (auto it = fallback_list_->begin(); it != fallback_list_->end();
+           ++it) {
         MpPage *page = *it;
         if (page->page_size_ >= page_id.round_) {
-          free_lists_[PageId::num_caches_]->dequeue(it);
+          fallback_list_->dequeue(it);
           return page;
         }
       }
@@ -126,7 +128,7 @@ class PageAllocator {
     if (page_id.exp_ < PageId::num_caches_) {
       free_lists_[page_id.exp_]->enqueue(page);
     } else {
-      free_lists_[PageId::num_caches_]->enqueue(page);
+      fallback_list_->enqueue(page);
     }
   }
 };

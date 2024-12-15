@@ -10,7 +10,6 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-
 #include "test_init.h"
 
 TEST_CASE("FullPtr") {
@@ -67,6 +66,23 @@ TEST_CASE("ScalablePageAllocator") {
   Posttest();
 }
 
+TEST_CASE("ThreadLocalAllocator") {
+  auto alloc = Pretest<hipc::PosixShmMmap, hipc::ThreadLocalAllocator>();
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+  Workloads<hipc::ThreadLocalAllocator>::PageAllocationTest(alloc);
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+  Workloads<hipc::ThreadLocalAllocator>::MultiPageAllocationTest(alloc);
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+  Workloads<hipc::ThreadLocalAllocator>::ReallocationTest(alloc);
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+
+  Posttest();
+}
+
 TEST_CASE("LocaFullPtrs") {
   auto alloc = Pretest<hipc::PosixShmMmap, hipc::ScalablePageAllocator>();
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
@@ -91,12 +107,10 @@ TEST_CASE("LocaFullPtrs") {
       alloc->NewObjLocal<std::vector<int>>(HSHM_DEFAULT_MEM_CTX);
   alloc->DelObjLocal(HSHM_DEFAULT_MEM_CTX, p4);
   hipc::FullPtr<std::vector<int>> p5 =
-      alloc->NewObjsLocal<std::vector<int>>(
-          HSHM_DEFAULT_MEM_CTX, 4);
-  alloc->ReallocateObjsLocal<std::vector<int>>(
-      HSHM_DEFAULT_MEM_CTX, p5, 5);
-  alloc->ReallocateConstructObjsLocal<std::vector<int>>(
-      HSHM_DEFAULT_MEM_CTX, p5, 4, 5);
+      alloc->NewObjsLocal<std::vector<int>>(HSHM_DEFAULT_MEM_CTX, 4);
+  alloc->ReallocateObjsLocal<std::vector<int>>(HSHM_DEFAULT_MEM_CTX, p5, 5);
+  alloc->ReallocateConstructObjsLocal<std::vector<int>>(HSHM_DEFAULT_MEM_CTX,
+                                                        p5, 4, 5);
   alloc->DelObjsLocal(HSHM_DEFAULT_MEM_CTX, p5, 5);
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
   Posttest();
@@ -106,14 +120,11 @@ TEST_CASE("Arrays") {
   auto alloc = Pretest<hipc::PosixShmMmap, hipc::ScalablePageAllocator>();
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
   // Allocate API
-  hipc::Array p1 = alloc->AllocateArray<char>(
-      HSHM_DEFAULT_MEM_CTX, 256);
+  hipc::Array p1 = alloc->AllocateArray<char>(HSHM_DEFAULT_MEM_CTX, 256);
   REQUIRE(!p1.shm_.IsNull());
-  hipc::Array p2 = alloc->ClearAllocateArray<char>(
-      HSHM_DEFAULT_MEM_CTX, 256);
+  hipc::Array p2 = alloc->ClearAllocateArray<char>(HSHM_DEFAULT_MEM_CTX, 256);
   REQUIRE(!p2.shm_.IsNull());
-  alloc->ReallocateArray<char>(
-      HSHM_DEFAULT_MEM_CTX, p1, 256);
+  alloc->ReallocateArray<char>(HSHM_DEFAULT_MEM_CTX, p1, 256);
   REQUIRE(!p1.shm_.IsNull());
   alloc->FreeArray(HSHM_DEFAULT_MEM_CTX, p1);
   Posttest();
@@ -123,17 +134,16 @@ TEST_CASE("LocalArrays") {
   auto alloc = Pretest<hipc::PosixShmMmap, hipc::ScalablePageAllocator>();
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
   // Allocate API
-  hipc::LArray<char> p1 = alloc->AllocateLocalArray<char>(
-      HSHM_DEFAULT_MEM_CTX, 256);
+  hipc::LArray<char> p1 =
+      alloc->AllocateLocalArray<char>(HSHM_DEFAULT_MEM_CTX, 256);
   REQUIRE(!p1.shm_.IsNull());
   REQUIRE(p1.ptr_ != nullptr);
-  hipc::LArray<char> p2 = alloc->ClearAllocateLocalArray<char>(
-      HSHM_DEFAULT_MEM_CTX, 256);
+  hipc::LArray<char> p2 =
+      alloc->ClearAllocateLocalArray<char>(HSHM_DEFAULT_MEM_CTX, 256);
   REQUIRE(!p2.shm_.IsNull());
   REQUIRE(p2.ptr_ != nullptr);
   REQUIRE(*p2 == 0);
-  alloc->ReallocateLocalArray<char>(
-      HSHM_DEFAULT_MEM_CTX, p1, 256);
+  alloc->ReallocateLocalArray<char>(HSHM_DEFAULT_MEM_CTX, p1, 256);
   REQUIRE(!p1.shm_.IsNull());
   REQUIRE(p1.ptr_ != nullptr);
   alloc->FreeLocalArray(HSHM_DEFAULT_MEM_CTX, p1);
