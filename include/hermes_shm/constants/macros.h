@@ -131,7 +131,7 @@ namespace hipc = hshm::ipc;
 
 /** Define the root allocator class */
 #ifndef HSHM_ROOT_ALLOC_T
-#define HSHM_ROOT_ALLOC_T hipc::ScalablePageAllocator
+#define HSHM_ROOT_ALLOC_T hipc::StackAllocator
 #endif
 #define HSHM_ROOT_ALLOC \
   HERMES_MEMORY_MANAGER->template GetRootAllocator<HSHM_ROOT_ALLOC_T>()

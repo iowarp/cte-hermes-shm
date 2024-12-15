@@ -115,19 +115,14 @@ class MemoryManager {
    * Unregister backend
    * */
   HSHM_CROSS_FUN
-  void UnregisterBackend(const MemoryBackendId &backend_id) {
+  MemoryBackend *UnregisterBackend(const MemoryBackendId &backend_id) {
+    auto backend = backends_[backend_id.id_];
     backends_[backend_id.id_] = nullptr;
+    return backend;
   }
 
-  /**
-   * Destroy backend
-   * */
-  HSHM_CROSS_FUN
-  void DestroyBackend(const MemoryBackendId &backend_id) {
-    auto backend = GetBackend(backend_id);
-    backend->Own();
-    UnregisterBackend(backend_id);
-  }
+  /** Free the backend */
+  HSHM_CROSS_FUN void DestroyBackend(const MemoryBackendId &backend_id);
 
   /**
    * Scans all attached backends for new memory allocators.
@@ -162,12 +157,17 @@ class MemoryManager {
    * Destroys an allocator
    * */
   HSHM_CROSS_FUN
-  void UnregisterAllocator(const AllocatorId &alloc_id) {
+  Allocator *UnregisterAllocator(const AllocatorId &alloc_id) {
     if (alloc_id == default_allocator_->GetId()) {
       default_allocator_ = root_alloc_;
     }
+    auto alloc = allocators_[alloc_id.ToIndex()];
     allocators_[alloc_id.ToIndex()] = nullptr;
+    return alloc;
   }
+
+  template <typename AllocT>
+  HSHM_CROSS_FUN void DestroyAllocator(const AllocatorId &alloc_id);
 
   /**
    * Locates an allocator of a particular id

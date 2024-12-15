@@ -10,21 +10,20 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-
-#include "basic_test.h"
 #include "test_init.h"
 
-template<typename AllocT>
+#include "basic_test.h"
+
+template <typename AllocT>
 void PretestRank0() {
   std::string shm_url = "test_allocators";
   AllocatorId alloc_id(0, 1);
   auto mem_mngr = HERMES_MEMORY_MANAGER;
   mem_mngr->UnregisterAllocator(alloc_id);
-  mem_mngr->UnregisterBackend(hipc::MemoryBackendId::GetRoot());
-  mem_mngr->CreateBackend<PosixShmMmap>(
-      hipc::MemoryBackendId::Get(0), MEGABYTES(100), shm_url);
-  mem_mngr->CreateAllocator<AllocT>(
-      hipc::MemoryBackendId::Get(0), alloc_id, 0);
+  mem_mngr->DestroyBackend(hipc::MemoryBackendId::GetRoot());
+  mem_mngr->CreateBackend<PosixShmMmap>(hipc::MemoryBackendId::Get(0),
+                                        MEGABYTES(100), shm_url);
+  mem_mngr->CreateAllocator<AllocT>(hipc::MemoryBackendId::Get(0), alloc_id, 0);
 }
 
 void PretestRankN() {
@@ -47,5 +46,4 @@ void MainPretest() {
   }
 }
 
-void MainPosttest() {
-}
+void MainPosttest() {}

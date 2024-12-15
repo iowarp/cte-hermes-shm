@@ -10,19 +10,18 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-
 #ifndef HERMES_TEST_UNIT_ALLOCATORS_TEST_INIT_H_
 #define HERMES_TEST_UNIT_ALLOCATORS_TEST_INIT_H_
 
 #include "basic_test.h"
-#include "omp.h"
 #include "hermes_shm/memory/memory_manager.h"
+#include "omp.h"
 
-using hshm::ipc::MemoryBackendType;
-using hshm::ipc::MemoryBackend;
+using hshm::ipc::Allocator;
 using hshm::ipc::AllocatorId;
 using hshm::ipc::AllocatorType;
-using hshm::ipc::Allocator;
+using hshm::ipc::MemoryBackend;
+using hshm::ipc::MemoryBackendType;
 using hshm::ipc::MemoryManager;
 using hshm::ipc::Pointer;
 
@@ -38,11 +37,11 @@ AllocT *Pretest() {
   AllocatorId alloc_id(0, 1);
   auto mem_mngr = HERMES_MEMORY_MANAGER;
   mem_mngr->UnregisterAllocator(alloc_id);
-  mem_mngr->UnregisterBackend(hipc::MemoryBackendId::Get(0));
-  mem_mngr->CreateBackendWithUrl<BackendT>(
-      hipc::MemoryBackendId::Get(0), GIGABYTES(1), shm_url);
-  mem_mngr->CreateAllocator<AllocT>(
-      hipc::MemoryBackendId::Get(0), alloc_id, sizeof(SimpleAllocatorHeader));
+  mem_mngr->DestroyBackend(hipc::MemoryBackendId::Get(0));
+  mem_mngr->CreateBackendWithUrl<BackendT>(hipc::MemoryBackendId::Get(0),
+                                           GIGABYTES(1), shm_url);
+  mem_mngr->CreateAllocator<AllocT>(hipc::MemoryBackendId::Get(0), alloc_id,
+                                    sizeof(SimpleAllocatorHeader));
   auto alloc = mem_mngr->GetAllocator<AllocT>(alloc_id);
   auto hdr = alloc->template GetCustomHeader<SimpleAllocatorHeader>();
   hdr->checksum_ = HEADER_CHECKSUM;

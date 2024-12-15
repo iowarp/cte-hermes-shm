@@ -11,24 +11,25 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include "test_init.h"
+
 #include "hermes_shm/data_structures/ipc/vector.h"
 #include "hermes_shm/memory/allocator/stack_allocator.h"
+
+GLOBAL_CONST AllocatorId alloc_id_g(0, 1);
 
 void MainPretest() {
   // hermes shared memory
   std::string shm_url = "HermesBench";
-  AllocatorId alloc_id(0, 1);
   auto mem_mngr = HERMES_MEMORY_MANAGER;
-  mem_mngr->UnregisterAllocator(alloc_id);
-  mem_mngr->UnregisterBackend(hipc::MemoryBackendId::Get(0));
+  mem_mngr->UnregisterAllocator(alloc_id_g);
+  mem_mngr->DestroyBackend(hipc::MemoryBackendId::Get(0));
   auto backend = mem_mngr->CreateBackend<hipc::PosixShmMmap>(
-      hipc::MemoryBackendId::Get(0),
-      mem_mngr->GetDefaultBackendSize(), shm_url);
+      hipc::MemoryBackendId::Get(0), mem_mngr->GetDefaultBackendSize(),
+      shm_url);
   memset(backend->data_, 0, MEGABYTES(16));
   // TODO(llogan): back to good allocator
-  mem_mngr->CreateAllocator<hipc::ScalablePageAllocator>(
-      hipc::MemoryBackendId::Get(0), alloc_id, 0);
-
+  mem_mngr->CreateAllocator<HSHM_DEFAULT_ALLOC_T>(hipc::MemoryBackendId::Get(0),
+                                                  alloc_id_g, 0);
 
   // Boost shared memory
   BOOST_SEGMENT;
@@ -43,5 +44,6 @@ void MainPretest() {
 }
 
 void MainPosttest() {
+  HERMES_MEMORY_MANAGER->DestroyAllocator<HSHM_DEFAULT_ALLOC_T>(alloc_id_g);
   bipc::shared_memory_object::remove("LabstorBoostBench");
 }

@@ -10,16 +10,16 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+#include "hermes_shm/memory/memory_manager.h"
+
+#include <mpi.h>
 
 #include "basic_test.h"
 
-#include <mpi.h>
-#include "hermes_shm/memory/memory_manager.h"
-
-using hshm::ipc::MemoryBackendType;
-using hshm::ipc::MemoryBackend;
 using hshm::ipc::AllocatorId;
 using hshm::ipc::AllocatorType;
+using hshm::ipc::MemoryBackend;
+using hshm::ipc::MemoryBackendType;
 using hshm::ipc::MemoryManager;
 
 struct SimpleHeader {
@@ -40,9 +40,9 @@ TEST_CASE("MemoryManager") {
   if (rank == 0) {
     std::cout << "Creating SHMEM (rank 0): " << shm_url << std::endl;
     mem_mngr->UnregisterAllocator(alloc_id);
-    mem_mngr->UnregisterBackend(hipc::MemoryBackendId::Get(0));
-    mem_mngr->CreateBackend<hipc::PosixShmMmap>(
-        hipc::MemoryBackendId::Get(0), MEGABYTES(100), shm_url);
+    mem_mngr->DestroyBackend(hipc::MemoryBackendId::Get(0));
+    mem_mngr->CreateBackend<hipc::PosixShmMmap>(hipc::MemoryBackendId::Get(0),
+                                                MEGABYTES(100), shm_url);
     mem_mngr->CreateAllocator<hipc::StackAllocator>(
         hipc::MemoryBackendId::Get(0), alloc_id, 0);
     mem_mngr->ScanBackends();
@@ -57,8 +57,8 @@ TEST_CASE("MemoryManager") {
   if (rank == 0) {
     std::cout << "Allocating pages (rank 0)" << std::endl;
     auto *alloc = mem_mngr->GetAllocator<HSHM_DEFAULT_ALLOC_T>(alloc_id);
-    char *page = alloc->template AllocatePtr<char>(
-        HSHM_DEFAULT_MEM_CTX, page_size);
+    char *page =
+        alloc->template AllocatePtr<char>(HSHM_DEFAULT_MEM_CTX, page_size);
     memset(page, nonce, page_size);
     auto header = alloc->GetCustomHeader<SimpleHeader>();
     hipc::Pointer p1 = mem_mngr->Convert<void>(alloc_id, page);

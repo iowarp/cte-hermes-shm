@@ -10,41 +10,40 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-
 #ifndef HERMES_TEST_UNIT_DATA_STRUCTURES_TEST_INIT_H_
 #define HERMES_TEST_UNIT_DATA_STRUCTURES_TEST_INIT_H_
 
-#include "hermes_shm/data_structures/all.h"
 #include <mpi.h>
 
-using hshm::ipc::PosixShmMmap;
-using hshm::ipc::MemoryBackendType;
-using hshm::ipc::MemoryBackend;
-using hshm::ipc::AllocatorId;
-using hshm::ipc::AllocatorType;
-using hshm::ipc::Allocator;
-using hshm::ipc::Pointer;
+#include "hermes_shm/data_structures/all.h"
 
-using hshm::ipc::MemoryBackendType;
-using hshm::ipc::MemoryBackend;
+using hshm::ipc::Allocator;
 using hshm::ipc::AllocatorId;
 using hshm::ipc::AllocatorType;
+using hshm::ipc::MemoryBackend;
+using hshm::ipc::MemoryBackendType;
+using hshm::ipc::Pointer;
+using hshm::ipc::PosixShmMmap;
+
 using hshm::ipc::Allocator;
+using hshm::ipc::AllocatorId;
+using hshm::ipc::AllocatorType;
+using hshm::ipc::MemoryBackend;
+using hshm::ipc::MemoryBackendType;
 using hshm::ipc::MemoryManager;
 using hshm::ipc::Pointer;
 
 GLOBAL_CONST AllocatorId alloc_id(0, 1);
 
-template<typename AllocT>
+template <typename AllocT>
 void PretestRank0() {
   std::string shm_url = "test_allocators";
   auto mem_mngr = HERMES_MEMORY_MANAGER;
   mem_mngr->UnregisterAllocator(alloc_id);
-  mem_mngr->UnregisterBackend(hipc::MemoryBackendId::Get(0));
-  mem_mngr->CreateBackend<PosixShmMmap>(
-      hipc::MemoryBackendId::Get(0), GIGABYTES(1), shm_url);
-  mem_mngr->CreateAllocator<AllocT>(
-      hipc::MemoryBackendId::Get(0), alloc_id, 0);
+  mem_mngr->DestroyBackend(hipc::MemoryBackendId::Get(0));
+  mem_mngr->CreateBackend<PosixShmMmap>(hipc::MemoryBackendId::Get(0),
+                                        GIGABYTES(1), shm_url);
+  mem_mngr->CreateAllocator<AllocT>(hipc::MemoryBackendId::Get(0), alloc_id, 0);
 }
 
 void PretestRankN();

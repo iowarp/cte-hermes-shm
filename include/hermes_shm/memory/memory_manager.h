@@ -56,6 +56,22 @@ AllocT *MemoryManager::CreateAllocator(const MemoryBackendId &backend_id,
   return GetAllocator<AllocT>(alloc_id);
 }
 
+/**
+ * Destroys an allocator
+ * */
+template <typename AllocT>
+HSHM_CROSS_FUN void MemoryManager::DestroyAllocator(
+    const AllocatorId &alloc_id) {
+  auto dead_alloc = UnregisterAllocator(alloc_id);
+  if (dead_alloc == nullptr) {
+    return;
+  }
+  FullPtr<AllocT> ptr((AllocT *)dead_alloc);
+  auto alloc = HERMES_MEMORY_MANAGER->GetAllocator<HSHM_ROOT_ALLOC_T>(
+      ptr.shm_.alloc_id_);
+  alloc->template DelObjLocal(HSHM_DEFAULT_MEM_CTX, ptr);
+}
+
 template <typename T, typename PointerT>
 LPointer<T, PointerT>::LPointer(const PointerT &shm) : shm_(shm) {
   ptr_ = HERMES_MEMORY_MANAGER->Convert<T, PointerT>(shm);

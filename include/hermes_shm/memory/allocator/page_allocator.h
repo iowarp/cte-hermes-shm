@@ -65,7 +65,7 @@ class PageAllocator {
   typedef hipc::lifo_list_queue<MpPage, Alloc_> LIFO_LIST;
   typedef hipc::mpmc_lifo_list_queue<MpPage, Alloc_> MPMC_LIFO_LIST;
   typedef
-      typename std::conditional<THREAD_SAFE, LIFO_LIST, MPMC_LIFO_LIST>::type
+      typename std::conditional<THREAD_SAFE, MPMC_LIFO_LIST, LIFO_LIST>::type
           LIST;
   hipc::Mutex lock_;
 

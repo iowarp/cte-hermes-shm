@@ -10,21 +10,19 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+#include "test_init.h"
 
 #include "basic_test.h"
-#include "test_init.h"
 
 void PretestRankN() {
   std::string shm_url = "test_allocators";
   AllocatorId alloc_id(0, 1);
   auto mem_mngr = HERMES_MEMORY_MANAGER;
   mem_mngr->UnregisterAllocator(alloc_id);
-  mem_mngr->UnregisterBackend(hipc::MemoryBackendId::Get(0));
+  mem_mngr->DestroyBackend(hipc::MemoryBackendId::Get(0));
   mem_mngr->AttachBackend(MemoryBackendType::kPosixShmMmap, shm_url);
 }
 
-void MainPretest() {
-}
+void MainPretest() {}
 
-void MainPosttest() {
-}
+void MainPosttest() {}

@@ -87,6 +87,22 @@ MemoryBackend *MemoryManager::AttachBackend(MemoryBackendType type,
 #endif
 }
 
+/**
+ * Destroys a backned
+ * */
+HSHM_CROSS_FUN void MemoryManager::DestroyBackend(
+    const MemoryBackendId &backend_id) {
+  auto backend = UnregisterBackend(backend_id);
+  if (backend == nullptr) {
+    return;
+  }
+  FullPtr<MemoryBackend> ptr(backend);
+  backend->Own();
+  auto alloc = HERMES_MEMORY_MANAGER->GetAllocator<HSHM_ROOT_ALLOC_T>(
+      ptr.shm_.alloc_id_);
+  alloc->template DelObjLocal(HSHM_DEFAULT_MEM_CTX, ptr);
+}
+
 #ifdef HERMES_ENABLE_CUDA
 template <typename BackendT>
 __global__ void AttachBackendKernel(BackendT *pack, BackendT *cpy) {
