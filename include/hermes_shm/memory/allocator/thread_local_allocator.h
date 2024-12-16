@@ -33,7 +33,7 @@ class _ThreadLocalAllocator;
 
 struct _ThreadLocalAllocatorHeader : public AllocatorHeader {
   typedef TlsAllocatorInfo<_ThreadLocalAllocator> TLS;
-  typedef hipc::PageAllocator<_ThreadLocalAllocator> PageAllocator;
+  typedef hipc::PageAllocator<_ThreadLocalAllocator, true> PageAllocator;
   typedef hipc::vector<PageAllocator, StackAllocator> PageAllocVec;
   typedef hipc::fixed_mpmc_ptr_queue<hshm::min_u64, StackAllocator>
       PageAllocIdVec;
@@ -77,7 +77,7 @@ struct _ThreadLocalAllocatorHeader : public AllocatorHeader {
 class _ThreadLocalAllocator : public Allocator {
  private:
   typedef TlsAllocatorInfo<_ThreadLocalAllocator> TLS;
-  typedef hipc::PageAllocator<_ThreadLocalAllocator, false> PageAllocator;
+  typedef _ThreadLocalAllocatorHeader::PageAllocator PageAllocator;
   typedef BaseAllocator<_ThreadLocalAllocator> AllocT;
   _ThreadLocalAllocatorHeader *header_;
   StackAllocator alloc_;
@@ -232,8 +232,9 @@ class _ThreadLocalAllocator : public Allocator {
     }
     hdr->UnsetAllocated();
     header_->total_alloc_.fetch_sub(hdr->page_size_);
-    ThreadId tid = GetOrCreateTid(ctx);
-    PageAllocator &page_alloc = (*header_->tls_)[tid.tid_];
+    // ThreadId tid = GetOrCreateTid(ctx);
+    // PageAllocator &page_alloc = (*header_->tls_)[tid.tid_];
+    PageAllocator &page_alloc = (*header_->tls_)[hdr->tid_.tid_];
     page_alloc.Free(hdr);
   }
 

@@ -239,12 +239,11 @@ void AllocatorTest(AllocatorType alloc_type, MemoryBackendType backend_type,
 /** Test different allocators on a particular thread */
 void FullAllocatorTestPerThread() {
   // Malloc allocator
-  // AllocatorTest<hipc::MallocBackend, hipc::MallocAllocator>(
-  //     AllocatorType::kMallocAllocator, MemoryBackendType::kMallocBackend);
+  AllocatorTest<hipc::MallocBackend, hipc::MallocAllocator>(
+      AllocatorType::kMallocAllocator, MemoryBackendType::kMallocBackend);
   // Scalable page allocator
-  // AllocatorTest<hipc::PosixShmMmap, hipc::ScalablePageAllocator>(
-  //     AllocatorType::kScalablePageAllocator,
-  //     MemoryBackendType::kMallocBackend);
+  AllocatorTest<hipc::PosixShmMmap, hipc::ScalablePageAllocator>(
+      AllocatorType::kScalablePageAllocator, MemoryBackendType::kMallocBackend);
   // Thread-local allocator
   AllocatorTest<hipc::PosixShmMmap, hipc::ThreadLocalAllocator>(
       AllocatorType::kThreadLocalAllocator, MemoryBackendType::kMallocBackend);
