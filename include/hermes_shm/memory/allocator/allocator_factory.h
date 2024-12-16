@@ -68,6 +68,7 @@ class AllocatorFactory {
       HSHM_ALLOC_DSRL_CASE(MallocAllocator)
       HSHM_ALLOC_DSRL_CASE(ScalablePageAllocator)
       HSHM_ALLOC_DSRL_CASE(ThreadLocalAllocator)
+      HSHM_ALLOC_DSRL_CASE(TestAllocator)
       default:
         return nullptr;
     }

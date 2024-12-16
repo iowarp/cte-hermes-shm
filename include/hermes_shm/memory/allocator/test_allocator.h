@@ -21,27 +21,55 @@ namespace hshm::ipc {
 class _TestAllocator;
 typedef BaseAllocator<_TestAllocator> TestAllocator;
 
+class _TestAllocatorHeader : public AllocatorHeader {
+ public:
+  hipc::atomic<hshm::min_u64> total_alloc_;
+
+  HSHM_CROSS_FUN
+  _TestAllocatorHeader() = default;
+
+  HSHM_CROSS_FUN
+  void Configure(AllocatorId alloc_id, size_t custom_header_size) {
+    AllocatorHeader::Configure(alloc_id, AllocatorType::kThreadLocalAllocator,
+                               custom_header_size);
+    total_alloc_ = 0;
+  }
+};
+
 class _TestAllocator : public Allocator {
  public:
-  /**====================================
-   * Constructors
-   * ===================================*/
-  /**
-   * Create the shared-memory allocator with \a id unique allocator id over
-   * the particular slot of a memory backend.
-   *
-   * The shm_init function is required, but cannot be marked virtual as
-   * each allocator has its own arguments to this method. Though each
-   * allocator must have "id" as its first argument.
-   * */
+  HSHM_ALLOCATOR(_TestAllocator);
+  _TestAllocatorHeader *header_;
+
+  /** Init */
   void shm_init(AllocatorId alloc_id, size_t custom_header_size, char *buffer,
-                size_t buffer_size) {}
+                size_t buffer_size) {
+    type_ = AllocatorType::kThreadLocalAllocator;
+    id_ = alloc_id;
+    buffer_ = buffer;
+    buffer_size_ = buffer_size;
+    header_ = reinterpret_cast<_TestAllocatorHeader *>(buffer_);
+    custom_header_ = reinterpret_cast<char *>(header_ + 1);
+    size_t region_off = (custom_header_ - buffer_) + custom_header_size;
+    size_t region_size = buffer_size_ - region_off;
+    header_->Configure(alloc_id, custom_header_size);
+  }
 
   /**
    * Deserialize allocator from a buffer.
    * */
   HSHM_CROSS_FUN
-  void shm_deserialize(char *buffer, size_t buffer_size) {}
+  void shm_deserialize(char *buffer, size_t buffer_size) {
+    buffer_ = buffer;
+    buffer_size_ = buffer_size;
+    header_ = reinterpret_cast<_TestAllocatorHeader *>(buffer_);
+    type_ = header_->allocator_type_;
+    id_ = header_->alloc_id_;
+    custom_header_ = reinterpret_cast<char *>(header_ + 1);
+    size_t region_off =
+        (custom_header_ - buffer_) + header_->custom_header_size_;
+    size_t region_size = buffer_size_ - region_off;
+  }
 
   /**====================================
    * Core Allocator API
@@ -52,6 +80,7 @@ class _TestAllocator : public Allocator {
    * */
   HSHM_CROSS_FUN
   OffsetPointer AllocateOffset(const MemContext &ctx, size_t size) {
+    header_->total_alloc_.fetch_add(1);
     return OffsetPointer::GetNull();
   }
 
@@ -82,7 +111,9 @@ class _TestAllocator : public Allocator {
    * Free the memory pointed to by \a ptr Pointer
    * */
   HSHM_CROSS_FUN
-  void FreeOffsetNoNullCheck(const MemContext &ctx, OffsetPointer p) {}
+  void FreeOffsetNoNullCheck(const MemContext &ctx, OffsetPointer p) {
+    header_->total_alloc_.fetch_sub(1);
+  }
 
   /**
    * Create a globally-unique thread ID
