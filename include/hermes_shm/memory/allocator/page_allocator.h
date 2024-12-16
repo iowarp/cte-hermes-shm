@@ -3,6 +3,7 @@
 
 #include <cmath>
 
+#include "hermes_shm/constants/macros.h"
 #include "hermes_shm/thread/lock/mutex.h"
 #include "mp_page.h"
 #include "stack_allocator.h"
@@ -73,7 +74,7 @@ class PageAllocator {
   hipc::delay_ar<LIST> free_lists_[PageId::num_caches_];
   hipc::delay_ar<LIFO_LIST> fallback_list_;
   TLS tls_info_;
-  HeapAllocator heap_;
+  HeapAllocator<THREAD_SAFE> heap_;
 
  public:
   HSHM_INLINE_CROSS_FUN
@@ -97,17 +98,22 @@ class PageAllocator {
   PageAllocator(PageAllocator &&other) {}
 
   HSHM_INLINE_CROSS_FUN
+  MpPage *AllocateHeap(const PageId &page_id) {
+    if constexpr (LOCAL_HEAP) {
+      if (page_id.exp_ < PageId::num_caches_) {
+        OffsetPointer shm = heap_.AllocateOffset(page_id.round_);
+        return tls_info_.alloc_->template Convert<MpPage>(shm);
+      }
+    }
+    return nullptr;
+  }
+
+  HSHM_INLINE_CROSS_FUN
   MpPage *Allocate(const PageId &page_id) {
     // Allocate small page size
     if (page_id.exp_ < PageId::num_caches_) {
       LIST &free_list = *free_lists_[page_id.exp_];
       MpPage *page = free_list.pop();
-      if constexpr (LOCAL_HEAP) {
-        if (!page) {
-          OffsetPointer shm = heap_.AllocateOffset(page_id.round_);
-          page = tls_info_.alloc_->template Convert<MpPage>(shm);
-        }
-      }
       return page;
     }
     // Allocate a large page size
@@ -141,7 +147,12 @@ class PageAllocator {
     if (page_id.exp_ < PageId::num_caches_) {
       free_lists_[page_id.exp_]->enqueue(page);
     } else {
-      fallback_list_->enqueue(page);
+      if constexpr (THREAD_SAFE) {
+        hipc::ScopedMutex lock(lock_, 0);
+        fallback_list_->enqueue(page);
+      } else {
+        fallback_list_->enqueue(page);
+      }
     }
   }
 };

@@ -32,6 +32,9 @@ typedef BaseAllocator<_StackAllocator> StackAllocator;
 class _ThreadLocalAllocator;
 typedef BaseAllocator<_ThreadLocalAllocator> ThreadLocalAllocator;
 
+class _TestAllocator;
+typedef BaseAllocator<_TestAllocator> TestAllocator;
+
 }  // namespace hshm::ipc
 
 #endif  // HERMES_MEMORY_ALLOCATOR_ALLOCATOR_FACTORY__H_

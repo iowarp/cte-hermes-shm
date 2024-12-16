@@ -25,7 +25,7 @@ class _StackAllocator;
 typedef BaseAllocator<_StackAllocator> StackAllocator;
 
 struct _StackAllocatorHeader : public AllocatorHeader {
-  HeapAllocator heap_;
+  HeapAllocator<true> heap_;
   hipc::atomic<hshm::min_u64> total_alloc_;
 
   HSHM_CROSS_FUN
@@ -48,7 +48,7 @@ class _StackAllocator : public Allocator {
  public:
   typedef BaseAllocator<_StackAllocator> AllocT;
   _StackAllocatorHeader *header_;
-  HeapAllocator *heap_;
+  HeapAllocator<true> *heap_;
 
  public:
   /**

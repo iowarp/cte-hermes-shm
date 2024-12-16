@@ -33,6 +33,7 @@ enum class AllocatorType {
   kFixedPageAllocator,
   kScalablePageAllocator,
   kThreadLocalAllocator,
+  kTestAllocator
 };
 
 /**
@@ -1076,7 +1077,8 @@ class _NullAllocator : public Allocator {
    * each allocator has its own arguments to this method. Though each
    * allocator must have "id" as its first argument.
    * */
-  void shm_init(AllocatorId id) {}
+  void shm_init(AllocatorId alloc_id, size_t custom_header_size, char *buffer,
+                size_t buffer_size) {}
 
   /**
    * Deserialize allocator from a buffer.

@@ -19,6 +19,7 @@
 #include "malloc_allocator.h"
 #include "scalable_page_allocator.h"
 #include "stack_allocator.h"
+#include "test_allocator.h"
 #include "thread_local_allocator.h"
 
 namespace hshm::ipc {

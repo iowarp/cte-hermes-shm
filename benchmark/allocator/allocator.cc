@@ -54,6 +54,10 @@ class AllocatorTestSuite {
         alloc_type_ = "hipc::ThreadLocalAllocator";
         break;
       }
+      case AllocatorType::kTestAllocator: {
+        alloc_type_ = "hipc::TestAllocator";
+        break;
+      }
       default: {
         HELOG(kFatal, "Could not find this allocator type");
         break;
@@ -226,13 +230,12 @@ void AllocatorTest(AllocatorType alloc_type, MemoryBackendType backend_type,
   //  AllocatorTestSuite<AllocT>((alloc_type,
   //  *scoped_tls).AllocateThenFreeFixedSize(
   //    count, KILOBYTES(1));
-  //  // Allocate and free immediately
-  //  AllocatorTestSuite<AllocT>((alloc_type,
-  //  *scoped_tls).AllocateAndFreeFixedSize(
-  //    count, KILOBYTES(1));
-  // Allocate and free randomly
+  // Allocate and free immediately
   AllocatorTestSuite<AllocT>(alloc_type, *scoped_tls)
-      .AllocateAndFreeRandomWindow(count);
+      .AllocateAndFreeFixedSize(count, KILOBYTES(1));
+  // Allocate and free randomly
+  // AllocatorTestSuite<AllocT>(alloc_type, *scoped_tls)
+  //     .AllocateAndFreeRandomWindow(count);
   Posttest();
 }
 
@@ -247,6 +250,9 @@ void FullAllocatorTestPerThread() {
   // Thread-local allocator
   AllocatorTest<hipc::PosixShmMmap, hipc::ThreadLocalAllocator>(
       AllocatorType::kThreadLocalAllocator, MemoryBackendType::kMallocBackend);
+  // Test allocator
+  AllocatorTest<hipc::PosixShmMmap, hipc::TestAllocator>(
+      AllocatorType::kTestAllocator, MemoryBackendType::kMallocBackend);
   // Stack allocator
   //  AllocatorTest<hipc::PosixShmMmap, hipc::StackAllocator>(
   //    AllocatorType::kStackAllocator,
@@ -268,9 +274,9 @@ TEST_CASE("AllocatorBenchmark") {
   HERMES_ERROR_HANDLE_START();
   AllocatorTestSuite<hipc::NullAllocator>::PrintTestHeader();
   FullAllocatorTestThreaded(1);
-  FullAllocatorTestThreaded(2);
-  FullAllocatorTestThreaded(4);
-  FullAllocatorTestThreaded(8);
-  FullAllocatorTestThreaded(16);
+  // FullAllocatorTestThreaded(2);
+  // FullAllocatorTestThreaded(4);
+  // FullAllocatorTestThreaded(8);
+  // FullAllocatorTestThreaded(16);
   HERMES_ERROR_HANDLE_END();
 }

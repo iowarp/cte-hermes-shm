@@ -18,9 +18,10 @@
 
 namespace hshm::ipc {
 
+template <bool ATOMIC>
 struct HeapAllocator {
   size_t region_off_;
-  hipc::atomic<hshm::min_u64> heap_off_;
+  hipc::opt_atomic<hshm::min_u64, ATOMIC> heap_off_;
   size_t heap_size_;
 
   /** Default constructor */

@@ -23,6 +23,7 @@
 #include "hermes_shm/data_structures/ipc/vector.h"
 #include "hermes_shm/memory/allocator/stack_allocator.h"
 #include "hermes_shm/thread/lock.h"
+#include "hermes_shm/util/logging.h"
 #include "hermes_shm/util/timer.h"
 #include "mp_page.h"
 #include "page_allocator.h"
@@ -168,14 +169,23 @@ class _ThreadLocalAllocator : public Allocator {
     PageAllocator &page_alloc = (*header_->tls_)[tid.tid_];
     page = page_alloc.Allocate(page_id);
 
-    // Case 2: Coalesce if enough space is being wasted
-    // if (page == nullptr) {}
+    auto *tls_again = HERMES_THREAD_MODEL->GetTls<TLS>(tls_key_);
+    tls_again->tid_ = tid;
+
+    // Case 2: Can we allocate of thread's heap?
+    if (page == nullptr) {
+      page = page_alloc.AllocateHeap(page_id);
+      page->tid_ = tid;
+      page->page_size_ = page_id.round_;
+    }
 
     // Case 3: Allocate from heap if no page found
     if (page == nullptr) {
       OffsetPointer off = alloc_.SubAllocateOffset(page_id.round_);
       if (!off.IsNull()) {
         page = alloc_.Convert<MpPage>(off);
+        page->tid_ = tid;
+        page->page_size_ = page_id.round_;
       }
     }
 
@@ -187,10 +197,7 @@ class _ThreadLocalAllocator : public Allocator {
     // Mark as allocated
     header_->total_alloc_.fetch_add(page_id.round_);
     OffsetPointer p = Convert<MpPage, OffsetPointer>(page);
-    page->page_size_ = page_id.round_;
-    page->tid_ = tid;
     page->SetAllocated();
-    // HILOG(kInfo, "TIME: {}ns", timer.GetNsec());
     return p + sizeof(MpPage);
   }
 
@@ -235,8 +242,6 @@ class _ThreadLocalAllocator : public Allocator {
     }
     hdr->UnsetAllocated();
     header_->total_alloc_.fetch_sub(hdr->page_size_);
-    // ThreadId tid = GetOrCreateTid(ctx);
-    // PageAllocator &page_alloc = (*header_->tls_)[tid.tid_];
     PageAllocator &page_alloc = (*header_->tls_)[hdr->tid_.tid_];
     page_alloc.Free(hdr);
   }
