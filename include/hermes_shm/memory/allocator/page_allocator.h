@@ -57,7 +57,7 @@ struct PageId {
   }
 };
 
-template <typename AllocT, bool THREAD_SAFE = false>
+template <typename AllocT, bool THREAD_SAFE, bool LOCAL_HEAP>
 class PageAllocator {
  public:
   typedef StackAllocator Alloc_;
@@ -73,14 +73,21 @@ class PageAllocator {
   hipc::delay_ar<LIST> free_lists_[PageId::num_caches_];
   hipc::delay_ar<LIFO_LIST> fallback_list_;
   TLS tls_info_;
+  HeapAllocator heap_;
 
  public:
   HSHM_INLINE_CROSS_FUN
-  explicit PageAllocator(StackAllocator *alloc) {
+  explicit PageAllocator(StackAllocator *alloc,
+                         size_t local_heap_size = KILOBYTES(64)) {
     for (size_t i = 0; i < PageId::num_caches_; ++i) {
       HSHM_MAKE_AR0(free_lists_[i], alloc);
     }
     HSHM_MAKE_AR0(fallback_list_, alloc);
+    if constexpr (LOCAL_HEAP) {
+      heap_.shm_init(
+          alloc->Allocate<OffsetPointer>(HSHM_DEFAULT_MEM_CTX, local_heap_size),
+          local_heap_size);
+    }
   }
 
   HSHM_INLINE_CROSS_FUN
@@ -95,6 +102,12 @@ class PageAllocator {
     if (page_id.exp_ < PageId::num_caches_) {
       LIST &free_list = *free_lists_[page_id.exp_];
       MpPage *page = free_list.pop();
+      if constexpr (LOCAL_HEAP) {
+        if (!page) {
+          OffsetPointer shm = heap_.AllocateOffset(page_id.round_);
+          page = tls_info_.alloc_->template Convert<MpPage>(shm);
+        }
+      }
       return page;
     }
     // Allocate a large page size

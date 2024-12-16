@@ -18,6 +18,7 @@
 
 #include <cstdint>
 
+#include "hermes_shm/constants/macros.h"
 #include "hermes_shm/thread/thread_model/thread_model.h"
 
 namespace hshm::ipc {
@@ -1053,6 +1054,13 @@ class BaseAllocator : public CoreAllocT {
   HSHM_CROSS_FUN
   void Print() { CoreAllocT::Print(); }
 };
+
+/** Get the full allocator within core allocator */
+#define HSHM_ALLOCATOR(ALLOC_NAME)                    \
+ public:                                              \
+  typedef hipc::BaseAllocator<ALLOC_NAME> BaseAllocT; \
+  HSHM_INLINE_CROSS_FUN                               \
+  BaseAllocT *GetAllocator() { return (BaseAllocT *)(this); }
 
 /** Demonstration allocator */
 class _NullAllocator : public Allocator {

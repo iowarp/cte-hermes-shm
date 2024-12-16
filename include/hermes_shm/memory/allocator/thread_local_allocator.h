@@ -30,10 +30,11 @@
 namespace hshm::ipc {
 
 class _ThreadLocalAllocator;
+typedef BaseAllocator<_ThreadLocalAllocator> ThreadLocalAllocator;
 
 struct _ThreadLocalAllocatorHeader : public AllocatorHeader {
   typedef TlsAllocatorInfo<_ThreadLocalAllocator> TLS;
-  typedef hipc::PageAllocator<_ThreadLocalAllocator, true> PageAllocator;
+  typedef hipc::PageAllocator<_ThreadLocalAllocator, true, true> PageAllocator;
   typedef hipc::vector<PageAllocator, StackAllocator> PageAllocVec;
   typedef hipc::fixed_mpmc_ptr_queue<hshm::min_u64, StackAllocator>
       PageAllocIdVec;
@@ -75,10 +76,12 @@ struct _ThreadLocalAllocatorHeader : public AllocatorHeader {
 };
 
 class _ThreadLocalAllocator : public Allocator {
+ public:
+  HSHM_ALLOCATOR(_ThreadLocalAllocator);
+
  private:
   typedef TlsAllocatorInfo<_ThreadLocalAllocator> TLS;
   typedef _ThreadLocalAllocatorHeader::PageAllocator PageAllocator;
-  typedef BaseAllocator<_ThreadLocalAllocator> AllocT;
   _ThreadLocalAllocatorHeader *header_;
   StackAllocator alloc_;
   thread::ThreadLocalKey tls_key_;
@@ -211,7 +214,7 @@ class _ThreadLocalAllocator : public Allocator {
   OffsetPointer ReallocateOffsetNoNullCheck(const hipc::MemContext &ctx,
                                             OffsetPointer p, size_t new_size) {
     FullPtr<char, OffsetPointer> new_ptr =
-        ((AllocT *)this)->AllocateLocalPtr<char, OffsetPointer>(ctx, new_size);
+        GetAllocator()->AllocateLocalPtr<char, OffsetPointer>(ctx, new_size);
     char *old = Convert<char, OffsetPointer>(p);
     MpPage *old_hdr = (MpPage *)(old - sizeof(MpPage));
     memcpy(new_ptr.ptr_, old, old_hdr->page_size_ - sizeof(MpPage));
@@ -264,8 +267,6 @@ class _ThreadLocalAllocator : public Allocator {
     HERMES_THREAD_MODEL->SetTls<TLS>(tls_key_, nullptr);
   }
 };
-
-typedef BaseAllocator<_ThreadLocalAllocator> ThreadLocalAllocator;
 
 }  // namespace hshm::ipc
 

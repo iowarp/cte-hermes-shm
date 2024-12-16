@@ -18,6 +18,9 @@
 
 namespace hshm::ipc {
 
+class _MallocAllocator;
+typedef BaseAllocator<_MallocAllocator> MallocAllocator;
+
 struct MallocPage {
   size_t page_size_;
 };
@@ -37,6 +40,9 @@ struct _MallocAllocatorHeader : public AllocatorHeader {
 };
 
 class _MallocAllocator : public Allocator {
+ public:
+  HSHM_ALLOCATOR(_MallocAllocator);
+
  private:
   _MallocAllocatorHeader *header_;
 
@@ -161,8 +167,6 @@ class _MallocAllocator : public Allocator {
   HSHM_CROSS_FUN
   void FreeTls(const hipc::MemContext &ctx) {}
 };
-
-typedef BaseAllocator<_MallocAllocator> MallocAllocator;
 
 }  // namespace hshm::ipc
 

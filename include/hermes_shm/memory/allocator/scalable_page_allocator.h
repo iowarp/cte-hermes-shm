@@ -31,9 +31,11 @@
 namespace hshm::ipc {
 
 class _ScalablePageAllocator;
+typedef BaseAllocator<_ScalablePageAllocator> ScalablePageAllocator;
 
 struct _ScalablePageAllocatorHeader : public AllocatorHeader {
-  typedef hipc::PageAllocator<_ScalablePageAllocator, true> PageAllocator;
+  typedef hipc::PageAllocator<_ScalablePageAllocator, true, false>
+      PageAllocator;
   hipc::atomic<hshm::min_u64> total_alloc_;
   hipc::delay_ar<PageAllocator> global_;
 
@@ -51,9 +53,11 @@ struct _ScalablePageAllocatorHeader : public AllocatorHeader {
 };
 
 class _ScalablePageAllocator : public Allocator {
+ public:
+  HSHM_ALLOCATOR(_ScalablePageAllocator);
+
  private:
-  typedef hipc::PageAllocator<_ScalablePageAllocator, true> PageAllocator;
-  typedef BaseAllocator<_ScalablePageAllocator> AllocT;
+  typedef _ScalablePageAllocatorHeader::PageAllocator PageAllocator;
   _ScalablePageAllocatorHeader *header_;
   StackAllocator alloc_;
 
@@ -160,7 +164,7 @@ class _ScalablePageAllocator : public Allocator {
   OffsetPointer ReallocateOffsetNoNullCheck(const hipc::MemContext &ctx,
                                             OffsetPointer p, size_t new_size) {
     FullPtr<char, OffsetPointer> new_ptr =
-        ((AllocT *)this)->AllocateLocalPtr<char, OffsetPointer>(ctx, new_size);
+        GetAllocator()->AllocateLocalPtr<char, OffsetPointer>(ctx, new_size);
     char *old = Convert<char, OffsetPointer>(p);
     MpPage *old_hdr = (MpPage *)(old - sizeof(MpPage));
     memcpy(new_ptr.ptr_, old, old_hdr->page_size_ - sizeof(MpPage));
@@ -204,8 +208,6 @@ class _ScalablePageAllocator : public Allocator {
   HSHM_CROSS_FUN
   void FreeTls(const MemContext &ctx) {}
 };
-
-typedef BaseAllocator<_ScalablePageAllocator> ScalablePageAllocator;
 
 }  // namespace hshm::ipc
 

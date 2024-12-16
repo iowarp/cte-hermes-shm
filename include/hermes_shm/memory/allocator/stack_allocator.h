@@ -21,6 +21,9 @@
 
 namespace hshm::ipc {
 
+class _StackAllocator;
+typedef BaseAllocator<_StackAllocator> StackAllocator;
+
 struct _StackAllocatorHeader : public AllocatorHeader {
   HeapAllocator heap_;
   hipc::atomic<hshm::min_u64> total_alloc_;
@@ -39,6 +42,9 @@ struct _StackAllocatorHeader : public AllocatorHeader {
 };
 
 class _StackAllocator : public Allocator {
+ public:
+  HSHM_ALLOCATOR(_StackAllocator);
+
  public:
   typedef BaseAllocator<_StackAllocator> AllocT;
   _StackAllocatorHeader *header_;
@@ -179,8 +185,6 @@ class _StackAllocator : public Allocator {
   HSHM_CROSS_FUN
   void FreeTls(const hipc::MemContext &ctx) {}
 };
-
-typedef BaseAllocator<_StackAllocator> StackAllocator;
 
 }  // namespace hshm::ipc
 
