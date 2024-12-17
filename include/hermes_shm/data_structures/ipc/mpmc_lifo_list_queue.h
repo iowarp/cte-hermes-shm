@@ -187,7 +187,7 @@ class mpmc_lifo_list_queue : public ShmContainer {
   }
 
   /** Emplace. wrapper for enqueue */
-  HSHM_CROSS_FUN
+  HSHM_INLINE_CROSS_FUN
   qtok_t emplace(const LPointer<T> &entry) { return enqueue(entry); }
 
   /** Push. wrapper for enqueue */
@@ -195,19 +195,44 @@ class mpmc_lifo_list_queue : public ShmContainer {
   qtok_t push(const LPointer<T> &entry) { return enqueue(entry); }
 
   /** Construct an element at \a pos position in the mpmc_lifo_list_queue */
-  HSHM_CROSS_FUN
+  HSHM_INLINE_CROSS_FUN
   qtok_t enqueue(T *entry) {
     FullPtr<T> entry_ptr(GetAllocator(), entry);
     return enqueue(entry_ptr);
   }
 
   /** Emplace. wrapper for enqueue */
-  HSHM_CROSS_FUN
+  HSHM_INLINE_CROSS_FUN
   qtok_t emplace(T *entry) { return enqueue(entry); }
 
   /** Push. wrapper for enqueue */
   HSHM_INLINE_CROSS_FUN
   qtok_t push(T *entry) { return enqueue(entry); }
+
+  /** Dequeue the element (FullPtr, qtok_t) */
+  HSHM_CROSS_FUN
+  qtok_t dequeue(FullPtr<T> &val) {
+    size_t cur_size = size();
+    if (cur_size == 0) {
+      return qtok_t::GetNull();
+    }
+    bool ret;
+    auto *alloc = GetAllocator();
+    do {
+      OffsetPointer tail_shm(tail_shm_.load());
+      if (tail_shm.IsNull()) {
+        return qtok_t::GetNull();
+      }
+      val.shm_.off_ = tail_shm_.load();
+      val.shm_.alloc_id_ = alloc->GetId();
+      val.ptr_ = alloc->template Convert<T>(tail_shm);
+      auto next_tail = val->next_shm_;
+      ret = tail_shm_.compare_exchange_weak(tail_shm.off_.ref(),
+                                            next_tail.off_.ref());
+    } while (!ret);
+    --count_;
+    return qtok_t(1);
+  }
 
   /** Dequeue the element */
   HSHM_INLINE_CROSS_FUN
@@ -222,30 +247,6 @@ class mpmc_lifo_list_queue : public ShmContainer {
   /** Pop the element */
   HSHM_INLINE_CROSS_FUN
   T *pop() { return dequeue(); }
-
-  /** Dequeue the element (FullPtr, qtok_t) */
-  HSHM_CROSS_FUN
-  qtok_t dequeue(FullPtr<T> &val) {
-    size_t cur_size = size();
-    if (cur_size == 0) {
-      return qtok_t::GetNull();
-    }
-    bool ret;
-    do {
-      OffsetPointer tail_shm(tail_shm_.load());
-      val.shm_.off_ = tail_shm_.load();
-      val.shm_.alloc_id_ = GetAllocator()->GetId();
-      val.ptr_ = GetAllocator()->template Convert<T>(tail_shm);
-      if (val.IsNull()) {
-        return qtok_t::GetNull();
-      }
-      auto next_tail = val->next_shm_;
-      ret = tail_shm_.compare_exchange_weak(tail_shm.off_.ref(),
-                                            next_tail.off_.ref());
-    } while (!ret);
-    --count_;
-    return qtok_t(1);
-  }
 
   /** Pop the element (FullPtr, qtok_t) */
   HSHM_INLINE_CROSS_FUN

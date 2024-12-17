@@ -35,7 +35,7 @@ typedef BaseAllocator<_ThreadLocalAllocator> ThreadLocalAllocator;
 
 struct _ThreadLocalAllocatorHeader : public AllocatorHeader {
   typedef TlsAllocatorInfo<_ThreadLocalAllocator> TLS;
-  typedef hipc::PageAllocator<_ThreadLocalAllocator, true, true> PageAllocator;
+  typedef hipc::PageAllocator<_ThreadLocalAllocator, false, true> PageAllocator;
   typedef hipc::vector<PageAllocator, StackAllocator> PageAllocVec;
   typedef hipc::fixed_mpmc_ptr_queue<hshm::min_u64, StackAllocator>
       PageAllocIdVec;
@@ -175,8 +175,10 @@ class _ThreadLocalAllocator : public Allocator {
     // Case 2: Can we allocate of thread's heap?
     if (page == nullptr) {
       page = page_alloc.AllocateHeap(page_id);
-      page->tid_ = tid;
-      page->page_size_ = page_id.round_;
+      if (page) {
+        page->tid_ = tid;
+        page->page_size_ = page_id.round_;
+      }
     }
 
     // Case 3: Allocate from heap if no page found
@@ -195,7 +197,7 @@ class _ThreadLocalAllocator : public Allocator {
     }
 
     // Mark as allocated
-    header_->total_alloc_.fetch_add(page_id.round_);
+    header_->AddSize(page_id.round_);
     OffsetPointer p = Convert<MpPage, OffsetPointer>(page);
     page->SetAllocated();
     return p + sizeof(MpPage);
@@ -241,9 +243,9 @@ class _ThreadLocalAllocator : public Allocator {
       HERMES_THROW_ERROR(DOUBLE_FREE);
     }
     hdr->UnsetAllocated();
-    header_->total_alloc_.fetch_sub(hdr->page_size_);
+    header_->SubSize(hdr->page_size_);
     PageAllocator &page_alloc = (*header_->tls_)[hdr->tid_.tid_];
-    page_alloc.Free(hdr);
+    page_alloc.Free(hdr_offset, hdr);
   }
 
   /**
@@ -251,7 +253,9 @@ class _ThreadLocalAllocator : public Allocator {
    * checking.
    * */
   HSHM_CROSS_FUN
-  size_t GetCurrentlyAllocatedSize() { return header_->total_alloc_.load(); }
+  size_t GetCurrentlyAllocatedSize() {
+    return header_->GetCurrentlyAllocatedSize();
+  }
 
   /**
    * Create a globally-unique thread ID

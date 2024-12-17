@@ -68,13 +68,14 @@ class PageAllocator {
   typedef
       typename std::conditional<THREAD_SAFE, MPMC_LIFO_LIST, LIFO_LIST>::type
           LIST;
-  hipc::Mutex lock_;
 
  public:
   hipc::delay_ar<LIST> free_lists_[PageId::num_caches_];
   hipc::delay_ar<LIFO_LIST> fallback_list_;
   TLS tls_info_;
   HeapAllocator<THREAD_SAFE> heap_;
+  hipc::Mutex lock_;
+  AtomicOffsetPointer last_page_shm_;
 
  public:
   HSHM_INLINE_CROSS_FUN
@@ -89,6 +90,7 @@ class PageAllocator {
           alloc->Allocate<OffsetPointer>(HSHM_DEFAULT_MEM_CTX, local_heap_size),
           local_heap_size);
     }
+    last_page_shm_.SetNull();
   }
 
   HSHM_INLINE_CROSS_FUN
@@ -110,6 +112,18 @@ class PageAllocator {
 
   HSHM_INLINE_CROSS_FUN
   MpPage *Allocate(const PageId &page_id) {
+    // Check last page
+    if constexpr (!THREAD_SAFE) {
+      if (!last_page_shm_.IsNull()) {
+        MpPage *last_page =
+            tls_info_.alloc_->template Convert<MpPage>(last_page_shm_);
+        if (last_page->page_size_ >= page_id.round_) {
+          MpPage *page = last_page;
+          last_page_shm_.SetNull();
+          return page;
+        }
+      }
+    }
     // Allocate small page size
     if (page_id.exp_ < PageId::num_caches_) {
       LIST &free_list = *free_lists_[page_id.exp_];
@@ -142,8 +156,24 @@ class PageAllocator {
   }
 
   HSHM_INLINE_CROSS_FUN
-  void Free(MpPage *page) {
+  void Free(OffsetPointer page_shm, MpPage *page) {
     PageId page_id(page->page_size_);
+    if constexpr (!THREAD_SAFE) {
+      OffsetPointer expected;
+      while (true) {
+        expected = last_page_shm_;
+        if (!expected.IsNull()) {
+          break;
+        }
+        bool ret = last_page_shm_.off_.compare_exchange_weak(
+            expected.off_.ref(), page_shm.off_.ref());
+        if (ret) {
+          return;
+        } else {
+          break;
+        }
+      }
+    }
     if (page_id.exp_ < PageId::num_caches_) {
       free_lists_[page_id.exp_]->enqueue(page);
     } else {

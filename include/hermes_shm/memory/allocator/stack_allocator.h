@@ -120,7 +120,7 @@ class _StackAllocator : public Allocator {
     hdr->SetAllocated();
     hdr->page_size_ = size;
     hdr->off_ = 0;
-    header_->total_alloc_.fetch_add(hdr->page_size_);
+    header_->AddSize(hdr->page_size_);
     return p + sizeof(MpPage);
   }
 
@@ -163,7 +163,7 @@ class _StackAllocator : public Allocator {
       HERMES_THROW_ERROR(DOUBLE_FREE);
     }
     hdr->UnsetAllocated();
-    header_->total_alloc_.fetch_sub(hdr->page_size_);
+    header_->SubSize(hdr->page_size_);
   }
 
   /**
@@ -171,7 +171,9 @@ class _StackAllocator : public Allocator {
    * checking.
    * */
   HSHM_CROSS_FUN
-  size_t GetCurrentlyAllocatedSize() { return header_->total_alloc_.load(); }
+  size_t GetCurrentlyAllocatedSize() {
+    return header_->GetCurrentlyAllocatedSize();
+  }
 
   /**
    * Create a globally-unique thread ID

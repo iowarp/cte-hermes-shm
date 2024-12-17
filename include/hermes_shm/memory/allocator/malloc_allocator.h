@@ -26,8 +26,6 @@ struct MallocPage {
 };
 
 struct _MallocAllocatorHeader : public AllocatorHeader {
-  hipc::atomic<hshm::min_u64> total_alloc_size_;
-
   HSHM_CROSS_FUN
   _MallocAllocatorHeader() = default;
 
@@ -35,7 +33,6 @@ struct _MallocAllocatorHeader : public AllocatorHeader {
   void Configure(AllocatorId alloc_id, size_t custom_header_size) {
     AllocatorHeader::Configure(alloc_id, AllocatorType::kStackAllocator,
                                custom_header_size);
-    total_alloc_size_ = 0;
   }
 };
 
@@ -87,7 +84,7 @@ class _MallocAllocator : public Allocator {
     auto page =
         reinterpret_cast<MallocPage *>(malloc(sizeof(MallocPage) + size));
     page->page_size_ = size;
-    header_->total_alloc_size_ += size;
+    header_->AddSize(size);
     return OffsetPointer((size_t)(page + 1));
   }
 
@@ -102,7 +99,7 @@ class _MallocAllocator : public Allocator {
     auto page = reinterpret_cast<MallocPage *>(
         aligned_alloc(alignment, sizeof(MallocPage) + size));
     page->page_size_ = size;
-    header_->total_alloc_size_ += size;
+    header_->AddSize(size);
     return OffsetPointer(size_t(page + 1));
 #else
     return OffsetPointer(0);
@@ -121,7 +118,7 @@ class _MallocAllocator : public Allocator {
     // Get the input page
     auto page =
         reinterpret_cast<MallocPage *>(p.off_.load() - sizeof(MallocPage));
-    header_->total_alloc_size_ += new_size - page->page_size_;
+    header_->AddSize(new_size - page->page_size_);
 
     // Reallocate the input page
     auto new_page = reinterpret_cast<MallocPage *>(
@@ -142,7 +139,7 @@ class _MallocAllocator : public Allocator {
   void FreeOffsetNoNullCheck(const hipc::MemContext &ctx, OffsetPointer p) {
     auto page =
         reinterpret_cast<MallocPage *>(p.off_.load() - sizeof(MallocPage));
-    header_->total_alloc_size_ -= page->page_size_;
+    header_->SubSize(page->page_size_);
     free(page);
   }
 
@@ -152,7 +149,7 @@ class _MallocAllocator : public Allocator {
    * */
   HSHM_CROSS_FUN
   size_t GetCurrentlyAllocatedSize() {
-    return header_->total_alloc_size_.load();
+    return header_->GetCurrentlyAllocatedSize();
   }
 
   /**

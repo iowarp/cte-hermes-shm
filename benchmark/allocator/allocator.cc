@@ -251,8 +251,8 @@ void FullAllocatorTestPerThread() {
   AllocatorTest<hipc::PosixShmMmap, hipc::ThreadLocalAllocator>(
       AllocatorType::kThreadLocalAllocator, MemoryBackendType::kMallocBackend);
   // Test allocator
-  AllocatorTest<hipc::PosixShmMmap, hipc::TestAllocator>(
-      AllocatorType::kTestAllocator, MemoryBackendType::kMallocBackend);
+  // AllocatorTest<hipc::PosixShmMmap, hipc::TestAllocator>(
+  //     AllocatorType::kTestAllocator, MemoryBackendType::kMallocBackend);
   // Stack allocator
   //  AllocatorTest<hipc::PosixShmMmap, hipc::StackAllocator>(
   //    AllocatorType::kStackAllocator,
@@ -265,7 +265,13 @@ void FullAllocatorTestThreaded(int nthreads) {
 #pragma omp parallel num_threads(nthreads)
   {
 #pragma omp barrier
-    FullAllocatorTestPerThread();
+    try {
+      FullAllocatorTestPerThread();
+    } catch (const std::exception &e) {
+      HELOG(kFatal, "Exception: {}", e.what());
+    } catch (hshm::Error &e) {
+      HELOG(kFatal, "Error: {}", e.what());
+    }
 #pragma omp barrier
   }
 }
@@ -273,10 +279,10 @@ void FullAllocatorTestThreaded(int nthreads) {
 TEST_CASE("AllocatorBenchmark") {
   HERMES_ERROR_HANDLE_START();
   AllocatorTestSuite<hipc::NullAllocator>::PrintTestHeader();
-  FullAllocatorTestThreaded(1);
+  // FullAllocatorTestThreaded(1);
   // FullAllocatorTestThreaded(2);
   // FullAllocatorTestThreaded(4);
-  // FullAllocatorTestThreaded(8);
+  FullAllocatorTestThreaded(8);
   // FullAllocatorTestThreaded(16);
   HERMES_ERROR_HANDLE_END();
 }

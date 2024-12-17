@@ -137,7 +137,7 @@ class _ScalablePageAllocator : public Allocator {
     }
 
     // Mark as allocated
-    header_->total_alloc_.fetch_add(page_id.round_);
+    header_->AddSize(page_id.round_);
     OffsetPointer p = Convert<MpPage, OffsetPointer>(page);
     page->page_size_ = page_id.round_;
     page->SetAllocated();
@@ -184,9 +184,9 @@ class _ScalablePageAllocator : public Allocator {
       HERMES_THROW_ERROR(DOUBLE_FREE);
     }
     hdr->UnsetAllocated();
-    header_->total_alloc_.fetch_sub(hdr->page_size_);
+    header_->SubSize(hdr->page_size_);
     PageAllocator &page_alloc = *header_->global_;
-    page_alloc.Free(hdr);
+    page_alloc.Free(hdr_offset, hdr);
   }
 
   /**
@@ -194,7 +194,9 @@ class _ScalablePageAllocator : public Allocator {
    * checking.
    * */
   HSHM_CROSS_FUN
-  size_t GetCurrentlyAllocatedSize() { return header_->total_alloc_.load(); }
+  size_t GetCurrentlyAllocatedSize() {
+    return header_->GetCurrentlyAllocatedSize();
+  }
 
   /**
    * Create a globally-unique thread ID
