@@ -14,6 +14,7 @@
 #define HERMES_DATA_STRUCTURES__MPMC_LIST_lifo_list_queue_H
 
 #include "hermes_shm/memory/memory.h"
+#include "hermes_shm/util/logging.h"
 #include "lifo_list_queue.h"
 
 namespace hshm::ipc {
@@ -175,11 +176,11 @@ class mpmc_lifo_list_queue : public ShmContainer {
 
   /** Construct an element at \a pos position in the mpmc_lifo_list_queue */
   HSHM_CROSS_FUN
-  qtok_t enqueue(const LPointer<T> &entry) {
+  qtok_t enqueue(const FullPtr<T> &entry) {
     bool ret;
     do {
       size_t tail_shm = tail_shm_.load();
-      entry.ptr_->next_shm_ = tail_shm;
+      entry->next_shm_ = tail_shm;
       ret = tail_shm_.compare_exchange_weak(tail_shm, entry.shm_.off_.load());
     } while (!ret);
     ++count_;
@@ -188,11 +189,11 @@ class mpmc_lifo_list_queue : public ShmContainer {
 
   /** Emplace. wrapper for enqueue */
   HSHM_INLINE_CROSS_FUN
-  qtok_t emplace(const LPointer<T> &entry) { return enqueue(entry); }
+  qtok_t emplace(const FullPtr<T> &entry) { return enqueue(entry); }
 
   /** Push. wrapper for enqueue */
   HSHM_INLINE_CROSS_FUN
-  qtok_t push(const LPointer<T> &entry) { return enqueue(entry); }
+  qtok_t push(const FullPtr<T> &entry) { return enqueue(entry); }
 
   /** Construct an element at \a pos position in the mpmc_lifo_list_queue */
   HSHM_INLINE_CROSS_FUN
@@ -223,12 +224,11 @@ class mpmc_lifo_list_queue : public ShmContainer {
       if (tail_shm.IsNull()) {
         return qtok_t::GetNull();
       }
-      val.shm_.off_ = tail_shm_.load();
+      val.shm_.off_ = tail_shm.load();
       val.shm_.alloc_id_ = alloc->GetId();
       val.ptr_ = alloc->template Convert<T>(tail_shm);
-      auto next_tail = val->next_shm_;
-      ret = tail_shm_.compare_exchange_weak(tail_shm.off_.ref(),
-                                            next_tail.off_.ref());
+      size_t next_tail = val->next_shm_.load();
+      ret = tail_shm_.compare_exchange_weak(tail_shm.off_.ref(), next_tail);
     } while (!ret);
     --count_;
     return qtok_t(1);

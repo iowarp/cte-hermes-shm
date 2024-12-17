@@ -138,7 +138,7 @@ namespace hipc = hshm::ipc;
 
 /** Define the default allocator class */
 #ifndef HSHM_DEFAULT_ALLOC_T
-#define HSHM_DEFAULT_ALLOC_T hipc::ThreadLocalAllocator
+#define HSHM_DEFAULT_ALLOC_T hipc::MallocAllocator
 #endif
 #define HSHM_DEFAULT_ALLOC \
   HERMES_MEMORY_MANAGER->template GetDefaultAllocator<HSHM_DEFAULT_ALLOC_T>()

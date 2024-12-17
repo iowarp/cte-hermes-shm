@@ -27,6 +27,11 @@ struct list_queue_entry {
   OffsetPointer next_shm_;
 };
 
+/** represents an object within a lifo_list_queue */
+struct atomic_list_queue_entry {
+  AtomicOffsetPointer next_shm_;
+};
+
 /**
  * The lifo_list_queue iterator
  * */

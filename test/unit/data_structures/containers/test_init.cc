@@ -10,19 +10,14 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-
-#include "basic_test.h"
 #include "test_init.h"
+
 #include <mpi.h>
 
-void Posttest() {
-  std::string shm_url = "test_allocators";
-}
+#include "basic_test.h"
 
-void MainPretest() {
-  Pretest<hipc::ScalablePageAllocator>();
-}
+void Posttest() { std::string shm_url = "test_allocators"; }
 
-void MainPosttest() {
-  Posttest();
-}
+void MainPretest() { Pretest<HSHM_DEFAULT_ALLOC_T>(); }
+
+void MainPosttest() { Posttest(); }

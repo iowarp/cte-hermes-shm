@@ -10,20 +10,20 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include <iostream>
 #include "test_init.h"
+
+#include <iostream>
+#include <memory>
+
 #include "hermes_shm/data_structures/ipc/string.h"
 #include "thallium.h"
-#include <memory>
 
 std::unique_ptr<tl::engine> client_;
 std::unique_ptr<tl::engine> server_;
 
 void MainPretest() {
-  ClientPretest<hipc::ScalablePageAllocator>();
-  client_ = std::make_unique<tl::engine>(
-    "ofi+sockets",
-    THALLIUM_CLIENT_MODE);
+  ClientPretest<HSHM_DEFAULT_ALLOC_T>();
+  client_ = std::make_unique<tl::engine>("ofi+sockets", THALLIUM_CLIENT_MODE);
 }
 
 void MainPosttest() {

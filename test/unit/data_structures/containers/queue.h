@@ -14,6 +14,7 @@
 #define HERMES_SHM_TEST_UNIT_DATA_STRUCTURES_CONTAINERS_QUEUE_H_
 
 #include "hermes_shm/data_structures/all.h"
+#include "hermes_shm/util/logging.h"
 #include "omp.h"
 #include "test_init.h"
 
@@ -30,7 +31,13 @@ struct IntEntry : public hipc::list_queue_entry {
 template <typename NewT>
 class VariableMaker {
  public:
-  static NewT MakeVariable(size_t num) {
+  std::vector<NewT> vars_;
+  hipc::atomic<size_t> count_;
+
+ public:
+  VariableMaker(size_t total_vars) : vars_(total_vars) { count_ = 0; }
+
+  static NewT _MakeVariable(size_t num) {
     if constexpr (std::is_arithmetic_v<NewT>) {
       return static_cast<NewT>(num);
     } else if constexpr (std::is_same_v<NewT, std::string>) {
@@ -46,7 +53,14 @@ class VariableMaker {
     }
   }
 
-  static size_t GetIntFromVar(NewT &var) {
+  NewT MakeVariable(size_t num) {
+    NewT var = _MakeVariable(num);
+    size_t count = count_.fetch_add(1);
+    vars_[count] = var;
+    return var;
+  }
+
+  size_t GetIntFromVar(NewT &var) {
     if constexpr (std::is_arithmetic_v<NewT>) {
       return static_cast<size_t>(var);
     } else if constexpr (std::is_same_v<NewT, std::string>) {
@@ -60,10 +74,20 @@ class VariableMaker {
     }
   }
 
-  static void FreeVariable(NewT &var) {
+  void FreeVariable(NewT &var) {
     if constexpr (std::is_same_v<NewT, IntEntry *>) {
       auto alloc = HSHM_DEFAULT_ALLOC;
       alloc->DelObj(HSHM_DEFAULT_MEM_CTX, var);
+    }
+  }
+
+  void FreeVariables() {
+    if constexpr (std::is_same_v<NewT, IntEntry *>) {
+      size_t count = count_.load();
+      for (size_t i = 0; i < count; ++i) {
+        auto alloc = HSHM_DEFAULT_ALLOC;
+        alloc->DelObj(HSHM_DEFAULT_MEM_CTX, vars_[i]);
+      }
     }
   }
 };
@@ -78,13 +102,13 @@ class QueueTestSuite {
   explicit QueueTestSuite(QueueT &queue) : queue_(queue) {}
 
   /** Producer method */
-  void Produce(size_t count_per_rank) {
+  void Produce(VariableMaker<T> &var_maker, size_t count_per_rank) {
     std::vector<size_t> idxs;
     int rank = omp_get_thread_num();
     try {
       for (size_t i = 0; i < count_per_rank; ++i) {
         size_t idx = rank * count_per_rank + i;
-        T var = VariableMaker<T>::MakeVariable(idx);
+        T var = var_maker.MakeVariable(idx);
         idxs.emplace_back(idx);
         while (queue_.emplace(var).IsNull()) {
         }
@@ -101,7 +125,8 @@ class QueueTestSuite {
   }
 
   /** Consumer method */
-  void Consume(std::atomic<size_t> &count, size_t total_count,
+  void Consume(int min_rank, VariableMaker<T> &var_maker,
+               std::atomic<size_t> &count, size_t total_count,
                std::vector<size_t> &entries) {
     T entry;
     // Consume everything
@@ -110,17 +135,18 @@ class QueueTestSuite {
       if (qtok.IsNull()) {
         continue;
       }
-      size_t entry_int = VariableMaker<T>::GetIntFromVar(entry);
+      size_t entry_int = var_maker.GetIntFromVar(entry);
       size_t off = count.fetch_add(1);
       if (off >= total_count) {
         break;
       }
       entries[off] = entry_int;
-      VariableMaker<T>::FreeVariable(entry);
+      // var_maker.FreeVariable(entry);
     }
 
     int rank = omp_get_thread_num();
-    if (rank == 0) {
+    HILOG(kInfo, "Rank {}: Consumed {} entries", rank, count.load());
+    if (rank == min_rank) {
       // Ensure there's no data left in the queue
       REQUIRE(queue_.pop(entry).IsNull());
       // Ensure the data is all correct
@@ -130,6 +156,7 @@ class QueueTestSuite {
       for (size_t i = 0; i < total_count; ++i) {
         REQUIRE(entries[i] == i);
       }
+      var_maker.FreeVariables();
     }
   }
 };
@@ -141,25 +168,26 @@ void ProduceThenConsume(size_t nproducers, size_t nconsumers,
   QueueTestSuite<QueueT, T> q(queue);
   std::atomic<size_t> count = 0;
   std::vector<size_t> entries;
+  VariableMaker<T> var_maker(nproducers * count_per_rank);
   entries.resize(count_per_rank * nproducers);
 
   // Produce all the data
   omp_set_dynamic(0);
-#pragma omp parallel shared(nproducers, count_per_rank, q, count, entries) \
-    num_threads(nproducers)  // NOLINT
-  {                          // NOLINT
+#pragma omp parallel shared(var_maker, nproducers, count_per_rank, q, count, \
+                                entries) num_threads(nproducers)  // NOLINT
+  {                                                               // NOLINT
 #pragma omp barrier
-    q.Produce(count_per_rank);
+    q.Produce(var_maker, count_per_rank);
 #pragma omp barrier
   }
 
   omp_set_dynamic(0);
-#pragma omp parallel shared(nproducers, count_per_rank, q) \
+#pragma omp parallel shared(var_maker, nproducers, count_per_rank, q) \
     num_threads(nconsumers)  // NOLINT
   {                          // NOLINT
 #pragma omp barrier
      // Consume all the data
-    q.Consume(count, count_per_rank * nproducers, entries);
+    q.Consume(0, var_maker, count, count_per_rank * nproducers, entries);
 #pragma omp barrier
   }
 }
@@ -172,21 +200,23 @@ void ProduceAndConsume(size_t nproducers, size_t nconsumers,
   QueueTestSuite<QueueT, T> q(queue);
   std::atomic<size_t> count = 0;
   std::vector<size_t> entries;
+  VariableMaker<T> var_maker(nproducers * count_per_rank);
   entries.resize(count_per_rank * nproducers);
 
   // Produce all the data
   omp_set_dynamic(0);
-#pragma omp parallel shared(nproducers, count_per_rank, q, count) \
+#pragma omp parallel shared(var_maker, nproducers, count_per_rank, q, count) \
     num_threads(nthreads)  // NOLINT
   {                        // NOLINT
 #pragma omp barrier
     size_t rank = omp_get_thread_num();
     if (rank < nproducers) {
       // Producer
-      q.Produce(count_per_rank);
+      q.Produce(var_maker, count_per_rank);
     } else {
       // Consumer
-      q.Consume(count, count_per_rank * nproducers, entries);
+      q.Consume(nproducers, var_maker, count, count_per_rank * nproducers,
+                entries);
     }
 #pragma omp barrier
   }
