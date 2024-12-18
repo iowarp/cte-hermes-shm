@@ -221,21 +221,23 @@ void AllocatorTest(AllocatorType alloc_type, MemoryBackendType backend_type,
                    Args &&...args) {
   auto *alloc =
       Pretest<BackendT, AllocT>(backend_type, std::forward<Args>(args)...);
-  hipc::ScopedTlsAllocator<AllocT> scoped_tls(alloc);
-  //  if (alloc_type == AllocatorType::kScalablePageAllocator) {
-  //    printf("TID: %llu\n", (*scoped_tls).ctx_.tid_);
-  //  }
-  size_t count = (1 << 16);
-  // Allocate many and then free many
-  //  AllocatorTestSuite<AllocT>((alloc_type,
-  //  *scoped_tls).AllocateThenFreeFixedSize(
-  //    count, KILOBYTES(1));
-  // Allocate and free immediately
-  AllocatorTestSuite<AllocT>(alloc_type, *scoped_tls)
-      .AllocateAndFreeFixedSize(count, KILOBYTES(1));
-  // Allocate and free randomly
-  // AllocatorTestSuite<AllocT>(alloc_type, *scoped_tls)
-  //     .AllocateAndFreeRandomWindow(count);
+  PAGE_DIVIDE("Test") {
+    hipc::ScopedTlsAllocator<AllocT> scoped_tls(alloc);
+    //  if (alloc_type == AllocatorType::kScalablePageAllocator) {
+    //    printf("TID: %llu\n", (*scoped_tls).ctx_.tid_);
+    //  }
+    size_t count = (1 << 16);
+    // Allocate many and then free many
+    //  AllocatorTestSuite<AllocT>((alloc_type,
+    //  *scoped_tls).AllocateThenFreeFixedSize(
+    //    count, KILOBYTES(1));
+    // Allocate and free immediately
+    AllocatorTestSuite<AllocT>(alloc_type, *scoped_tls)
+        .AllocateAndFreeFixedSize(count, KILOBYTES(1));
+    // Allocate and free randomly
+    // AllocatorTestSuite<AllocT>(alloc_type, *scoped_tls)
+    //     .AllocateAndFreeRandomWindow(count);
+  }
   Posttest();
 }
 
@@ -248,12 +250,11 @@ void FullAllocatorTestPerThread() {
   AllocatorTest<hipc::PosixShmMmap, hipc::ScalablePageAllocator>(
       AllocatorType::kScalablePageAllocator, MemoryBackendType::kMallocBackend);
   // Thread-local allocator
-  // AllocatorTest<hipc::PosixShmMmap, hipc::ThreadLocalAllocator>(
-  //     AllocatorType::kThreadLocalAllocator,
-  //     MemoryBackendType::kMallocBackend);
+  AllocatorTest<hipc::PosixShmMmap, hipc::ThreadLocalAllocator>(
+      AllocatorType::kThreadLocalAllocator, MemoryBackendType::kMallocBackend);
   // Test allocator
-  // AllocatorTest<hipc::PosixShmMmap, hipc::TestAllocator>(
-  //     AllocatorType::kTestAllocator, MemoryBackendType::kMallocBackend);
+  AllocatorTest<hipc::PosixShmMmap, hipc::TestAllocator>(
+      AllocatorType::kTestAllocator, MemoryBackendType::kMallocBackend);
   // Stack allocator
   //  AllocatorTest<hipc::PosixShmMmap, hipc::StackAllocator>(
   //    AllocatorType::kStackAllocator,
@@ -280,10 +281,10 @@ void FullAllocatorTestThreaded(int nthreads) {
 TEST_CASE("AllocatorBenchmark") {
   HERMES_ERROR_HANDLE_START();
   AllocatorTestSuite<hipc::NullAllocator>::PrintTestHeader();
-  // FullAllocatorTestThreaded(1);
+  FullAllocatorTestThreaded(1);
   // FullAllocatorTestThreaded(2);
   // FullAllocatorTestThreaded(4);
-  FullAllocatorTestThreaded(8);
+  // FullAllocatorTestThreaded(8);
   // FullAllocatorTestThreaded(16);
   HERMES_ERROR_HANDLE_END();
 }

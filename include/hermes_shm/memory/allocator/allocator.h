@@ -59,10 +59,21 @@ struct AllocatorHeader {
     total_alloc_ = 0;
   }
 
-  void AddSize(hshm::min_u64 size) { total_alloc_ += size; }
+  HSHM_INLINE_CROSS_FUN
+  void AddSize(hshm::min_u64 size) {
+#ifdef HSHM_ALLOC_TRACK_SIZE
+    total_alloc_ += size;
+#endif
+  }
 
-  void SubSize(hshm::min_u64 size) { total_alloc_ -= size; }
+  HSHM_INLINE_CROSS_FUN
+  void SubSize(hshm::min_u64 size) {
+#ifdef HSHM_ALLOC_TRACK_SIZE
+    total_alloc_ -= size;
+#endif
+  }
 
+  HSHM_INLINE_CROSS_FUN
   hshm::min_u64 GetCurrentlyAllocatedSize() { return total_alloc_.load(); }
 };
 
