@@ -69,7 +69,7 @@
             "request": "launch",
             "program": "${workspaceFolder}/build/bin/test_data_structure_exec",
             "args": [
-                "TestMpmcListQueueIntMultithreaded"
+                ""
             ],
             "miDebuggerPath": "/usr/bin/gdb",
             "cwd": "${workspaceFolder}",
@@ -91,7 +91,7 @@
             "request": "launch",
             "program": "${workspaceFolder}/build/bin/test_allocator_exec",
             "args": [
-                ""
+                "ScalablePageAllocatorMultithreaded"
             ],
             "miDebuggerPath": "/usr/bin/gdb",
             "cwd": "${workspaceFolder}",

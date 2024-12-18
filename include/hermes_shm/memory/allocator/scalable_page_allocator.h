@@ -181,7 +181,7 @@ class _ScalablePageAllocator : public Allocator {
     auto hdr_offset = p - sizeof(MpPage);
     MpPage *hdr = Convert<MpPage>(hdr_offset);
     if (!hdr->IsAllocated()) {
-      HERMES_THROW_ERROR(DOUBLE_FREE);
+      HERMES_THROW_ERROR(DOUBLE_FREE, hdr);
     }
     hdr->UnsetAllocated();
     header_->SubSize(hdr->page_size_);

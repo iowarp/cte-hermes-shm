@@ -248,8 +248,9 @@ void FullAllocatorTestPerThread() {
   AllocatorTest<hipc::PosixShmMmap, hipc::ScalablePageAllocator>(
       AllocatorType::kScalablePageAllocator, MemoryBackendType::kMallocBackend);
   // Thread-local allocator
-  AllocatorTest<hipc::PosixShmMmap, hipc::ThreadLocalAllocator>(
-      AllocatorType::kThreadLocalAllocator, MemoryBackendType::kMallocBackend);
+  // AllocatorTest<hipc::PosixShmMmap, hipc::ThreadLocalAllocator>(
+  //     AllocatorType::kThreadLocalAllocator,
+  //     MemoryBackendType::kMallocBackend);
   // Test allocator
   // AllocatorTest<hipc::PosixShmMmap, hipc::TestAllocator>(
   //     AllocatorType::kTestAllocator, MemoryBackendType::kMallocBackend);

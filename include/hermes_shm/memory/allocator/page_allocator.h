@@ -58,22 +58,19 @@ struct PageId {
   }
 };
 
-template <typename AllocT, bool THREAD_SAFE, bool LOCAL_HEAP>
+template <typename AllocT, bool MPMC, bool LOCAL_HEAP>
 class PageAllocator {
  public:
   typedef StackAllocator Alloc_;
   typedef TlsAllocatorInfo<AllocT> TLS;
   typedef hipc::lifo_list_queue<MpPage, Alloc_> LIFO_LIST;
-  typedef hipc::mpmc_lifo_list_queue<MpPage, Alloc_> MPMC_LIFO_LIST;
-  typedef
-      typename std::conditional<THREAD_SAFE, MPMC_LIFO_LIST, LIFO_LIST>::type
-          LIST;
+  typedef hipc::mpsc_lifo_list_queue<MpPage, Alloc_> MPSC_LIFO_LIST;
 
  public:
-  hipc::delay_ar<LIST> free_lists_[PageId::num_caches_];
+  hipc::delay_ar<MPSC_LIFO_LIST> free_lists_[PageId::num_caches_];
   hipc::delay_ar<LIFO_LIST> fallback_list_;
   TLS tls_info_;
-  HeapAllocator<THREAD_SAFE> heap_;
+  HeapAllocator<MPMC> heap_;
   hipc::Mutex lock_;
   AtomicOffsetPointer last_page_shm_;
 
@@ -112,8 +109,20 @@ class PageAllocator {
 
   HSHM_INLINE_CROSS_FUN
   MpPage *Allocate(const PageId &page_id) {
-    // Check last page
-    if constexpr (!THREAD_SAFE) {
+    if constexpr (!MPMC) {
+      return AllocateMpsc(page_id);
+    } else {
+      hipc::ScopedMutex lock(lock_, 0);
+      return AllocateMpsc(page_id);
+    }
+    // No page was cached
+    return nullptr;
+  }
+
+  HSHM_INLINE_CROSS_FUN
+  MpPage *AllocateMpsc(const PageId &page_id) {
+    // Check if last page is set
+    if constexpr (!MPMC) {
       if (!last_page_shm_.IsNull()) {
         MpPage *last_page =
             tls_info_.alloc_->template Convert<MpPage>(last_page_shm_);
@@ -124,41 +133,27 @@ class PageAllocator {
         }
       }
     }
-    // Allocate small page size
+    // Allocate cached page
     if (page_id.exp_ < PageId::num_caches_) {
-      LIST &free_list = *free_lists_[page_id.exp_];
+      MPSC_LIFO_LIST &free_list = *free_lists_[page_id.exp_];
       MpPage *page = free_list.pop();
       return page;
     }
     // Allocate a large page size
-    if constexpr (THREAD_SAFE) {
-      hipc::ScopedMutex lock(lock_, 0);
-      for (auto it = fallback_list_->begin(); it != fallback_list_->end();
-           ++it) {
-        MpPage *page = *it;
-        if (page->page_size_ >= page_id.round_) {
-          fallback_list_->dequeue(it);
-          return page;
-        }
-      }
-    } else {
-      for (auto it = fallback_list_->begin(); it != fallback_list_->end();
-           ++it) {
-        MpPage *page = *it;
-        if (page->page_size_ >= page_id.round_) {
-          fallback_list_->dequeue(it);
-          return page;
-        }
+    for (auto it = fallback_list_->begin(); it != fallback_list_->end(); ++it) {
+      MpPage *page = *it;
+      if (page->page_size_ >= page_id.round_) {
+        fallback_list_->dequeue(it);
+        return page;
       }
     }
-    // No page was cached
     return nullptr;
   }
 
   HSHM_INLINE_CROSS_FUN
   void Free(OffsetPointer page_shm, MpPage *page) {
     PageId page_id(page->page_size_);
-    if constexpr (!THREAD_SAFE) {
+    if constexpr (!MPMC) {
       OffsetPointer expected;
       while (true) {
         expected = last_page_shm_;
@@ -177,7 +172,7 @@ class PageAllocator {
     if (page_id.exp_ < PageId::num_caches_) {
       free_lists_[page_id.exp_]->enqueue(page);
     } else {
-      if constexpr (THREAD_SAFE) {
+      if constexpr (MPMC) {
         hipc::ScopedMutex lock(lock_, 0);
         fallback_list_->enqueue(page);
       } else {

@@ -67,7 +67,7 @@ TEST_CASE("TestSpscListQueueInt") {
 TEST_CASE("TestMpmcListQueueInt") {
   auto *alloc = HSHM_DEFAULT_ALLOC;
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
-  ProduceThenConsume<hipc::mpmc_lifo_list_queue<IntEntry>, IntEntry *>(1, 1, 32,
+  ProduceThenConsume<hipc::mpsc_lifo_list_queue<IntEntry>, IntEntry *>(1, 1, 32,
                                                                        32);
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
 }
@@ -75,8 +75,8 @@ TEST_CASE("TestMpmcListQueueInt") {
 TEST_CASE("TestMpmcListQueueIntMultithreaded") {
   auto *alloc = HSHM_DEFAULT_ALLOC;
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
-  ProduceAndConsume<hipc::mpmc_lifo_list_queue<IntEntry>, IntEntry *>(
-      32, 32, 48000, 32);
+  ProduceAndConsume<hipc::mpsc_lifo_list_queue<IntEntry>, IntEntry *>(
+      8, 1, 48000, 32);
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
 }
 

@@ -14,11 +14,11 @@
 #define HERMES_INCLUDE_HERMES_MEMORY_ALLOCATOR_MP_PAGE_H_
 
 #include "hermes_shm/data_structures/ipc/lifo_list_queue.h"
-#include "hermes_shm/data_structures/ipc/mpmc_lifo_list_queue.h"
+#include "hermes_shm/data_structures/ipc/mpsc_lifo_list_queue.h"
 
 namespace hshm::ipc {
 
-struct MpPage : public list_queue_entry {
+struct MpPage : public atomic_list_queue_entry {
   bitfield32_t flags_; /**< Flags of the page (e.g., free/alloc) */
   /** Offset from the start of the page to the beginning of this header */
   u32 off_;

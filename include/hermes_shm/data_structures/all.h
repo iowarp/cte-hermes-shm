@@ -21,7 +21,7 @@
 #include "ipc/key_set.h"
 #include "ipc/lifo_list_queue.h"
 #include "ipc/list.h"
-#include "ipc/mpmc_lifo_list_queue.h"
+#include "ipc/mpsc_lifo_list_queue.h"
 #include "ipc/pair.h"
 #include "ipc/pod_array.h"
 #include "ipc/ring_ptr_queue.h"
@@ -51,7 +51,7 @@
   using list = HSHM_NS::list<T, ALLOC_T>;                                    \
                                                                              \
   template <typename T>                                                      \
-  using mpmc_lifo_list_queue = HSHM_NS::mpmc_lifo_list_queue<T, ALLOC_T>;    \
+  using mpsc_lifo_list_queue = HSHM_NS::mpsc_lifo_list_queue<T, ALLOC_T>;    \
                                                                              \
   template <typename T>                                                      \
   using spsc_fifo_list_queue = HSHM_NS::spsc_fifo_list_queue<T, ALLOC_T>;    \
