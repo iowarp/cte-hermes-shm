@@ -1,21 +1,29 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-* Distributed under BSD 3-Clause license.                                   *
-* Copyright by The HDF Group.                                               *
-* Copyright by the Illinois Institute of Technology.                        *
-* All rights reserved.                                                      *
-*                                                                           *
-* This file is part of Hermes. The full Hermes copyright notice, including  *
-* terms governing use, modification, and redistribution, is contained in    *
-* the COPYING file, which can be found at the top directory. If you do not  *
-* have access to the file, you may request a copy from help@hdfgroup.org.   *
-* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+ * Distributed under BSD 3-Clause license.                                   *
+ * Copyright by The HDF Group.                                               *
+ * Copyright by the Illinois Institute of Technology.                        *
+ * All rights reserved.                                                      *
+ *                                                                           *
+ * This file is part of Hermes. The full Hermes copyright notice, including  *
+ * terms governing use, modification, and redistribution, is contained in    *
+ * the COPYING file, which can be found at the top directory. If you do not  *
+ * have access to the file, you may request a copy from help@hdfgroup.org.   *
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include <unistd.h>
+#include <hermes_shm/util/logging.h>
 #include <hermes_shm/util/timer.h>
 #include <hermes_shm/util/timer_mpi.h>
 #include <hermes_shm/util/timer_thread.h>
-#include <hermes_shm/util/logging.h>
+#include <unistd.h>
+
 #include "basic_test.h"
+
+TEST_CASE("TestPeriodic") {
+  HILOG_PERIODIC(0, 0, SECONDS(1), "Print periodic 1");
+  sleep(1);
+  HILOG_PERIODIC(0, 0, SECONDS(1), "Print periodic 2");
+  HILOG_PERIODIC(0, 0, SECONDS(1), "Print periodic 3");
+}
 
 TEST_CASE("TestTimepoint") {
   hshm::Timepoint timer;

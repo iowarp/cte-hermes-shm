@@ -18,6 +18,7 @@
 #include <vector>
 
 #include "hermes_shm/constants/macros.h"
+#include "singleton.h"
 
 namespace hshm {
 
@@ -72,7 +73,6 @@ class NsecTimer {
   HSHM_INLINE_CROSS_FUN double GetUsec() const { return time_ns_ / 1000; }
   HSHM_INLINE_CROSS_FUN double GetMsec() const { return time_ns_ / 1000000; }
   HSHM_INLINE_CROSS_FUN double GetSec() const { return time_ns_ / 1000000000; }
-  HSHM_INLINE_CROSS_FUN void Reset() { time_ns_ = 0; }
 };
 
 template <typename T>
@@ -87,6 +87,10 @@ class TimerBase : public TimepointBase<T>, public NsecTimer {
   HSHM_INLINE_CROSS_FUN double Pause() {
     time_ns_ += TimepointBase<T>::GetNsecFromStart();
     return time_ns_;
+  }
+  HSHM_INLINE_CROSS_FUN void Reset() {
+    Resume();
+    time_ns_ = 0;
   }
   HSHM_INLINE_CROSS_FUN double GetUsFromEpoch() const {
     std::chrono::time_point<std::chrono::system_clock> point =
@@ -103,6 +107,26 @@ typedef HighResMonotonicTimer Timer;
 typedef TimepointBase<std::chrono::high_resolution_clock> HighResCpuTimepoint;
 typedef TimepointBase<std::chrono::steady_clock> HighResMonotonicTimepoint;
 typedef HighResMonotonicTimepoint Timepoint;
+
+template <int IDX>
+class PeriodicRun {
+ public:
+  HighResMonotonicTimer timer_;
+
+  PeriodicRun() { timer_.Resume(); }
+
+  template <typename LAMBDA>
+  void Run(size_t max_nsec, LAMBDA &&lambda) {
+    size_t nsec = timer_.GetNsecFromStart();
+    if (nsec >= max_nsec) {
+      lambda();
+      timer_.Reset();
+    }
+  }
+};
+
+#define HSHM_PERIODIC(IDX) \
+  hshm::EasySingleton<hshm::PeriodicRun<IDX>>::GetInstance()
 
 }  // namespace hshm
 

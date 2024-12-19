@@ -26,6 +26,7 @@
 
 #include "formatter.h"
 #include "singleton.h"
+#include "timer.h"
 
 namespace hshm {
 
@@ -82,6 +83,12 @@ namespace hshm {
 
 /** Hermes error log */
 #define HELOG(LOG_CODE, ...) HLOG(LOG_CODE, LOG_CODE, __VA_ARGS__)
+
+/** Periodic info log */
+#define HILOG_PERIODIC(SUB_CODE, IDX, NSEC, ...)                            \
+  do {                                                                      \
+    HSHM_PERIODIC(IDX)->Run(NSEC, [&]() { HILOG(SUB_CODE, __VA_ARGS__); }); \
+  } while (false)
 
 class Logger {
  public:

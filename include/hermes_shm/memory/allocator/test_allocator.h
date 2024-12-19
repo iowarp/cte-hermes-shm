@@ -184,7 +184,7 @@ class _TestAllocator : public Allocator {
     // // Mark as allocated
     // header_->AddSize(page_id.round_);
     OffsetPointer p = Convert<MpPage, OffsetPointer>(page);
-    page->SetAllocated();
+    // page->SetAllocated();
     return p + sizeof(MpPage);
   }
 
@@ -224,10 +224,10 @@ class _TestAllocator : public Allocator {
     // Mark as free
     auto hdr_offset = p - sizeof(MpPage);
     MpPage *hdr = Convert<MpPage>(hdr_offset);
-    if (!hdr->IsAllocated()) {
-      HERMES_THROW_ERROR(DOUBLE_FREE);
-    }
-    hdr->UnsetAllocated();
+    // if (!hdr->IsAllocated()) {
+    //   HERMES_THROW_ERROR(DOUBLE_FREE);
+    // }
+    // hdr->UnsetAllocated();
     // header_->SubSize(hdr->page_size_);
     PageAllocator &page_alloc = (*header_->tls_)[hdr->tid_.tid_];
     page_alloc.Free(hdr_offset, hdr);

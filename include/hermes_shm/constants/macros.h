@@ -45,6 +45,26 @@
 #define PETABYTES(n) (size_t)((n) * (((size_t)1) << 50))
 #endif
 
+/** Seconds to nanoseconds */
+#ifndef SECONDS
+#define SECONDS(n) (size_t)((n) * 1000000000)
+#endif
+
+/** Milliseconds to nanoseconds */
+#ifndef MILLISECONDS
+#define MILLISECONDS(n) (size_t)((n) * 1000000)
+#endif
+
+/** Microseconds to nanoseconds */
+#ifndef MICROSECONDS
+#define MICROSECONDS(n) (size_t)((n) * 1000)
+#endif
+
+/** Nanoseconds to nanoseconds */
+#ifndef NANOSECONDS
+#define NANOSECONDS(n) (size_t)(n)
+#endif
+
 /**
  * Remove parenthesis surrounding "X" if it has parenthesis
  * Used for helper macros which take templated types as parameters
