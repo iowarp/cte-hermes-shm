@@ -35,6 +35,11 @@ option(HERMES_ENABLE_COMPRESS "Enable compression" OFF)
 option(HERMES_ENABLE_ENCRYPT "Enable encryption" OFF)
 option(HERMES_USE_ELF "Enable elf" OFF)
 option(HERMES_ENABLE_CUDA "Enable CUDA support" OFF)
+option(HERMES_NO_COMPILE "Disable compiling / installing this library" OFF)
+
+if (HERMES_NO_COMPILE)
+    return()
+endif()
 
 if (HERMES_ENABLE_PTHREADS)
     add_compile_definitions(HERMES_ENABLE_PTHREADS)
