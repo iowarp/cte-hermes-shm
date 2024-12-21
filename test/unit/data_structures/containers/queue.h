@@ -49,7 +49,7 @@ class VariableMaker {
       return alloc->template NewObjLocal<IntEntry>(HSHM_DEFAULT_MEM_CTX, num)
           .ptr_;
     } else {
-      static_assert(false, "Unsupported type");
+      STATIC_ASSERT(false, "Unsupported type", NewT);
     }
   }
 
@@ -70,7 +70,7 @@ class VariableMaker {
     } else if constexpr (std::is_same_v<NewT, IntEntry *>) {
       return var->value;
     } else {
-      static_assert(false, "Unsupported type");
+      STATIC_ASSERT(false, "Unsupported type", NewT);
     }
   }
 

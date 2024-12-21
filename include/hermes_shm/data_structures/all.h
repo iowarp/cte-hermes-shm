@@ -21,6 +21,7 @@
 #include "ipc/key_set.h"
 #include "ipc/lifo_list_queue.h"
 #include "ipc/list.h"
+#include "ipc/mpsc_fifo_list_queue.h"
 #include "ipc/mpsc_lifo_list_queue.h"
 #include "ipc/pair.h"
 #include "ipc/pod_array.h"
