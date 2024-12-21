@@ -64,7 +64,8 @@ struct ArgPackRecur<idx, EndTemplateRecurrence> {
   /** Forward an rvalue reference (only if argpack) */
   template <size_t i>
   HSHM_INLINE_CROSS_FUN constexpr void Forward() const {
-    static_assert("(Forward) ArgPack index outside of range");
+    // TODO(llogan): fix assert
+    STATIC_ASSERT(true, "(Forward) ArgPack index outside of range", void);
   }
 };
 

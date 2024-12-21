@@ -178,4 +178,15 @@ namespace hipc = hshm::ipc;
 #define HSHM_DEFAULT_MEM_CTX \
   {}
 
+/** Compatability hack for static_assert */
+template <bool TRUTH, typename T = int>
+class assert_hack {
+ public:
+  CLS_CONST bool value = TRUTH;
+};
+
+/** A hack for static asserts */
+#define STATIC_ASSERT(TRUTH, MSG, T) \
+  static_assert(assert_hack<TRUTH, __TU(T)>::value, MSG)
+
 #endif  // HERMES_MACROS_H

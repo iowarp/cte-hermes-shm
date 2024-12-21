@@ -328,7 +328,7 @@ class ring_ptr_queue_base : public ShmContainer {
     } else if constexpr (IS_SHM_POINTER(T)) {
       entry = val.Mark();
     } else {
-      static_assert(false, "Unsupported type");
+      STATIC_ASSERT(false, "Unsupported type", T);
     }
   }
 
@@ -342,7 +342,7 @@ class ring_ptr_queue_base : public ShmContainer {
     } else if constexpr (IS_SHM_POINTER(T)) {
       return entry.IsMarked();
     } else {
-      static_assert(false, "Unsupported type");
+      STATIC_ASSERT(false, "Unsupported type", T);
     }
   }
 
@@ -359,7 +359,7 @@ class ring_ptr_queue_base : public ShmContainer {
       val = entry.Unmark();
       entry.SetZero();
     } else {
-      static_assert(false, "Unsupported type");
+      STATIC_ASSERT(false, "Unsupported type", T);
     }
   }
 

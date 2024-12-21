@@ -5,124 +5,116 @@
 #ifndef HERMES_SHM_INCLUDE_HERMES_SHM_DATA_STRUCTURES_SERIALIZATION_LOCAL_SERIALIZE_H_
 #define HERMES_SHM_INCLUDE_HERMES_SHM_DATA_STRUCTURES_SERIALIZATION_LOCAL_SERIALIZE_H_
 
-
+#include "hermes_shm/constants/macros.h"
 #include "hermes_shm/data_structures/all.h"
 #include "serialize_common.h"
 
 namespace hshm::ipc {
 
 /** Save cereal binary archive */
-template<typename Ar, typename T>
+template <typename Ar, typename T>
 void save(Ar &ar, const cereal::BinaryData<T> &data) {
-  ar.write_binary((const char*)data.data, data.size);
+  ar.write_binary((const char *)data.data, data.size);
 }
 
 /** Load cereal binary archive */
-template<typename Ar, typename T>
+template <typename Ar, typename T>
 void load(Ar &ar, cereal::BinaryData<T> &data) {
-  ar.read_binary((char*)data.data, data.size);
+  ar.read_binary((char *)data.data, data.size);
 }
 
 /** Save string */
-template<typename Ar>
+template <typename Ar>
 void save(Ar &ar, const std::string &str) {
   save_string(ar, str);
 }
 
 /** Load string */
-template<typename Ar>
+template <typename Ar>
 void load(Ar &ar, std::string &str) {
   load_string(ar, str);
 }
 
 /** Save vector */
-template<typename Ar, typename T>
+template <typename Ar, typename T>
 void save(Ar &ar, const std::vector<T> &data) {
   save_vec<Ar, std::vector<T>, T>(ar, data);
 }
 
 /** Load vector */
-template<typename Ar, typename T>
+template <typename Ar, typename T>
 void load(Ar &ar, std::vector<T> &data) {
   load_vec<Ar, std::vector<T>, T>(ar, data);
 }
 
 /** Save list */
-template<typename Ar, typename T>
+template <typename Ar, typename T>
 void save(Ar &ar, const std::list<T> &data) {
   save_list<Ar, std::list<T>, T>(ar, data);
 }
 
 /** Load list */
-template<typename Ar, typename T>
+template <typename Ar, typename T>
 void load(Ar &ar, std::list<T> &data) {
   load_list<Ar, std::list<T>, T>(ar, data);
 }
 
 /** Save unordered_map */
-template<typename Ar, typename KeyT, typename T>
+template <typename Ar, typename KeyT, typename T>
 void save(Ar &ar, const std::unordered_map<KeyT, T> &data) {
   save_map<Ar, std::unordered_map<KeyT, T>, KeyT, T>(ar, data);
 }
 
 /** Load list */
-template<typename Ar, typename KeyT, typename T>
+template <typename Ar, typename KeyT, typename T>
 void load(Ar &ar, std::unordered_map<KeyT, T> &data) {
   load_map<Ar, std::unordered_map<KeyT, T>, KeyT, T>(ar, data);
 }
 
 /** A class for serializing simple objects into private memory */
-template<typename DataT = hshm::charwrap>
+template <typename DataT = hshm::charwrap>
 class LocalSerialize {
  public:
   DataT &data_;
+
  public:
-  LocalSerialize(DataT &data) : data_(data) {
-    data_.resize(0);
-  }
+  LocalSerialize(DataT &data) : data_(data) { data_.resize(0); }
   LocalSerialize(DataT &data, bool) : data_(data) {}
 
   /** left shift operator */
-  template<typename T>
-  HSHM_INLINE
-  LocalSerialize& operator<<(const T &obj) {
+  template <typename T>
+  HSHM_INLINE LocalSerialize &operator<<(const T &obj) {
     return base(obj);
   }
 
   /** & operator */
-  template<typename T>
-  HSHM_INLINE
-  LocalSerialize& operator&(const T &obj) {
+  template <typename T>
+  HSHM_INLINE LocalSerialize &operator&(const T &obj) {
     return base(obj);
   }
 
   /** Call operator */
-  template<typename ...Args>
-  HSHM_INLINE
-  LocalSerialize& operator()(Args&& ...args) {
+  template <typename... Args>
+  HSHM_INLINE LocalSerialize &operator()(Args &&...args) {
     hshm::ForwardIterateArgpack::Apply(
         hshm::make_argpack(std::forward<Args>(args)...),
-        [this](auto i, auto &arg) {
-          this->base(arg);
-        });
+        [this](auto i, auto &arg) { this->base(arg); });
     return *this;
   }
 
   /** Save function */
-  template<typename T>
-  HSHM_INLINE
-  LocalSerialize& base(const T &obj) {
-    static_assert(
-        is_serializeable_v<LocalSerialize, T>,
-        "Cannot serialize object");
+  template <typename T>
+  HSHM_INLINE LocalSerialize &base(const T &obj) {
+    STATIC_ASSERT((is_serializeable_v<LocalSerialize, T>),
+                  "Cannot serialize object", void);
     if constexpr (std::is_arithmetic<T>::value) {
-      write_binary(reinterpret_cast<const char*>(&obj), sizeof(T));
+      write_binary(reinterpret_cast<const char *>(&obj), sizeof(T));
     } else if constexpr (has_serialize_fun_v<LocalSerialize, T>) {
-      serialize(*this, const_cast<T&>(obj));
+      serialize(*this, const_cast<T &>(obj));
     } else if constexpr (has_load_save_fun_v<LocalSerialize, T>) {
       save(*this, obj);
     } else if constexpr (has_serialize_cls_v<LocalSerialize, T>) {
-      const_cast<T&>(obj).serialize(*this);
+      const_cast<T &>(obj).serialize(*this);
     } else if constexpr (has_load_save_cls_v<LocalSerialize, T>) {
       obj.save(*this);
     }
@@ -131,7 +123,7 @@ class LocalSerialize {
 
   /** Save function (binary data) */
   HSHM_INLINE
-  LocalSerialize& write_binary(const char *data, size_t size) {
+  LocalSerialize &write_binary(const char *data, size_t size) {
     size_t off = data_.size();
     data_.resize(off + size);
     memcpy(data_.data() + off, data, size);
@@ -140,51 +132,43 @@ class LocalSerialize {
 };
 
 /** A class for serializing simple objects into private memory */
-template<typename DataT = hshm::charwrap>
+template <typename DataT = hshm::charwrap>
 class LocalDeserialize {
  public:
   const DataT &data_;
   size_t cur_off_ = 0;
+
  public:
-  LocalDeserialize(const DataT &data) : data_(data) {
-    cur_off_ = 0;
-  }
+  LocalDeserialize(const DataT &data) : data_(data) { cur_off_ = 0; }
 
   /** right shift operator */
-  template<typename T>
-  HSHM_INLINE
-  LocalDeserialize& operator>>(T &obj) {
+  template <typename T>
+  HSHM_INLINE LocalDeserialize &operator>>(T &obj) {
     return base(obj);
   }
 
   /** & operator */
-  template<typename T>
-  HSHM_INLINE
-  LocalDeserialize& operator&(const T &obj) {
+  template <typename T>
+  HSHM_INLINE LocalDeserialize &operator&(const T &obj) {
     return base(obj);
   }
 
   /** Call operator */
-  template<typename ...Args>
-  HSHM_INLINE
-  LocalDeserialize& operator()(Args&& ...args) {
+  template <typename... Args>
+  HSHM_INLINE LocalDeserialize &operator()(Args &&...args) {
     hshm::ForwardIterateArgpack::Apply(
         hshm::make_argpack(std::forward<Args>(args)...),
-        [this](auto i, auto &arg) {
-          this->base(arg);
-        });
+        [this](auto i, auto &arg) { this->base(arg); });
     return *this;
   }
 
   /** Load function */
-  template<typename T>
-  HSHM_INLINE
-  LocalDeserialize& base(T &obj) {
-    static_assert(
-        is_serializeable_v<LocalDeserialize, T>,
-        "Cannot serialize object");
+  template <typename T>
+  HSHM_INLINE LocalDeserialize &base(T &obj) {
+    STATIC_ASSERT((is_serializeable_v<LocalDeserialize, T>),
+                  "Cannot serialize object", void);
     if constexpr (std::is_arithmetic<T>::value) {
-      read_binary(reinterpret_cast<char*>(&obj), sizeof(T));
+      read_binary(reinterpret_cast<char *>(&obj), sizeof(T));
     } else if constexpr (has_serialize_fun_v<LocalDeserialize, T>) {
       serialize(*this, obj);
     } else if constexpr (has_load_save_fun_v<LocalDeserialize, T>) {
@@ -199,14 +183,13 @@ class LocalDeserialize {
 
   /** Save function (binary data) */
   HSHM_INLINE
-  LocalDeserialize& read_binary(char *data, size_t size) {
+  LocalDeserialize &read_binary(char *data, size_t size) {
     memcpy(data, data_.data() + cur_off_, size);
     cur_off_ += size;
     return *this;
   }
 };
 
-}  // namespace chi
-
+}  // namespace hshm::ipc
 
 #endif  // HERMES_SHM_INCLUDE_HERMES_SHM_DATA_STRUCTURES_SERIALIZATION_LOCAL_SERIALIZE_H_

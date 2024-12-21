@@ -11,35 +11,35 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include "basic_test.h"
-#include "test_init.h"
-#include "hermes_shm/data_structures/ipc/string.h"
 #include "hermes_shm/data_structures/all.h"
+#include "hermes_shm/data_structures/ipc/string.h"
+#include "test_init.h"
 
 // Class with external serialize
 struct ClassWithExternalSerialize {
   int z_;
 };
 namespace hshm::ipc {
-template<typename Ar>
+template <typename Ar>
 void serialize(Ar &ar, ClassWithExternalSerialize &obj) {
   ar(obj.z_);
 }
-}
+}  // namespace hshm::ipc
 
 // Class with external load/save
 struct ClassWithExternalLoadSave {
   int z_;
 };
 namespace hshm::ipc {
-template<typename Ar>
+template <typename Ar>
 void save(Ar &ar, const ClassWithExternalLoadSave &obj) {
   ar(obj.z_);
 }
-template<typename Ar>
+template <typename Ar>
 void load(Ar &ar, ClassWithExternalLoadSave &obj) {
   ar(obj.z_);
 }
-}
+}  // namespace hshm::ipc
 
 // Class with serialize
 class ClassWithSerialize {
@@ -47,28 +47,26 @@ class ClassWithSerialize {
   int z_;
 
  public:
-  template<typename Ar>
-  void serialize(Ar& ar) {
+  template <typename Ar>
+  void serialize(Ar &ar) {
     ar(z_);
   }
 };
 
 // Class with load/save
-template<typename T>
+template <typename T>
 class ClassWithLoadSave {
  public:
   T z_;
 
  public:
-  template<typename Ar>
-  HSHM_CROSS_FUN
-  void save(Ar& ar) const {
+  template <typename Ar>
+  HSHM_CROSS_FUN void save(Ar &ar) const {
     ar << z_;
   }
 
-  template<typename Ar>
-  HSHM_CROSS_FUN
-  void load(Ar& ar) {
+  template <typename Ar>
+  HSHM_CROSS_FUN void load(Ar &ar) {
     ar >> z_;
   }
 };
@@ -76,7 +74,9 @@ class ClassWithLoadSave {
 TEST_CASE("SerializeExists") {
   std::string buf;
   buf.resize(8192);
-  static_assert(hipc::has_load_fun_v<hipc::LocalSerialize<std::string>, ClassWithExternalLoadSave>);
+  STATIC_ASSERT((hipc::has_load_fun_v<hipc::LocalSerialize<std::string>,
+                                      ClassWithExternalLoadSave>),
+                "", void);
 
   PAGE_DIVIDE("Arithmetic serialize, shift operator") {
     hipc::LocalSerialize srl(buf);
