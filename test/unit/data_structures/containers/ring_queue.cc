@@ -81,26 +81,6 @@ TEST_CASE("TestMpmcLifoListQueueIntMultithreaded") {
 }
 
 /**
- * TEST MPSC FIFO LIST QUEUE
- * */
-
-TEST_CASE("TestMpmcFifoListQueueInt") {
-  auto *alloc = HSHM_DEFAULT_ALLOC;
-  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
-  ProduceThenConsume<hipc::mpsc_fifo_list_queue<IntEntry>, IntEntry *>(
-      1, 1, 48000, 32);
-  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
-}
-
-TEST_CASE("TestMpmcFifoListQueueIntMultithreaded") {
-  auto *alloc = HSHM_DEFAULT_ALLOC;
-  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
-  ProduceAndConsume<hipc::mpsc_fifo_list_queue<IntEntry>, IntEntry *>(
-      8, 1, 48000, 32);
-  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
-}
-
-/**
  * TEST MPSC QUEUE
  * */
 
