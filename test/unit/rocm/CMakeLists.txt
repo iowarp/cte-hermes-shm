@@ -1,31 +1,6 @@
 cmake_minimum_required(VERSION 3.24)
-set(GPU_RUNTIME "HIP" CACHE STRING "Switches between HIP and CUDA")
-set(GPU_RUNTIMES "HIP" "CUDA")
-set_property(CACHE GPU_RUNTIME PROPERTY STRINGS ${GPU_RUNTIMES})
 project(hermes_shm_cuda LANGUAGES C CXX)
 set(CMAKE_CXX_STANDARD 17)
-
-# Enable CUDA or ROCm
-set(GPU_RUNTIME "HIP" CACHE STRING "Switches between HIP and CUDA")
-if(NOT "${GPU_RUNTIME}" IN_LIST GPU_RUNTIMES)
-    set(ERROR_MESSAGE
-        "GPU_RUNTIME is set to \"${GPU_RUNTIME}\".\nGPU_RUNTIME must be either HIP or CUDA."
-    )
-    message(FATAL_ERROR ${ERROR_MESSAGE})
-endif()
-enable_language(${GPU_RUNTIME})
-set(CMAKE_${GPU_RUNTIME}_STANDARD 17)
-set(CMAKE_${GPU_RUNTIME}_EXTENSIONS OFF)
-set(CMAKE_${GPU_RUNTIME}_STANDARD_REQUIRED ON)
-set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --forward-unknown-to-host-compiler")
-set(ROCM_ROOT
-        "/opt/rocm"
-        CACHE PATH
-        "Root directory of the ROCm installation"
-)
-if(GPU_RUNTIME STREQUAL "CUDA")
-    list(APPEND include_dirs "${ROCM_ROOT}/include")
-endif()
 
 #------------------------------------------------------------------------------
 # Build Tests
