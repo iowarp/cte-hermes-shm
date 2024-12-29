@@ -17,6 +17,10 @@ if (HERMES_ENABLE_CUDA)
     add_subdirectory(cuda)
 endif()
 
+if (HERMES_ENABLE_ROCM)
+    add_subdirectory(rocm)  
+endif()
+
 if (HERMES_ENABLE_COMPRESS)
     add_subdirectory(compress)
 endif()

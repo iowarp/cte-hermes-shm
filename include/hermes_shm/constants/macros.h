@@ -81,16 +81,24 @@
 #define VANISH
 #define __TU(X) TYPE_UNWRAP(X)
 
-/** Macros for CUDA functions */
+/** Includes for CUDA and ROCm */
 #ifdef HERMES_ENABLE_CUDA
 #include <cuda_runtime.h>
-#define CUDA_HOST __host__
-#define CUDA_DEVICE __device__
-#define CUDA_HOST_DEVICE __device__ __host__
+#endif
+
+#ifdef HERMES_ENABLE_ROCM
+#include <hip/hip_runtime.h>
+#endif
+
+/** Macros for CUDA functions */
+#if defined(HERMES_ENABLE_CUDA) || defined(HERMES_ENABLE_ROCM)
+#define ROCM_HOST __host__
+#define ROCM_DEVICE __device__
+#define ROCM_HOST_DEVICE __device__ __host__
 #else
-#define CUDA_HOST_DEVICE
-#define CUDA_HOST
-#define CUDA_DEVICE
+#define ROCM_HOST_DEVICE
+#define ROCM_HOST
+#define ROCM_DEVICE
 #endif
 
 /**
@@ -103,10 +111,10 @@
 #endif
 
 /** Function decorators */
-#define HSHM_REG_FUN CUDA_HOST
-#define HSHM_HOST_FUN CUDA_HOST
-#define HSHM_GPU_FUN CUDA_DEVICE
-#define HSHM_CROSS_FUN CUDA_HOST_DEVICE
+#define HSHM_REG_FUN ROCM_HOST
+#define HSHM_HOST_FUN ROCM_HOST
+#define HSHM_GPU_FUN ROCM_DEVICE
+#define HSHM_CROSS_FUN ROCM_HOST_DEVICE
 
 /** Function internals */
 #ifndef __CUDA_ARCH__
@@ -117,8 +125,8 @@
 
 /** Macro for inline function */
 #define HSHM_INLINE_CROSS_FUN HSHM_INLINE HSHM_CROSS_FUN
-#define HSHM_INLINE_GPU CUDA_DEVICE HSHM_INLINE
-#define HSHM_INLINE_HOST CUDA_HOST HSHM_INLINE
+#define HSHM_INLINE_GPU ROCM_DEVICE HSHM_INLINE
+#define HSHM_INLINE_HOST ROCM_HOST HSHM_INLINE
 
 /** Bitfield macros */
 #define MARK_FIRST_BIT_MASK(T) ((T)1 << (sizeof(T) * 8 - 1))

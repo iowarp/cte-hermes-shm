@@ -31,6 +31,8 @@ enum class MemoryBackendType {
   kMallocBackend,
   kArrayBackend,
   kPosixMmap,
+  kRocmMalloc,
+  kRocmShmMmap,
 };
 
 /** ID for memory backend */

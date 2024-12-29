@@ -73,22 +73,22 @@ HSHM_CROSS_FUN void MemoryManager::DestroyAllocator(
 }
 
 template <typename T, typename PointerT>
-LPointer<T, PointerT>::LPointer(const PointerT &shm) : shm_(shm) {
+HSHM_INLINE_CROSS_FUN LPointer<T, PointerT>::LPointer(const PointerT &shm) : shm_(shm) {
   ptr_ = HERMES_MEMORY_MANAGER->Convert<T, PointerT>(shm);
 }
 
 template <typename T, typename PointerT>
-LPointer<T, PointerT>::LPointer(T *ptr) : ptr_(ptr) {
+HSHM_INLINE_CROSS_FUN LPointer<T, PointerT>::LPointer(T *ptr) : ptr_(ptr) {
   shm_ = HERMES_MEMORY_MANAGER->Convert<T, PointerT>(ptr);
 }
 
 template <typename T, typename PointerT>
-LPointer<T, PointerT>::LPointer(hipc::Allocator *alloc, T *ptr) : ptr_(ptr) {
+HSHM_INLINE_CROSS_FUN LPointer<T, PointerT>::LPointer(hipc::Allocator *alloc, T *ptr) : ptr_(ptr) {
   shm_ = alloc->Convert<T, PointerT>(ptr);
 }
 
 template <typename T, typename PointerT>
-LPointer<T, PointerT>::LPointer(hipc::Allocator *alloc,
+HSHM_INLINE_CROSS_FUN LPointer<T, PointerT>::LPointer(hipc::Allocator *alloc,
                                 const OffsetPointer &shm) {
   ptr_ = alloc->Convert<T, OffsetPointer>(shm);
   shm_ = PointerT(alloc->GetId(), shm);

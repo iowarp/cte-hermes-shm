@@ -30,6 +30,7 @@ set(HERMES_ENABLE_COMPRESS @HERMES_ENABLE_COMPRESS@)
 set(HERMES_ENABLE_ENCRYPT @HERMES_ENABLE_ENCRYPT@)
 set(HERMES_USE_ELF @HERMES_USE_ELF@)
 set(HERMES_ENABLE_CUDA @HERMES_ENABLE_CUDA@)
+set(HERMES_ENABLE_ROCM @HERMES_ENABLE_ROCM@)
 
 #-----------------------------------------------------------------------------
 # Find hermes_shm header

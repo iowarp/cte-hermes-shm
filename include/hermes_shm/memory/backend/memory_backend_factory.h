@@ -25,6 +25,10 @@
 #include "cuda_shm_mmap.h"
 #include "cuda_malloc.h"
 #endif
+#ifdef HERMES_ENABLE_ROCM
+#include "rocm_malloc.h"
+#include "rocm_shm_mmap.h"
+#endif
 
 namespace hshm::ipc {
 
@@ -67,6 +71,12 @@ class MemoryBackendFactory {
     HSHM_CREATE_BACKEND(CudaShmMmap)
     HSHM_CREATE_BACKEND(CudaMalloc)
 #endif
+
+#ifdef HERMES_ENABLE_ROCM
+    HSHM_CREATE_BACKEND(RocmMalloc)
+    HSHM_CREATE_BACKEND(RocmShmMmap)
+#endif
+    
     HSHM_CREATE_BACKEND(PosixMmap)
     HSHM_CREATE_BACKEND(MallocBackend)
     HSHM_CREATE_BACKEND(ArrayBackend)
@@ -100,21 +110,21 @@ class MemoryBackendFactory {
       // Posix Mmap
       case MemoryBackendType::kPosixMmap: {
         return HSHM_ROOT_ALLOC->
-          NewObjLocal<PosixMmap>(ThreadId::GetNull(),
+          NewObjLocal<PosixMmap>(HSHM_DEFAULT_MEM_CTX,
                                  *(PosixMmap*)backend).ptr_;
       }
 
         // Malloc
       case MemoryBackendType::kMallocBackend: {
         return HSHM_ROOT_ALLOC->
-        NewObjLocal<MallocBackend>(ThreadId::GetNull(),
+        NewObjLocal<MallocBackend>(HSHM_DEFAULT_MEM_CTX,
                                    *(MallocBackend*)backend).ptr_;
       }
 
         // Array
       case MemoryBackendType::kArrayBackend: {
         return HSHM_ROOT_ALLOC->
-          NewObjLocal<ArrayBackend>(ThreadId::GetNull(),
+          NewObjLocal<ArrayBackend>(HSHM_DEFAULT_MEM_CTX,
                                     *(ArrayBackend*)backend).ptr_;
       }
 
@@ -122,15 +132,33 @@ class MemoryBackendFactory {
         // Cuda Malloc
       case MemoryBackendType::kCudaMalloc: {
         return HSHM_ROOT_ALLOC->
-          NewObjLocal<CudaMalloc>(ThreadId::GetNull(),
+          NewObjLocal<CudaMalloc>(HSHM_DEFAULT_MEM_CTX,
                                   *(CudaMalloc*)backend).ptr_;
       }
 
         // Cuda Shm Mmap
       case MemoryBackendType::kCudaShmMmap: {
         return HSHM_ROOT_ALLOC->
-          NewObjLocal<CudaShmMmap>(ThreadId::GetNull(),
+          NewObjLocal<CudaShmMmap>(HSHM_DEFAULT_MEM_CTX,
                                    *(CudaShmMmap*)backend).ptr_;
+      }
+#endif
+
+#ifdef HERMES_ENABLE_ROCM
+        // Rocm Malloc
+      case MemoryBackendType::kRocmMalloc: {
+        return HSHM_ROOT_ALLOC
+            ->NewObjLocal<RocmMalloc>(HSHM_DEFAULT_MEM_CTX,
+                                      *(RocmMalloc *)backend)
+            .ptr_;
+      }
+
+        // Rocm Shm Mmap
+      case MemoryBackendType::kRocmShmMmap: {
+        return HSHM_ROOT_ALLOC
+            ->NewObjLocal<RocmShmMmap>(HSHM_DEFAULT_MEM_CTX,
+                                       *(RocmShmMmap *)backend)
+            .ptr_;
       }
 #endif
 
