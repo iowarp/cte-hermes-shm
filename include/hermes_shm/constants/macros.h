@@ -101,6 +101,15 @@
 #define ROCM_DEVICE
 #endif
 
+/** Error checking for ROCM */
+#define HIP_ERROR_CHECK(X)                                                  \
+  do {                                                                      \
+    if (X != hipSuccess) {                                                  \
+      hipError_t hipErr = hipGetLastError();                                \
+      HELOG(kFatal, "HIP Error {}: {}", hipErr, hipGetErrorString(hipErr)); \
+    }                                                                       \
+  } while (false)
+
 /**
  * Ensure that the compiler ALWAYS inlines a particular function.
  * */
@@ -116,11 +125,21 @@
 #define HSHM_GPU_FUN ROCM_DEVICE
 #define HSHM_CROSS_FUN ROCM_HOST_DEVICE
 
+/** Function content selector for CUDA */
+#ifdef __CUDA_ARCH__
+#define HSHM_IS_CUDA_GPU
+#endif
+
+/** Function content selector for ROCm */
+#ifdef __HIP_DEVICE_COMPILE__
+#define HSHM_IS_ROCM_GPU
+#endif
+
 /** Function internals */
-#ifndef __CUDA_ARCH__
-#define HSHM_IS_HOST
-#else
+#if defined(HSHM_IS_CUDA_GPU) || defined(HSHM_IS_ROCM_GPU)
 #define HSHM_IS_GPU
+#else
+#define HSHM_IS_HOST
 #endif
 
 /** Macro for inline function */
@@ -155,8 +174,6 @@ namespace hipc = hshm::ipc;
 /***************************************************
  * CUSTOM SETTINGS FOR ALLOCATORS + THREAD MODELS
  * ************************************************* */
-#ifndef HSHM_CUSTOM_SETTINGS
-
 /** Define the root allocator class */
 #ifndef HSHM_ROOT_ALLOC_T
 #define HSHM_ROOT_ALLOC_T hipc::StackAllocator
@@ -172,14 +189,17 @@ namespace hipc = hshm::ipc;
   HERMES_MEMORY_MANAGER->template GetDefaultAllocator<HSHM_DEFAULT_ALLOC_T>()
 
 /** Define the default thread model class */
-#ifndef HSHM_DEFAULT_THREAD_MODEL
-#ifdef HSHM_IS_HOST
-#define HSHM_DEFAULT_THREAD_MODEL hshm::thread::Pthread
-#else
+// CUDA
+#if defined(HSHM_IS_CUDA_GPU)
 #define HSHM_DEFAULT_THREAD_MODEL hshm::thread::Cuda
 #endif
+// ROCM
+#if defined(HSHM_IS_ROCM_GPU)
+#define HSHM_DEFAULT_THREAD_MODEL hshm::thread::Rocm
 #endif
-
+// CPU
+#ifndef HSHM_DEFAULT_THREAD_MODEL
+#define HSHM_DEFAULT_THREAD_MODEL hshm::thread::Pthread
 #endif
 
 /** Default memory context object */

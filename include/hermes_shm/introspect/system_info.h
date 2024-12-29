@@ -54,12 +54,15 @@ struct SystemInfo {
   }
 
   void RefreshCpuFreqKhz() {
+    #ifdef HSHM_IS_HOST
     for (int i = 0; i < ncpu_; ++i) {
       cur_cpu_freq_[i] = GetCpuFreqKhz(i);
     }
+    #endif
   }
 
   size_t GetCpuFreqKhz(int cpu) {
+    #ifdef HSHM_IS_HOST
     // Read /sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_cur_freq
     std::string cpu_str = hshm::Formatter::format(
         "/sys/devices/system/cpu/cpu{}/cpufreq/cpuinfo_cur_freq",
@@ -68,9 +71,13 @@ struct SystemInfo {
     size_t freq_khz;
     cpu_file >> freq_khz;
     return freq_khz;
+#else
+    return 0;
+    #endif
   }
 
   size_t GetCpuMaxFreqKhz(int cpu) {
+    #ifdef HSHM_IS_HOST
     // Read /sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_cur_freq
     std::string cpu_str = hshm::Formatter::format(
         "/sys/devices/system/cpu/cpu{}/cpufreq/cpuinfo_max_freq",
@@ -79,9 +86,13 @@ struct SystemInfo {
     size_t freq_khz;
     cpu_file >> freq_khz;
     return freq_khz;
+#else
+    return 0;
+    #endif
   }
 
   size_t GetCpuMinFreqKhz(int cpu) {
+    #ifdef HSHM_IS_HOST
     // Read /sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_cur_freq
     std::string cpu_str = hshm::Formatter::format(
         "/sys/devices/system/cpu/cpu{}/cpufreq/cpuinfo_min_freq",
@@ -90,6 +101,9 @@ struct SystemInfo {
     size_t freq_khz;
     cpu_file >> freq_khz;
     return freq_khz;
+#else
+    return 0;
+    #endif
   }
 
   size_t GetCpuMinFreqMhz(int cpu) {

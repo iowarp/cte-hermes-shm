@@ -26,6 +26,9 @@
 #ifdef HERMES_ENABLE_CUDA
 #include "thread_model/cuda.h"
 #endif
+#ifdef HERMES_ENABLE_ROCM
+#include "thread_model/rocm.h"
+#endif
 
 #include "hermes_shm/util/singleton/_easy_singleton.h"
 #define HERMES_THREAD_MODEL \

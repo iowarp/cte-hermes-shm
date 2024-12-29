@@ -68,6 +68,7 @@ class PosixMmap : public MemoryBackend {
   bool shm_deserialize(const hshm::chararr &url) override {
     (void) url;
     HERMES_THROW_ERROR(SHMEM_NOT_SUPPORTED);
+    return false;
   }
 
   /** Detach the mapped memory */

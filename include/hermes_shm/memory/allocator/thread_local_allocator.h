@@ -212,6 +212,7 @@ class _ThreadLocalAllocator : public Allocator {
   OffsetPointer AlignedAllocateOffset(const hipc::MemContext &ctx, size_t size,
                                       size_t alignment) {
     HERMES_THROW_ERROR(NOT_IMPLEMENTED, "AlignedAllocateOffset");
+    return OffsetPointer::GetNull();
   }
 
   /**

@@ -30,11 +30,14 @@
 #ifdef HERMES_ENABLE_CUDA
 #include <cuda_runtime.h>
 #endif
+#ifdef HERMES_ENABLE_ROCM
+#include <hip/hip_runtime.h>
+#endif
 
 namespace hshm {
 
 /** Available threads that are mapped */
-enum class ThreadType { kNone, kPthread, kArgobots, kCuda };
+enum class ThreadType { kNone, kPthread, kArgobots, kCuda, kRocm };
 
 }  // namespace hshm
 

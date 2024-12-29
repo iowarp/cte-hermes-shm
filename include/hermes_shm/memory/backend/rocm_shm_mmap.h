@@ -41,8 +41,8 @@ class RocmShmMmap : public PosixShmMmap {
                 size_t size,
                 const hshm::chararr &url,
                 int device) {
-    hipDeviceSynchronize();
-    hipSetDevice(device);
+    HIP_ERROR_CHECK(hipDeviceSynchronize());
+    HIP_ERROR_CHECK(hipSetDevice(device));
     bool ret = PosixShmMmap::shm_init(backend_id, size, url);
     if (!ret) {
       return false;
@@ -54,14 +54,14 @@ class RocmShmMmap : public PosixShmMmap {
   /** Map shared memory */
   char* _Map(size_t size, off64_t off) override {
     char* ptr = _ShmMap(size, off);
-    hipHostRegister(ptr, size, hipHostRegisterPortable);
+    HIP_ERROR_CHECK(hipHostRegister(ptr, size, hipHostRegisterPortable));
     return ptr;
   }
 
   /** Detach shared memory */
   void _Detach() override {
-    hipHostUnregister(header_);
-    hipHostUnregister(data_);
+    HIP_ERROR_CHECK(hipHostUnregister(header_));
+    HIP_ERROR_CHECK(hipHostUnregister(data_));
     _ShmDetach();
   }
 };

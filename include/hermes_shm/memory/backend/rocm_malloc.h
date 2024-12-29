@@ -51,18 +51,19 @@ public:
   }
 
   /** Deserialize the backend */
-  bool shm_deserialize(const hshm::chararr &url) {
+  bool shm_deserialize(const hshm::chararr &url) override {
     (void) url;
     HERMES_THROW_ERROR(SHMEM_NOT_SUPPORTED);
+    return false;
   }
 
   /** Detach the mapped memory */
-  void shm_detach() {
+  void shm_detach() override {
     _Detach();
   }
 
   /** Destroy the mapped memory */
-  void shm_destroy() {
+  void shm_destroy() override {
     _Destroy();
   }
 
@@ -71,7 +72,7 @@ protected:
   template<typename T = char>
   T* _Map(size_t size) {
     T *ptr;
-    hipMallocManaged(&ptr, size);
+    HIP_ERROR_CHECK(hipMallocManaged(&ptr, size));
     return ptr;
   }
 
@@ -81,7 +82,7 @@ protected:
   /** Destroy shared memory */
   void _Destroy() {
     if (!IsInitialized()) { return; }
-    hipFree(header_);
+    HIP_ERROR_CHECK(hipFree(header_));
     UnsetInitialized();
   }
 };
