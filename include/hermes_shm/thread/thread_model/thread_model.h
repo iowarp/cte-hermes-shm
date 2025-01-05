@@ -33,11 +33,14 @@
 #ifdef HERMES_ENABLE_ROCM
 #include <hip/hip_runtime.h>
 #endif
+#ifdef HERMES_ENABLE_WINDOWS_THREADS
+#include <windows.h>
+#endif
 
 namespace hshm {
 
 /** Available threads that are mapped */
-enum class ThreadType { kNone, kPthread, kArgobots, kCuda, kRocm };
+enum class ThreadType { kNone, kPthread, kArgobots, kCuda, kRocm, kWindows };
 
 }  // namespace hshm
 
@@ -63,6 +66,9 @@ union ThreadLocalKey {
 #endif
 #ifdef HERMES_RPC_THALLIUM
   ABT_key argobots_key_;
+#endif
+#ifdef HERMES_ENABLE_WINDOWS_THREADS
+  DWORD windows_key_;
 #endif
 };
 

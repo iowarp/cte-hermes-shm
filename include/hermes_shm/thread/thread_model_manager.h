@@ -28,6 +28,9 @@
 #ifdef HERMES_ENABLE_ROCM
 #include "thread_model/rocm.h"
 #endif
+#ifdef HERMES_ENABLE_WINDOWS_THREADS
+#include "thread_model/windows.h"
+#endif
 
 #include "hermes_shm/util/singleton/_easy_singleton.h"
 #define HERMES_THREAD_MODEL \
