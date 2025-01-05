@@ -113,10 +113,16 @@
 /**
  * Ensure that the compiler ALWAYS inlines a particular function.
  * */
+#ifdef HSHM_MSVC
+#define HSHM_INLINE_FLAG __forceinline
+#elifdef HSHM_GNU
+#define HSHM_INLINE_FLAG __attribute__((always_inline))
+#endif
+
 #ifndef HSHM_DEBUG
-#define HSHM_INLINE inline __attribute__((always_inline))
+#define HSHM_INLINE HSHM_INLINE_FLAG
 #else
-#define HSHM_INLINE __attribute__((noinline))
+#define HSHM_INLINE inline
 #endif
 
 /** Function decorators */
@@ -204,7 +210,8 @@ namespace hipc = hshm::ipc;
 
 /** Default memory context object */
 #define HSHM_DEFAULT_MEM_CTX \
-  {}
+  {                          \
+  }
 
 /** Compatability hack for static_assert */
 template <bool TRUTH, typename T = int>
