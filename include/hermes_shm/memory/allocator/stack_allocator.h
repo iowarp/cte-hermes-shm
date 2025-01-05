@@ -15,7 +15,7 @@
 
 #include "allocator.h"
 #include "heap.h"
-#include "hermes_shm/memory/allocator/mp_page.h>
+#include "hermes_shm/memory/allocator/mp_page.h"
 #include "hermes_shm/thread/lock.h"
 
 namespace hshm::ipc {

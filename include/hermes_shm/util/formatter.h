@@ -21,7 +21,7 @@
 #include <type_traits>
 #include <vector>
 
-#include "hermes_shm/types/argpack.h>
+#include "hermes_shm/types/argpack.h"
 
 namespace hshm {
 

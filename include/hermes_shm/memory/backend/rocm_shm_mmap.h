@@ -22,8 +22,8 @@
 #include <string>
 
 #include "hermes_shm/constants/macros.h"
-#include "hermes_shm/introspect/system_info.h>
-#include "hermes_shm/util/errors.h>
+#include "hermes_shm/introspect/system_info.h"
+#include "hermes_shm/util/errors.h"
 #include "hermes_shm/util/logging.h"
 #include "memory_backend.h"
 #include "posix_shm_mmap.h"

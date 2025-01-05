@@ -11,10 +11,10 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include "basic_test.h"
-#include "hermes_shm/util/logging.h>
-#include "hermes_shm/util/timer.h>
-#include "hermes_shm/util/timer_mpi.h>
-#include "hermes_shm/util/timer_thread.h>
+#include "hermes_shm/util/logging.h"
+#include "hermes_shm/util/timer.h"
+#include "hermes_shm/util/timer_mpi.h"
+#include "hermes_shm/util/timer_thread.h"
 
 TEST_CASE("TestPeriodic") {
   HILOG_PERIODIC(0, 0, SECONDS(1), "Print periodic 1");

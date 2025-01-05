@@ -28,9 +28,9 @@
 #include <unistd.h>
 #endif
 
-#include "hermes_shm/constants/macros.h>
-#include "hermes_shm/introspect/system_info.h>
-#include "hermes_shm/util/errors.h>
+#include "hermes_shm/constants/macros.h"
+#include "hermes_shm/introspect/system_info.h"
+#include "hermes_shm/util/errors.h"
 #include "memory_backend.h"
 
 namespace hshm::ipc {

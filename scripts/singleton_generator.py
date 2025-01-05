@@ -50,9 +50,9 @@ class SingletonGenerator:
 
     def _GenerateCC(self, path, h_file):
         lines = []
-        lines.append("#include "hermes_shm/constants/macros.h>")
-        lines.append("#include "hermes_shm/util/singleton.h>")
-        lines.append("#include "hermes_shm/thread/lock/mutex.h>")
+        lines.append("#include "hermes_shm/constants/macros.h"")
+        lines.append("#include "hermes_shm/util/singleton.h"")
+        lines.append("#include "hermes_shm/thread/lock/mutex.h"")
         lines.append(f"#include <{h_file.replace('include/', '')}>")
         lines.append("")
         for defn in self.defs:
@@ -67,7 +67,7 @@ class SingletonGenerator:
         lines.append(f"#ifndef HERMES_{guard.upper()}_H")
         lines.append(f"#define HERMES_{guard.upper()}_H")
         lines.append("")
-        lines.append("#include "hermes_shm/util/singleton.h>")
+        lines.append("#include "hermes_shm/util/singleton.h"")
         lines.append("")
         for defn in self.defs:
             lines.append(f"#define {defn.macro_name} hshm::GlobalSingleton<{defn.class_name}>::GetInstance()")

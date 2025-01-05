@@ -20,7 +20,7 @@
 #include <memory>
 #include <string>
 
-#include "hermes_shm/util/formatter.h>
+#include "hermes_shm/util/formatter.h"
 
 #define HERMES_ERROR_TYPE std::shared_ptr<hshm::Error>
 #define HERMES_ERROR_HANDLE_START() try {

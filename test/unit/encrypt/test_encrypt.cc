@@ -13,7 +13,7 @@
 #include <utility>
 
 #include "basic_test.h"
-#include "hermes_shm/util/encrypt/encrypt.h>
+#include "hermes_shm/util/encrypt/encrypt.h"
 
 TEST_CASE("TestEncrypt") {
   PAGE_DIVIDE("AES") {

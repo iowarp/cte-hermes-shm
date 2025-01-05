@@ -11,10 +11,10 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include "basic_test.h"
-#include "hermes_shm/util/auto_trace.h>
-#include "hermes_shm/util/config_parse.h>
-#include "hermes_shm/util/formatter.h>
-#include "hermes_shm/util/logging.h>
+#include "hermes_shm/util/auto_trace.h"
+#include "hermes_shm/util/config_parse.h"
+#include "hermes_shm/util/formatter.h"
+#include "hermes_shm/util/logging.h"
 #include "hermes_shm/util/singleton.h"
 #include "hermes_shm/util/type_switch.h"
 

@@ -20,7 +20,7 @@
 #include <boost/interprocess/managed_shared_memory.hpp>
 
 #include "hermes_shm/data_structures/all.h"
-#include "hermes_shm/util/timer.h>
+#include "hermes_shm/util/timer.h"
 
 using hshm::ipc::Allocator;
 using hshm::ipc::AllocatorId;

@@ -13,10 +13,11 @@
 #ifndef HERMES_SYSINFO_INFO_H_
 #define HERMES_SYSINFO_INFO_H_
 
-#ifdef HERMES_ENABLE_PROCFS_SYSINFO
+#include "hermes_shm/constants/macros.h"
+#if defined(HERMES_ENABLE_PROCFS_SYSINFO)
 #include <sys/sysinfo.h>
 #include <unistd.h>
-#elifdef HERMES_ENABLE_WINDOWS_SYSINFO
+#elif defined(HERMES_ENABLE_WINDOWS_SYSINFO)
 #include <windows.h>
 #else
 #error \
@@ -51,7 +52,7 @@ struct SystemInfo {
 #ifdef HSHM_IS_HOST
     pid_ = GetPid();
     ncpu_ = GetCpuCount();
-    page_size_ = getpagesize();
+    page_size_ = GetPageSize();
     uid_ = GetUid();
     gid_ = GetGid();
     ram_size_ = GetRamCapacity();
@@ -70,7 +71,7 @@ struct SystemInfo {
 
   size_t GetCpuFreqKhz(int cpu) {
 #ifdef HSHM_IS_HOST
-#ifdef HERMES_ENABLE_PROCFS_SYSINFO
+#if defined(HERMES_ENABLE_PROCFS_SYSINFO)
     // Read /sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_cur_freq
     std::string cpu_str = hshm::Formatter::format(
         "/sys/devices/system/cpu/cpu{}/cpufreq/cpuinfo_cur_freq", cpu);
@@ -78,7 +79,7 @@ struct SystemInfo {
     size_t freq_khz;
     cpu_file >> freq_khz;
     return freq_khz;
-#elifdef HERMES_ENABLE_WINDOWS_SYSINFO
+#elif defined(HERMES_ENABLE_WINDOWS_SYSINFO)
     return 0;
 #endif
 #else
@@ -88,7 +89,7 @@ struct SystemInfo {
 
   size_t GetCpuMaxFreqKhz(int cpu) {
 #ifdef HSHM_IS_HOST
-#ifdef HERMES_ENABLE_PROCFS_SYSINFO
+#if defined(HERMES_ENABLE_PROCFS_SYSINFO)
     // Read /sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_cur_freq
     std::string cpu_str = hshm::Formatter::format(
         "/sys/devices/system/cpu/cpu{}/cpufreq/cpuinfo_max_freq", cpu);
@@ -96,7 +97,7 @@ struct SystemInfo {
     size_t freq_khz;
     cpu_file >> freq_khz;
     return freq_khz;
-#elifdef HERMES_ENABLE_WINDOWS_SYSINFO
+#elif defined(HERMES_ENABLE_WINDOWS_SYSINFO)
     return 0;
 #endif
 #else
@@ -106,7 +107,7 @@ struct SystemInfo {
 
   size_t GetCpuMinFreqKhz(int cpu) {
 #ifdef HSHM_IS_HOST
-#ifdef HERMES_ENABLE_PROCFS_SYSINFO
+#if defined(HERMES_ENABLE_PROCFS_SYSINFO)
     // Read /sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_cur_freq
     std::string cpu_str = hshm::Formatter::format(
         "/sys/devices/system/cpu/cpu{}/cpufreq/cpuinfo_min_freq", cpu);
@@ -114,7 +115,7 @@ struct SystemInfo {
     size_t freq_khz;
     cpu_file >> freq_khz;
     return freq_khz;
-#elifdef HERMES_ENABLE_WINDOWS_SYSINFO
+#elif defined(HERMES_ENABLE_WINDOWS_SYSINFO)
     return 0;
 #endif
 #else
@@ -136,7 +137,7 @@ struct SystemInfo {
   }
 
   void SetCpuMinFreqKhz(int cpu, size_t cpu_freq_khz) {
-#ifdef HERMES_ENABLE_PROCFS_SYSINFO
+#if defined(HERMES_ENABLE_PROCFS_SYSINFO)
     std::string cpu_str = hshm::Formatter::format(
         "/sys/devices/system/cpu/cpu{}/cpufreq/scaling_min_freq", cpu);
     std::ofstream min_freq_file(cpu_str);
@@ -145,7 +146,7 @@ struct SystemInfo {
   }
 
   void SetCpuMaxFreqKhz(int cpu, size_t cpu_freq_khz) {
-#ifdef HERMES_ENABLE_PROCFS_SYSINFO
+#if defined(HERMES_ENABLE_PROCFS_SYSINFO)
     std::string cpu_str = hshm::Formatter::format(
         "/sys/devices/system/cpu/cpu{}/cpufreq/scaling_max_freq", cpu);
     std::ofstream max_freq_file(cpu_str);
@@ -154,9 +155,9 @@ struct SystemInfo {
   }
 
   static int GetCpuCount() {
-#ifdef HERMES_ENABLE_PROCFS_SYSINFO
+#if defined(HERMES_ENABLE_PROCFS_SYSINFO)
     return get_nprocs_conf();
-#elifdef HERMES_ENABLE_WINDOWS_SYSINFO
+#elif defined(HERMES_ENABLE_WINDOWS_SYSINFO)
     SYSTEM_INFO sys_info;
     GetSystemInfo(&sys_info);
     return sys_info.dwNumberOfProcessors;
@@ -164,9 +165,9 @@ struct SystemInfo {
   }
 
   static int GetPageSize() {
-#ifdef HERMES_ENABLE_PROCFS_SYSINFO
+#if defined(HERMES_ENABLE_PROCFS_SYSINFO)
     return getpagesize();
-#elifdef HERMES_ENABLE_WINDOWS_SYSINFO
+#elif defined(HERMES_ENABLE_WINDOWS_SYSINFO)
     SYSTEM_INFO sys_info;
     GetSystemInfo(&sys_info);
     return sys_info.dwPageSize;
@@ -174,51 +175,60 @@ struct SystemInfo {
   }
 
   static int GetTid() {
-#ifdef HERMES_ENABLE_PROCFS_SYSINFO
+#if defined(HERMES_ENABLE_PROCFS_SYSINFO)
 #ifdef SYS_gettid
     return (pid_t)syscall(SYS_gettid);
 #else
 #warning "GetTid is not defined"
     return GetPid();
 #endif
-#elifdef HERMES_ENABLE_WINDOWS_SYSINFO
+#elif defined(HERMES_ENABLE_WINDOWS_SYSINFO)
     return GetCurrentThreadId();
 #endif
   }
 
   static int GetPid() {
-#ifdef HERMES_ENABLE_PROCFS_SYSINFO
+#if defined(HERMES_ENABLE_PROCFS_SYSINFO)
 #ifdef SYS_getpid
     return (pid_t)syscall(SYS_getpid);
 #else
 #warning "GetPid is not defined"
     return 0;
 #endif
-#elifdef HERMES_ENABLE_WINDOWS_SYSINFO
+#elif defined(HERMES_ENABLE_WINDOWS_SYSINFO)
     return GetCurrentProcessId();
 #endif
   }
 
   static int GetUid() {
-#ifdef HERMES_ENABLE_PROCFS_SYSINFO
+#if defined(HERMES_ENABLE_PROCFS_SYSINFO)
     return getuid();
-#elifdef HERMES_ENABLE_WINDOWS_SYSINFO
+#elif defined(HERMES_ENABLE_WINDOWS_SYSINFO)
+    return 0;
+#endif
+  };
+
+  static int GetGid() {
+#if defined(HERMES_ENABLE_PROCFS_SYSINFO)
+    return getgid();
+#elif defined(HERMES_ENABLE_WINDOWS_SYSINFO)
     return 0;
 #endif
   };
 
   static size_t GetRamCapacity() {
-#ifdef HERMES_ENABLE_PROCFS_SYSINFO
+#if defined(HERMES_ENABLE_PROCFS_SYSINFO)
     struct sysinfo info;
     sysinfo(&info);
     return info.totalram;
-#elifdef HERMES_ENABLE_WINDOWS_SYSINFO
+#elif defined(HERMES_ENABLE_WINDOWS_SYSINFO)
     MEMORYSTATUSEX mem_info;
     mem_info.dwLength = sizeof(mem_info);
     GlobalMemoryStatusEx(&mem_info);
-    return mem_info.ullTotalPhys;
+    return (size_t)mem_info.ullTotalPhys;
 #endif
   }
+};
 
 }  // namespace hshm
 

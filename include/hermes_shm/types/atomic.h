@@ -16,7 +16,7 @@
 #include <atomic>
 #include <type_traits>
 
-#include "hermes_shm/constants/macros.h>
+#include "hermes_shm/constants/macros.h"
 #include "numbers.h"
 #ifdef HERMES_ENABLE_CUDA
 #include <cuda/atomic>

@@ -28,8 +28,6 @@ option(HERMES_ENABLE_CEREAL "Enable serialization using cereal" OFF)
 option(HERMES_ENABLE_COVERAGE "Check how well tests cover code" OFF)
 option(HERMES_ENABLE_DOXYGEN "Check how well the code is documented" OFF)
 
-option(HERMES_ENABLE_WINDOWS_SYSINFO "Support windows system info" OFF)
-option(HERMES_ENABLE_PROCFS_SYSINFO "Support procfs system info" OFF)
 option(HERMES_ENABLE_WINDOWS_THREADS "Support spawning windows threads" OFF)
 option(HERMES_ENABLE_PTHREADS "Support spawning pthreads" OFF)
 option(HERMES_DEBUG_LOCK "Used for debugging locks" OFF)
@@ -41,6 +39,14 @@ option(HERMES_ENABLE_CUDA "Enable CUDA support" OFF)
 option(HERMES_ENABLE_ROCM "Enable ROCm support" OFF)
 option(HERMES_NO_COMPILE "Disable compiling / installing this library" OFF)
 
+if (WIN32)
+    message(STATUS "Detected Windows OS")
+    set(HERMES_ENABLE_WINDOWS_SYSINFO ON)
+else()
+    message(STATUS "Detected non-Windows OS")
+    set(HERMES_ENABLE_PROCFS_SYSINFO ON)
+endif()
+
 if (HERMES_NO_COMPILE)
     install(
             FILES
@@ -51,32 +57,12 @@ if (HERMES_NO_COMPILE)
     return()
 endif()
 
-if (HERMES_ENABLE_MPI)
-    add_compile_definitions(HERMES_ENABLE_MPI)
-    set(MPI_LIBS MPI::MPI_CXX)
-endif()
-if (HERMES_ENABLE_OPENMP)
-    add_compile_definitions(HERMES_ENABLE_OPENMP)
-    set(OPENMP_LIBS OpenMP::OpenMP_CXX)
-endif()
-if (HERMES_ENABLE_WINDOWS_SYSINFO) 
-    add_compile_definitions(HERMES_ENABLE_WINDOWS_SYSINFO)
-endif()
-if (HERMES_ENABLE_PROCFS_SYSINFO)
-    add_compile_definitions(HERMES_ENABLE_PROCFS_SYSINFO)
-endif()
-if (HERMES_ENABLE_WINDOWS_THREADS)
-    add_compile_definitions(HERMES_ENABLE_WINDOWS_THREADS)
-endif()
-if (HERMES_ENABLE_PTHREADS)
-    add_compile_definitions(HERMES_ENABLE_PTHREADS)
-endif()
-if (HERMES_RPC_THALLIUM)
-    add_compile_definitions(HERMES_RPC_THALLIUM)
-endif()
-if (HERMES_DEBUG_LOCK)
-    add_compile_definitions(HERMES_DEBUG_LOCK)
-endif()
+# Configure the hermes_shm options
+configure_file(
+        ${CMAKE_CURRENT_SOURCE_DIR}/include/hermes_shm/constants/settings.h_templ
+        ${PROJECT_BINARY_DIR}/include/hermes_shm/constants/settings.h @ONLY
+)
+include_directories(${PROJECT_BINARY_DIR}/include)
 
 #------------------------------------------------------------------------------
 # Setup CMake Environment
@@ -159,12 +145,14 @@ message(STATUS "found yaml-cpp at ${yaml-cpp_DIR}")
 # MPICH
 if(HERMES_ENABLE_MPI)
     find_package(MPI REQUIRED COMPONENTS C CXX)
+    set(MPI_LIBS MPI::MPI_CXX)
     message(STATUS "found mpi.h at ${MPI_CXX_INCLUDE_DIRS}")
 endif()
 
 # OpenMP
 if(HERMES_ENABLE_OPENMP)
     find_package(OpenMP REQUIRED COMPONENTS C CXX)
+    set(OPENMP_LIBS OpenMP::OpenMP_CXX)
     message(STATUS "found omp.h at ${OpenMP_CXX_INCLUDE_DIRS}")
 endif()
 
@@ -338,11 +326,6 @@ install(DIRECTORY include DESTINATION ${CMAKE_INSTALL_PREFIX})
 configure_file(
         ${CMAKE_CURRENT_SOURCE_DIR}/CMake/HermesShmConfig.cmake
         ${PROJECT_BINARY_DIR}/CMakeFiles/HermesShmConfig.cmake @ONLY
-)
-
-configure_file(
-        ${CMAKE_CURRENT_SOURCE_DIR}/include/hermes_shm/constants/settings.h_templ
-        ${PROJECT_BINARY_DIR}/include/hermes_shm/constants/settings.h @ONLY
 )
 
 configure_file(

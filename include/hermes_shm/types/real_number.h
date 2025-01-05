@@ -16,7 +16,7 @@
 #include <cstddef>
 #include <cstdint>
 
-#include "hermes_shm/constants/macros.h>
+#include "hermes_shm/constants/macros.h"
 
 #ifdef __cplusplus
 

@@ -13,7 +13,7 @@
 #ifndef HERMES_THREAD_THREAD_MANAGER_H_
 #define HERMES_THREAD_THREAD_MANAGER_H_
 
-#include "hermes_shm/introspect/system_info.h>
+#include "hermes_shm/introspect/system_info.h"
 #include "hermes_shm/thread/thread_model/thread_model.h"
 
 #ifdef HERMES_ENABLE_PTHREADS

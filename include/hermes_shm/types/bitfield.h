@@ -15,7 +15,7 @@
 
 #include <cstdint>
 
-#include "hermes_shm/constants/macros.h>
+#include "hermes_shm/constants/macros.h"
 
 namespace hshm {
 
@@ -155,7 +155,7 @@ struct big_bitfield {
   HSHM_INLINE_CROSS_FUN void Clear() {
     memset((void *)bits_, 0, sizeof(bitfield32_t) * LEN::value);
   }
-} __attribute__((packed));
+};
 
 }  // namespace hshm
 

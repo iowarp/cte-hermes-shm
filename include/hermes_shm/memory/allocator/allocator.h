@@ -16,10 +16,10 @@
 #include <cstdint>
 
 #include "hermes_shm/constants/macros.h"
-#include "hermes_shm/memory/memory.h>
+#include "hermes_shm/memory/memory.h"
 #include "hermes_shm/thread/thread_model/thread_model.h"
 #include "hermes_shm/types/numbers.h"
-#include "hermes_shm/util/errors.h>
+#include "hermes_shm/util/errors.h"
 
 namespace hshm::ipc {
 

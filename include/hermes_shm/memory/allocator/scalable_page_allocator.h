@@ -21,7 +21,7 @@
 #include "hermes_shm/data_structures/ipc/ring_ptr_queue.h"
 #include "hermes_shm/data_structures/ipc/ring_queue.h"
 #include "hermes_shm/data_structures/ipc/vector.h"
-#include "hermes_shm/memory/allocator/stack_allocator.h>
+#include "hermes_shm/memory/allocator/stack_allocator.h"
 #include "hermes_shm/thread/lock.h"
 #include "hermes_shm/util/timer.h"
 #include "mp_page.h"

@@ -15,12 +15,12 @@
 
 #include <cstdio>
 
-#include "hermes_shm/constants/macros.h>
-#include "hermes_shm/data_structures/ipc/hash.h>
-#include "hermes_shm/introspect/system_info.h>
-#include "hermes_shm/types/atomic.h>
-#include "hermes_shm/types/bitfield.h>
-#include "hermes_shm/types/real_number.h>
+#include "hermes_shm/constants/macros.h"
+#include "hermes_shm/data_structures/ipc/hash.h"
+#include "hermes_shm/introspect/system_info.h"
+#include "hermes_shm/types/atomic.h"
+#include "hermes_shm/types/bitfield.h"
+#include "hermes_shm/types/real_number.h"
 
 namespace hshm::ipc {
 

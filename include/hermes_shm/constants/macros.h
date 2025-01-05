@@ -13,7 +13,7 @@
 #ifndef HERMES_MACROS_H
 #define HERMES_MACROS_H
 
-#include "settings.h"
+#include "hermes_shm/constants/settings.h"
 
 /** Bytes -> Bytes */
 #ifndef BYTES
@@ -205,7 +205,11 @@ namespace hipc = hshm::ipc;
 #endif
 // CPU
 #ifndef HSHM_DEFAULT_THREAD_MODEL
+#if defined(HERMES_ENABLE_PTHREADS)
 #define HSHM_DEFAULT_THREAD_MODEL hshm::thread::Pthread
+#elif defined(HERMES_ENABLE_WINDOWS_THREADS)
+#define HSHM_DEFAULT_THREAD_MODEL hshm::thread::Windows
+#endif
 #endif
 
 /** Default memory context object */
