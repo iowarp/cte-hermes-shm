@@ -21,9 +21,8 @@
 #include <vector>
 
 // hermes
-#include <hermes_shm/data_structures/ipc/vector.h>
-
 #include "hermes_shm/data_structures/ipc/string.h"
+#include "hermes_shm/data_structures/ipc/vector.h>
 
 template <typename T>
 using bipc_vector = bipc::vector<T, typename BoostAllocator<T>::alloc_t>;

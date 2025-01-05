@@ -10,26 +10,24 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-
 #ifndef HERMES_TEST_UNIT_DATA_STRUCTURES_TEST_INIT_H_
 #define HERMES_TEST_UNIT_DATA_STRUCTURES_TEST_INIT_H_
 
 #include "hermes_shm/data_structures/all.h"
-#include <mpi.h>
 
-using hshm::ipc::PosixShmMmap;
-using hshm::ipc::MemoryBackendType;
-using hshm::ipc::MemoryBackend;
+using hshm::ipc::Allocator;
 using hshm::ipc::AllocatorId;
 using hshm::ipc::AllocatorType;
-using hshm::ipc::Allocator;
+using hshm::ipc::MemoryBackend;
+using hshm::ipc::MemoryBackendType;
 using hshm::ipc::Pointer;
+using hshm::ipc::PosixShmMmap;
 
-using hshm::ipc::MemoryBackendType;
-using hshm::ipc::MemoryBackend;
+using hshm::ipc::Allocator;
 using hshm::ipc::AllocatorId;
 using hshm::ipc::AllocatorType;
-using hshm::ipc::Allocator;
+using hshm::ipc::MemoryBackend;
+using hshm::ipc::MemoryBackendType;
 using hshm::ipc::MemoryManager;
 using hshm::ipc::Pointer;
 

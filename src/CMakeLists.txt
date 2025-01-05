@@ -26,16 +26,13 @@ else()
 endif()
 target_link_libraries(hermes_shm_data_structures
         -lrt -ldl
-        cereal::cereal yaml-cpp
-        $<$<BOOL:${HERMES_RPC_THALLIUM}>:thallium>
+        yaml-cpp
+        ${SERIALIZATION_LIBS}
         ${COMPRESS_LIBS}
         ${ENCRYPT_LIBS}
 )
 if (HERMES_ENABLE_PTHREADS)
     target_link_libraries(hermes_shm_data_structures pthread)
-endif()
-if (HERMES_ENABLE_OPENMP)
-    target_link_libraries(hermes_shm_data_structures OpenMP::OpenMP_CXX)
 endif()
 if (HERMES_ENABLE_CUDA)
     foreach (SOURCE IN LISTS SOURCE_FILES)

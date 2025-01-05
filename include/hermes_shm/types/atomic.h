@@ -13,11 +13,10 @@
 #ifndef HERMES_INCLUDE_HERMES_TYPES_ATOMIC_H_
 #define HERMES_INCLUDE_HERMES_TYPES_ATOMIC_H_
 
-#include <hermes_shm/constants/macros.h>
-
 #include <atomic>
 #include <type_traits>
 
+#include "hermes_shm/constants/macros.h>
 #include "numbers.h"
 #ifdef HERMES_ENABLE_CUDA
 #include <cuda/atomic>

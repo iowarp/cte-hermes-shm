@@ -15,7 +15,7 @@ add_executable(test_backend_exec
         memory_manager.cc)
 add_dependencies(test_backend_exec hermes_shm_data_structures)
 target_link_libraries(test_backend_exec
-        hermes_shm_data_structures Catch2::Catch2 MPI::MPI_CXX)
+        hermes_shm_data_structures Catch2::Catch2 ${MPI_LIBS})
 
 #------------------------------------------------------------------------------
 # Test Cases

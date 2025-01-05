@@ -14,7 +14,7 @@ add_executable(test_types_exec
         test_atomics.cc)
 add_dependencies(test_types_exec hermes_shm_data_structures)
 target_link_libraries(test_types_exec
-        hermes_shm_data_structures Catch2::Catch2 MPI::MPI_CXX OpenMP::OpenMP_CXX)
+        hermes_shm_data_structures Catch2::Catch2 ${MPI_LIBS} ${OpenMP_LIBS})
 
 add_test(NAME test_types COMMAND
         ${CMAKE_BINARY_DIR}/bin/test_types_exec "~[error=FatalError]")
@@ -33,7 +33,7 @@ add_executable(test_timers_exec
         test_timers.cc)
 add_dependencies(test_timers_exec hermes_shm_data_structures)
 target_link_libraries(test_timers_exec
-        hermes_shm_data_structures Catch2::Catch2 MPI::MPI_CXX OpenMP::OpenMP_CXX)
+        hermes_shm_data_structures Catch2::Catch2 ${MPI_LIBS} ${OpenMP_LIBS})
 
 add_test(NAME test_timers COMMAND
         ${CMAKE_BINARY_DIR}/bin/test_timers_exec)

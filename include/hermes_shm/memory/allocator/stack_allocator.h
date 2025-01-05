@@ -13,10 +13,9 @@
 #ifndef HERMES_MEMORY_ALLOCATOR_STACK_ALLOCATOR_H_
 #define HERMES_MEMORY_ALLOCATOR_STACK_ALLOCATOR_H_
 
-#include <hermes_shm/memory/allocator/mp_page.h>
-
 #include "allocator.h"
 #include "heap.h"
+#include "hermes_shm/memory/allocator/mp_page.h>
 #include "hermes_shm/thread/lock.h"
 
 namespace hshm::ipc {

@@ -21,9 +21,8 @@
 #include <unordered_map>
 
 // hermes
-#include <hermes_shm/data_structures/ipc/unordered_map.h>
-
 #include "hermes_shm/data_structures/ipc/string.h"
+#include "hermes_shm/data_structures/ipc/unordered_map.h>
 
 template <typename Key, typename T>
 using bipc_unordered_map =

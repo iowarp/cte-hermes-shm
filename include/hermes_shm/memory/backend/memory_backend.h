@@ -14,13 +14,13 @@
 #define HERMES_MEMORY_H
 
 #include <cstdint>
-#include <vector>
-#include <string>
-#include <hermes_shm/memory/memory.h>
-#include "hermes_shm/constants/macros.h"
 #include <limits>
-#include "hermes_shm/data_structures/ipc/chararr.h"
+#include <string>
+#include <vector>
+
 #include "hermes_shm/constants/macros.h"
+#include "hermes_shm/data_structures/ipc/chararr.h"
+#include "hermes_shm/memory/memory.h>
 
 namespace hshm::ipc {
 
@@ -65,14 +65,10 @@ class MemoryBackendId {
   }
 
   HSHM_CROSS_FUN
-  static MemoryBackendId GetRoot() {
-    return {0};
-  }
+  static MemoryBackendId GetRoot() { return {0}; }
 
   HSHM_CROSS_FUN
-  static MemoryBackendId Get(u32 id) {
-    return {id + 1};
-  }
+  static MemoryBackendId Get(u32 id) { return {id + 1}; }
 
   HSHM_CROSS_FUN
   bool operator==(const MemoryBackendId &other) const {
@@ -94,9 +90,7 @@ struct MemoryBackendHeader {
   HSHM_CROSS_FUN
   void Print() const {
     printf("(%s) MemoryBackendHeader: type: %d, id: %d, data_size: %lu\n",
-           kCurrentDevice,
-           static_cast<int>(type_),
-           id_.id_, data_size_);
+           kCurrentDevice, static_cast<int>(type_), id_.id_, data_size_);
   }
 };
 
@@ -122,75 +116,53 @@ class MemoryBackend {
 
   /** Mark data as valid */
   HSHM_CROSS_FUN
-  void SetInitialized() {
-    flags_.SetBits(MEMORY_BACKEND_INITIALIZED);
-  }
+  void SetInitialized() { flags_.SetBits(MEMORY_BACKEND_INITIALIZED); }
 
   /** Check if data is valid */
   HSHM_CROSS_FUN
-  bool IsInitialized() {
-    return flags_.Any(MEMORY_BACKEND_INITIALIZED);
-  }
+  bool IsInitialized() { return flags_.Any(MEMORY_BACKEND_INITIALIZED); }
 
   /** Mark data as invalid */
   HSHM_CROSS_FUN
-  void UnsetInitialized() {
-    flags_.UnsetBits(MEMORY_BACKEND_INITIALIZED);
-  }
+  void UnsetInitialized() { flags_.UnsetBits(MEMORY_BACKEND_INITIALIZED); }
 
   /** Mark the backend as registered */
   HSHM_CROSS_FUN
-  void SetScanned() {
-    flags_.SetBits(MEMORY_BACKEND_SCANNED);
-  }
+  void SetScanned() { flags_.SetBits(MEMORY_BACKEND_SCANNED); }
 
   /** Check if the backend is registered */
   HSHM_CROSS_FUN
-  bool IsScanned() {
-    return flags_.Any(MEMORY_BACKEND_SCANNED);
-  }
+  bool IsScanned() { return flags_.Any(MEMORY_BACKEND_SCANNED); }
 
   /** Mark the backend as unregistered */
   HSHM_CROSS_FUN
-  void UnsetScanned() {
-    flags_.UnsetBits(MEMORY_BACKEND_SCANNED);
-  }
+  void UnsetScanned() { flags_.UnsetBits(MEMORY_BACKEND_SCANNED); }
 
   /** This is the process which destroys the backend */
   HSHM_CROSS_FUN
-  void Own() {
-    flags_.SetBits(MEMORY_BACKEND_OWNED);
-  }
+  void Own() { flags_.SetBits(MEMORY_BACKEND_OWNED); }
 
   /** This is owned */
   HSHM_CROSS_FUN
-  bool IsOwned() {
-    return flags_.Any(MEMORY_BACKEND_OWNED);
-  }
+  bool IsOwned() { return flags_.Any(MEMORY_BACKEND_OWNED); }
 
   /** This is not the process which destroys the backend */
   HSHM_CROSS_FUN
-  void Disown() {
-    flags_.UnsetBits(MEMORY_BACKEND_OWNED);
-  }
+  void Disown() { flags_.UnsetBits(MEMORY_BACKEND_OWNED); }
 
   /** Get the ID of this backend */
   HSHM_CROSS_FUN
-  MemoryBackendId& GetId() {
-    return header_->id_;
-  }
+  MemoryBackendId &GetId() { return header_->id_; }
 
   /** Get the ID of this backend */
   HSHM_CROSS_FUN
-  const MemoryBackendId& GetId() const {
-    return header_->id_;
-  }
+  const MemoryBackendId &GetId() const { return header_->id_; }
 
   HSHM_CROSS_FUN
   void Print() const {
     header_->Print();
-    printf("(%s) MemoryBackend: data: %p, data_size: %lu\n",
-           kCurrentDevice, data_, data_size_);
+    printf("(%s) MemoryBackend: data: %p, data_size: %lu\n", kCurrentDevice,
+           data_, data_size_);
   }
 
   /// Each allocator must define its own shm_init.

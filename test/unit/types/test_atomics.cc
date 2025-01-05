@@ -1,7 +1,8 @@
-#include <hermes_shm/types/atomic.h>
 #include "basic_test.h"
+#include "hermes_shm/types/atomic.h>
 
-template <typename AtomicT> class AtomicTest {
+template <typename AtomicT>
+class AtomicTest {
  public:
   AtomicTest() {}
 

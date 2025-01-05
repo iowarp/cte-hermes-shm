@@ -15,7 +15,6 @@
 
 #include "basic_test.h"
 #include "hermes_shm/memory/memory_manager.h"
-#include "omp.h"
 
 using hshm::ipc::Allocator;
 using hshm::ipc::AllocatorId;

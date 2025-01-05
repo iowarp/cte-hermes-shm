@@ -13,9 +13,9 @@
 #ifndef HERMES_INCLUDE_HERMES_TYPES_BITFIELD_H_
 #define HERMES_INCLUDE_HERMES_TYPES_BITFIELD_H_
 
-#include <hermes_shm/constants/macros.h>
-
 #include <cstdint>
+
+#include "hermes_shm/constants/macros.h>
 
 namespace hshm {
 

@@ -13,21 +13,25 @@
 #ifndef HERMES_INCLUDE_MEMORY_BACKEND_POSIX_MMAP_H
 #define HERMES_INCLUDE_MEMORY_BACKEND_POSIX_MMAP_H
 
-#include "memory_backend.h"
-#include <string>
-
+#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <fcntl.h>
+
+#include <string>
+
+#include "hermes_shm/constants/macros.h"
+#ifdef HERMES_ENABLE_PROCFS_SYSINFO
+#include <sys/mman.h>
 #include <sys/shm.h>
 #include <sys/stat.h>
-#include <sys/mman.h>
 #include <unistd.h>
+#endif
 
-#include <hermes_shm/util/errors.h>
-#include <hermes_shm/constants/macros.h>
-#include <hermes_shm/introspect/system_info.h>
+#include "hermes_shm/constants/macros.h>
+#include "hermes_shm/introspect/system_info.h>
+#include "hermes_shm/util/errors.h>
+#include "memory_backend.h"
 
 namespace hshm::ipc {
 
@@ -55,57 +59,74 @@ class PosixMmap : public MemoryBackend {
     Own();
     total_size_ = sizeof(MemoryBackendHeader) + size;
     char *ptr = _Map(total_size_);
-    header_ = reinterpret_cast<MemoryBackendHeader*>(ptr);
+    header_ = reinterpret_cast<MemoryBackendHeader *>(ptr);
     header_->type_ = MemoryBackendType::kPosixMmap;
     header_->id_ = backend_id;
     header_->data_size_ = size;
     data_size_ = size;
-    data_ = reinterpret_cast<char*>(header_ + 1);
+    data_ = reinterpret_cast<char *>(header_ + 1);
     return true;
   }
 
   /** Deserialize the backend */
   bool shm_deserialize(const hshm::chararr &url) override {
-    (void) url;
+    (void)url;
     HERMES_THROW_ERROR(SHMEM_NOT_SUPPORTED);
     return false;
   }
 
   /** Detach the mapped memory */
-  void shm_detach() override {
-    _Detach();
-  }
+  void shm_detach() override { _Detach(); }
 
   /** Destroy the mapped memory */
-  void shm_destroy() override {
-    _Destroy();
-  }
+  void shm_destroy() override { _Destroy(); }
 
  protected:
   /** Map shared memory */
-  template<typename T = char>
-  T* _Map(size_t size) {
-    T *ptr = reinterpret_cast<T*>(
-      mmap64(nullptr, MemoryAlignment::AlignToPageSize(size),
-             PROT_READ | PROT_WRITE,
-             MAP_PRIVATE | MAP_ANONYMOUS, -1, 0));
+  template <typename T = char>
+  T *_Map(size_t size) {
+#ifdef HERMES_ENABLE_PROCFS_SYSINFO
+    T *ptr = reinterpret_cast<T *>(
+        mmap64(nullptr, MemoryAlignment::AlignToPageSize(size),
+               PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0));
     if (ptr == MAP_FAILED) {
       perror("map failed");
       HERMES_THROW_ERROR(SHMEM_CREATE_FAILED);
     }
     return ptr;
+#elifdef HERMES_ENABLE_WINDOWS_SYSINFO
+    T *ptr = (T *)VirtualAlloc(
+        nullptr,      // lpAddress: pointer where the function should commit the
+                      // pages
+        size,         // dwSize: number of bytes to commit and reserve
+        MEM_COMMIT |  // flAllocationType: specifies whether this is a commit or
+                      // reserve operation
+            MEM_RESERVE,  // flProtect: memory protection for committed pages
+                          // (in this case, PAGE_READWRITE)
+        PAGE_READWRITE);  // dwFlags: flags used by the operating system to
+                          // manage memory
+
+    if (!ptr) {
+      HERMES_THROW_ERROR(SHMEM_CREATE_FAILED);
+    }
+    return ptr;
+#endif
   }
 
   /** Unmap shared memory */
   void _Detach() {
-    if (!IsInitialized()) { return; }
-    munmap(reinterpret_cast<void*>(header_), total_size_);
+    if (!IsInitialized()) {
+      return;
+    }
+    munmap(reinterpret_cast<void *>(header_), total_size_);
     UnsetInitialized();
   }
 
   /** Destroy shared memory */
   void _Destroy() {
-    if (!IsInitialized()) { return; }
+    if (!IsInitialized()) {
+      return;
+    }
     _Detach();
     UnsetInitialized();
   }

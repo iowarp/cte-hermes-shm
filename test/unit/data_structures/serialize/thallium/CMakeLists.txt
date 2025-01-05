@@ -9,8 +9,8 @@ set(CMAKE_CXX_STANDARD 17)
 set (LIBS
         hermes_shm_data_structures
         Catch2::Catch2
-        MPI::MPI_CXX
-        OpenMP::OpenMP_CXX
+        ${MPI_LIBS}
+        ${OpenMP_LIBS}
         thallium)
 
 add_executable(test_thallium_server server.cc)

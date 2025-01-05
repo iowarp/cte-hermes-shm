@@ -13,8 +13,7 @@
 #ifndef HERMES_THREAD_RWLOCK_H_
 #define HERMES_THREAD_RWLOCK_H_
 
-#include <hermes_shm/constants/macros.h>
-
+#include "hermes_shm/constants/macros.h>
 #include "hermes_shm/thread/lock.h"
 #include "hermes_shm/thread/thread_model_manager.h"
 #include "hermes_shm/types/atomic.h"

@@ -13,10 +13,6 @@
 #ifndef HERMES_SHM_INCLUDE_HERMES_SHM_UTIL_LOGGING_H_
 #define HERMES_SHM_INCLUDE_HERMES_SHM_UTIL_LOGGING_H_
 
-#include <sys/syscall.h>
-#include <sys/types.h>
-#include <unistd.h>
-
 #include <climits>
 #include <filesystem>
 #include <fstream>
@@ -26,6 +22,7 @@
 
 #include "formatter.h"
 #include "singleton.h"
+#include "system_info.h"
 #include "timer.h"
 
 namespace hshm {
@@ -134,7 +131,7 @@ class Logger {
 #ifdef HSHM_IS_HOST
 
     std::string msg = hshm::Formatter::format(fmt, std::forward<Args>(args)...);
-    int tid = GetTid();
+    int tid = SystemInfo::GetTid();
     std::string out = hshm::Formatter::format("{}\n", msg);
     std::cout << out;
     if (fout_) {
@@ -175,7 +172,7 @@ class Logger {
     }
 
     std::string msg = hshm::Formatter::format(fmt, std::forward<Args>(args)...);
-    int tid = GetTid();
+    int tid = SystemInfo::GetTid();
     std::string out = hshm::Formatter::format("{}:{} {} {} {} {}\n", path, line,
                                               level, tid, func, msg);
     if (LOG_CODE == kInfo) {
@@ -191,24 +188,6 @@ class Logger {
     if (LOG_CODE == kFatal) {
       exit(1);
     }
-#endif
-  }
-
-  int GetTid() {
-#ifdef SYS_gettid
-    return (pid_t)syscall(SYS_gettid);
-#else
-#warning "GetTid is not defined"
-    return GetPid();
-#endif
-  }
-
-  int GetPid() {
-#ifdef SYS_getpid
-    return (pid_t)syscall(SYS_getpid);
-#else
-#warning "GetPid is not defined"
-    return 0;
 #endif
   }
 };

@@ -14,8 +14,8 @@ set(HERMES_SHM_VERSION_MAJOR @HERMES_SHM_VERSION_MAJOR@)
 set(HERMES_SHM_VERSION_MINOR @HERMES_SHM_VERSION_MINOR@)
 set(HERMES_SHM_VERSION_PATCH @HERMES_SHM_VERSION_PATCH@)
 
-set(BUILD_MPI_TESTS @BUILD_MPI_TESTS@)
-set(BUILD_OpenMP_TESTS @BUILD_OpenMP_TESTS@)
+set(HERMES_ENABLE_MPI @HERMES_ENABLE_MPI@)
+set(HERMES_ENABLE_OPENMP @HERMES_ENABLE_OPENMP@)
 set(BUILD_Boost_TESTS @BUILD_Boost_TESTS@)
 set(HERMES_RPC_THALLIUM @HERMES_RPC_THALLIUM@)
 set(HERMES_ENABLE_PTHREADS @HERMES_ENABLE_PTHREADS@)
@@ -99,16 +99,16 @@ find_package(yaml-cpp REQUIRED)
 message(STATUS "found yaml-cpp at ${yaml-cpp_DIR}")
 
 # MPI
-if(BUILD_MPI_TESTS)
+if(HERMES_ENABLE_MPI)
   find_package(MPI REQUIRED COMPONENTS C CXX)
-  set(MPI_LIBS MPI::MPI_CXX)
+  set(MPI_LIBS ${MPI_LIBS})
   message(STATUS "found mpi.h at ${MPI_CXX_INCLUDE_DIRS}")
 endif()
 
 # OpenMP
-if(BUILD_OpenMP_TESTS)
+if(HERMES_ENABLE_OPENMP)
   find_package(OpenMP REQUIRED COMPONENTS C CXX)
-  set(OpenMP_LIBS OpenMP::OpenMP_CXX)
+  set(OpenMP_LIBS ${OpenMP_LIBS})
   message(STATUS "found omp.h at ${OpenMP_CXX_INCLUDE_DIRS}")
 endif()
 
@@ -214,7 +214,8 @@ set(HermesShm_INCLUDE_DIRS
         ${COMPRESS_INCLUDE_DIRS}
         ${HermesShm_INCLUDE_DIR})
 set(HermesShm_LIBRARIES
-        -lrt -ldl cereal::cereal -lstdc++fs yaml-cpp
+        -lrt -ldl -lstdc++fs yaml-cpp
+        ${SERIALIZATION_LIBS}
         ${ENCRYPT_LIBRARIES}
         ${COMPRESS_LIBRARIES}
         ${HermesShm_LIBRARY}

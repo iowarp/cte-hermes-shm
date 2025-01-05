@@ -30,7 +30,7 @@ add_executable(test_data_structure_exec
 add_dependencies(test_data_structure_exec hermes_shm_data_structures)
 target_link_libraries(test_data_structure_exec
         hermes_shm_data_structures Catch2::Catch2
-        MPI::MPI_CXX OpenMP::OpenMP_CXX)
+        ${MPI_LIBS} ${OpenMP_LIBS})
 
 #------------------------------------------------------------------------------
 # Test Cases
