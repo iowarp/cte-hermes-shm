@@ -39,8 +39,8 @@ void PretestRank0() {
   auto mem_mngr = HERMES_MEMORY_MANAGER;
   mem_mngr->UnregisterAllocator(alloc_id);
   mem_mngr->DestroyBackend(hipc::MemoryBackendId::Get(0));
-  mem_mngr->CreateBackend<PosixShmMmap>(hipc::MemoryBackendId::Get(0),
-                                        GIGABYTES(1), shm_url);
+  mem_mngr->CreateBackend<PosixShmMmap>(
+      hipc::MemoryBackendId::Get(0), hshm::Unit<size_t>::Gigabytes(1), shm_url);
   mem_mngr->CreateAllocator<AllocT>(hipc::MemoryBackendId::Get(0), alloc_id, 0);
 }
 

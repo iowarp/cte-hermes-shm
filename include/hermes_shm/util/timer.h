@@ -47,7 +47,8 @@ class TimepointBase {
   HSHM_INLINE_CROSS_FUN double GetNsecFromStart() const {
     std::chrono::time_point<T> end_ = T::now();
     double elapsed =
-        std::chrono::duration_cast<std::chrono::nanoseconds>(end_ - start_)
+        (double)std::chrono::duration_cast<std::chrono::nanoseconds>(end_ -
+                                                                     start_)
             .count();
     return elapsed;
   }

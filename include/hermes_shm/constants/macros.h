@@ -15,6 +15,9 @@
 
 #include "hermes_shm/constants/settings.h"
 
+/** For windows */
+// #define _CRT_SECURE_NO_DEPRECATE
+
 /** Function content selector for CUDA */
 #ifdef __CUDA_ARCH__
 #define HSHM_IS_CUDA_GPU

@@ -300,7 +300,7 @@ void *SystemInfo::MapPrivateMemory(size_t size) {
 #endif
 }
 
-void *SystemInfo::MapSharedMemory(const File &fd, size_t size, size_t off) {
+void *SystemInfo::MapSharedMemory(const File &fd, size_t size, i64 off) {
 #if defined(HERMES_ENABLE_PROCFS_SYSINFO)
   return mmap(nullptr, size, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS,
               -1, 0);
@@ -308,7 +308,7 @@ void *SystemInfo::MapSharedMemory(const File &fd, size_t size, size_t off) {
   return MapViewOfFile(fd.windows_fd_,       // handle to map object
                        FILE_MAP_ALL_ACCESS,  // read/write permission
                        0,                    // file offset high
-                       off,                  // file offset low
+                       (DWORD)off,           // file offset low
                        size);                // number of bytes to map
 #endif
 }

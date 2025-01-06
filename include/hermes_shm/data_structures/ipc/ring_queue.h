@@ -222,7 +222,7 @@ class ring_queue_base : public ShmContainer {
         }
       }
     } else {
-      size_t size = tail - head + 1;
+      qtok_id size = tail - head + 1;
       if (size > queue.size()) {
         tail_.fetch_sub(1);
         return qtok_t::GetNull();
@@ -259,7 +259,7 @@ class ring_queue_base : public ShmContainer {
 
     // Pop the element, but only if it's marked valid
     qtok_id idx = head % (*queue_).size();
-    pair_t &entry = (*queue_)[idx];
+    pair_t &entry = (*queue_)[(size_t)idx];
     if (entry.GetFirst().Any(1)) {
       val = std::move(entry.GetSecond());
       entry.GetFirst().Clear();

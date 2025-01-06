@@ -26,7 +26,7 @@ void MainPretest() {
   auto backend = mem_mngr->CreateBackend<hipc::PosixShmMmap>(
       hipc::MemoryBackendId::Get(0), mem_mngr->GetDefaultBackendSize(),
       shm_url);
-  memset(backend->data_, 0, MEGABYTES(16));
+  memset(backend->data_, 0, hshm::Unit<size_t>::Megabytes(16));
   // TODO(llogan): back to good allocator
   mem_mngr->CreateAllocator<HSHM_DEFAULT_ALLOC_T>(hipc::MemoryBackendId::Get(0),
                                                   alloc_id_g, 0);

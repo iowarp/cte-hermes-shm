@@ -125,8 +125,7 @@ struct SystemInfo {
 
   HSHM_DLL static void *MapPrivateMemory(size_t size);
 
-  HSHM_DLL static void *MapSharedMemory(const File &fd, size_t size,
-                                        size_t off);
+  HSHM_DLL static void *MapSharedMemory(const File &fd, size_t size, i64 off);
 
   HSHM_DLL static void UnmapMemory(void *ptr, size_t size);
 

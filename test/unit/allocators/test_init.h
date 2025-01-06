@@ -37,8 +37,8 @@ AllocT *Pretest() {
   auto mem_mngr = HERMES_MEMORY_MANAGER;
   mem_mngr->UnregisterAllocator(alloc_id);
   mem_mngr->DestroyBackend(hipc::MemoryBackendId::Get(0));
-  mem_mngr->CreateBackendWithUrl<BackendT>(hipc::MemoryBackendId::Get(0),
-                                           GIGABYTES(1), shm_url);
+  mem_mngr->CreateBackendWithUrl<BackendT>(
+      hipc::MemoryBackendId::Get(0), hshm::Unit<size_t>::Gigabytes(1), shm_url);
   mem_mngr->CreateAllocator<AllocT>(hipc::MemoryBackendId::Get(0), alloc_id,
                                     sizeof(SimpleAllocatorHeader));
   auto alloc = mem_mngr->GetAllocator<AllocT>(alloc_id);
@@ -54,7 +54,7 @@ class Workloads {
  public:
   static void PageAllocationTest(AllocT *alloc) {
     size_t count = 1024;
-    size_t page_size = KILOBYTES(4);
+    size_t page_size = hshm::Unit<size_t>::Kilobytes(4);
     auto mem_mngr = HERMES_MEMORY_MANAGER;
 
     // Allocate pages
@@ -73,7 +73,7 @@ class Workloads {
     for (size_t i = 0; i < count; ++i) {
       Pointer p = mem_mngr->Convert(ptrs[i]);
       REQUIRE(p == ps[i]);
-      REQUIRE(VerifyBuffer((char *)ptrs[i], page_size, i));
+      REQUIRE(VerifyBuffer((char *)ptrs[i], page_size, (char)i));
     }
 
     // Check the custom header
@@ -102,8 +102,13 @@ class Workloads {
   }
 
   static void MultiPageAllocationTest(AllocT *alloc) {
-    std::vector<size_t> alloc_sizes = {
-        64, 128, 256, KILOBYTES(1), KILOBYTES(4), KILOBYTES(64), MEGABYTES(1)};
+    std::vector<size_t> alloc_sizes = {64,
+                                       128,
+                                       256,
+                                       hshm::Unit<size_t>::Kilobytes(1),
+                                       hshm::Unit<size_t>::Kilobytes(4),
+                                       hshm::Unit<size_t>::Kilobytes(64),
+                                       hshm::Unit<size_t>::Megabytes(1)};
 
     // Allocate and free pages between 64 bytes and 32MB
     {
@@ -123,13 +128,14 @@ class Workloads {
 
   static void ReallocationTest(AllocT *alloc) {
     std::vector<std::pair<size_t, size_t>> sizes = {
-        {KILOBYTES(3), KILOBYTES(4)}, {KILOBYTES(4), MEGABYTES(1)}};
+        {hshm::Unit<size_t>::Kilobytes(3), hshm::Unit<size_t>::Kilobytes(4)},
+        {hshm::Unit<size_t>::Kilobytes(4), hshm::Unit<size_t>::Megabytes(1)}};
 
     // Reallocate a small page to a larger page
     for (auto &[small_size, large_size] : sizes) {
       Pointer p;
       char *ptr = alloc->template AllocatePtr<char>(HSHM_DEFAULT_MEM_CTX,
-                                                    small_size, p);
+                                                    (size_t)small_size, p);
       memset(ptr, 10, small_size);
       char *new_ptr = alloc->template ReallocatePtr<char>(HSHM_DEFAULT_MEM_CTX,
                                                           p, large_size);
@@ -143,7 +149,7 @@ class Workloads {
 
   static void AlignedAllocationTest(AllocT *alloc) {
     std::vector<std::pair<size_t, size_t>> sizes = {
-        {KILOBYTES(4), KILOBYTES(4)},
+        {hshm::Unit<size_t>::Kilobytes(4), hshm::Unit<size_t>::Kilobytes(4)},
     };
 
     // Aligned allocate pages

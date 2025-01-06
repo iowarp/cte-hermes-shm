@@ -52,7 +52,8 @@ struct BoostSegment {
   BoostSegment() {
     bipc::shared_memory_object::remove("HermesBoostBench");
     segment_ = std::make_unique<bipc::managed_shared_memory>(
-        bipc::create_only, "HermesBoostBench", GIGABYTES(4));
+        bipc::create_only, "HermesBoostBench",
+        hshm::Unit<size_t>::Gigabytes(4));
   }
 };
 #define BOOST_SEGMENT \

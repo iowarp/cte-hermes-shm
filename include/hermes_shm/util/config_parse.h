@@ -33,6 +33,10 @@ namespace hshm {
 
 class ConfigParse {
  public:
+  static void rm_char(std::string &str, char ch) {
+    str.erase(std::remove(str.begin(), str.end(), ch), str.end());
+  }
+
   /**
    * parse a hostfile string
    * [] represents a range to generate
@@ -43,10 +47,10 @@ class ConfigParse {
   static void ParseHostNameString(std::string hostname_set_str,
                                   std::vector<std::string> &list) {
     // Remove all whitespace characters from host name
-    std::remove(hostname_set_str.begin(), hostname_set_str.end(), ' ');
-    std::remove(hostname_set_str.begin(), hostname_set_str.end(), '\n');
-    std::remove(hostname_set_str.begin(), hostname_set_str.end(), '\r');
-    std::remove(hostname_set_str.begin(), hostname_set_str.end(), '\t');
+    rm_char(hostname_set_str, ' ');
+    rm_char(hostname_set_str, '\n');
+    rm_char(hostname_set_str, '\r');
+    rm_char(hostname_set_str, '\t');
     if (hostname_set_str.size() == 0) {
       return;
     }
@@ -85,7 +89,7 @@ class ConfigParse {
         // Parse ',' and remove spaces
         std::string range_str;
         std::getline(ss_ranges, range_str, ',');
-        std::remove(range_str.begin(), range_str.end(), ' ');
+        rm_char(range_str, ' ');
 
         // Divide the range by '-'
         auto dash = range_str.find_first_of('-');
@@ -164,24 +168,24 @@ class ConfigParse {
   }
 
   /** Converts \a size_text SIZE text into a size_t */
-  static size_t ParseSize(const std::string &size_text) {
-    auto size = ParseNumber<float>(size_text);
+  static hshm::u64 ParseSize(const std::string &size_text) {
+    auto size = ParseNumber<double>(size_text);
     if (size_text == "inf") {
-      return std::numeric_limits<size_t>::max();
+      return std::numeric_limits<hshm::u64>::max();
     }
     std::string suffix = ParseNumberSuffix(size_text);
     if (suffix.empty()) {
-      return BYTES(size);
+      return Unit<hshm::u64>::Bytes(size);
     } else if (suffix[0] == 'k' || suffix[0] == 'K') {
-      return KILOBYTES(size);
+      return hshm::Unit<hshm::u64>::Kilobytes(size);
     } else if (suffix[0] == 'm' || suffix[0] == 'M') {
-      return MEGABYTES(size);
+      return hshm::Unit<hshm::u64>::Megabytes(size);
     } else if (suffix[0] == 'g' || suffix[0] == 'G') {
-      return GIGABYTES(size);
+      return hshm::Unit<hshm::u64>::Terabytes(size);
     } else if (suffix[0] == 't' || suffix[0] == 'T') {
-      return TERABYTES(size);
+      return hshm::Unit<hshm::u64>::Terabytes(size);
     } else if (suffix[0] == 'p' || suffix[0] == 'P') {
-      return PETABYTES(size);
+      return hshm::Unit<hshm::u64>::Terabytes(size);
     } else {
       HELOG(kFatal, "Could not parse the size: {}", size_text);
       exit(1);
@@ -189,24 +193,24 @@ class ConfigParse {
   }
 
   /** Returns bandwidth (bytes / second) */
-  static size_t ParseBandwidth(const std::string &size_text) {
+  static hshm::u64 ParseBandwidth(const std::string &size_text) {
     return ParseSize(size_text);
   }
 
   /** Returns latency (nanoseconds) */
-  static size_t ParseLatency(const std::string &latency_text) {
-    auto size = ParseNumber<float>(latency_text);
+  static hshm::u64 ParseLatency(const std::string &latency_text) {
+    auto size = ParseNumber<double>(latency_text);
     std::string suffix = ParseNumberSuffix(latency_text);
     if (suffix.empty()) {
-      return BYTES(size);
+      return Unit<hshm::u64>::Bytes(size);
     } else if (suffix[0] == 'n' || suffix[0] == 'N') {
-      return BYTES(size);
+      return Unit<hshm::u64>::Bytes(size);
     } else if (suffix[0] == 'u' || suffix[0] == 'U') {
-      return KILOBYTES(size);
+      return hshm::Unit<hshm::u64>::Kilobytes(size);
     } else if (suffix[0] == 'm' || suffix[0] == 'M') {
-      return MEGABYTES(size);
+      return hshm::Unit<hshm::u64>::Megabytes(size);
     } else if (suffix[0] == 's' || suffix[0] == 'S') {
-      return GIGABYTES(size);
+      return hshm::Unit<hshm::u64>::Terabytes(size);
     }
     HELOG(kFatal, "Could not parse the latency: {}", latency_text);
     return 0;
@@ -222,8 +226,8 @@ class ConfigParse {
     for (auto &env_name_re : env_names) {
       std::string to_replace = std::string(env_name_re);
       std::string env_name = to_replace.substr(2, to_replace.size() - 3);
-      std::string env_val =
-          hshm::SystemInfo::getenv(env_name.c_str(), MEGABYTES(1));
+      std::string env_val = hshm::SystemInfo::getenv(
+          env_name.c_str(), hshm::Unit<size_t>::Megabytes(1));
       std::regex replace_expr("\\$\\{" + env_name + "\\}");
       path = std::regex_replace(path, replace_expr, env_val);
     }

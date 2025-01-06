@@ -40,7 +40,8 @@ void Pretest() {
   mem_mngr->UnregisterAllocator(MAIN_ALLOC_ID);
   mem_mngr->DestroyBackend(hipc::MemoryBackendId::GetRoot());
   mem_mngr->CreateBackend<PosixShmMmap>(hipc::MemoryBackendId::Get(0),
-                                        MEGABYTES(100), shm_url);
+                                        hshm::Unit<size_t>::Megabytes(100),
+                                        shm_url);
   mem_mngr->CreateAllocator<AllocT>(hipc::MemoryBackendId::Get(0),
                                     MAIN_ALLOC_ID, 0);
 }

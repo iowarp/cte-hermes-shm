@@ -535,7 +535,7 @@ class vector : public ShmContainer {
       return;
     }
     delay_ar<T> *vec = data_ar();
-    hipc::Allocator::DestructObj((*this)[pos.i_]);
+    hipc::Allocator::DestructObj((*this)[(size_t)pos.i_]);
     HSHM_MAKE_AR(vec[pos.i_], GetCtxAllocator(), std::forward<Args>(args)...)
   }
 
@@ -550,14 +550,14 @@ class vector : public ShmContainer {
   /** Delete elements between first and last  */
   HSHM_INLINE_CROSS_FUN
   void erase(iterator_t first, iterator_t last) {
-    size_t last_i;
+    i64 last_i;
     if (first.is_end()) return;
     if (last.is_end()) {
       last_i = size();
     } else {
       last_i = last.i_;
     }
-    size_t count = last_i - first.i_;
+    size_t count = (size_t)(last_i - first.i_);
     if (count == 0) return;
     shift_left(first, count);
     length_ -= count;

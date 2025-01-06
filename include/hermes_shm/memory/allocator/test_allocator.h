@@ -61,7 +61,7 @@ struct _TestAllocatorHeader : public AllocatorHeader {
   void FreeTid(hshm::ThreadId tid) { free_tids_->emplace(tid.tid_); }
 
   HSHM_INLINE_CROSS_FUN
-  TLS *GetTls(hshm::ThreadId tid) { return &(*tls_)[tid.tid_].tls_info_; }
+  TLS *GetTls(hshm::ThreadId tid) { return &(*tls_)[(size_t)tid.tid_].tls_info_; }
 };
 
 class _TestAllocator : public Allocator {
@@ -154,7 +154,7 @@ class _TestAllocator : public Allocator {
 
     // Case 1: Can we re-use an existing page?
     ThreadId tid = GetOrCreateTid(ctx);
-    PageAllocator &page_alloc = (*header_->tls_)[tid.tid_];
+    PageAllocator &page_alloc = (*header_->tls_)[(size_t)tid.tid_];
     page = page_alloc.Allocate(page_id);
 
     // Case 2: Can we allocate of thread's heap?
@@ -230,7 +230,7 @@ class _TestAllocator : public Allocator {
     // }
     // hdr->UnsetAllocated();
     // header_->SubSize(hdr->page_size_);
-    PageAllocator &page_alloc = (*header_->tls_)[hdr->tid_.tid_];
+    PageAllocator &page_alloc = (*header_->tls_)[(size_t)hdr->tid_.tid_];
     page_alloc.Free(hdr_offset, hdr);
   }
 

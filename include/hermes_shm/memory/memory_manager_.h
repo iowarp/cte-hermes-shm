@@ -8,6 +8,7 @@
 #include "allocator/allocator_factory_.h"
 #include "hermes_shm/memory/allocator/allocator.h"
 #include "hermes_shm/memory/backend/posix_mmap.h"
+#include "hermes_shm/types/numbers.h"
 #include "hermes_shm/util/singleton/_global_singleton.h"
 
 /** Singleton declaration */
@@ -34,7 +35,7 @@ class MemoryManager {
   Allocator *default_allocator_;
   char root_backend_space_[64];
   char root_alloc_space_[64];
-  char root_alloc_data_[KILOBYTES(64)];
+  char root_alloc_data_[hshm::Unit<size_t>::Kilobytes(64)];
 
  public:
   /** Create the root allocator */

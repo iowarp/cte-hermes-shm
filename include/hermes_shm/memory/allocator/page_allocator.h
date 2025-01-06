@@ -40,7 +40,7 @@ struct PageId {
   PageId(size_t size) {
     orig_ = size;
 #ifdef HSHM_IS_HOST
-    exp_ = std::ceil(std::log2(size - sizeof(MpPage)));
+    exp_ = (size_t)std::ceil(std::log2(size - sizeof(MpPage)));
 #else
     exp_ = ceil(log2(size - sizeof(MpPage)));
 #endif
@@ -75,8 +75,9 @@ class PageAllocator {
 
  public:
   HSHM_INLINE_CROSS_FUN
-  explicit PageAllocator(StackAllocator *alloc,
-                         size_t local_heap_size = KILOBYTES(64)) {
+  explicit PageAllocator(
+      StackAllocator *alloc,
+      size_t local_heap_size = hshm::Unit<size_t>::Kilobytes(64)) {
     for (size_t i = 0; i < PageId::num_caches_; ++i) {
       HSHM_MAKE_AR0(free_lists_[i], alloc);
     }

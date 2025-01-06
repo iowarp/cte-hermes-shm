@@ -11,6 +11,7 @@ set(HERMES_SHM_VERSION_PATCH 0)
 set(HERMES_SHM_ROOT ${CMAKE_CURRENT_SOURCE_DIR})
 include_directories(${HERMES_SHM_ROOT}/include)
 include_directories(${PROJECT_BINARY_DIR}/include)
+add_compile_definitions(_CRT_SECURE_NO_DEPRECATE)
 
 #------------------------------------------------------------------------------
 # Options

@@ -14,13 +14,13 @@ namespace hshm::ipc {
 /** Save cereal binary archive */
 template <typename Ar, typename T>
 void save(Ar &ar, const cereal::BinaryData<T> &data) {
-  ar.write_binary((const char *)data.data, data.size);
+  ar.write_binary((const char *)data.data, (size_t)data.size);
 }
 
 /** Load cereal binary archive */
 template <typename Ar, typename T>
 void load(Ar &ar, cereal::BinaryData<T> &data) {
-  ar.read_binary((char *)data.data, data.size);
+  ar.read_binary((char *)data.data, (size_t)data.size);
 }
 
 /** Save string */

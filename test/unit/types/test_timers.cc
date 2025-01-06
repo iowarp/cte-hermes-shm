@@ -17,10 +17,10 @@
 #include "hermes_shm/util/timer_thread.h"
 
 TEST_CASE("TestPeriodic") {
-  HILOG_PERIODIC(0, 0, SECONDS(1), "Print periodic 1");
+  HILOG_PERIODIC(0, 0, hshm::Unit<size_t>::Seconds(1), "Print periodic 1");
   sleep(1);
-  HILOG_PERIODIC(0, 0, SECONDS(1), "Print periodic 2");
-  HILOG_PERIODIC(0, 0, SECONDS(1), "Print periodic 3");
+  HILOG_PERIODIC(0, 0, hshm::Unit<size_t>::Seconds(1), "Print periodic 2");
+  HILOG_PERIODIC(0, 0, hshm::Unit<size_t>::Seconds(1), "Print periodic 3");
 }
 
 TEST_CASE("TestTimepoint") {

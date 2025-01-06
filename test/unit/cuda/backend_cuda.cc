@@ -87,7 +87,8 @@ void mpsc_test() {
   mem_mngr->UnregisterAllocator(alloc_id);
   mem_mngr->DestroyBackend(hipc::MemoryBackendId::Get(0));
   mem_mngr->CreateBackend<hipc::CudaShmMmap>(hipc::MemoryBackendId::Get(0),
-                                             MEGABYTES(100), shm_url, 0);
+                                             hshm::Unit<size_t>::Megabytes(100),
+                                             shm_url, 0);
   auto *alloc = mem_mngr->CreateAllocator<hipc::ScalablePageAllocator>(
       hipc::MemoryBackendId::Get(0), alloc_id, 0);
 

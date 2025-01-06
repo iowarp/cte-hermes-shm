@@ -101,9 +101,9 @@ class _StackAllocator : public Allocator {
   /** Align the memory to the next page boundary */
   HSHM_CROSS_FUN
   void Align() {
-    size_t off = heap_->heap_off_.load();
-    size_t page_size = 4096;
-    size_t new_off = (off + page_size - 1) & ~(page_size - 1);
+    hshm::min_u64 off = heap_->heap_off_.load();
+    hshm::min_u64 page_size = 4096;
+    hshm::min_u64 new_off = (off + page_size - 1) & ~(page_size - 1);
     heap_->heap_off_.store(new_off);
   }
 

@@ -515,7 +515,7 @@ class unordered_map : public ShmContainer {
    * ===================================*/
 
   /** The number of entries in the map */
-  HSHM_INLINE_CROSS_FUN size_t size() const { return length_.load(); }
+  HSHM_INLINE_CROSS_FUN size_t size() const { return (size_t)length_.load(); }
 
   /** The number of buckets in the map */
   HSHM_INLINE_CROSS_FUN size_t get_num_buckets() const {

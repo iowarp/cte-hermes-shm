@@ -94,6 +94,51 @@ typedef reg_uint min_u32;
 typedef big_uint min_u64;
 #endif
 
+template <typename T>
+class Unit {
+ public:
+  template <typename U>
+  CLS_CONST T Bytes(U n) {
+    return (T)(T(n) * (((T)1) << 0));
+  }
+  template <typename U>
+  CLS_CONST T Kilobytes(U n) {
+    return (T)(T(n) * (((T)1) << 10));
+  }
+  template <typename U>
+  CLS_CONST T Megabytes(U n) {
+    return (T)(T(n) * (((T)1) << 20));
+  }
+  template <typename U>
+  CLS_CONST T Gigabytes(U n) {
+    return (T)(T(n) * (((T)1) << 30));
+  }
+  template <typename U>
+  CLS_CONST T Terabytes(U n) {
+    return (T)(T(n) * (((T)1) << 40));
+  }
+  template <typename U>
+  CLS_CONST T Petabytes(U n) {
+    return (T)(T(n) * (((T)1) << 50));
+  }
+  template <typename U>
+  CLS_CONST T Seconds(U n) {
+    return (T)(T(n) * 1000000000);
+  }
+  template <typename U>
+  CLS_CONST T Milliseconds(U n) {
+    return (T)(T(n) * 1000000);
+  }
+  template <typename U>
+  CLS_CONST T Microseconds(U n) {
+    return (T)(T(n) * 1000);
+  }
+  template <typename U>
+  CLS_CONST T Nanoseconds(U n) {
+    return (T)(T(n));
+  }
+};
+
 }  // namespace hshm
 
 /** Bytes -> Bytes */
