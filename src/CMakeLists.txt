@@ -9,13 +9,14 @@ if (HERMES_ENABLE_CUDA)
 endif()
 project(hermes_shm LANGUAGES ${LANG})
 
-set(CMAKE_CXX_STANDARD 17)
+
 
 #-----------------------------------------------------------------------------
 # Build HSHM
 #-----------------------------------------------------------------------------
 set (SOURCE_FILES
         memory_manager.cc
+        system_info.cc
         data_structure_singleton.cc)
 if (BUILD_SHARED_LIBS)
     message("Building dynamic library")
@@ -24,9 +25,9 @@ else()
     message("Building static library")
     add_library(hermes_shm_data_structures STATIC ${SOURCE_FILES})
 endif()
-target_link_libraries(hermes_shm_data_structures
-        -lrt -ldl
+target_link_libraries(hermes_shm_data_structures 
         yaml-cpp
+        ${REAL_TIME_FLAGS}
         ${SERIALIZATION_LIBS}
         ${COMPRESS_LIBS}
         ${ENCRYPT_LIBS}

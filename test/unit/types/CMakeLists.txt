@@ -1,8 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 project(hermes_shm)
 
-set(CMAKE_CXX_STANDARD 17)
-
 #------------------------------------------------------------------------------
 # Build Tests
 #------------------------------------------------------------------------------
@@ -23,27 +21,30 @@ add_test(NAME test_fatal_logger
 set_tests_properties(
         test_fatal_logger PROPERTIES
         WILL_FAIL TRUE)
+set(INSTALLS ${INSTALLS} test_types_exec)
 
 #------------------------------------------------------------------------------
 # Build Timer Tests
 #------------------------------------------------------------------------------
-add_executable(test_timers_exec
-        ${TEST_MAIN}/main_mpi.cc
-        test_init.cc
-        test_timers.cc)
-add_dependencies(test_timers_exec hermes_shm_data_structures)
-target_link_libraries(test_timers_exec
-        hermes_shm_data_structures Catch2::Catch2 ${MPI_LIBS} ${OpenMP_LIBS})
+if (HERMES_ENABLE_MPI AND HERMES_ENABLE_OPENMP)
+    add_executable(test_timers_exec
+            ${TEST_MAIN}/main_mpi.cc
+            test_init.cc
+            test_timers.cc)
+    add_dependencies(test_timers_exec hermes_shm_data_structures)
+    target_link_libraries(test_timers_exec
+            hermes_shm_data_structures Catch2::Catch2 ${MPI_LIBS} ${OpenMP_LIBS})
 
-add_test(NAME test_timers COMMAND
-        ${CMAKE_BINARY_DIR}/bin/test_timers_exec)
+    add_test(NAME test_timers COMMAND
+            ${CMAKE_BINARY_DIR}/bin/test_timers_exec)
+    set(INSTALLS ${INSTALLS} test_timers_exec)
+endif()
 
 #-----------------------------------------------------------------------------
 # Install Targets
 #------------------------------------------------------------------------------
 install(TARGETS
-        test_types_exec
-        test_timers_exec
+        ${INSTALLS}
         EXPORT
         ${HERMES_EXPORTED_TARGETS}
         LIBRARY DESTINATION ${HERMES_INSTALL_LIB_DIR}

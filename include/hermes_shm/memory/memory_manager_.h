@@ -39,7 +39,7 @@ class MemoryManager {
  public:
   /** Create the root allocator */
   HSHM_CROSS_FUN
-  MemoryManager();
+  HSHM_DLL MemoryManager();
 
   /**
    * Initialize memory manager
@@ -47,11 +47,11 @@ class MemoryManager {
    * Must be called explicitly if on GPU.
    * */
   HSHM_CROSS_FUN
-  void Init();
+  HSHM_DLL void Init();
 
   /** Default backend size */
   HSHM_CROSS_FUN
-  static size_t GetDefaultBackendSize();
+  HSHM_DLL static size_t GetDefaultBackendSize();
 
   /**
    * Create a memory backend. Memory backends are divided into slots.
@@ -100,8 +100,8 @@ class MemoryManager {
    * Attaches to an existing memory backend located at \a url url.
    * */
   HSHM_CROSS_FUN
-  MemoryBackend *AttachBackend(MemoryBackendType type,
-                               const hshm::chararr &url);
+  HSHM_DLL MemoryBackend *AttachBackend(MemoryBackendType type,
+                                        const hshm::chararr &url);
 
   /**
    * Returns a pointer to a backend that has already been attached.
@@ -122,13 +122,14 @@ class MemoryManager {
   }
 
   /** Free the backend */
-  HSHM_CROSS_FUN void DestroyBackend(const MemoryBackendId &backend_id);
+  HSHM_CROSS_FUN HSHM_DLL void DestroyBackend(
+      const MemoryBackendId &backend_id);
 
   /**
    * Scans all attached backends for new memory allocators.
    * */
   HSHM_CROSS_FUN
-  void ScanBackends(bool find_allocs = true);
+  HSHM_DLL void ScanBackends(bool find_allocs = true);
 
   /**
    * Create and register a memory allocator for a particular backend.
@@ -143,7 +144,7 @@ class MemoryManager {
    * also be used externally.
    * */
   HSHM_CROSS_FUN
-  Allocator *RegisterAllocator(Allocator *alloc, bool do_scan = true);
+  HSHM_DLL Allocator *RegisterAllocator(Allocator *alloc, bool do_scan = true);
 
   /**
    * Registers an internal allocator.

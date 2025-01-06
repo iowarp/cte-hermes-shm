@@ -9,8 +9,10 @@
  * the COPYING file, which can be found at the top directory. If you do not  *
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+#define HSHM_IS_COMPILING_SINGLETONS
 
 #include "basic_test.h"
+#include "hermes_shm/thread/thread_model_manager.h"
 #include "hermes_shm/util/auto_trace.h"
 #include "hermes_shm/util/config_parse.h"
 #include "hermes_shm/util/formatter.h"
@@ -37,9 +39,9 @@ TEST_CASE("TypeSwitch") {
 }
 
 TEST_CASE("TestPathParser") {
-  setenv("PATH_PARSER_TEST", "HOME", true);
+  hshm::SystemInfo::setenv("PATH_PARSER_TEST", "HOME", true);
   auto x = hshm::ConfigParse::ExpandPath("${PATH_PARSER_TEST}/hello");
-  unsetenv("PATH_PARSER_TEST");
+  hshm::SystemInfo::unsetenv("PATH_PARSER_TEST");
   auto y = hshm::ConfigParse::ExpandPath("${PATH_PARSER_TEST}/hello");
   auto z = hshm::ConfigParse::ExpandPath("${HOME}/hello");
   REQUIRE(x == "HOME/hello");
@@ -85,7 +87,7 @@ TEST_CASE("TestAutoTrace") {
   AUTO_TRACE(0);
 
   TIMER_START("Example");
-  sleep(1);
+  HERMES_THREAD_MODEL->SleepForUs(1000);
   TIMER_END();
 }
 

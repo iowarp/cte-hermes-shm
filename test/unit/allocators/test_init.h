@@ -59,7 +59,7 @@ class Workloads {
 
     // Allocate pages
     std::vector<Pointer> ps(count);
-    void *ptrs[count];
+    std::vector<void *> ptrs(count);
     for (size_t i = 0; i < count; ++i) {
       ptrs[i] = alloc->template AllocatePtr<void>(HSHM_DEFAULT_MEM_CTX,
                                                   page_size, ps[i]);
@@ -82,7 +82,7 @@ class Workloads {
 
     // Free pages
     for (size_t i = 0; i < count; ++i) {
-      alloc->template Free(HSHM_DEFAULT_MEM_CTX, ps[i]);
+      alloc->Free(HSHM_DEFAULT_MEM_CTX, ps[i]);
     }
 
     // Reallocate pages
@@ -95,7 +95,7 @@ class Workloads {
 
     // Free again
     for (size_t i = 0; i < count; ++i) {
-      alloc->template Free(HSHM_DEFAULT_MEM_CTX, ps[i]);
+      alloc->Free(HSHM_DEFAULT_MEM_CTX, ps[i]);
     }
 
     return;
@@ -111,11 +111,10 @@ class Workloads {
         for (size_t i = 0; i < alloc_sizes.size(); ++i) {
           Pointer ps[16];
           for (size_t j = 0; j < 16; ++j) {
-            ps[j] =
-                alloc->template Allocate(HSHM_DEFAULT_MEM_CTX, alloc_sizes[i]);
+            ps[j] = alloc->Allocate(HSHM_DEFAULT_MEM_CTX, alloc_sizes[i]);
           }
           for (size_t j = 0; j < 16; ++j) {
-            alloc->template Free(HSHM_DEFAULT_MEM_CTX, ps[j]);
+            alloc->Free(HSHM_DEFAULT_MEM_CTX, ps[j]);
           }
         }
       }
@@ -138,7 +137,7 @@ class Workloads {
         REQUIRE(ptr[i] == 10);
       }
       memset(new_ptr, 0, large_size);
-      alloc->template Free(HSHM_DEFAULT_MEM_CTX, p);
+      alloc->Free(HSHM_DEFAULT_MEM_CTX, p);
     }
   }
 
@@ -155,7 +154,7 @@ class Workloads {
                                                       size, p, alignment);
         REQUIRE(((size_t)ptr % alignment) == 0);
         memset(alloc->template Convert<void>(p), 0, size);
-        alloc->template Free(HSHM_DEFAULT_MEM_CTX, p);
+        alloc->Free(HSHM_DEFAULT_MEM_CTX, p);
       }
     }
   }

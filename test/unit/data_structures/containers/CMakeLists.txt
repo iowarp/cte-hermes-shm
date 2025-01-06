@@ -1,30 +1,33 @@
 cmake_minimum_required(VERSION 3.10)
 project(hermes_shm)
 
-set(CMAKE_CXX_STANDARD 17)
+
 
 #------------------------------------------------------------------------------
 # Build Tests
 #------------------------------------------------------------------------------
 
+set(SOURCES
+    string.cc
+    pair.cc
+    #tuple.cc
+    list.cc
+    slist.cc
+    vector.cc
+    lifo_list_queue.cc
+    unordered_map.cc
+    charwrap.cc
+    pod_array.cc
+    chararr.cc
+    namespace.cc
+    key_set.cc)
+if (HERMES_ENABLE_OPENMP)
+    list(APPEND SOURCES spsc.cc mpsc.cc)
+endif()
 add_executable(test_data_structure_exec
         ${TEST_MAIN}/main.cc
         test_init.cc
-        string.cc
-        pair.cc
-        #tuple.cc
-        list.cc
-        slist.cc
-        vector.cc
-        lifo_list_queue.cc
-        unordered_map.cc
-        ring_queue.cc
-        charwrap.cc
-        ticket_queue.cc
-        pod_array.cc
-        chararr.cc
-        namespace.cc
-        key_set.cc
+        ${SOURCES}
 )
 
 add_dependencies(test_data_structure_exec hermes_shm_data_structures)

@@ -10,6 +10,9 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+#define HSHM_IS_COMPILING_SINGLETONS
+#define HSHM_IS_COMPILING
+
 #include "hermes_shm/constants/macros.h"
 #include "hermes_shm/memory/memory_manager.h"
 #include "hermes_shm/thread/lock/mutex.h"

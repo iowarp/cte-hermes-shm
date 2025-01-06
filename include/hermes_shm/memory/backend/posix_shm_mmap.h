@@ -17,10 +17,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/mman.h>
-#include <sys/shm.h>
-#include <sys/stat.h>
-#include <unistd.h>
 
 #include <string>
 
@@ -34,13 +30,13 @@ namespace hshm::ipc {
 
 class PosixShmMmap : public MemoryBackend, public UrlMemoryBackend {
  protected:
-  int fd_;
+  File fd_;
   hshm::chararr url_;
 
  public:
   /** Constructor */
   HSHM_CROSS_FUN
-  PosixShmMmap() : fd_(-1) {}
+  PosixShmMmap() {}
 
   /** Destructor */
   ~PosixShmMmap() override {
@@ -56,13 +52,14 @@ class PosixShmMmap : public MemoryBackend, public UrlMemoryBackend {
                 const hshm::chararr &url) {
     SetInitialized();
     Own();
-    shm_unlink(url.c_str());
-    fd_ = shm_open(url.c_str(), O_CREAT | O_RDWR, 0666);
-    if (fd_ < 0) {
-      HILOG(kError, "shm_open failed: {}", strerror(errno));
+    SystemInfo::DestroySharedMemory(url.c_str());
+    if (!SystemInfo::CreateNewSharedMemory(
+            fd_, url.c_str(), size + HERMES_SYSTEM_INFO->page_size_)) {
+      char err_buf[256];
+      strerror_s(err_buf, sizeof(err_buf), errno);
+      HILOG(kError, "shm_open failed: {}", err_buf);
       return false;
     }
-    _Reserve(size + HERMES_SYSTEM_INFO->page_size_);
     url_ = url;
     header_ = (MemoryBackendHeader *)_Map(HERMES_SYSTEM_INFO->page_size_, 0);
     header_->type_ = MemoryBackendType::kPosixShmMmap;
@@ -77,9 +74,10 @@ class PosixShmMmap : public MemoryBackend, public UrlMemoryBackend {
   bool shm_deserialize(const hshm::chararr &url) override {
     SetInitialized();
     Disown();
-    fd_ = shm_open(url.c_str(), O_RDWR, 0666);
-    if (fd_ < 0) {
-      HILOG(kError, "shm_open failed: {}", strerror(errno));
+    if (!SystemInfo::OpenSharedMemory(fd_, url.c_str())) {
+      char err_buf[256];
+      strerror_s(err_buf, sizeof(err_buf), errno);
+      HILOG(kError, "shm_open failed: {}", err_buf);
       return false;
     }
     header_ = (MemoryBackendHeader *)_Map(HERMES_SYSTEM_INFO->page_size_, 0);
@@ -95,22 +93,14 @@ class PosixShmMmap : public MemoryBackend, public UrlMemoryBackend {
   void shm_destroy() override { _Destroy(); }
 
  protected:
-  /** Reserve shared memory */
-  void _Reserve(size_t size) {
-    int ret = ftruncate64(fd_, static_cast<off64_t>(size));
-    if (ret < 0) {
-      HERMES_THROW_ERROR(SHMEM_RESERVE_FAILED);
-    }
-  }
+  /** Map shared memory */
+  virtual char *_Map(size_t size, i64 off) { return _ShmMap(size, off); };
 
   /** Map shared memory */
-  virtual char *_Map(size_t size, off64_t off) { return _ShmMap(size, off); };
-
-  /** Map shared memory */
-  char *_ShmMap(size_t size, off64_t off) {
-    char *ptr = reinterpret_cast<char *>(
-        mmap64(nullptr, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd_, off));
-    if (ptr == MAP_FAILED) {
+  char *_ShmMap(size_t size, i64 off) {
+    char *ptr =
+        reinterpret_cast<char *>(SystemInfo::MapSharedMemory(fd_, size, off));
+    if (!ptr) {
       HERMES_THROW_ERROR(SHMEM_CREATE_FAILED);
     }
     return ptr;
@@ -124,9 +114,10 @@ class PosixShmMmap : public MemoryBackend, public UrlMemoryBackend {
     if (!IsInitialized()) {
       return;
     }
-    munmap(data_, data_size_);
-    munmap(header_, HERMES_SYSTEM_INFO->page_size_);
-    close(fd_);
+    SystemInfo::UnmapMemory(reinterpret_cast<void *>(header_),
+                            HERMES_SYSTEM_INFO->page_size_);
+    SystemInfo::UnmapMemory(data_, data_size_);
+    SystemInfo::CloseSharedMemory(fd_);
     UnsetInitialized();
   }
 
@@ -136,7 +127,7 @@ class PosixShmMmap : public MemoryBackend, public UrlMemoryBackend {
       return;
     }
     _Detach();
-    shm_unlink(url_.c_str());
+    SystemInfo::DestroySharedMemory(url_.c_str());
     UnsetInitialized();
   }
 };

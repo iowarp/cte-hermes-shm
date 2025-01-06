@@ -3,7 +3,6 @@ set(GPU_RUNTIME "HIP" CACHE STRING "Switches between HIP and CUDA")
 set(GPU_RUNTIMES "HIP" "CUDA")
 set_property(CACHE GPU_RUNTIME PROPERTY STRINGS ${GPU_RUNTIMES})
 project(hermes_shm_cuda LANGUAGES C CXX)
-set(CMAKE_CXX_STANDARD 17)
 
 # Enable CUDA or ROCm
 set(GPU_RUNTIME "HIP" CACHE STRING "Switches between HIP and CUDA")

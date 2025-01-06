@@ -46,7 +46,7 @@ class RocmShmMmap : public PosixShmMmap {
   }
 
   /** Map shared memory */
-  char* _Map(size_t size, off64_t off) override {
+  char* _Map(size_t size, i64 off) override {
     char* ptr = _ShmMap(size, off);
     HIP_ERROR_CHECK(hipHostRegister(ptr, size, hipHostRegisterPortable));
     return ptr;

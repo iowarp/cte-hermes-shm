@@ -33,9 +33,6 @@
 #ifdef HERMES_ENABLE_ROCM
 #include <hip/hip_runtime.h>
 #endif
-#ifdef HERMES_ENABLE_WINDOWS_THREADS
-#include <windows.h>
-#endif
 
 namespace hshm {
 
@@ -60,17 +57,7 @@ class ThreadLocalData {
 };
 
 /** Thread-local key */
-union ThreadLocalKey {
-#ifdef HERMES_ENABLE_PTHREADS
-  pthread_key_t pthread_key_;
-#endif
-#ifdef HERMES_RPC_THALLIUM
-  ABT_key argobots_key_;
-#endif
-#ifdef HERMES_ENABLE_WINDOWS_THREADS
-  DWORD windows_key_;
-#endif
-};
+using hshm::ThreadLocalKey;
 
 /** Represents the generic operations of a thread */
 class ThreadModel {

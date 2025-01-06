@@ -214,7 +214,7 @@ set(HermesShm_INCLUDE_DIRS
         ${COMPRESS_INCLUDE_DIRS}
         ${HermesShm_INCLUDE_DIR})
 set(HermesShm_LIBRARIES
-        -lrt -ldl -lstdc++fs yaml-cpp
+        ${REAL_TIME_FLAGS} -lstdc++fs yaml-cpp
         ${SERIALIZATION_LIBS}
         ${ENCRYPT_LIBRARIES}
         ${COMPRESS_LIBRARIES}

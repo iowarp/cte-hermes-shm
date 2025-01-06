@@ -14,8 +14,9 @@
 #define HERMES_SHM_INCLUDE_HERMES_SHM_UTIL_SINGLETON_SINGLETON_H_
 
 #include <memory>
-#include "hermes_shm/constants/macros.h"
+
 #include "_easy_singleton.h"
+#include "hermes_shm/constants/macros.h"
 
 namespace hshm {
 
@@ -25,55 +26,56 @@ namespace hshm {
  * Requires user to define the static storage of obj_ in separate file.
  * @tparam T
  */
-template<typename T, bool WithLock>
+template <typename T, bool WithLock>
 class SingletonBase {
  private:
   /** static instance. */
-  static char data_[sizeof(T)];
-  static T* obj_;
-  static hshm::SpinLock lock_;
+  HSHM_DLL_SINGLETON static char data_[sizeof(T)];
+  HSHM_DLL_SINGLETON static T *obj_;
+  HSHM_DLL_SINGLETON static hshm::SpinLock lock_;
 
  public:
   /** Get or create an instance of type T */
-  template<typename ...Args>
-  inline static T *GetInstance(Args&& ...args) {
+  template <typename... Args>
+  inline static T *GetInstance(Args &&...args) {
     if (!obj_) {
       if constexpr (WithLock) {
         hshm::ScopedSpinLock lock(lock_, 0);
-        new((T *) data_) T(std::forward<Args>(args)...);
-        obj_ = (T *) data_;
+        new ((T *)data_) T(std::forward<Args>(args)...);
+        obj_ = (T *)data_;
       } else {
-        new((T *) data_) T(std::forward<Args>(args)...);
-        obj_ = (T *) data_;
+        new ((T *)data_) T(std::forward<Args>(args)...);
+        obj_ = (T *)data_;
       }
     }
     return obj_;
   }
 };
 
-template<typename T>
+template <typename T>
 using Singleton = SingletonBase<T, true>;
 
-template<typename T>
+template <typename T>
 using LockfreeSingleton = SingletonBase<T, false>;
 
-#define DEFINE_SINGLETON_BASE_CC(T, WithLock)\
-  template<> char hshm::SingletonBase<T, WithLock>::data_[sizeof(T)] = {0}; \
-  template<> T* hshm::SingletonBase<T, WithLock>::obj_ = nullptr; \
-  template<> hshm::SpinLock hshm::SingletonBase<T, WithLock>::lock_ = hshm::SpinLock();
+#define DEFINE_SINGLETON_BASE_CC(T, WithLock)                    \
+  template <>                                                    \
+  char hshm::SingletonBase<T, WithLock>::data_[sizeof(T)] = {0}; \
+  template <>                                                    \
+  T *hshm::SingletonBase<T, WithLock>::obj_ = nullptr;           \
+  template <>                                                    \
+  hshm::SpinLock hshm::SingletonBase<T, WithLock>::lock_ = hshm::SpinLock();
 
-#define DEFINE_SINGLETON_CC(T)\
-  DEFINE_SINGLETON_BASE_CC(T, true)
-#define DEFINE_LOCKFREE_SINGLETON_CC(T)\
-  DEFINE_SINGLETON_BASE_CC(T, false)
+#define DEFINE_SINGLETON_CC(T) DEFINE_SINGLETON_BASE_CC(T, true)
+#define DEFINE_LOCKFREE_SINGLETON_CC(T) DEFINE_SINGLETON_BASE_CC(T, false)
 
 #else
 // Regular singleton replace
-template<typename T>
+template <typename T>
 using Singleton = EasyLockfreeSingleton<T>;
 
 // Lockfree singleton replace
-template<typename T>
+template <typename T>
 using LockfreeSingleton = EasyLockfreeSingleton<T>;
 
 // Empty overrides for the defn macros

@@ -31,7 +31,7 @@ template <typename T, bool FORWARD_ITER, HSHM_CLASS_TEMPL>
 struct vector_iterator_templ {
  public:
   vector<T, HSHM_CLASS_TEMPL_ARGS> *vec_;
-  off64_t i_;
+  i64 i_;
 
   /** Default constructor */
   HSHM_INLINE_CROSS_FUN vector_iterator_templ() = default;
@@ -40,11 +40,11 @@ struct vector_iterator_templ {
   template <typename SizeT>
   HSHM_INLINE_CROSS_FUN explicit vector_iterator_templ(
       vector<T, HSHM_CLASS_TEMPL_ARGS> *vec, SizeT i)
-      : vec_(vec), i_(static_cast<off64_t>(i)) {}
+      : vec_(vec), i_(static_cast<i64>(i)) {}
 
   /** Construct an iterator (called from iterator) */
   HSHM_INLINE_CROSS_FUN explicit vector_iterator_templ(
-      vector<T, HSHM_CLASS_TEMPL_ARGS> *vec, off64_t i)
+      vector<T, HSHM_CLASS_TEMPL_ARGS> *vec, i64 i)
       : vec_(vec), i_(i) {}
 
   /** Copy constructor */
@@ -192,14 +192,14 @@ struct vector_iterator_templ {
     if constexpr (FORWARD_ITER) {
       return (i_ == 0);
     } else {
-      return (i_ == vec_->template size<off64_t>() - 1);
+      return (i_ == vec_->template size<i64>() - 1);
     }
   }
 
   /** Determine whether this iterator is the end iterator */
   HSHM_INLINE_CROSS_FUN bool is_end() const {
     if constexpr (FORWARD_ITER) {
-      return i_ >= vec_->template size<off64_t>();
+      return i_ >= vec_->template size<i64>();
     } else {
       return i_ == -1;
     }
@@ -695,7 +695,7 @@ class vector : public ShmContainer {
                                          size_t count = 1) {
     auto src = data_ar() + size() - 1;
     auto dst = src + count;
-    auto sz = static_cast<off64_t>(size());
+    auto sz = static_cast<i64>(size());
     for (auto i = sz - 1; i >= pos.i_; --i) {
       memcpy((void *)dst, (void *)src, sizeof(delay_ar<T>));
       dst -= 1;
@@ -720,27 +720,27 @@ class vector : public ShmContainer {
 
   /** End of the forward iterator */
   HSHM_INLINE_CROSS_FUN citerator_t cend() const {
-    return citerator_t(const_cast<vector *>(this), size<off64_t>());
+    return citerator_t(const_cast<vector *>(this), size<i64>());
   }
 
   /** Beginning of the reverse iterator */
   HSHM_INLINE_CROSS_FUN riterator_t rbegin() {
-    return riterator_t(this, size<off64_t>() - 1);
+    return riterator_t(this, size<i64>() - 1);
   }
 
   /** End of the reverse iterator */
   HSHM_INLINE_CROSS_FUN riterator_t rend() {
-    return citerator_t(this, (off64_t)-1);
+    return citerator_t(this, (i64)-1);
   }
 
   /** Beginning of the constant reverse iterator */
   HSHM_INLINE_CROSS_FUN criterator_t crbegin() const {
-    return criterator_t(const_cast<vector *>(this), size<off64_t>() - 1);
+    return criterator_t(const_cast<vector *>(this), size<i64>() - 1);
   }
 
   /** End of the constant reverse iterator */
   HSHM_INLINE_CROSS_FUN criterator_t crend() const {
-    return criterator_t(const_cast<vector *>(this), (off64_t)-1);
+    return criterator_t(const_cast<vector *>(this), (i64)-1);
   }
 
   /** Lets Thallium know how to serialize an hipc::vector. */

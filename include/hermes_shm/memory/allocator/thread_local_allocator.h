@@ -255,7 +255,7 @@ class _ThreadLocalAllocator : public Allocator {
    * */
   HSHM_CROSS_FUN
   size_t GetCurrentlyAllocatedSize() {
-    return header_->GetCurrentlyAllocatedSize();
+    return (size_t)header_->GetCurrentlyAllocatedSize();
   }
 
   /**

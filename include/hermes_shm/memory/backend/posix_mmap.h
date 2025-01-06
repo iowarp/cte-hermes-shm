@@ -85,32 +85,12 @@ class PosixMmap : public MemoryBackend {
   /** Map shared memory */
   template <typename T = char>
   T *_Map(size_t size) {
-#ifdef HERMES_ENABLE_PROCFS_SYSINFO
     T *ptr = reinterpret_cast<T *>(
-        mmap64(nullptr, MemoryAlignment::AlignToPageSize(size),
-               PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0));
-    if (ptr == MAP_FAILED) {
-      perror("map failed");
-      HERMES_THROW_ERROR(SHMEM_CREATE_FAILED);
-    }
-    return ptr;
-#elifdef HERMES_ENABLE_WINDOWS_SYSINFO
-    T *ptr = (T *)VirtualAlloc(
-        nullptr,      // lpAddress: pointer where the function should commit the
-                      // pages
-        size,         // dwSize: number of bytes to commit and reserve
-        MEM_COMMIT |  // flAllocationType: specifies whether this is a commit or
-                      // reserve operation
-            MEM_RESERVE,  // flProtect: memory protection for committed pages
-                          // (in this case, PAGE_READWRITE)
-        PAGE_READWRITE);  // dwFlags: flags used by the operating system to
-                          // manage memory
-
+        SystemInfo::MapPrivateMemory(MemoryAlignment::AlignToPageSize(size)));
     if (!ptr) {
       HERMES_THROW_ERROR(SHMEM_CREATE_FAILED);
     }
     return ptr;
-#endif
   }
 
   /** Unmap shared memory */
@@ -118,7 +98,7 @@ class PosixMmap : public MemoryBackend {
     if (!IsInitialized()) {
       return;
     }
-    munmap(reinterpret_cast<void *>(header_), total_size_);
+    SystemInfo::UnmapMemory(reinterpret_cast<void *>(header_), total_size_);
     UnsetInitialized();
   }
 

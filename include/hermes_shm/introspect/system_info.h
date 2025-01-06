@@ -14,14 +14,9 @@
 #define HERMES_SYSINFO_INFO_H_
 
 #include "hermes_shm/constants/macros.h"
-#if defined(HERMES_ENABLE_PROCFS_SYSINFO)
+#ifdef HERMES_ENABLE_PROCFS_SYSINFO
 #include <sys/sysinfo.h>
 #include <unistd.h>
-#elif defined(HERMES_ENABLE_WINDOWS_SYSINFO)
-#include <windows.h>
-#else
-#error \
-    "Must define either HERMES_ENABLE_PROCFS_SYSINFO or HERMES_ENABLE_WINDOWS_SYSINFO"
 #endif
 
 #include <fstream>
@@ -32,10 +27,36 @@
 
 #define HERMES_SYSTEM_INFO \
   hshm::LockfreeSingleton<hshm::SystemInfo>::GetInstance()
-#define HERMES_SYSTEM_INFO_T hshm::SystemInfo*
+#define HERMES_SYSTEM_INFO_T hshm::SystemInfo *
 
 namespace hshm {
 
+/** DWORD type for windows compatability */
+typedef u32 DWORD;
+
+/** HANDLE type for windows compatability */
+typedef void *HANDLE;
+
+/** Thread-local key */
+union ThreadLocalKey {
+#ifdef HERMES_ENABLE_PTHREADS
+  pthread_key_t pthread_key_;
+#endif
+#ifdef HERMES_RPC_THALLIUM
+  ABT_key argobots_key_;
+#endif
+#ifdef HERMES_ENABLE_WINDOWS_THREADS
+  DWORD windows_key_;
+#endif
+};
+
+/** File wrapper */
+union File {
+  int posix_fd_;
+  HANDLE windows_fd_;
+};
+
+/** A unification of certain OS system calls */
 struct SystemInfo {
   int pid_;
   int ncpu_;
@@ -47,189 +68,80 @@ struct SystemInfo {
   std::vector<size_t> cur_cpu_freq_;
 #endif
 
+  HSHM_DLL
   HSHM_CROSS_FUN
-  void RefreshInfo() {
-#ifdef HSHM_IS_HOST
-    pid_ = GetPid();
-    ncpu_ = GetCpuCount();
-    page_size_ = GetPageSize();
-    uid_ = GetUid();
-    gid_ = GetGid();
-    ram_size_ = GetRamCapacity();
-    cur_cpu_freq_.resize(ncpu_);
-    RefreshCpuFreqKhz();
-#endif
-  }
+  void RefreshInfo();
 
-  void RefreshCpuFreqKhz() {
-#ifdef HSHM_IS_HOST
-    for (int i = 0; i < ncpu_; ++i) {
-      cur_cpu_freq_[i] = GetCpuFreqKhz(i);
-    }
-#endif
-  }
+  HSHM_DLL void RefreshCpuFreqKhz();
 
-  size_t GetCpuFreqKhz(int cpu) {
-#ifdef HSHM_IS_HOST
-#if defined(HERMES_ENABLE_PROCFS_SYSINFO)
-    // Read /sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_cur_freq
-    std::string cpu_str = hshm::Formatter::format(
-        "/sys/devices/system/cpu/cpu{}/cpufreq/cpuinfo_cur_freq", cpu);
-    std::ifstream cpu_file(cpu_str);
-    size_t freq_khz;
-    cpu_file >> freq_khz;
-    return freq_khz;
-#elif defined(HERMES_ENABLE_WINDOWS_SYSINFO)
-    return 0;
-#endif
-#else
-    return 0;
-#endif
-  }
+  HSHM_DLL size_t GetCpuFreqKhz(int cpu);
 
-  size_t GetCpuMaxFreqKhz(int cpu) {
-#ifdef HSHM_IS_HOST
-#if defined(HERMES_ENABLE_PROCFS_SYSINFO)
-    // Read /sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_cur_freq
-    std::string cpu_str = hshm::Formatter::format(
-        "/sys/devices/system/cpu/cpu{}/cpufreq/cpuinfo_max_freq", cpu);
-    std::ifstream cpu_file(cpu_str);
-    size_t freq_khz;
-    cpu_file >> freq_khz;
-    return freq_khz;
-#elif defined(HERMES_ENABLE_WINDOWS_SYSINFO)
-    return 0;
-#endif
-#else
-    return 0;
-#endif
-  }
+  HSHM_DLL size_t GetCpuMaxFreqKhz(int cpu);
 
-  size_t GetCpuMinFreqKhz(int cpu) {
-#ifdef HSHM_IS_HOST
-#if defined(HERMES_ENABLE_PROCFS_SYSINFO)
-    // Read /sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_cur_freq
-    std::string cpu_str = hshm::Formatter::format(
-        "/sys/devices/system/cpu/cpu{}/cpufreq/cpuinfo_min_freq", cpu);
-    std::ifstream cpu_file(cpu_str);
-    size_t freq_khz;
-    cpu_file >> freq_khz;
-    return freq_khz;
-#elif defined(HERMES_ENABLE_WINDOWS_SYSINFO)
-    return 0;
-#endif
-#else
-    return 0;
-#endif
-  }
+  HSHM_DLL size_t GetCpuMinFreqKhz(int cpu);
 
-  size_t GetCpuMinFreqMhz(int cpu) { return GetCpuMinFreqKhz(cpu) / 1000; }
+  HSHM_DLL size_t GetCpuMinFreqMhz(int cpu);
 
-  size_t GetCpuMaxFreqMhz(int cpu) { return GetCpuMaxFreqKhz(cpu) / 1000; }
+  HSHM_DLL size_t GetCpuMaxFreqMhz(int cpu);
 
-  void SetCpuFreqMhz(int cpu, size_t cpu_freq_mhz) {
-    SetCpuFreqKhz(cpu, cpu_freq_mhz * 1000);
-  }
+  HSHM_DLL void SetCpuFreqMhz(int cpu, size_t cpu_freq_mhz);
 
-  void SetCpuFreqKhz(int cpu, size_t cpu_freq_khz) {
-    SetCpuMinFreqKhz(cpu, cpu_freq_khz);
-    SetCpuMaxFreqKhz(cpu, cpu_freq_khz);
-  }
+  HSHM_DLL void SetCpuFreqKhz(int cpu, size_t cpu_freq_khz);
 
-  void SetCpuMinFreqKhz(int cpu, size_t cpu_freq_khz) {
-#if defined(HERMES_ENABLE_PROCFS_SYSINFO)
-    std::string cpu_str = hshm::Formatter::format(
-        "/sys/devices/system/cpu/cpu{}/cpufreq/scaling_min_freq", cpu);
-    std::ofstream min_freq_file(cpu_str);
-    min_freq_file << cpu_freq_khz;
-#endif
-  }
+  HSHM_DLL void SetCpuMinFreqKhz(int cpu, size_t cpu_freq_khz);
 
-  void SetCpuMaxFreqKhz(int cpu, size_t cpu_freq_khz) {
-#if defined(HERMES_ENABLE_PROCFS_SYSINFO)
-    std::string cpu_str = hshm::Formatter::format(
-        "/sys/devices/system/cpu/cpu{}/cpufreq/scaling_max_freq", cpu);
-    std::ofstream max_freq_file(cpu_str);
-    max_freq_file << cpu_freq_khz;
-#endif
-  }
+  HSHM_DLL void SetCpuMaxFreqKhz(int cpu, size_t cpu_freq_khz);
 
-  static int GetCpuCount() {
-#if defined(HERMES_ENABLE_PROCFS_SYSINFO)
-    return get_nprocs_conf();
-#elif defined(HERMES_ENABLE_WINDOWS_SYSINFO)
-    SYSTEM_INFO sys_info;
-    GetSystemInfo(&sys_info);
-    return sys_info.dwNumberOfProcessors;
-#endif
-  }
+  HSHM_DLL static int GetCpuCount();
 
-  static int GetPageSize() {
-#if defined(HERMES_ENABLE_PROCFS_SYSINFO)
-    return getpagesize();
-#elif defined(HERMES_ENABLE_WINDOWS_SYSINFO)
-    SYSTEM_INFO sys_info;
-    GetSystemInfo(&sys_info);
-    return sys_info.dwPageSize;
-#endif
-  }
+  HSHM_DLL static int GetPageSize();
 
-  static int GetTid() {
-#if defined(HERMES_ENABLE_PROCFS_SYSINFO)
-#ifdef SYS_gettid
-    return (pid_t)syscall(SYS_gettid);
-#else
-#warning "GetTid is not defined"
-    return GetPid();
-#endif
-#elif defined(HERMES_ENABLE_WINDOWS_SYSINFO)
-    return GetCurrentThreadId();
-#endif
-  }
+  HSHM_DLL static int GetTid();
 
-  static int GetPid() {
-#if defined(HERMES_ENABLE_PROCFS_SYSINFO)
-#ifdef SYS_getpid
-    return (pid_t)syscall(SYS_getpid);
-#else
-#warning "GetPid is not defined"
-    return 0;
-#endif
-#elif defined(HERMES_ENABLE_WINDOWS_SYSINFO)
-    return GetCurrentProcessId();
-#endif
-  }
+  HSHM_DLL static int GetPid();
 
-  static int GetUid() {
-#if defined(HERMES_ENABLE_PROCFS_SYSINFO)
-    return getuid();
-#elif defined(HERMES_ENABLE_WINDOWS_SYSINFO)
-    return 0;
-#endif
-  };
+  HSHM_DLL static int GetUid();
 
-  static int GetGid() {
-#if defined(HERMES_ENABLE_PROCFS_SYSINFO)
-    return getgid();
-#elif defined(HERMES_ENABLE_WINDOWS_SYSINFO)
-    return 0;
-#endif
-  };
+  HSHM_DLL static int GetGid();
 
-  static size_t GetRamCapacity() {
-#if defined(HERMES_ENABLE_PROCFS_SYSINFO)
-    struct sysinfo info;
-    sysinfo(&info);
-    return info.totalram;
-#elif defined(HERMES_ENABLE_WINDOWS_SYSINFO)
-    MEMORYSTATUSEX mem_info;
-    mem_info.dwLength = sizeof(mem_info);
-    GlobalMemoryStatusEx(&mem_info);
-    return (size_t)mem_info.ullTotalPhys;
-#endif
-  }
+  HSHM_DLL static size_t GetRamCapacity();
+
+  HSHM_DLL static void YieldThread();
+
+  HSHM_DLL static bool CreateTls(ThreadLocalKey &key, void *data);
+
+  HSHM_DLL static bool SetTls(const ThreadLocalKey &key, void *data);
+
+  HSHM_DLL static void *GetTls(const ThreadLocalKey &key);
+
+  HSHM_DLL static bool CreateNewSharedMemory(File &fd, const std::string &name,
+                                             size_t size);
+
+  HSHM_DLL static bool OpenSharedMemory(File &fd, const std::string &name);
+
+  HSHM_DLL static void CloseSharedMemory(File &file);
+
+  HSHM_DLL static void DestroySharedMemory(const std::string &name);
+
+  HSHM_DLL static void *MapPrivateMemory(size_t size);
+
+  HSHM_DLL static void *MapSharedMemory(const File &fd, size_t size,
+                                        size_t off);
+
+  HSHM_DLL static void UnmapMemory(void *ptr, size_t size);
+
+  HSHM_DLL static void *AlignedAlloc(size_t alignment, size_t size);
+
+  HSHM_DLL static std::string getenv(const char *name, size_t max_size);
+
+  HSHM_DLL static void setenv(const char *name, const std::string &value,
+                              int overwrite);
+
+  HSHM_DLL static void unsetenv(const char *name);
 };
 
 }  // namespace hshm
+
+#undef WIN32_LEAN_AND_MEAN
 
 #endif  // HERMES_SYSINFO_INFO_H_

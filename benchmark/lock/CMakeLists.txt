@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
 project(hermes_shm)
 
-set(CMAKE_CXX_STANDARD 17)
+
 
 if (HERMES_ENABLE_OPENMP)
     include_directories( ${Boost_INCLUDE_DIRS} )

@@ -21,8 +21,8 @@
 #include <vector>
 
 #include "formatter.h"
+#include "hermes_shm/introspect/system_info.h"
 #include "singleton.h"
-#include "system_info.h"
 #include "timer.h"
 
 namespace hshm {
@@ -98,8 +98,9 @@ class Logger {
 #ifdef HSHM_IS_HOST
     memset(disabled_, 0, sizeof(disabled_));
     // exe_name_ = std::filesystem::path(exe_path_).filename().string();
-    auto verbosity_env = getenv("HERMES_LOG_EXCLUDE");
-    if (verbosity_env && strlen(verbosity_env)) {
+    std::string verbosity_env =
+        hshm::SystemInfo::getenv("HERMES_LOG_EXCLUDE", MEGABYTES(1));
+    if (!verbosity_env.empty()) {
       std::vector<int> verbosity_levels;
       std::string verbosity_str(verbosity_env);
       std::stringstream ss(verbosity_str);
@@ -110,11 +111,11 @@ class Logger {
       }
     }
 
-    auto env = getenv("HERMES_LOG_OUT");
-    if (env == nullptr) {
+    std::string env = hshm::SystemInfo::getenv("HERMES_LOG_OUT", MEGABYTES(1));
+    if (env.empty()) {
       fout_ = nullptr;
     } else {
-      fout_ = fopen(env, "w");
+      fout_ = fopen(env.c_str(), "w");
     }
 #endif
   }

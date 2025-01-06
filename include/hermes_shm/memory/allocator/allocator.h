@@ -92,7 +92,7 @@ class MemContext {
 };
 
 /** The allocator information struct */
-struct Allocator {
+class Allocator {
  public:
   AllocatorType type_;
   AllocatorId id_;

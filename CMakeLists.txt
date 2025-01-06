@@ -1,6 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
 project(hermes_shm LANGUAGES C CXX)
-
 set(CMAKE_CXX_STANDARD 17)
 
 #------------------------------------------------------------------------------
@@ -11,6 +10,7 @@ set(HERMES_SHM_VERSION_MINOR 0)
 set(HERMES_SHM_VERSION_PATCH 0)
 set(HERMES_SHM_ROOT ${CMAKE_CURRENT_SOURCE_DIR})
 include_directories(${HERMES_SHM_ROOT}/include)
+include_directories(${PROJECT_BINARY_DIR}/include)
 
 #------------------------------------------------------------------------------
 # Options
@@ -42,9 +42,11 @@ option(HERMES_NO_COMPILE "Disable compiling / installing this library" OFF)
 if (WIN32)
     message(STATUS "Detected Windows OS")
     set(HERMES_ENABLE_WINDOWS_SYSINFO ON)
+    set(HERMES_ENABLE_WINDOWS_THREADS ON)
 else()
     message(STATUS "Detected non-Windows OS")
     set(HERMES_ENABLE_PROCFS_SYSINFO ON)
+    set(HERMES_ENABLE_PTHREADS ON)
 endif()
 
 if (HERMES_NO_COMPILE)
@@ -56,13 +58,6 @@ if (HERMES_NO_COMPILE)
     )
     return()
 endif()
-
-# Configure the hermes_shm options
-configure_file(
-        ${CMAKE_CURRENT_SOURCE_DIR}/include/hermes_shm/constants/settings.h_templ
-        ${PROJECT_BINARY_DIR}/include/hermes_shm/constants/settings.h @ONLY
-)
-include_directories(${PROJECT_BINARY_DIR}/include)
 
 #------------------------------------------------------------------------------
 # Setup CMake Environment
@@ -104,7 +99,7 @@ endif()
 #------------------------------------------------------------------------------
 # Optimization
 #------------------------------------------------------------------------------
-set(CMAKE_CXX_STANDARD 17)
+
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "MinGW" OR CMAKE_CXX_COMPILER STREQUAL "Intel")
     if(CMAKE_BUILD_TYPE STREQUAL "Debug")
@@ -115,7 +110,8 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clan
         message("IN RELEASE MODE")
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O3")
     endif()
-    add_compile_definitions(HSHM_COMPILER "GNU")
+    set(HSHM_COMPILER_GNU "ON")
+    set(REAL_TIME_FLAGS "-lrt -ldl")
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     if(CMAKE_BUILD_TYPE STREQUAL "Debug")
         message("IN DEBUG MODE")
@@ -125,7 +121,9 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
         message("IN RELEASE MODE")
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /O2")
     endif()
-    add_compile_definitions(HSHM_COMPILER "MSVC")
+    set(HSHM_COMPILER_MSVC "ON")
+else()
+    message(FATAL_ERROR "Unsupported compiler ${CMAKE_CXX_COMPILER_ID}")
 endif()
 
 #------------------------------------------------------------------------------
@@ -322,6 +320,12 @@ endif()
 # Install hshm
 #------------------------------------------------------------------------------
 install(DIRECTORY include DESTINATION ${CMAKE_INSTALL_PREFIX})
+
+# Configure the hermes_shm options
+configure_file(
+        ${CMAKE_CURRENT_SOURCE_DIR}/include/hermes_shm/constants/settings.h_templ
+        ${PROJECT_BINARY_DIR}/include/hermes_shm/constants/settings.h @ONLY
+)
 
 configure_file(
         ${CMAKE_CURRENT_SOURCE_DIR}/CMake/HermesShmConfig.cmake

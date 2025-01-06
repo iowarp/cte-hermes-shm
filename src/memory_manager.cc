@@ -10,6 +10,9 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+#define HSHM_IS_COMPILING_SINGLETONS
+#define HSHM_IS_COMPILING
+
 #include "hermes_shm/memory/memory_manager.h"
 
 #include "hermes_shm/data_structures/ipc/unordered_map.h"
@@ -100,7 +103,7 @@ HSHM_CROSS_FUN void MemoryManager::DestroyBackend(
   backend->Own();
   auto alloc = HERMES_MEMORY_MANAGER->GetAllocator<HSHM_ROOT_ALLOC_T>(
       ptr.shm_.alloc_id_);
-  alloc->template DelObjLocal(HSHM_DEFAULT_MEM_CTX, ptr);
+  alloc->DelObjLocal(HSHM_DEFAULT_MEM_CTX, ptr);
 }
 
 #ifdef HERMES_ENABLE_CUDA

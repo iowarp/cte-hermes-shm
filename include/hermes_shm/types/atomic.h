@@ -188,7 +188,7 @@ struct nonatomic {
 };
 
 /** A wrapper for CUDA atomic operations */
-#if defined(HERMES_ENABLE_CUDA) or defined(HERMES_ENABLE_ROCM)
+#if defined(HERMES_ENABLE_CUDA) || defined(HERMES_ENABLE_ROCM)
 template <typename T>
 struct rocm_atomic {
   T x;

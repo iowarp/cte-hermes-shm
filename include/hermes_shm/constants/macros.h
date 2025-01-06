@@ -15,54 +15,44 @@
 
 #include "hermes_shm/constants/settings.h"
 
-/** Bytes -> Bytes */
-#ifndef BYTES
-#define BYTES(n) (size_t)((n) * (((size_t)1) << 0))
+/** Function content selector for CUDA */
+#ifdef __CUDA_ARCH__
+#define HSHM_IS_CUDA_GPU
 #endif
 
-/** KILOBYTES -> Bytes */
-#ifndef KILOBYTES
-#define KILOBYTES(n) (size_t)((n) * (((size_t)1) << 10))
+/** Function content selector for ROCm */
+#ifdef __HIP_DEVICE_COMPILE__
+#define HSHM_IS_ROCM_GPU
 #endif
 
-/** MEGABYTES -> Bytes */
-#ifndef MEGABYTES
-#define MEGABYTES(n) (size_t)((n) * (((size_t)1) << 20))
+/** Function content selector for CPU vs GPU */
+#if defined(HSHM_IS_CUDA_GPU) || defined(HSHM_IS_ROCM_GPU)
+#define HSHM_IS_GPU
+#else
+#define HSHM_IS_HOST
 #endif
 
-/** GIGABYTES -> Bytes */
-#ifndef GIGABYTES
-#define GIGABYTES(n) (size_t)((n) * (((size_t)1) << 30))
+/** Import / export flags for MSVC DLLs */
+#ifdef HSHM_COMPILER_MSVC
+#define HSHM_DLL_EXPORT __declspec(dllexport)
+#define HSHM_DLL_IMPORT __declspec(dllimport)
+#else
+#define HSHM_DLL_EXPORT
+#define HSHM_DLL_IMPORT
 #endif
 
-/** TERABYTES -> Bytes */
-#ifndef TERABYTES
-#define TERABYTES(n) (size_t)((n) * (((size_t)1) << 40))
+/** DLL import / export for HSHM code */
+#ifdef HSHM_IS_COMPILING
+#define HSHM_DLL HSHM_DLL_EXPORT
+#else
+#define HSHM_DLL HSHM_DLL_IMPORT
 #endif
 
-/** PETABYTES -> Bytes */
-#ifndef PETABYTES
-#define PETABYTES(n) (size_t)((n) * (((size_t)1) << 50))
-#endif
-
-/** Seconds to nanoseconds */
-#ifndef SECONDS
-#define SECONDS(n) (size_t)((n) * 1000000000)
-#endif
-
-/** Milliseconds to nanoseconds */
-#ifndef MILLISECONDS
-#define MILLISECONDS(n) (size_t)((n) * 1000000)
-#endif
-
-/** Microseconds to nanoseconds */
-#ifndef MICROSECONDS
-#define MICROSECONDS(n) (size_t)((n) * 1000)
-#endif
-
-/** Nanoseconds to nanoseconds */
-#ifndef NANOSECONDS
-#define NANOSECONDS(n) (size_t)(n)
+/** DLL import / export for singletons */
+#ifdef HSHM_IS_COMPILING_SINGLETONS
+#define HSHM_DLL_SINGLETON HSHM_DLL_EXPORT
+#else
+#define HSHM_DLL_SINGLETON HSHM_DLL_IMPORT
 #endif
 
 /**
@@ -113,16 +103,16 @@
 /**
  * Ensure that the compiler ALWAYS inlines a particular function.
  * */
-#ifdef HSHM_MSVC
+#if defined(HSHM_COMPILER_MSVC)
 #define HSHM_INLINE_FLAG __forceinline
-#elifdef HSHM_GNU
+#elif defined(HSHM_COMPILER_GNU)
 #define HSHM_INLINE_FLAG __attribute__((always_inline))
 #endif
 
 #ifndef HSHM_DEBUG
-#define HSHM_INLINE HSHM_INLINE_FLAG
+#define HSHM_INLINE
 #else
-#define HSHM_INLINE inline
+#define HSHM_INLINE inline HSHM_INLINE_FLAG
 #endif
 
 /** Function decorators */
@@ -130,23 +120,6 @@
 #define HSHM_HOST_FUN ROCM_HOST
 #define HSHM_GPU_FUN ROCM_DEVICE
 #define HSHM_CROSS_FUN ROCM_HOST_DEVICE
-
-/** Function content selector for CUDA */
-#ifdef __CUDA_ARCH__
-#define HSHM_IS_CUDA_GPU
-#endif
-
-/** Function content selector for ROCm */
-#ifdef __HIP_DEVICE_COMPILE__
-#define HSHM_IS_ROCM_GPU
-#endif
-
-/** Function internals */
-#if defined(HSHM_IS_CUDA_GPU) || defined(HSHM_IS_ROCM_GPU)
-#define HSHM_IS_GPU
-#else
-#define HSHM_IS_HOST
-#endif
 
 /** Macro for inline function */
 #define HSHM_INLINE_CROSS_FUN HSHM_INLINE HSHM_CROSS_FUN
@@ -208,7 +181,7 @@ namespace hipc = hshm::ipc;
 #if defined(HERMES_ENABLE_PTHREADS)
 #define HSHM_DEFAULT_THREAD_MODEL hshm::thread::Pthread
 #elif defined(HERMES_ENABLE_WINDOWS_THREADS)
-#define HSHM_DEFAULT_THREAD_MODEL hshm::thread::Windows
+#define HSHM_DEFAULT_THREAD_MODEL hshm::thread::WindowsThread
 #endif
 #endif
 
