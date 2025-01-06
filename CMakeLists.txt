@@ -20,7 +20,6 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 option(BUILD_SHARED_LIBS "Build shared libraries (.dll/.so) instead of static ones (.lib/.a)" ON)
 option(BUILD_HSHM_TESTS "Build tests" ON)
 option(BUILD_HSHM_BENCHMARKS "Build benchmarks" OFF)
-option(BUILD_Boost_TESTS "Build tests which depend on libboost" ON)
 
 option(HERMES_ENABLE_MPI "Enable MPI support" OFF)
 option(HERMES_RPC_THALLIUM "Build tests which depend on thallium" OFF)
@@ -32,7 +31,6 @@ option(HERMES_ENABLE_DOXYGEN "Check how well the code is documented" OFF)
 option(HERMES_ENABLE_WINDOWS_THREADS "Support spawning windows threads" OFF)
 option(HERMES_ENABLE_PTHREADS "Support spawning pthreads" OFF)
 option(HERMES_DEBUG_LOCK "Used for debugging locks" OFF)
-option(HERMES_ENABLE_PROFILING "View profiling logs" OFF)
 option(HERMES_ENABLE_COMPRESS "Enable compression" OFF)
 option(HERMES_ENABLE_ENCRYPT "Enable encryption" OFF)
 option(HERMES_USE_ELF "Enable elf" OFF)
@@ -174,10 +172,8 @@ if(HERMES_ENABLE_CEREAL)
 endif()
 
 # Boost
-if(BUILD_Boost_TESTS)
-    find_package(Boost REQUIRED)
-    message(STATUS "found boost.h at ${Boost_INCLUDE_DIRS}")
-endif()
+find_package(Boost REQUIRED)
+message(STATUS "found boost.h at ${Boost_INCLUDE_DIRS}")
 
 # Compression libraries
 if(HERMES_ENABLE_COMPRESS)

@@ -20,7 +20,6 @@
 #cmakedefine HERMES_ENABLE_DOXYGEN
 #cmakedefine HERMES_CXX_PROFILE
 #cmakedefine HERMES_DEBUG_LOCK
-#cmakedefine HERMES_ENABLE_PROFILING
 #cmakedefine HERMES_ENABLE_COMPRESS
 #cmakedefine HERMES_ENABLE_ENCRYPT
 #cmakedefine HERMES_USE_ELF
