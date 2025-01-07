@@ -11,6 +11,7 @@
 
 namespace hshm::ipc {
 
+#ifdef HERMES_ENABLE_CEREAL
 /** Save cereal binary archive */
 template <typename Ar, typename T>
 void save(Ar &ar, const cereal::BinaryData<T> &data) {
@@ -22,6 +23,7 @@ template <typename Ar, typename T>
 void load(Ar &ar, cereal::BinaryData<T> &data) {
   ar.read_binary((char *)data.data, (size_t)data.size);
 }
+#endif
 
 /** Save string */
 template <typename Ar>

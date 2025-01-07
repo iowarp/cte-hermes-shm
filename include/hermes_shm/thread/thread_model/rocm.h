@@ -15,8 +15,6 @@
 
 #include <errno.h>
 
-#include <thallium.hpp>
-
 #include "hermes_shm/introspect/system_info.h"
 #include "hermes_shm/util/errors.h"
 #include "thread_model.h"

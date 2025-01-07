@@ -163,6 +163,13 @@ endif()
 # This is for compatability with SPACK
 SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
+# Pkg-Config
+find_package(PkgConfig REQUIRED)
+if(PkgConfig)
+  message(STATUS "found pkg config")
+endif()
+
+
 # Catch2
 find_package(Catch2 3.0.1 REQUIRED)
 message(STATUS "found catch2.h at ${Catch2_CXX_INCLUDE_DIRS}")

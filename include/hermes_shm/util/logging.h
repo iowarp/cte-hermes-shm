@@ -98,7 +98,7 @@ class Logger {
 #ifdef HSHM_IS_HOST
     memset(disabled_, 0, sizeof(disabled_));
     // exe_name_ = std::filesystem::path(exe_path_).filename().string();
-    std::string verbosity_env = hshm::SystemInfo::getenv(
+    std::string verbosity_env = hshm::SystemInfo::Getenv(
         "HERMES_LOG_EXCLUDE", hshm::Unit<size_t>::Megabytes(1));
     if (!verbosity_env.empty()) {
       std::vector<int> verbosity_levels;
@@ -111,7 +111,7 @@ class Logger {
       }
     }
 
-    std::string env = hshm::SystemInfo::getenv(
+    std::string env = hshm::SystemInfo::Getenv(
         "HERMES_LOG_OUT", hshm::Unit<size_t>::Megabytes(1));
     if (env.empty()) {
       fout_ = nullptr;

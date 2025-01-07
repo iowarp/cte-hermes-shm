@@ -7,7 +7,12 @@
 
 #include "hermes_shm/constants/macros.h"
 #if defined(HERMES_ENABLE_PROCFS_SYSINFO)
+#include <fcntl.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <sys/syscall.h>
 #include <sys/sysinfo.h>
+#include <sys/types.h>
 #include <unistd.h>
 #elif defined(HERMES_ENABLE_WINDOWS_SYSINFO)
 #include <windows.h>
@@ -297,7 +302,6 @@ void *SystemInfo::MapPrivateMemory(size_t size) {
 #if defined(HERMES_ENABLE_PROCFS_SYSINFO)
   return mmap64(nullptr, size, PROT_READ | PROT_WRITE,
                 MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-  return ptr;
 #elif defined(HERMES_ENABLE_WINDOWS_SYSINFO)
   return VirtualAlloc(nullptr, size, MEM_COMMIT, PAGE_READWRITE);
 #endif
@@ -346,9 +350,9 @@ void *SystemInfo::AlignedAlloc(size_t alignment, size_t size) {
 #endif
 }
 
-std::string SystemInfo::getenv(const char *name, size_t max_size) {
+std::string SystemInfo::Getenv(const char *name, size_t max_size) {
 #if defined(HERMES_ENABLE_PROCFS_SYSINFO)
-  char *var = std::getenv(name);
+  char *var = getenv(name);
   if (var == nullptr) {
     return "";
   }
@@ -361,18 +365,18 @@ std::string SystemInfo::getenv(const char *name, size_t max_size) {
 #endif
 }
 
-void SystemInfo::setenv(const char *name, const std::string &value,
+void SystemInfo::Setenv(const char *name, const std::string &value,
                         int overwrite) {
 #if defined(HERMES_ENABLE_PROCFS_SYSINFO)
-  std::setenv(name, value, overwrite);
+  setenv(name, value.c_str(), overwrite);
 #elif defined(HERMES_ENABLE_WINDOWS_SYSINFO)
   SetEnvironmentVariable(name, value.c_str());
 #endif
 }
 
-void SystemInfo::unsetenv(const char *name) {
+void SystemInfo::Unsetenv(const char *name) {
 #if defined(HERMES_ENABLE_PROCFS_SYSINFO)
-  std::unsetenv(name);
+  unsetenv(name);
 #elif defined(HERMES_ENABLE_WINDOWS_SYSINFO)
   SetEnvironmentVariable(name, nullptr);
 #endif

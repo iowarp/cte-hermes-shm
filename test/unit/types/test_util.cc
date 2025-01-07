@@ -39,9 +39,9 @@ TEST_CASE("TypeSwitch") {
 }
 
 TEST_CASE("TestPathParser") {
-  hshm::SystemInfo::setenv("PATH_PARSER_TEST", "HOME", true);
+  hshm::SystemInfo::Setenv("PATH_PARSER_TEST", "HOME", true);
   auto x = hshm::ConfigParse::ExpandPath("${PATH_PARSER_TEST}/hello");
-  hshm::SystemInfo::unsetenv("PATH_PARSER_TEST");
+  hshm::SystemInfo::Unsetenv("PATH_PARSER_TEST");
   auto y = hshm::ConfigParse::ExpandPath("${PATH_PARSER_TEST}/hello");
   auto z = hshm::ConfigParse::ExpandPath("${HOME}/hello");
   REQUIRE(x == "HOME/hello");

@@ -55,8 +55,7 @@ class PosixShmMmap : public MemoryBackend, public UrlMemoryBackend {
     SystemInfo::DestroySharedMemory(url.c_str());
     if (!SystemInfo::CreateNewSharedMemory(
             fd_, url.c_str(), size + HERMES_SYSTEM_INFO->page_size_)) {
-      char err_buf[256];
-      strerror_s(err_buf, sizeof(err_buf), errno);
+      char *err_buf = strerror(errno);
       HILOG(kError, "shm_open failed: {}", err_buf);
       return false;
     }
@@ -75,8 +74,7 @@ class PosixShmMmap : public MemoryBackend, public UrlMemoryBackend {
     SetInitialized();
     Disown();
     if (!SystemInfo::OpenSharedMemory(fd_, url.c_str())) {
-      char err_buf[256];
-      strerror_s(err_buf, sizeof(err_buf), errno);
+      const char *err_buf = strerror(errno);
       HILOG(kError, "shm_open failed: {}", err_buf);
       return false;
     }

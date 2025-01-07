@@ -131,12 +131,12 @@ struct SystemInfo {
 
   HSHM_DLL static void *AlignedAlloc(size_t alignment, size_t size);
 
-  HSHM_DLL static std::string getenv(const char *name, size_t max_size);
+  HSHM_DLL static std::string Getenv(const char *name, size_t max_size);
 
-  HSHM_DLL static void setenv(const char *name, const std::string &value,
+  HSHM_DLL static void Setenv(const char *name, const std::string &value,
                               int overwrite);
 
-  HSHM_DLL static void unsetenv(const char *name);
+  HSHM_DLL static void Unsetenv(const char *name);
 };
 
 }  // namespace hshm
