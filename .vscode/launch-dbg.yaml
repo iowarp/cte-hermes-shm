@@ -1,22 +1,78 @@
 macros:
-  debug: 
+  debug:
     version: 0.2.0
     configurations:
       - name: $(launch-name)
         type: cppdbg
         request: launch
         program: ${workspaceFolder}/build/bin/$(program)
-        args: []
+        args: $(args)
         stopAtEntry: false
         cwd: ${workspaceFolder}
         environment: []
         externalConsole: false
         MIMode: gdb
         setupCommands:
-            - description: Enable pretty-printing for gdb,
-              text: -enable-pretty-printing,
-              ignoreFailures: true
-test-local-serialize: 
+          - description: Enable pretty-printing for gdb,
+            text: -enable-pretty-printing,
+            ignoreFailures: true
+  rdebug:
+    name: $(launch-name),
+    type: cppdbg,
+    request: launch,
+    program: echo,
+    miDebuggerServerAddress: localhost:$(port),
+    miDebuggerPath: /usr/bin/gdb,
+    cwd: ${workspaceFolder},
+    setupCommands:
+      - description: Enable pretty-printing for gdb,
+        text: -enable-pretty-printing,
+        ignoreFailures: true
+    externalConsole: true,
+    logging: { engineLogging: false }
+
+remote_debug:
+  macro: rdebug
+  launch-name: remote-debug
+  port: 4000
+
+client_debug:
+  macro: rdebug
+  launch-name: client-debug
+  port: 4001
+
+test_shm_debug:
   macro: debug
-  launch-name: Application Debug
-  program: test_local_serialize
+  launch-name: test-local-serialize
+  program: test_shm_exec
+  args: ["SerializeHshm"]
+
+test_data_debug:
+  macro: debug
+  launch-name: test-data-structures
+  program: test_data_structure_exec
+  args: ["TestMpmcFifoListQueueIntMultithreaded"]
+
+test_allocator_debug:
+  macro: debug
+  launch-name: test-allocators
+  program: test_allocator_exec
+  args: ["ScalablePageAllocatorMultithreaded"]
+
+test_rocm_debug:
+  macro: debug
+  launch-name: test-rocm
+  program: test_memory_rocm_exec
+  args: [""]
+
+bench_allocator_debug:
+  macro: debug
+  launch-name: bench-allocators
+  program: benchmark_allocators_exec
+  args: [""]
+
+bench_data_debug:
+  macro: debug
+  launch-name: bench-data-structures
+  program: benchmark_data_structures_exec
+  args: [""]
