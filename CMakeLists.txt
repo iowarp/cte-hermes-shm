@@ -85,6 +85,8 @@ if (HERMES_ENABLE_ROCM)
     if(GPU_RUNTIME STREQUAL "CUDA")
         list(APPEND include_dirs "${ROCM_ROOT}/include")
     endif()
+    find_package(HIP REQUIRED)
+    message(STATUS "found hip at ${HIP_DIR}")
 endif()
 
 

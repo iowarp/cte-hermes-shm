@@ -14,8 +14,9 @@
 #define HERMES_SHM_INCLUDE_HERMES_SHM_UTIL_SINGLETON__GLOBAL_SINGLETON_H_
 
 #include <memory>
-#include "hermes_shm/constants/macros.h"
+
 #include "_easy_singleton.h"
+#include "hermes_shm/constants/macros.h"
 
 namespace hshm {
 
@@ -24,26 +25,25 @@ namespace hshm {
  * Requires user to define the static storage of obj_ in separate file.
  * */
 #ifdef HSHM_IS_HOST
-template<typename T>
+template <typename T>
 class GlobalSingleton {
  public:
   static T obj_;
 
  public:
   /** Get instance of type T */
-  static T* GetInstance() {
-    return &obj_;
-  }
+  HSHM_INLINE static T* GetInstance() { return &obj_; }
 
   /** Get ref of type T */
-  static T& GetRef() {
-    return obj_;
-  }
+  HSHM_INLINE static T& GetRef() { return obj_; }
 };
-#define DEFINE_GLOBAL_SINGLETON_CC(T)\
-  template<> T hshm::GlobalSingleton<T>::obj_ = T();
+// template <typename T>
+// T GlobalSingleton<T>::obj_;
+#define DEFINE_GLOBAL_SINGLETON_CC(T) \
+  template <>                         \
+  T hshm::GlobalSingleton<T>::obj_ = T();
 #else
-template<typename T>
+template <typename T>
 using GlobalSingleton = EasyLockfreeSingleton<T>;
 #define DEFINE_GLOBAL_SINGLETON_CC(T)
 #endif

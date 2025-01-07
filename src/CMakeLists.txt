@@ -15,8 +15,8 @@ set(CMAKE_CXX_STANDARD 17)
 # Build HSHM
 #-----------------------------------------------------------------------------
 set (SOURCE_FILES
-        memory_manager.cc
-        data_structure_singleton.cc)
+        data_structure_singleton.cc
+        memory_manager.cc) 
 if (BUILD_SHARED_LIBS)
     message("Building dynamic library")
     add_library(hermes_shm_data_structures SHARED ${SOURCE_FILES})
@@ -53,6 +53,14 @@ if (HERMES_ENABLE_CUDA)
     target_compile_definitions(hermes_shm_data_structures PRIVATE HERMES_ENABLE_CUDA)
     target_compile_options(hermes_shm_data_structures PRIVATE
             $<$<COMPILE_LANGUAGE:CUDA>:--expt-relaxed-constexpr>)
+endif()
+if (HERMES_ENABLE_ROCM)
+    foreach (SOURCE IN LISTS SOURCE_FILES)
+        set_source_files_properties(${SOURCE} PROPERTIES LANGUAGE ${GPU_RUNTIME})
+    endforeach()
+    target_compile_definitions(hermes_shm_data_structures PRIVATE HERMES_ENABLE_ROCM)
+    # target_compile_options(hermes_shm_data_structures PRIVATE -fgpu-rdc)
+    # target_link_libraries(hermes_shm_data_structures ${HIP_LIBRARIES})
 endif()
 
 #-----------------------------------------------------------------------------

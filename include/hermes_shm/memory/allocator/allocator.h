@@ -258,7 +258,7 @@ class BaseAllocator : public CoreAllocT {
    * allocator must have "id" as its first argument.
    * */
   template <typename... Args>
-  void shm_init(AllocatorId id, Args... args) {
+  HSHM_CROSS_FUN void shm_init(AllocatorId id, Args... args) {
     CoreAllocT::shm_init(id, std::forward<Args>(args)...);
   }
 

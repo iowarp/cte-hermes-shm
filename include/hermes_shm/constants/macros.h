@@ -131,7 +131,7 @@
 #endif
 
 /** Function content selector for ROCm */
-#ifdef __HIP_DEVICE_COMPILE__
+#if __HIP_DEVICE_COMPILE__
 #define HSHM_IS_ROCM_GPU
 #endif
 

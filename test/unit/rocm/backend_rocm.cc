@@ -107,37 +107,37 @@ void singleton_test() {
   shm.shm_destroy();
 }
 
-// __global__ void mpsc_kernel(hipc::mpsc_queue<int> *queue) {
-//   hipc::ScopedTlsAllocator<HSHM_DEFAULT_ALLOC_T> ctx_alloc(
-//       queue->GetCtxAllocator());
-//   queue->GetThreadLocal(ctx_alloc);
-//   queue->emplace(10);
-// }
+__global__ void mpsc_kernel(hipc::mpsc_queue<int> *queue) {
+  hipc::ScopedTlsAllocator<HSHM_DEFAULT_ALLOC_T> ctx_alloc(
+      queue->GetCtxAllocator());
+  queue->GetThreadLocal(ctx_alloc);
+  queue->emplace(10);
+}
 
-// void mpsc_test() {
-//   hshm::chararr shm_url = "test_serializers";
-//   hipc::AllocatorId alloc_id(0, 1);
-//   auto mem_mngr = HERMES_MEMORY_MANAGER;
-//   mem_mngr->UnregisterAllocator(alloc_id);
-//   mem_mngr->DestroyBackend(hipc::MemoryBackendId::Get(0));
-//   mem_mngr->CreateBackend<hipc::RocmShmMmap>(hipc::MemoryBackendId::Get(0),
-//                                              MEGABYTES(100), shm_url, 0);
-//   auto *alloc = mem_mngr->CreateAllocator<HSHM_DEFAULT_ALLOC_T>(
-//       hipc::MemoryBackendId::Get(0), alloc_id, 0);
-//   hipc::CtxAllocator<HSHM_DEFAULT_ALLOC_T> ctx_alloc(alloc);
+void mpsc_test() {
+  hshm::chararr shm_url = "test_serializers";
+  hipc::AllocatorId alloc_id(0, 1);
+  auto mem_mngr = HERMES_MEMORY_MANAGER;
+  mem_mngr->UnregisterAllocator(alloc_id);
+  mem_mngr->DestroyBackend(hipc::MemoryBackendId::Get(0));
+  mem_mngr->CreateBackend<hipc::RocmShmMmap>(hipc::MemoryBackendId::Get(0),
+                                             MEGABYTES(100), shm_url, 0);
+  auto *alloc = mem_mngr->CreateAllocator<HSHM_DEFAULT_ALLOC_T>(
+      hipc::MemoryBackendId::Get(0), alloc_id, 0);
+  hipc::CtxAllocator<HSHM_DEFAULT_ALLOC_T> ctx_alloc(alloc);
 
-//   auto *queue =
-//       ctx_alloc->NewObj<hipc::mpsc_queue<int>>(ctx_alloc.ctx_, 256 * 256);
-//   printf("GetSize: %lu\n", queue->GetSize());
-//   mpsc_kernel<<<16, 16>>>(queue);
-//   HIP_ERROR_CHECK(hipDeviceSynchronize());
-//   printf("GetSize: %lu\n", queue->GetSize());
-//   int val, sum = 0;
-//   while (!queue->pop(val).IsNull()) {
-//     sum += val;
-//   }
-//   printf("SUM: %d\n", sum);
-// }
+  auto *queue =
+      ctx_alloc->NewObj<hipc::mpsc_queue<int>>(ctx_alloc.ctx_, 256 * 256);
+  printf("GetSize: %lu\n", queue->GetSize());
+  mpsc_kernel<<<16, 16>>>(queue);
+  HIP_ERROR_CHECK(hipDeviceSynchronize());
+  printf("GetSize: %lu\n", queue->GetSize());
+  int val, sum = 0;
+  while (!queue->pop(val).IsNull()) {
+    sum += val;
+  }
+  printf("SUM: %d\n", sum);
+}
 
 __global__ void atomic_kernel(hipc::rocm_atomic<hshm::min_u64> *x) {
   x->fetch_add(1);

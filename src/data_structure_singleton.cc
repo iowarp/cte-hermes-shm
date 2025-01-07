@@ -11,10 +11,10 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include <hermes_shm/constants/macros.h>
-#include <hermes_shm/util/singleton.h>
-#include <hermes_shm/thread/lock/mutex.h>
-
 #include <hermes_shm/memory/memory_manager.h>
+#include <hermes_shm/thread/lock/mutex.h>
+#include <hermes_shm/util/singleton.h>
 DEFINE_GLOBAL_SINGLETON_CC(hshm::ipc::MemoryManager)
+
 #include <hermes_shm/introspect/system_info.h>
 DEFINE_LOCKFREE_SINGLETON_CC(hshm::SystemInfo)

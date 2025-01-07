@@ -69,6 +69,7 @@ size_t MemoryManager::GetDefaultBackendSize() {
   return HERMES_SYSTEM_INFO->ram_size_;
 #else
   // TODO(llogan)
+  return 0;
 #endif
 }
 
@@ -84,6 +85,8 @@ MemoryBackend *MemoryManager::AttachBackend(MemoryBackendType type,
   ScanBackends();
   backend->Disown();
   return backend;
+#else
+  return nullptr;
 #endif
 }
 
