@@ -106,7 +106,7 @@
             "logging": {
                 "engineLogging": false
             }
-        }, 
+        },
         {
             "name": "test-rocm",
             "type": "cppdbg",
