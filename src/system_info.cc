@@ -222,8 +222,8 @@ void SystemInfo::YieldThread() {
 
 bool SystemInfo::CreateTls(ThreadLocalKey &key, void *data) {
 #ifdef HERMES_ENABLE_PROCFS_SYSINFO
-  key.posix_key_ = pthread_key_create(&key.posix_key_, nullptr);
-  return key.posix_key_ == 0;
+  key.pthread_key_ = pthread_key_create(&key.pthread_key_, nullptr);
+  return key.pthread_key_ == 0;
 #elif defined(HERMES_ENABLE_WINDOWS_SYSINFO)
   key.windows_key_ = TlsAlloc();
   if (key.windows_key_ == TLS_OUT_OF_INDEXES) {
@@ -235,7 +235,7 @@ bool SystemInfo::CreateTls(ThreadLocalKey &key, void *data) {
 
 bool SystemInfo::SetTls(const ThreadLocalKey &key, void *data) {
 #ifdef HERMES_ENABLE_PROCFS_SYSINFO
-  return pthread_setspecific(key.posix_key_, data) == 0;
+  return pthread_setspecific(key.pthread_key_, data) == 0;
 #elif defined(HERMES_ENABLE_WINDOWS_SYSINFO)
   return TlsSetValue(key.windows_key_, data);
 #endif
@@ -243,7 +243,7 @@ bool SystemInfo::SetTls(const ThreadLocalKey &key, void *data) {
 
 void *SystemInfo::GetTls(const ThreadLocalKey &key) {
 #ifdef HERMES_ENABLE_PROCFS_SYSINFO
-  return pthread_getspecific(key.posix_key_);
+  return pthread_getspecific(key.pthread_key_);
 #elif defined(HERMES_ENABLE_WINDOWS_SYSINFO)
   return TlsGetValue(key.windows_key_);
 #endif
@@ -261,6 +261,7 @@ bool SystemInfo::CreateNewSharedMemory(File &fd, const std::string &name,
     close(fd.posix_fd_);
     return false;
   }
+  return true;
 #elif defined(HERMES_ENABLE_WINDOWS_SYSINFO)
   fd.windows_fd_ =
       CreateFileMapping(INVALID_HANDLE_VALUE,  // use paging file
