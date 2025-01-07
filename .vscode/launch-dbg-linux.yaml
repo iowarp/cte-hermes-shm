@@ -1,3 +1,5 @@
+requirements:
+  os: linux
 macros:
   debug:
     name: $(launch-name)

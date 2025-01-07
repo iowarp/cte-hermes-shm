@@ -1,0 +1,49 @@
+requirements:
+  os: windows
+macros:
+  debug:
+    name: $(launch-name)
+    type: cppvsdbg
+    request: launch
+    program: ${workspaceFolder}/build/bin/$(program).exe
+    args: ScalablePageAllocatorMultithreaded
+    stopAtEntry: false
+    cwd: ${workspaceFolder}
+    environment: []
+    externalConsole: false
+
+test_shm_debug:
+  macro: debug
+  launch-name: test-local-serialize
+  program: test_shm_exec
+  args: ["SerializeHshm"]
+
+test_data_debug:
+  macro: debug
+  launch-name: test-data-structures
+  program: test_data_structure_exec
+  args: ["TestMpmcFifoListQueueIntMultithreaded"]
+
+test_allocator_debug:
+  macro: debug
+  launch-name: test-allocators
+  program: test_allocator_exec
+  args: ["ScalablePageAllocatorMultithreaded"]
+
+test_rocm_debug:
+  macro: debug
+  launch-name: test-rocm
+  program: test_memory_rocm_exec
+  args: [""]
+
+bench_allocator_debug:
+  macro: debug
+  launch-name: bench-allocators
+  program: benchmark_allocators_exec
+  args: [""]
+
+bench_data_debug:
+  macro: debug
+  launch-name: bench-data-structures
+  program: benchmark_data_structures_exec
+  args: [""]

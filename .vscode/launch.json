@@ -1,156 +1,68 @@
 {
-  "remote_debug": {
-    "name": "remote-debug,",
-    "type": "cppdbg,",
-    "request": "launch,",
-    "program": "echo,",
-    "miDebuggerServerAddress": "localhost:4000,",
-    "miDebuggerPath": "/usr/bin/gdb,",
-    "cwd": "${workspaceFolder},",
-    "setupCommands": [
-      {
-        "description": "Enable pretty-printing for gdb,",
-        "text": "-enable-pretty-printing,",
-        "ignoreFailures": true
-      }
-    ],
-    "externalConsole": "true,",
-    "logging": {
-      "engineLogging": false
-    }
-  },
-  "client_debug": {
-    "name": "client-debug,",
-    "type": "cppdbg,",
-    "request": "launch,",
-    "program": "echo,",
-    "miDebuggerServerAddress": "localhost:4001,",
-    "miDebuggerPath": "/usr/bin/gdb,",
-    "cwd": "${workspaceFolder},",
-    "setupCommands": [
-      {
-        "description": "Enable pretty-printing for gdb,",
-        "text": "-enable-pretty-printing,",
-        "ignoreFailures": true
-      }
-    ],
-    "externalConsole": "true,",
-    "logging": {
-      "engineLogging": false
-    }
-  },
   "test_shm_debug": {
     "name": "test-local-serialize",
-    "type": "cppdbg",
+    "type": "cppvsdbg",
     "request": "launch",
-    "program": "${workspaceFolder}/build/bin/test_shm_exec",
-    "args": "SerializeHshm",
-    "stopAtEntry": false,
-    "cwd": "${workspaceFolder}",
-    "environment": [],
-    "externalConsole": false,
-    "MIMode": "gdb",
-    "setupCommands": [
-      {
-        "description": "Enable pretty-printing for gdb,",
-        "text": "-enable-pretty-printing,",
-        "ignoreFailures": true
-      }
-    ]
-  },
-  "test_data_debug": {
-    "name": "test-data-structures",
-    "type": "cppdbg",
-    "request": "launch",
-    "program": "${workspaceFolder}/build/bin/test_data_structure_exec",
-    "args": "TestMpmcFifoListQueueIntMultithreaded",
-    "stopAtEntry": false,
-    "cwd": "${workspaceFolder}",
-    "environment": [],
-    "externalConsole": false,
-    "MIMode": "gdb",
-    "setupCommands": [
-      {
-        "description": "Enable pretty-printing for gdb,",
-        "text": "-enable-pretty-printing,",
-        "ignoreFailures": true
-      }
-    ]
-  },
-  "test_allocator_debug": {
-    "name": "test-allocators",
-    "type": "cppdbg",
-    "request": "launch",
-    "program": "${workspaceFolder}/build/bin/test_allocator_exec",
+    "program": "${workspaceFolder}/build/bin/test_shm_exec.exe",
     "args": "ScalablePageAllocatorMultithreaded",
     "stopAtEntry": false,
     "cwd": "${workspaceFolder}",
     "environment": [],
-    "externalConsole": false,
-    "MIMode": "gdb",
-    "setupCommands": [
-      {
-        "description": "Enable pretty-printing for gdb,",
-        "text": "-enable-pretty-printing,",
-        "ignoreFailures": true
-      }
-    ]
+    "externalConsole": false
+  },
+  "test_data_debug": {
+    "name": "test-data-structures",
+    "type": "cppvsdbg",
+    "request": "launch",
+    "program": "${workspaceFolder}/build/bin/test_data_structure_exec.exe",
+    "args": "ScalablePageAllocatorMultithreaded",
+    "stopAtEntry": false,
+    "cwd": "${workspaceFolder}",
+    "environment": [],
+    "externalConsole": false
+  },
+  "test_allocator_debug": {
+    "name": "test-allocators",
+    "type": "cppvsdbg",
+    "request": "launch",
+    "program": "${workspaceFolder}/build/bin/test_allocator_exec.exe",
+    "args": "ScalablePageAllocatorMultithreaded",
+    "stopAtEntry": false,
+    "cwd": "${workspaceFolder}",
+    "environment": [],
+    "externalConsole": false
   },
   "test_rocm_debug": {
     "name": "test-rocm",
-    "type": "cppdbg",
+    "type": "cppvsdbg",
     "request": "launch",
-    "program": "${workspaceFolder}/build/bin/test_memory_rocm_exec",
-    "args": "",
+    "program": "${workspaceFolder}/build/bin/test_memory_rocm_exec.exe",
+    "args": "ScalablePageAllocatorMultithreaded",
     "stopAtEntry": false,
     "cwd": "${workspaceFolder}",
     "environment": [],
-    "externalConsole": false,
-    "MIMode": "gdb",
-    "setupCommands": [
-      {
-        "description": "Enable pretty-printing for gdb,",
-        "text": "-enable-pretty-printing,",
-        "ignoreFailures": true
-      }
-    ]
+    "externalConsole": false
   },
   "bench_allocator_debug": {
     "name": "bench-allocators",
-    "type": "cppdbg",
+    "type": "cppvsdbg",
     "request": "launch",
-    "program": "${workspaceFolder}/build/bin/benchmark_allocators_exec",
-    "args": "",
+    "program": "${workspaceFolder}/build/bin/benchmark_allocators_exec.exe",
+    "args": "ScalablePageAllocatorMultithreaded",
     "stopAtEntry": false,
     "cwd": "${workspaceFolder}",
     "environment": [],
-    "externalConsole": false,
-    "MIMode": "gdb",
-    "setupCommands": [
-      {
-        "description": "Enable pretty-printing for gdb,",
-        "text": "-enable-pretty-printing,",
-        "ignoreFailures": true
-      }
-    ]
+    "externalConsole": false
   },
   "bench_data_debug": {
     "name": "bench-data-structures",
-    "type": "cppdbg",
+    "type": "cppvsdbg",
     "request": "launch",
-    "program": "${workspaceFolder}/build/bin/benchmark_data_structures_exec",
-    "args": "",
+    "program": "${workspaceFolder}/build/bin/benchmark_data_structures_exec.exe",
+    "args": "ScalablePageAllocatorMultithreaded",
     "stopAtEntry": false,
     "cwd": "${workspaceFolder}",
     "environment": [],
-    "externalConsole": false,
-    "MIMode": "gdb",
-    "setupCommands": [
-      {
-        "description": "Enable pretty-printing for gdb,",
-        "text": "-enable-pretty-printing,",
-        "ignoreFailures": true
-      }
-    ]
+    "externalConsole": false
   }
 }
