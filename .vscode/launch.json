@@ -1,68 +1,71 @@
 {
-  "test_shm_debug": {
-    "name": "test-local-serialize",
-    "type": "cppvsdbg",
-    "request": "launch",
-    "program": "${workspaceFolder}/build/bin/test_shm_exec.exe",
-    "args": "ScalablePageAllocatorMultithreaded",
-    "stopAtEntry": false,
-    "cwd": "${workspaceFolder}",
-    "environment": [],
-    "externalConsole": false
-  },
-  "test_data_debug": {
-    "name": "test-data-structures",
-    "type": "cppvsdbg",
-    "request": "launch",
-    "program": "${workspaceFolder}/build/bin/test_data_structure_exec.exe",
-    "args": "ScalablePageAllocatorMultithreaded",
-    "stopAtEntry": false,
-    "cwd": "${workspaceFolder}",
-    "environment": [],
-    "externalConsole": false
-  },
-  "test_allocator_debug": {
-    "name": "test-allocators",
-    "type": "cppvsdbg",
-    "request": "launch",
-    "program": "${workspaceFolder}/build/bin/test_allocator_exec.exe",
-    "args": "ScalablePageAllocatorMultithreaded",
-    "stopAtEntry": false,
-    "cwd": "${workspaceFolder}",
-    "environment": [],
-    "externalConsole": false
-  },
-  "test_rocm_debug": {
-    "name": "test-rocm",
-    "type": "cppvsdbg",
-    "request": "launch",
-    "program": "${workspaceFolder}/build/bin/test_memory_rocm_exec.exe",
-    "args": "ScalablePageAllocatorMultithreaded",
-    "stopAtEntry": false,
-    "cwd": "${workspaceFolder}",
-    "environment": [],
-    "externalConsole": false
-  },
-  "bench_allocator_debug": {
-    "name": "bench-allocators",
-    "type": "cppvsdbg",
-    "request": "launch",
-    "program": "${workspaceFolder}/build/bin/benchmark_allocators_exec.exe",
-    "args": "ScalablePageAllocatorMultithreaded",
-    "stopAtEntry": false,
-    "cwd": "${workspaceFolder}",
-    "environment": [],
-    "externalConsole": false
-  },
-  "bench_data_debug": {
-    "name": "bench-data-structures",
-    "type": "cppvsdbg",
-    "request": "launch",
-    "program": "${workspaceFolder}/build/bin/benchmark_data_structures_exec.exe",
-    "args": "ScalablePageAllocatorMultithreaded",
-    "stopAtEntry": false,
-    "cwd": "${workspaceFolder}",
-    "environment": [],
-    "externalConsole": false
+  "version": "0.2.0",
+  "configurations": {
+    "test_shm_debug": {
+      "name": "test-local-serialize",
+      "type": "cppvsdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/build/bin/test_shm_exec.exe",
+      "args": "ScalablePageAllocatorMultithreaded",
+      "stopAtEntry": false,
+      "cwd": "${workspaceFolder}",
+      "environment": [],
+      "externalConsole": false
+    },
+    "test_data_debug": {
+      "name": "test-data-structures",
+      "type": "cppvsdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/build/bin/test_data_structure_exec.exe",
+      "args": "ScalablePageAllocatorMultithreaded",
+      "stopAtEntry": false,
+      "cwd": "${workspaceFolder}",
+      "environment": [],
+      "externalConsole": false
+    },
+    "test_allocator_debug": {
+      "name": "test-allocators",
+      "type": "cppvsdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/build/bin/test_allocator_exec.exe",
+      "args": "ScalablePageAllocatorMultithreaded",
+      "stopAtEntry": false,
+      "cwd": "${workspaceFolder}",
+      "environment": [],
+      "externalConsole": false
+    },
+    "test_rocm_debug": {
+      "name": "test-rocm",
+      "type": "cppvsdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/build/bin/test_memory_rocm_exec.exe",
+      "args": "ScalablePageAllocatorMultithreaded",
+      "stopAtEntry": false,
+      "cwd": "${workspaceFolder}",
+      "environment": [],
+      "externalConsole": false
+    },
+    "bench_allocator_debug": {
+      "name": "bench-allocators",
+      "type": "cppvsdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/build/bin/benchmark_allocators_exec.exe",
+      "args": "ScalablePageAllocatorMultithreaded",
+      "stopAtEntry": false,
+      "cwd": "${workspaceFolder}",
+      "environment": [],
+      "externalConsole": false
+    },
+    "bench_data_debug": {
+      "name": "bench-data-structures",
+      "type": "cppvsdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/build/bin/benchmark_data_structures_exec.exe",
+      "args": "ScalablePageAllocatorMultithreaded",
+      "stopAtEntry": false,
+      "cwd": "${workspaceFolder}",
+      "environment": [],
+      "externalConsole": false
+    }
   }
 }

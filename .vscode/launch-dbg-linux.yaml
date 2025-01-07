@@ -31,48 +31,35 @@ macros:
     externalConsole: true,
     logging: { engineLogging: false }
 
-remote_debug:
-  macro: rdebug
-  launch-name: remote-debug
-  port: 4000
-
-client_debug:
-  macro: rdebug
-  launch-name: client-debug
-  port: 4001
-
-test_shm_debug:
-  macro: debug
-  launch-name: test-local-serialize
-  program: test_shm_exec
-  args: ["SerializeHshm"]
-
-test_data_debug:
-  macro: debug
-  launch-name: test-data-structures
-  program: test_data_structure_exec
-  args: ["TestMpmcFifoListQueueIntMultithreaded"]
-
-test_allocator_debug:
-  macro: debug
-  launch-name: test-allocators
-  program: test_allocator_exec
-  args: ["ScalablePageAllocatorMultithreaded"]
-
-test_rocm_debug:
-  macro: debug
-  launch-name: test-rocm
-  program: test_memory_rocm_exec
-  args: [""]
-
-bench_allocator_debug:
-  macro: debug
-  launch-name: bench-allocators
-  program: benchmark_allocators_exec
-  args: [""]
-
-bench_data_debug:
-  macro: debug
-  launch-name: bench-data-structures
-  program: benchmark_data_structures_exec
-  args: [""]
+version: 0.2.0
+configurations:
+  - macro: rdebug
+    launch-name: remote-debug
+    port: 4000
+  - macro: rdebug
+    launch-name: client-debug
+    port: 4001
+  - macro: debug
+    launch-name: test-local-serialize
+    program: test_shm_exec
+    args: ["SerializeHshm"]
+  - macro: debug
+    launch-name: test-data-structures
+    program: test_data_structure_exec
+    args: ["TestMpmcFifoListQueueIntMultithreaded"]
+  - macro: debug
+    launch-name: test-allocators
+    program: test_allocator_exec
+    args: ["ScalablePageAllocatorMultithreaded"]
+  - macro: debug
+    launch-name: test-rocm
+    program: test_memory_rocm_exec
+    args: [""]
+  - macro: debug
+    launch-name: bench-allocators
+    program: benchmark_allocators_exec
+    args: [""]
+  - macro: debug
+    launch-name: bench-data-structures
+    program: benchmark_data_structures_exec
+    args: [""]
