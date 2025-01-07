@@ -14,7 +14,6 @@
 #define HERMES_SHM_INCLUDE_HERMES_SHM_THREAD_THALLIUM_H_
 
 #include <errno.h>
-#include <omp.h>
 
 #include <thallium.hpp>
 

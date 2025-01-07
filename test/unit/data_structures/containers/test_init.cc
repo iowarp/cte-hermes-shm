@@ -12,8 +12,6 @@
 
 #include "test_init.h"
 
-#include <mpi.h>
-
 #include "basic_test.h"
 
 void Posttest() { std::string shm_url = "test_allocators"; }

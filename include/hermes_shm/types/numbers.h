@@ -94,6 +94,101 @@ typedef reg_uint min_u32;
 typedef big_uint min_u64;
 #endif
 
+template <typename T>
+class Unit {
+ public:
+  template <typename U>
+  CLS_CONST T Bytes(U n) {
+    return (T)(T(n) * (((T)1) << 0));
+  }
+  template <typename U>
+  CLS_CONST T Kilobytes(U n) {
+    return (T)(T(n) * (((T)1) << 10));
+  }
+  template <typename U>
+  CLS_CONST T Megabytes(U n) {
+    return (T)(T(n) * (((T)1) << 20));
+  }
+  template <typename U>
+  CLS_CONST T Gigabytes(U n) {
+    return (T)(T(n) * (((T)1) << 30));
+  }
+  template <typename U>
+  CLS_CONST T Terabytes(U n) {
+    return (T)(T(n) * (((T)1) << 40));
+  }
+  template <typename U>
+  CLS_CONST T Petabytes(U n) {
+    return (T)(T(n) * (((T)1) << 50));
+  }
+  template <typename U>
+  CLS_CONST T Seconds(U n) {
+    return (T)(T(n) * 1000000000);
+  }
+  template <typename U>
+  CLS_CONST T Milliseconds(U n) {
+    return (T)(T(n) * 1000000);
+  }
+  template <typename U>
+  CLS_CONST T Microseconds(U n) {
+    return (T)(T(n) * 1000);
+  }
+  template <typename U>
+  CLS_CONST T Nanoseconds(U n) {
+    return (T)(T(n));
+  }
+};
+
 }  // namespace hshm
+
+/** Bytes -> Bytes */
+#ifndef BYTES
+#define BYTES(n) (hshm::u64)((n) * (((hshm::u64)1) << 0))
+#endif
+
+/** KILOBYTES -> Bytes */
+#ifndef KILOBYTES
+#define KILOBYTES(n) (hshm::u64)((n) * (((hshm::u64)1) << 10))
+#endif
+
+/** MEGABYTES -> Bytes */
+#ifndef MEGABYTES
+#define MEGABYTES(n) (hshm::u64)((n) * (((hshm::u64)1) << 20))
+#endif
+
+/** GIGABYTES -> Bytes */
+#ifndef GIGABYTES
+#define GIGABYTES(n) (hshm::u64)((n) * (((hshm::u64)1) << 30))
+#endif
+
+/** TERABYTES -> Bytes */
+#ifndef TERABYTES
+#define TERABYTES(n) (hshm::u64)((n) * (((hshm::u64)1) << 40))
+#endif
+
+/** PETABYTES -> Bytes */
+#ifndef PETABYTES
+#define PETABYTES(n) (hshm::u64)((n) * (((hshm::u64)1) << 50))
+#endif
+
+/** Seconds to nanoseconds */
+#ifndef SECONDS
+#define SECONDS(n) (hshm::u64)((n) * 1000000000)
+#endif
+
+/** Milliseconds to nanoseconds */
+#ifndef MILLISECONDS
+#define MILLISECONDS(n) (hshm::u64)((n) * 1000000)
+#endif
+
+/** Microseconds to nanoseconds */
+#ifndef MICROSECONDS
+#define MICROSECONDS(n) (hshm::u64)((n) * 1000)
+#endif
+
+/** Nanoseconds to nanoseconds */
+#ifndef NANOSECONDS
+#define NANOSECONDS(n) (hshm::u64)(n)
+#endif
 
 #endif  // HERMES_SHM_INCLUDE_HERMES_SHM_TYPES_NUMBERS_H_

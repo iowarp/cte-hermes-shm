@@ -13,8 +13,6 @@
 #ifndef HERMES_MEMORY_ALLOCATOR_SCALABLE_PAGE_ALLOCATOR_H
 #define HERMES_MEMORY_ALLOCATOR_SCALABLE_PAGE_ALLOCATOR_H
 
-#include <hermes_shm/memory/allocator/stack_allocator.h>
-
 #include <cmath>
 
 #include "allocator.h"
@@ -23,6 +21,7 @@
 #include "hermes_shm/data_structures/ipc/ring_ptr_queue.h"
 #include "hermes_shm/data_structures/ipc/ring_queue.h"
 #include "hermes_shm/data_structures/ipc/vector.h"
+#include "hermes_shm/memory/allocator/stack_allocator.h"
 #include "hermes_shm/thread/lock.h"
 #include "hermes_shm/util/timer.h"
 #include "mp_page.h"
@@ -196,7 +195,7 @@ class _ScalablePageAllocator : public Allocator {
    * */
   HSHM_CROSS_FUN
   size_t GetCurrentlyAllocatedSize() {
-    return header_->GetCurrentlyAllocatedSize();
+    return (size_t)header_->GetCurrentlyAllocatedSize();
   }
 
   /**

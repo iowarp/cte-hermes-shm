@@ -15,7 +15,7 @@
 
 #ifdef __cplusplus
 
-#include <hermes_shm/util/error.h>
+#include "hermes_shm/util/error.h"
 
 namespace hshm {
 const Error MEMORY_BACKEND_REPEATED(

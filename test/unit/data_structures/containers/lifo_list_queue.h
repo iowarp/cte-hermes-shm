@@ -13,9 +13,8 @@
 #ifndef HERMES_TEST_UNIT_DATA_STRUCTURES_CONTAINERS_lifo_list_queue_H_
 #define HERMES_TEST_UNIT_DATA_STRUCTURES_CONTAINERS_lifo_list_queue_H_
 
-#include <hermes_shm/memory/allocator/mp_page.h>
-
 #include "basic_test.h"
+#include "hermes_shm/memory/allocator/mp_page.h"
 #include "test_init.h"
 
 using hipc::MpPage;

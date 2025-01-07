@@ -13,36 +13,38 @@
 #ifndef HERMES_ERROR_SERIALIZER_H
 #define HERMES_ERROR_SERIALIZER_H
 
-#include <memory>
-#include <vector>
+#include <cstring>
 #include <list>
+#include <memory>
+#include <sstream>
 #include <string>
 #include <type_traits>
-#include <cstring>
-#include <sstream>
-#include <hermes_shm/types/argpack.h>
+#include <vector>
+
+#include "hermes_shm/types/argpack.h"
 
 namespace hshm {
 
 class Formatter {
  public:
-  template<typename ...Args>
-  static std::string format(std::string fmt, Args&& ...args) {
+  template <typename... Args>
+  static std::string format(std::string fmt, Args &&...args) {
     std::stringstream ss;
     std::vector<std::pair<size_t, size_t>> offsets = tokenize(fmt);
-    size_t packlen =
-      make_argpack(std::forward<Args>(args)...).Size();
+    size_t packlen = make_argpack(std::forward<Args>(args)...).Size();
     if (offsets.size() != packlen + 1) {
       return fmt;
     }
     auto lambda = [&ss, &fmt, &offsets](auto i, auto &&arg) {
-      if (i.Get() >= offsets.size()) { return; }
+      if (i.Get() >= offsets.size()) {
+        return;
+      }
       auto &sub = offsets[i.Get()];
       ss << fmt.substr(sub.first, sub.second);
       ss << arg;
     };
-    ForwardIterateArgpack::Apply(
-      make_argpack(std::forward<Args>(args)...), lambda);
+    ForwardIterateArgpack::Apply(make_argpack(std::forward<Args>(args)...),
+                                 lambda);
     if (offsets.back().second > 0) {
       auto &sub = offsets.back();
       ss << fmt.substr(sub.first, sub.second);
@@ -50,8 +52,8 @@ class Formatter {
     return ss.str();
   }
 
-  static std::vector<std::pair<size_t, size_t>>
-    tokenize(const std::string &fmt) {
+  static std::vector<std::pair<size_t, size_t>> tokenize(
+      const std::string &fmt) {
     std::vector<std::pair<size_t, size_t>> offsets;
     size_t i = 0;
     offsets.emplace_back(std::pair<size_t, size_t>(0, fmt.size()));
@@ -82,4 +84,4 @@ class Formatter {
 
 }  // namespace hshm
 
-#endif  //HERMES_ERROR_SERIALIZER_H
+#endif  // HERMES_ERROR_SERIALIZER_H

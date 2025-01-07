@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
 project(hermes_shm)
 
-set(CMAKE_CXX_STANDARD 17)
+
 
 #------------------------------------------------------------------------------
 # Build Tests
@@ -10,11 +10,21 @@ set(CMAKE_CXX_STANDARD 17)
 add_executable(test_allocator_exec
         ${TEST_MAIN}/main.cc
         test_init.cc
-        allocator.cc
-        allocator_thread.cc)
+        allocator.cc)
 add_dependencies(test_allocator_exec hermes_shm_data_structures)
 target_link_libraries(test_allocator_exec
-        hermes_shm_data_structures Catch2::Catch2 MPI::MPI_CXX OpenMP::OpenMP_CXX)
+        hermes_shm_data_structures Catch2::Catch2)
+
+if (HERMES_ENABLE_OPENMP)
+    add_executable(test_allocator_mp_exec
+            ${TEST_MAIN}/main.cc
+            test_init.cc
+            allocator.cc
+            allocator_thread.cc)
+    add_dependencies(test_allocator_mp_exec hermes_shm_data_structures)
+    target_link_libraries(test_allocator_mp_exec
+            hermes_shm_data_structures Catch2::Catch2 ${OpenMP_LIBS})
+endif()
 
 #------------------------------------------------------------------------------
 # Test Cases

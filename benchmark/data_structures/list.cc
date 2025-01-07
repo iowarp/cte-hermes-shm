@@ -21,9 +21,8 @@
 #include <string>
 
 // hermes
-#include <hermes_shm/data_structures/ipc/list.h>
-#include <hermes_shm/data_structures/ipc/slist.h>
-
+#include "hermes_shm/data_structures/ipc/list.h"
+#include "hermes_shm/data_structures/ipc/slist.h"
 #include "hermes_shm/data_structures/ipc/string.h"
 
 template <typename T>

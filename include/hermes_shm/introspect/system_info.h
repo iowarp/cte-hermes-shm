@@ -13,19 +13,50 @@
 #ifndef HERMES_SYSINFO_INFO_H_
 #define HERMES_SYSINFO_INFO_H_
 
-#include <unistd.h>
+#include "hermes_shm/constants/macros.h"
+#ifdef HERMES_ENABLE_PROCFS_SYSINFO
 #include <sys/sysinfo.h>
-#include "hermes_shm/util/singleton/_singleton.h"
-#include "hermes_shm/util/formatter.h"
-#include <iostream>
+#include <unistd.h>
+#endif
+
 #include <fstream>
+#include <iostream>
+
+#include "hermes_shm/util/formatter.h"
+#include "hermes_shm/util/singleton/_singleton.h"
 
 #define HERMES_SYSTEM_INFO \
   hshm::LockfreeSingleton<hshm::SystemInfo>::GetInstance()
-#define HERMES_SYSTEM_INFO_T hshm::SystemInfo*
+#define HERMES_SYSTEM_INFO_T hshm::SystemInfo *
 
 namespace hshm {
 
+/** DWORD type for windows compatability */
+typedef u32 DWORD;
+
+/** HANDLE type for windows compatability */
+typedef void *HANDLE;
+
+/** Thread-local key */
+union ThreadLocalKey {
+#ifdef HERMES_ENABLE_PTHREADS
+  pthread_key_t pthread_key_;
+#endif
+#ifdef HERMES_RPC_THALLIUM
+  ABT_key argobots_key_;
+#endif
+#ifdef HERMES_ENABLE_WINDOWS_THREADS
+  DWORD windows_key_;
+#endif
+};
+
+/** File wrapper */
+union File {
+  int posix_fd_;
+  HANDLE windows_fd_;
+};
+
+/** A unification of certain OS system calls */
 struct SystemInfo {
   int pid_;
   int ncpu_;
@@ -37,109 +68,79 @@ struct SystemInfo {
   std::vector<size_t> cur_cpu_freq_;
 #endif
 
+  HSHM_DLL
   HSHM_CROSS_FUN
-  void RefreshInfo() {
-#ifdef HSHM_IS_HOST
-    pid_ = getpid();
-    ncpu_ = get_nprocs_conf();
-    page_size_ = getpagesize();
-    struct sysinfo info;
-    sysinfo(&info);
-    uid_ = getuid();
-    gid_ = getgid();
-    ram_size_ = info.totalram;
-    cur_cpu_freq_.resize(ncpu_);
-    RefreshCpuFreqKhz();
-#endif
-  }
+  void RefreshInfo();
 
-  void RefreshCpuFreqKhz() {
-    #ifdef HSHM_IS_HOST
-    for (int i = 0; i < ncpu_; ++i) {
-      cur_cpu_freq_[i] = GetCpuFreqKhz(i);
-    }
-    #endif
-  }
+  HSHM_DLL void RefreshCpuFreqKhz();
 
-  size_t GetCpuFreqKhz(int cpu) {
-    #ifdef HSHM_IS_HOST
-    // Read /sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_cur_freq
-    std::string cpu_str = hshm::Formatter::format(
-        "/sys/devices/system/cpu/cpu{}/cpufreq/cpuinfo_cur_freq",
-        cpu);
-    std::ifstream cpu_file(cpu_str);
-    size_t freq_khz;
-    cpu_file >> freq_khz;
-    return freq_khz;
-#else
-    return 0;
-    #endif
-  }
+  HSHM_DLL size_t GetCpuFreqKhz(int cpu);
 
-  size_t GetCpuMaxFreqKhz(int cpu) {
-    #ifdef HSHM_IS_HOST
-    // Read /sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_cur_freq
-    std::string cpu_str = hshm::Formatter::format(
-        "/sys/devices/system/cpu/cpu{}/cpufreq/cpuinfo_max_freq",
-        cpu);
-    std::ifstream cpu_file(cpu_str);
-    size_t freq_khz;
-    cpu_file >> freq_khz;
-    return freq_khz;
-#else
-    return 0;
-    #endif
-  }
+  HSHM_DLL size_t GetCpuMaxFreqKhz(int cpu);
 
-  size_t GetCpuMinFreqKhz(int cpu) {
-    #ifdef HSHM_IS_HOST
-    // Read /sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_cur_freq
-    std::string cpu_str = hshm::Formatter::format(
-        "/sys/devices/system/cpu/cpu{}/cpufreq/cpuinfo_min_freq",
-        cpu);
-    std::ifstream cpu_file(cpu_str);
-    size_t freq_khz;
-    cpu_file >> freq_khz;
-    return freq_khz;
-#else
-    return 0;
-    #endif
-  }
+  HSHM_DLL size_t GetCpuMinFreqKhz(int cpu);
 
-  size_t GetCpuMinFreqMhz(int cpu) {
-    return GetCpuMinFreqKhz(cpu) / 1000;
-  }
+  HSHM_DLL size_t GetCpuMinFreqMhz(int cpu);
 
-  size_t GetCpuMaxFreqMhz(int cpu) {
-    return GetCpuMaxFreqKhz(cpu) / 1000;
-  }
+  HSHM_DLL size_t GetCpuMaxFreqMhz(int cpu);
 
-  void SetCpuFreqMhz(int cpu, size_t cpu_freq_mhz) {
-    SetCpuFreqKhz(cpu, cpu_freq_mhz * 1000);
-  }
+  HSHM_DLL void SetCpuFreqMhz(int cpu, size_t cpu_freq_mhz);
 
-  void SetCpuFreqKhz(int cpu, size_t cpu_freq_khz) {
-    SetCpuMinFreqKhz(cpu, cpu_freq_khz);
-    SetCpuMaxFreqKhz(cpu, cpu_freq_khz);
-  }
+  HSHM_DLL void SetCpuFreqKhz(int cpu, size_t cpu_freq_khz);
 
-  void SetCpuMinFreqKhz(int cpu, size_t cpu_freq_khz) {
-    std::string cpu_str = hshm::Formatter::format(
-        "/sys/devices/system/cpu/cpu{}/cpufreq/scaling_min_freq",
-        cpu);
-    std::ofstream min_freq_file(cpu_str);
-    min_freq_file << cpu_freq_khz;
-  }
+  HSHM_DLL void SetCpuMinFreqKhz(int cpu, size_t cpu_freq_khz);
 
-  void SetCpuMaxFreqKhz(int cpu, size_t cpu_freq_khz) {
-    std::string cpu_str = hshm::Formatter::format(
-        "/sys/devices/system/cpu/cpu{}/cpufreq/scaling_max_freq",
-        cpu);
-    std::ofstream max_freq_file(cpu_str);
-    max_freq_file << cpu_freq_khz;
-  }
+  HSHM_DLL void SetCpuMaxFreqKhz(int cpu, size_t cpu_freq_khz);
+
+  HSHM_DLL static int GetCpuCount();
+
+  HSHM_DLL static int GetPageSize();
+
+  HSHM_DLL static int GetTid();
+
+  HSHM_DLL static int GetPid();
+
+  HSHM_DLL static int GetUid();
+
+  HSHM_DLL static int GetGid();
+
+  HSHM_DLL static size_t GetRamCapacity();
+
+  HSHM_DLL static void YieldThread();
+
+  HSHM_DLL static bool CreateTls(ThreadLocalKey &key, void *data);
+
+  HSHM_DLL static bool SetTls(const ThreadLocalKey &key, void *data);
+
+  HSHM_DLL static void *GetTls(const ThreadLocalKey &key);
+
+  HSHM_DLL static bool CreateNewSharedMemory(File &fd, const std::string &name,
+                                             size_t size);
+
+  HSHM_DLL static bool OpenSharedMemory(File &fd, const std::string &name);
+
+  HSHM_DLL static void CloseSharedMemory(File &file);
+
+  HSHM_DLL static void DestroySharedMemory(const std::string &name);
+
+  HSHM_DLL static void *MapPrivateMemory(size_t size);
+
+  HSHM_DLL static void *MapSharedMemory(const File &fd, size_t size, i64 off);
+
+  HSHM_DLL static void UnmapMemory(void *ptr, size_t size);
+
+  HSHM_DLL static void *AlignedAlloc(size_t alignment, size_t size);
+
+  HSHM_DLL static std::string getenv(const char *name, size_t max_size);
+
+  HSHM_DLL static void setenv(const char *name, const std::string &value,
+                              int overwrite);
+
+  HSHM_DLL static void unsetenv(const char *name);
 };
 
 }  // namespace hshm
+
+#undef WIN32_LEAN_AND_MEAN
 
 #endif  // HERMES_SYSINFO_INFO_H_

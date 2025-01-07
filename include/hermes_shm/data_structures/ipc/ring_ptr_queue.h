@@ -251,7 +251,7 @@ class ring_ptr_queue_base : public ShmContainer {
 
     // Pop the element, but only if it's marked valid
     qtok_id idx = head % (*queue_).size();
-    T &entry = (*queue_)[idx];
+    T &entry = (*queue_)[(size_t)idx];
 
     // Check if bit is marked
     bool is_marked = IsMarked(entry);

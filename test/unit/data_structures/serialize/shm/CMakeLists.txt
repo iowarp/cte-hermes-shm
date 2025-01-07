@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
 project(hermes_shm)
 
-set(CMAKE_CXX_STANDARD 17)
+
 
 #------------------------------------------------------------------------------
 # Test Cases
@@ -9,8 +9,8 @@ set(CMAKE_CXX_STANDARD 17)
 set (LIBS
         hermes_shm_data_structures
         Catch2::Catch2
-        MPI::MPI_CXX
-        OpenMP::OpenMP_CXX)
+        ${MPI_LIBS}
+        ${OpenMP_LIBS})
 add_executable(test_shm_exec
         ${TEST_MAIN}/main.cc
         test_init.cc

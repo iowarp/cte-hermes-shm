@@ -3,14 +3,14 @@
 //
 
 #include <cuda_runtime.h>
-#include <hermes_shm/data_structures/ipc/ring_queue.h>
-#include <hermes_shm/data_structures/ipc/unordered_map.h>
 #include <stdio.h>
 
 #include <cassert>
 
 #include "hermes_shm/constants/macros.h"
+#include "hermes_shm/data_structures/ipc/ring_queue.h"
 #include "hermes_shm/data_structures/ipc/string.h"
+#include "hermes_shm/data_structures/ipc/unordered_map.h"
 #include "hermes_shm/memory/backend/cuda_shm_mmap.h"
 #include "hermes_shm/memory/memory_manager.h"
 #include "hermes_shm/thread/lock/mutex.h"
@@ -87,7 +87,8 @@ void mpsc_test() {
   mem_mngr->UnregisterAllocator(alloc_id);
   mem_mngr->DestroyBackend(hipc::MemoryBackendId::Get(0));
   mem_mngr->CreateBackend<hipc::CudaShmMmap>(hipc::MemoryBackendId::Get(0),
-                                             MEGABYTES(100), shm_url, 0);
+                                             hshm::Unit<size_t>::Megabytes(100),
+                                             shm_url, 0);
   auto *alloc = mem_mngr->CreateAllocator<hipc::ScalablePageAllocator>(
       hipc::MemoryBackendId::Get(0), alloc_id, 0);
 

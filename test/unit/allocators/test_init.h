@@ -15,7 +15,6 @@
 
 #include "basic_test.h"
 #include "hermes_shm/memory/memory_manager.h"
-#include "omp.h"
 
 using hshm::ipc::Allocator;
 using hshm::ipc::AllocatorId;
@@ -38,8 +37,8 @@ AllocT *Pretest() {
   auto mem_mngr = HERMES_MEMORY_MANAGER;
   mem_mngr->UnregisterAllocator(alloc_id);
   mem_mngr->DestroyBackend(hipc::MemoryBackendId::Get(0));
-  mem_mngr->CreateBackendWithUrl<BackendT>(hipc::MemoryBackendId::Get(0),
-                                           GIGABYTES(1), shm_url);
+  mem_mngr->CreateBackendWithUrl<BackendT>(
+      hipc::MemoryBackendId::Get(0), hshm::Unit<size_t>::Gigabytes(1), shm_url);
   mem_mngr->CreateAllocator<AllocT>(hipc::MemoryBackendId::Get(0), alloc_id,
                                     sizeof(SimpleAllocatorHeader));
   auto alloc = mem_mngr->GetAllocator<AllocT>(alloc_id);
@@ -55,12 +54,12 @@ class Workloads {
  public:
   static void PageAllocationTest(AllocT *alloc) {
     size_t count = 1024;
-    size_t page_size = KILOBYTES(4);
+    size_t page_size = hshm::Unit<size_t>::Kilobytes(4);
     auto mem_mngr = HERMES_MEMORY_MANAGER;
 
     // Allocate pages
     std::vector<Pointer> ps(count);
-    void *ptrs[count];
+    std::vector<void *> ptrs(count);
     for (size_t i = 0; i < count; ++i) {
       ptrs[i] = alloc->template AllocatePtr<void>(HSHM_DEFAULT_MEM_CTX,
                                                   page_size, ps[i]);
@@ -74,7 +73,7 @@ class Workloads {
     for (size_t i = 0; i < count; ++i) {
       Pointer p = mem_mngr->Convert(ptrs[i]);
       REQUIRE(p == ps[i]);
-      REQUIRE(VerifyBuffer((char *)ptrs[i], page_size, i));
+      REQUIRE(VerifyBuffer((char *)ptrs[i], page_size, (char)i));
     }
 
     // Check the custom header
@@ -83,7 +82,7 @@ class Workloads {
 
     // Free pages
     for (size_t i = 0; i < count; ++i) {
-      alloc->template Free(HSHM_DEFAULT_MEM_CTX, ps[i]);
+      alloc->Free(HSHM_DEFAULT_MEM_CTX, ps[i]);
     }
 
     // Reallocate pages
@@ -96,15 +95,20 @@ class Workloads {
 
     // Free again
     for (size_t i = 0; i < count; ++i) {
-      alloc->template Free(HSHM_DEFAULT_MEM_CTX, ps[i]);
+      alloc->Free(HSHM_DEFAULT_MEM_CTX, ps[i]);
     }
 
     return;
   }
 
   static void MultiPageAllocationTest(AllocT *alloc) {
-    std::vector<size_t> alloc_sizes = {
-        64, 128, 256, KILOBYTES(1), KILOBYTES(4), KILOBYTES(64), MEGABYTES(1)};
+    std::vector<size_t> alloc_sizes = {64,
+                                       128,
+                                       256,
+                                       hshm::Unit<size_t>::Kilobytes(1),
+                                       hshm::Unit<size_t>::Kilobytes(4),
+                                       hshm::Unit<size_t>::Kilobytes(64),
+                                       hshm::Unit<size_t>::Megabytes(1)};
 
     // Allocate and free pages between 64 bytes and 32MB
     {
@@ -112,11 +116,10 @@ class Workloads {
         for (size_t i = 0; i < alloc_sizes.size(); ++i) {
           Pointer ps[16];
           for (size_t j = 0; j < 16; ++j) {
-            ps[j] =
-                alloc->template Allocate(HSHM_DEFAULT_MEM_CTX, alloc_sizes[i]);
+            ps[j] = alloc->Allocate(HSHM_DEFAULT_MEM_CTX, alloc_sizes[i]);
           }
           for (size_t j = 0; j < 16; ++j) {
-            alloc->template Free(HSHM_DEFAULT_MEM_CTX, ps[j]);
+            alloc->Free(HSHM_DEFAULT_MEM_CTX, ps[j]);
           }
         }
       }
@@ -125,13 +128,14 @@ class Workloads {
 
   static void ReallocationTest(AllocT *alloc) {
     std::vector<std::pair<size_t, size_t>> sizes = {
-        {KILOBYTES(3), KILOBYTES(4)}, {KILOBYTES(4), MEGABYTES(1)}};
+        {hshm::Unit<size_t>::Kilobytes(3), hshm::Unit<size_t>::Kilobytes(4)},
+        {hshm::Unit<size_t>::Kilobytes(4), hshm::Unit<size_t>::Megabytes(1)}};
 
     // Reallocate a small page to a larger page
     for (auto &[small_size, large_size] : sizes) {
       Pointer p;
       char *ptr = alloc->template AllocatePtr<char>(HSHM_DEFAULT_MEM_CTX,
-                                                    small_size, p);
+                                                    (size_t)small_size, p);
       memset(ptr, 10, small_size);
       char *new_ptr = alloc->template ReallocatePtr<char>(HSHM_DEFAULT_MEM_CTX,
                                                           p, large_size);
@@ -139,13 +143,13 @@ class Workloads {
         REQUIRE(ptr[i] == 10);
       }
       memset(new_ptr, 0, large_size);
-      alloc->template Free(HSHM_DEFAULT_MEM_CTX, p);
+      alloc->Free(HSHM_DEFAULT_MEM_CTX, p);
     }
   }
 
   static void AlignedAllocationTest(AllocT *alloc) {
     std::vector<std::pair<size_t, size_t>> sizes = {
-        {KILOBYTES(4), KILOBYTES(4)},
+        {hshm::Unit<size_t>::Kilobytes(4), hshm::Unit<size_t>::Kilobytes(4)},
     };
 
     // Aligned allocate pages
@@ -156,7 +160,7 @@ class Workloads {
                                                       size, p, alignment);
         REQUIRE(((size_t)ptr % alignment) == 0);
         memset(alloc->template Convert<void>(p), 0, size);
-        alloc->template Free(HSHM_DEFAULT_MEM_CTX, p);
+        alloc->Free(HSHM_DEFAULT_MEM_CTX, p);
       }
     }
   }

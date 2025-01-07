@@ -107,12 +107,16 @@ class AllocatorTestSuite {
     std::mt19937 rng(23522523);
     std::vector<size_t> sizes_;
 
-    seq(sizes_, 64, MEGABYTES(1) / 64);
-    seq(sizes_, 190, MEGABYTES(1) / 190);
-    seq(sizes_, KILOBYTES(1), MEGABYTES(1) / KILOBYTES(1));
-    seq(sizes_, KILOBYTES(4), MEGABYTES(8) / KILOBYTES(4));
-    seq(sizes_, KILOBYTES(32), MEGABYTES(4) / KILOBYTES(4));
-    seq(sizes_, MEGABYTES(1), MEGABYTES(64) / MEGABYTES(1));
+    seq(sizes_, 64, hshm::Unit<size_t>::Megabytes(1) / 64);
+    seq(sizes_, 190, hshm::Unit<size_t>::Megabytes(1) / 190);
+    seq(sizes_, hshm::Unit<size_t>::Kilobytes(1),
+        hshm::Unit<size_t>::Megabytes(1) / hshm::Unit<size_t>::Kilobytes(1));
+    seq(sizes_, hshm::Unit<size_t>::Kilobytes(4),
+        hshm::Unit<size_t>::Megabytes(8) / hshm::Unit<size_t>::Kilobytes(4));
+    seq(sizes_, hshm::Unit<size_t>::Kilobytes(32),
+        hshm::Unit<size_t>::Megabytes(4) / hshm::Unit<size_t>::Kilobytes(4));
+    seq(sizes_, hshm::Unit<size_t>::Megabytes(1),
+        hshm::Unit<size_t>::Megabytes(64) / hshm::Unit<size_t>::Megabytes(1));
     std::shuffle(std::begin(sizes_), std::end(sizes_), rng);
     std::vector<Pointer> window(sizes_.size());
     size_t num_windows = 500;
@@ -230,10 +234,10 @@ void AllocatorTest(AllocatorType alloc_type, MemoryBackendType backend_type,
     // Allocate many and then free many
     //  AllocatorTestSuite<AllocT>((alloc_type,
     //  *scoped_tls).AllocateThenFreeFixedSize(
-    //    count, KILOBYTES(1));
+    //    count, hshm::Unit<size_t>::Kilobytes(1));
     // Allocate and free immediately
     AllocatorTestSuite<AllocT>(alloc_type, *scoped_tls)
-        .AllocateAndFreeFixedSize(count, KILOBYTES(1));
+        .AllocateAndFreeFixedSize(count, hshm::Unit<size_t>::Kilobytes(1));
     // Allocate and free randomly
     // AllocatorTestSuite<AllocT>(alloc_type, *scoped_tls)
     //     .AllocateAndFreeRandomWindow(count);

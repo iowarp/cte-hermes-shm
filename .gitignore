@@ -15,3 +15,4 @@ build
 Testing
 *.env
 CMakePresets.json
+vcpkg_installed

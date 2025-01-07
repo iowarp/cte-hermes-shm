@@ -13,10 +13,11 @@
 #ifndef HERMES_BASICS_H
 #define HERMES_BASICS_H
 
-#include <hermes_shm/constants/macros.h>
-
 #include <cstddef>
 #include <cstdint>
+
+#include "hermes_shm/constants/macros.h"
+#include "hermes_shm/types/numbers.h"
 
 #ifdef __cplusplus
 
@@ -44,7 +45,7 @@ struct RealNumber {
   explicit RealNumber(uint64_t numerator, uint64_t denominator) {
     decimal_ = numerator / denominator;
     uint64_t rem = numerator % denominator;
-    numerator_ = rem * precision / denominator;
+    numerator_ = (u32)(rem * precision / denominator);
   }
 
   /**
@@ -92,7 +93,7 @@ struct RealNumber {
   }
 
   HSHM_INLINE_CROSS_FUN
-  size_t as_int() const { return decimal_ + numerator_ / precision; }
+  size_t as_int() const { return (size_t)(decimal_ + numerator_ / precision); }
 };
 
 }  // namespace hshm

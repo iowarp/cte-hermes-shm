@@ -14,7 +14,6 @@
 #define HERMES_SHM_INCLUDE_HERMES_SHM_UTIL_TIMER_THREAD_H_
 
 #include "timer.h"
-#include "omp.h"
 
 namespace hshm {
 
@@ -30,21 +29,13 @@ class ThreadTimer : public NsecTimer {
     timers_.resize(nprocs_);
   }
 
-  void SetRank(int rank) {
-    rank_ = rank;
-  }
+  void SetRank(int rank) { rank_ = rank; }
 
-  void Resume() {
-    timers_[rank_].Resume();
-  }
+  void Resume() { timers_[rank_].Resume(); }
 
-  void Pause() {
-    timers_[rank_].Pause();
-  }
+  void Pause() { timers_[rank_].Pause(); }
 
-  void Reset() {
-    timers_[rank_].Reset();
-  }
+  void Reset() { timers_[rank_].Reset(); }
 
   void Collect() {
     std::vector<double> rank_times;
@@ -55,7 +46,6 @@ class ThreadTimer : public NsecTimer {
     time_ns_ = *std::max_element(rank_times.begin(), rank_times.end());
   }
 };
-
 
 }  // namespace hshm
 

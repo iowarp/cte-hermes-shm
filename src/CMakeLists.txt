@@ -9,14 +9,15 @@ if (HERMES_ENABLE_CUDA)
 endif()
 project(hermes_shm LANGUAGES ${LANG})
 
-set(CMAKE_CXX_STANDARD 17)
+
 
 #-----------------------------------------------------------------------------
 # Build HSHM
 #-----------------------------------------------------------------------------
 set (SOURCE_FILES
-        data_structure_singleton.cc
-        memory_manager.cc) 
+        memory_manager.cc
+        system_info.cc
+        data_structure_singleton.cc)
 if (BUILD_SHARED_LIBS)
     message("Building dynamic library")
     add_library(hermes_shm_data_structures SHARED ${SOURCE_FILES})
@@ -24,18 +25,15 @@ else()
     message("Building static library")
     add_library(hermes_shm_data_structures STATIC ${SOURCE_FILES})
 endif()
-target_link_libraries(hermes_shm_data_structures
-        -lrt -ldl
-        cereal::cereal yaml-cpp
-        $<$<BOOL:${HERMES_RPC_THALLIUM}>:thallium>
+target_link_libraries(hermes_shm_data_structures 
+        yaml-cpp
+        ${REAL_TIME_FLAGS}
+        ${SERIALIZATION_LIBS}
         ${COMPRESS_LIBS}
         ${ENCRYPT_LIBS}
 )
 if (HERMES_ENABLE_PTHREADS)
     target_link_libraries(hermes_shm_data_structures pthread)
-endif()
-if (HERMES_ENABLE_OPENMP)
-    target_link_libraries(hermes_shm_data_structures OpenMP::OpenMP_CXX)
 endif()
 if (HERMES_ENABLE_CUDA)
     foreach (SOURCE IN LISTS SOURCE_FILES)

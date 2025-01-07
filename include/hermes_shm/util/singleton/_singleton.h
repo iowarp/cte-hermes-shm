@@ -30,9 +30,9 @@ template <typename T, bool WithLock>
 class SingletonBase {
  private:
   /** static instance. */
-  static char data_[sizeof(T)];
-  static T *obj_;
-  static hshm::SpinLock lock_;
+  HSHM_DLL_SINGLETON static char data_[sizeof(T)];
+  HSHM_DLL_SINGLETON static T *obj_;
+  HSHM_DLL_SINGLETON static hshm::SpinLock lock_;
 
  public:
   /** Get or create an instance of type T */

@@ -28,17 +28,15 @@ namespace hshm {
 template <typename T>
 class GlobalSingleton {
  public:
-  static T obj_;
+  HSHM_DLL_SINGLETON static T obj_;
 
  public:
   /** Get instance of type T */
-  HSHM_INLINE static T* GetInstance() { return &obj_; }
+  static T* GetInstance() { return &obj_; }
 
   /** Get ref of type T */
-  HSHM_INLINE static T& GetRef() { return obj_; }
+  static T& GetRef() { return obj_; }
 };
-// template <typename T>
-// T GlobalSingleton<T>::obj_;
 #define DEFINE_GLOBAL_SINGLETON_CC(T) \
   template <>                         \
   T hshm::GlobalSingleton<T>::obj_ = T();

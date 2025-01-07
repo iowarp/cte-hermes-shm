@@ -1,16 +1,17 @@
 cmake_minimum_required(VERSION 3.10)
 project(hermes_shm LANGUAGES C CXX)
-
 set(CMAKE_CXX_STANDARD 17)
 
 #------------------------------------------------------------------------------
 # Global variables
 #------------------------------------------------------------------------------
-set(HERMES_SHM_VERSION_MAJOR 1)
-set(HERMES_SHM_VERSION_MINOR 1)
+set(HERMES_SHM_VERSION_MAJOR 2)
+set(HERMES_SHM_VERSION_MINOR 0)
 set(HERMES_SHM_VERSION_PATCH 0)
 set(HERMES_SHM_ROOT ${CMAKE_CURRENT_SOURCE_DIR})
 include_directories(${HERMES_SHM_ROOT}/include)
+include_directories(${PROJECT_BINARY_DIR}/include)
+add_compile_definitions(_CRT_SECURE_NO_DEPRECATE)
 
 #------------------------------------------------------------------------------
 # Options
@@ -18,25 +19,34 @@ include_directories(${HERMES_SHM_ROOT}/include)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 option(BUILD_SHARED_LIBS "Build shared libraries (.dll/.so) instead of static ones (.lib/.a)" ON)
 option(BUILD_HSHM_TESTS "Build tests" ON)
-option(BUILD_HSHM_BENCHMARKS "Build benchmarks" ON)
-option(BUILD_MPI_TESTS "Build tests which depend on MPI" ON)
-option(BUILD_OpenMP_TESTS "Build tests which depend on OpenMP" ON)
-option(BUILD_Boost_TESTS "Build tests which depend on libboost" ON)
-option(HERMES_RPC_THALLIUM "Build tests which depend on thallium" ON)
-option(HERMES_ENABLE_OPENMP "Enable the use of OpenMP" ON)
-option(HERMES_ENABLE_CEREAL "Enable serialization using cereal" ON)
+option(BUILD_HSHM_BENCHMARKS "Build benchmarks" OFF)
+
+option(HERMES_ENABLE_MPI "Enable MPI support" OFF)
+option(HERMES_RPC_THALLIUM "Build tests which depend on thallium" OFF)
+option(HERMES_ENABLE_OPENMP "Enable the use of OpenMP" OFF)
+option(HERMES_ENABLE_CEREAL "Enable serialization using cereal" OFF)
 option(HERMES_ENABLE_COVERAGE "Check how well tests cover code" OFF)
-option(HERMES_ENABLE_DOXYGEN "Check how well the code is documented" ON)
-option(HERMES_CXX_PROFILE "Generate profiling data from benchmarks" OFF)
-option(HERMES_ENABLE_PTHREADS "Support spawning pthreads" ON)
+option(HERMES_ENABLE_DOXYGEN "Check how well the code is documented" OFF)
+
+option(HERMES_ENABLE_WINDOWS_THREADS "Support spawning windows threads" OFF)
+option(HERMES_ENABLE_PTHREADS "Support spawning pthreads" OFF)
 option(HERMES_DEBUG_LOCK "Used for debugging locks" OFF)
-option(HERMES_ENABLE_PROFILING "View profiling logs" OFF)
 option(HERMES_ENABLE_COMPRESS "Enable compression" OFF)
 option(HERMES_ENABLE_ENCRYPT "Enable encryption" OFF)
 option(HERMES_USE_ELF "Enable elf" OFF)
 option(HERMES_ENABLE_CUDA "Enable CUDA support" OFF)
 option(HERMES_ENABLE_ROCM "Enable ROCm support" OFF)
 option(HERMES_NO_COMPILE "Disable compiling / installing this library" OFF)
+
+if (WIN32)
+    message(STATUS "Detected Windows OS")
+    set(HERMES_ENABLE_WINDOWS_SYSINFO ON)
+    set(HERMES_ENABLE_WINDOWS_THREADS ON)
+else()
+    message(STATUS "Detected non-Windows OS")
+    set(HERMES_ENABLE_PROCFS_SYSINFO ON)
+    set(HERMES_ENABLE_PTHREADS ON)
+endif()
 
 if (HERMES_NO_COMPILE)
     install(
@@ -46,16 +56,6 @@ if (HERMES_NO_COMPILE)
             ${CMAKE_INSTALL_PREFIX}/include/hermes_shm/constants/
     )
     return()
-endif()
-
-if (HERMES_ENABLE_PTHREADS)
-    add_compile_definitions(HERMES_ENABLE_PTHREADS)
-endif()
-if (HERMES_RPC_THALLIUM)
-    add_compile_definitions(HERMES_RPC_THALLIUM)
-endif()
-if (HERMES_DEBUG_LOCK)
-    add_compile_definitions(HERMES_DEBUG_LOCK)
 endif()
 
 #------------------------------------------------------------------------------
@@ -130,25 +130,32 @@ endif()
 #------------------------------------------------------------------------------
 # Optimization
 #------------------------------------------------------------------------------
-set(CMAKE_CXX_STANDARD 17)
+
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    message("IN DEBUG MODE")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O0")
-    add_compile_definitions(HSHM_DEBUG)
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "MinGW" OR CMAKE_CXX_COMPILER STREQUAL "Intel")
+    if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+        message("IN DEBUG MODE")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O0")
+        add_compile_definitions(HSHM_DEBUG)
+    else()
+        message("IN RELEASE MODE")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O3")
+    endif()
+    set(HSHM_COMPILER_GNU "ON")
+    set(REAL_TIME_FLAGS "-lrt -ldl")
+elseif (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+    if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+        message("IN DEBUG MODE")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Zi /Od")
+        add_compile_definitions(HSHM_DEBUG)
+    else()
+        message("IN RELEASE MODE")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /O2")
+    endif()
+    set(HSHM_COMPILER_MSVC "ON")
 else()
-    message("IN RELEASE MODE")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O3")
+    message(FATAL_ERROR "Unsupported compiler ${CMAKE_CXX_COMPILER_ID}")
 endif()
-if(HERMES_CXX_PROFILE)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
-    message("CXX PROFILER IS ON")
-endif()
-#function(make_gprof exec_name exec_dir)
-#    add_custom_target(
-#      ${exec_name}_gprof
-#      COMMAND gprof -b -A -p -q ${exec_dir}/${exec_name} gmon.out)
-#endfunction()
 
 #------------------------------------------------------------------------------
 # External libraries
@@ -165,14 +172,16 @@ find_package(yaml-cpp REQUIRED)
 message(STATUS "found yaml-cpp at ${yaml-cpp_DIR}")
 
 # MPICH
-if(BUILD_MPI_TESTS)
+if(HERMES_ENABLE_MPI)
     find_package(MPI REQUIRED COMPONENTS C CXX)
+    set(MPI_LIBS MPI::MPI_CXX)
     message(STATUS "found mpi.h at ${MPI_CXX_INCLUDE_DIRS}")
 endif()
 
 # OpenMP
-if(BUILD_OpenMP_TESTS)
+if(HERMES_ENABLE_OPENMP)
     find_package(OpenMP REQUIRED COMPONENTS C CXX)
+    set(OPENMP_LIBS OpenMP::OpenMP_CXX)
     message(STATUS "found omp.h at ${OpenMP_CXX_INCLUDE_DIRS}")
 endif()
 
@@ -182,6 +191,7 @@ if(HERMES_RPC_THALLIUM)
     if(thallium_FOUND)
         message(STATUS "found thallium at ${thallium_DIR}")
     endif()
+    set(SERIALIZATION_LIBS thallium ${SERIALIZATION_LIBS})
 endif()
 
 # Cereal
@@ -190,13 +200,12 @@ if(HERMES_ENABLE_CEREAL)
     if(cereal_FOUND)
         message(STATUS "found cereal at ${cereal_DIR}")
     endif()
+    set(SERIALIZATION_LIBS cereal::cereal ${SERIALIZATION_LIBS})
 endif()
 
 # Boost
-if(BUILD_Boost_TESTS)
-    find_package(Boost REQUIRED)
-    message(STATUS "found boost.h at ${Boost_INCLUDE_DIRS}")
-endif()
+find_package(Boost REQUIRED)
+message(STATUS "found boost.h at ${Boost_INCLUDE_DIRS}")
 
 # Compression libraries
 if(HERMES_ENABLE_COMPRESS)
@@ -341,14 +350,15 @@ endif()
 #------------------------------------------------------------------------------
 install(DIRECTORY include DESTINATION ${CMAKE_INSTALL_PREFIX})
 
-configure_file(
-        ${CMAKE_CURRENT_SOURCE_DIR}/CMake/HermesShmConfig.cmake
-        ${PROJECT_BINARY_DIR}/CMakeFiles/HermesShmConfig.cmake @ONLY
-)
-
+# Configure the hermes_shm options
 configure_file(
         ${CMAKE_CURRENT_SOURCE_DIR}/include/hermes_shm/constants/settings.h_templ
         ${PROJECT_BINARY_DIR}/include/hermes_shm/constants/settings.h @ONLY
+)
+
+configure_file(
+        ${CMAKE_CURRENT_SOURCE_DIR}/CMake/HermesShmConfig.cmake
+        ${PROJECT_BINARY_DIR}/CMakeFiles/HermesShmConfig.cmake @ONLY
 )
 
 configure_file(

@@ -5,23 +5,23 @@
 #ifndef CUDA_MALLOC_H
 #define CUDA_MALLOC_H
 
-#include "memory_backend.h"
-#include "hermes_shm/util/logging.h"
-#include <string>
-#include <unistd.h>
-
-#include <hermes_shm/util/errors.h>
-#include <hermes_shm/constants/macros.h>
-#include <hermes_shm/introspect/system_info.h>
 #include <cuda_runtime.h>
+
+#include <string>
+
+#include "hermes_shm/constants/macros.h"
+#include "hermes_shm/introspect/system_info.h"
+#include "hermes_shm/util/errors.h"
+#include "hermes_shm/util/logging.h"
+#include "memory_backend.h"
 
 namespace hshm::ipc {
 
 class CudaMalloc : public MemoryBackend {
-private:
+ private:
   size_t total_size_;
 
-public:
+ public:
   /** Constructor */
   HSHM_CROSS_FUN
   CudaMalloc() = default;
@@ -41,35 +41,31 @@ public:
     Own();
     total_size_ = sizeof(MemoryBackendHeader) + size;
     char *ptr = _Map(total_size_);
-    header_ = reinterpret_cast<MemoryBackendHeader*>(ptr);
+    header_ = reinterpret_cast<MemoryBackendHeader *>(ptr);
     header_->type_ = MemoryBackendType::kCudaMalloc;
     header_->id_ = backend_id;
     header_->data_size_ = size;
     data_size_ = size;
-    data_ = reinterpret_cast<char*>(header_ + 1);
+    data_ = reinterpret_cast<char *>(header_ + 1);
     return true;
   }
 
   /** Deserialize the backend */
   bool shm_deserialize(const hshm::chararr &url) {
-    (void) url;
+    (void)url;
     HERMES_THROW_ERROR(SHMEM_NOT_SUPPORTED);
   }
 
   /** Detach the mapped memory */
-  void shm_detach() {
-    _Detach();
-  }
+  void shm_detach() { _Detach(); }
 
   /** Destroy the mapped memory */
-  void shm_destroy() {
-    _Destroy();
-  }
+  void shm_destroy() { _Destroy(); }
 
-protected:
+ protected:
   /** Map shared memory */
-  template<typename T = char>
-  T* _Map(size_t size) {
+  template <typename T = char>
+  T *_Map(size_t size) {
     T *ptr;
     cudaMallocManaged(&ptr, size);
     return ptr;
@@ -80,7 +76,9 @@ protected:
 
   /** Destroy shared memory */
   void _Destroy() {
-    if (!IsInitialized()) { return; }
+    if (!IsInitialized()) {
+      return;
+    }
     cudaFree(header_);
     UnsetInitialized();
   }

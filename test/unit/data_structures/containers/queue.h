@@ -15,7 +15,6 @@
 
 #include "hermes_shm/data_structures/all.h"
 #include "hermes_shm/util/logging.h"
-#include "omp.h"
 #include "test_init.h"
 
 struct IntEntry : public hipc::list_queue_entry {

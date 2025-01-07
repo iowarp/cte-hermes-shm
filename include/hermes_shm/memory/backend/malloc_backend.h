@@ -13,21 +13,16 @@
 #ifndef HERMES_INCLUDE_HERMES_MEMORY_BACKEND_MALLOC_H
 #define HERMES_INCLUDE_HERMES_MEMORY_BACKEND_MALLOC_H
 
-#include "memory_backend.h"
-#include <string>
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <fcntl.h>
-#include <sys/shm.h>
-#include <sys/stat.h>
-#include <sys/mman.h>
-#include <unistd.h>
 
-#include <hermes_shm/util/errors.h>
-#include <hermes_shm/constants/macros.h>
-#include <hermes_shm/introspect/system_info.h>
+#include <string>
+
+#include "hermes_shm/constants/macros.h"
+#include "hermes_shm/introspect/system_info.h"
+#include "hermes_shm/util/errors.h"
+#include "memory_backend.h"
 
 namespace hshm::ipc {
 
@@ -46,38 +41,30 @@ class MallocBackend : public MemoryBackend {
     SetInitialized();
     Own();
     total_size_ = sizeof(MemoryBackendHeader) + size;
-    char *ptr = (char*)malloc(total_size_);
-    header_ = reinterpret_cast<MemoryBackendHeader*>(ptr);
+    char *ptr = (char *)malloc(total_size_);
+    header_ = reinterpret_cast<MemoryBackendHeader *>(ptr);
     header_->type_ = MemoryBackendType::kMallocBackend;
     header_->id_ = backend_id;
     header_->data_size_ = size;
     data_size_ = size;
-    data_ = (char*)(header_ + 1);
+    data_ = (char *)(header_ + 1);
     return true;
   }
 
   bool shm_deserialize(const hshm::chararr &url) override {
-    (void) url;
+    (void)url;
     HERMES_THROW_ERROR(SHMEM_NOT_SUPPORTED);
     return false;
   }
 
-  void shm_detach() override {
-    _Detach();
-  }
+  void shm_detach() override { _Detach(); }
 
-  void shm_destroy() override {
-    _Destroy();
-  }
+  void shm_destroy() override { _Destroy(); }
 
  protected:
-  void _Detach() {
-    free(header_);
-  }
+  void _Detach() { free(header_); }
 
-  void _Destroy() {
-    free(header_);
-  }
+  void _Destroy() { free(header_); }
 };
 
 }  // namespace hshm::ipc

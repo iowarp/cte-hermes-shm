@@ -13,8 +13,6 @@
 #ifndef HERMES_TEST_UNIT_DATA_STRUCTURES_TEST_INIT_H_
 #define HERMES_TEST_UNIT_DATA_STRUCTURES_TEST_INIT_H_
 
-#include <mpi.h>
-
 #include "hermes_shm/data_structures/all.h"
 
 using hshm::ipc::Allocator;
@@ -41,8 +39,8 @@ void PretestRank0() {
   auto mem_mngr = HERMES_MEMORY_MANAGER;
   mem_mngr->UnregisterAllocator(alloc_id);
   mem_mngr->DestroyBackend(hipc::MemoryBackendId::Get(0));
-  mem_mngr->CreateBackend<PosixShmMmap>(hipc::MemoryBackendId::Get(0),
-                                        GIGABYTES(1), shm_url);
+  mem_mngr->CreateBackend<PosixShmMmap>(
+      hipc::MemoryBackendId::Get(0), hshm::Unit<size_t>::Gigabytes(1), shm_url);
   mem_mngr->CreateAllocator<AllocT>(hipc::MemoryBackendId::Get(0), alloc_id, 0);
 }
 

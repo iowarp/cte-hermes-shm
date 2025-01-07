@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
 project(hermes_shm)
 
-set(CMAKE_CXX_STANDARD 17)
+
 
 #------------------------------------------------------------------------------
 # Build Tests
@@ -12,7 +12,7 @@ add_executable(test_encrypt_exec
         test_encrypt.cc)
 add_dependencies(test_encrypt_exec hermes_shm_data_structures)
 target_link_libraries(test_encrypt_exec
-        hermes_shm_data_structures Catch2::Catch2 MPI::MPI_CXX OpenMP::OpenMP_CXX)
+        hermes_shm_data_structures Catch2::Catch2)
 
 add_test(NAME test_encrypt COMMAND
         ${CMAKE_BINARY_DIR}/bin/test_encrypt_exec "~[error=FatalError]")

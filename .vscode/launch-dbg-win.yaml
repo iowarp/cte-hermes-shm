@@ -1,0 +1,40 @@
+requirements:
+    os: windows
+macros:
+    debug:
+        name: $(launch-name)
+        type: cppvsdbg
+        request: launch
+        program: ${workspaceFolder}/build/bin/$(program).exe
+        args: $(args)
+        stopAtEntry: false
+        cwd: ${workspaceFolder}
+        environment: []
+        externalConsole: false
+
+version: 0.2.0
+configurations:
+    - macro: debug
+      launch-name: test-local-serialize
+      program: test_shm_exec
+      args: ["SerializeHshm"]
+    - macro: debug
+      launch-name: test-data-structures
+      program: test_data_structure_exec
+      args: [""]
+    - macro: debug
+      launch-name: test-allocators
+      program: test_allocator_exec
+      args: [""]
+    - macro: debug
+      launch-name: test-rocm
+      program: test_memory_rocm_exec
+      args: [""]
+    - macro: debug
+      launch-name: bench-allocators
+      program: benchmark_allocators_exec
+      args: [""]
+    - macro: debug
+      launch-name: bench-data-structures
+      program: benchmark_data_structures_exec
+      args: [""]

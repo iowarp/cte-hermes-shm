@@ -14,7 +14,6 @@
 #define HERMES_THREAD_PTHREAD_H_
 
 #include <errno.h>
-#include <omp.h>
 
 #include "hermes_shm/introspect/system_info.h"
 #include "hermes_shm/util/errors.h"

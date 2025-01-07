@@ -13,21 +13,25 @@
 #ifndef HERMES_INCLUDE_MEMORY_BACKEND_POSIX_MMAP_H
 #define HERMES_INCLUDE_MEMORY_BACKEND_POSIX_MMAP_H
 
-#include "memory_backend.h"
-#include <string>
-
+#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <fcntl.h>
+
+#include <string>
+
+#include "hermes_shm/constants/macros.h"
+#ifdef HERMES_ENABLE_PROCFS_SYSINFO
+#include <sys/mman.h>
 #include <sys/shm.h>
 #include <sys/stat.h>
-#include <sys/mman.h>
 #include <unistd.h>
+#endif
 
-#include <hermes_shm/util/errors.h>
-#include <hermes_shm/constants/macros.h>
-#include <hermes_shm/introspect/system_info.h>
+#include "hermes_shm/constants/macros.h"
+#include "hermes_shm/introspect/system_info.h"
+#include "hermes_shm/util/errors.h"
+#include "memory_backend.h"
 
 namespace hshm::ipc {
 
@@ -55,42 +59,35 @@ class PosixMmap : public MemoryBackend {
     Own();
     total_size_ = sizeof(MemoryBackendHeader) + size;
     char *ptr = _Map(total_size_);
-    header_ = reinterpret_cast<MemoryBackendHeader*>(ptr);
+    header_ = reinterpret_cast<MemoryBackendHeader *>(ptr);
     header_->type_ = MemoryBackendType::kPosixMmap;
     header_->id_ = backend_id;
     header_->data_size_ = size;
     data_size_ = size;
-    data_ = reinterpret_cast<char*>(header_ + 1);
+    data_ = reinterpret_cast<char *>(header_ + 1);
     return true;
   }
 
   /** Deserialize the backend */
   bool shm_deserialize(const hshm::chararr &url) override {
-    (void) url;
+    (void)url;
     HERMES_THROW_ERROR(SHMEM_NOT_SUPPORTED);
     return false;
   }
 
   /** Detach the mapped memory */
-  void shm_detach() override {
-    _Detach();
-  }
+  void shm_detach() override { _Detach(); }
 
   /** Destroy the mapped memory */
-  void shm_destroy() override {
-    _Destroy();
-  }
+  void shm_destroy() override { _Destroy(); }
 
  protected:
   /** Map shared memory */
-  template<typename T = char>
-  T* _Map(size_t size) {
-    T *ptr = reinterpret_cast<T*>(
-      mmap64(nullptr, MemoryAlignment::AlignToPageSize(size),
-             PROT_READ | PROT_WRITE,
-             MAP_PRIVATE | MAP_ANONYMOUS, -1, 0));
-    if (ptr == MAP_FAILED) {
-      perror("map failed");
+  template <typename T = char>
+  T *_Map(size_t size) {
+    T *ptr = reinterpret_cast<T *>(
+        SystemInfo::MapPrivateMemory(MemoryAlignment::AlignToPageSize(size)));
+    if (!ptr) {
       HERMES_THROW_ERROR(SHMEM_CREATE_FAILED);
     }
     return ptr;
@@ -98,14 +95,18 @@ class PosixMmap : public MemoryBackend {
 
   /** Unmap shared memory */
   void _Detach() {
-    if (!IsInitialized()) { return; }
-    munmap(reinterpret_cast<void*>(header_), total_size_);
+    if (!IsInitialized()) {
+      return;
+    }
+    SystemInfo::UnmapMemory(reinterpret_cast<void *>(header_), total_size_);
     UnsetInitialized();
   }
 
   /** Destroy shared memory */
   void _Destroy() {
-    if (!IsInitialized()) { return; }
+    if (!IsInitialized()) {
+      return;
+    }
     _Detach();
     UnsetInitialized();
   }

@@ -13,10 +13,9 @@
 #ifndef HERMES_MEMORY_ALLOCATOR_STACK_ALLOCATOR_H_
 #define HERMES_MEMORY_ALLOCATOR_STACK_ALLOCATOR_H_
 
-#include <hermes_shm/memory/allocator/mp_page.h>
-
 #include "allocator.h"
 #include "heap.h"
+#include "hermes_shm/memory/allocator/mp_page.h"
 #include "hermes_shm/thread/lock.h"
 
 namespace hshm::ipc {
@@ -102,9 +101,9 @@ class _StackAllocator : public Allocator {
   /** Align the memory to the next page boundary */
   HSHM_CROSS_FUN
   void Align() {
-    size_t off = heap_->heap_off_.load();
-    size_t page_size = 4096;
-    size_t new_off = (off + page_size - 1) & ~(page_size - 1);
+    hshm::min_u64 off = heap_->heap_off_.load();
+    hshm::min_u64 page_size = 4096;
+    hshm::min_u64 new_off = (off + page_size - 1) & ~(page_size - 1);
     heap_->heap_off_.store(new_off);
   }
 
@@ -173,7 +172,7 @@ class _StackAllocator : public Allocator {
    * */
   HSHM_CROSS_FUN
   size_t GetCurrentlyAllocatedSize() {
-    return header_->GetCurrentlyAllocatedSize();
+    return (size_t)header_->GetCurrentlyAllocatedSize();
   }
 
   /**

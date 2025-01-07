@@ -10,12 +10,11 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-
 #ifndef HERMES_THREAD_THREAD_MANAGER_H_
 #define HERMES_THREAD_THREAD_MANAGER_H_
 
+#include "hermes_shm/introspect/system_info.h"
 #include "hermes_shm/thread/thread_model/thread_model.h"
-#include <hermes_shm/introspect/system_info.h>
 
 #ifdef HERMES_ENABLE_PTHREADS
 #include "thread_model/pthread.h"
@@ -29,11 +28,13 @@
 #ifdef HERMES_ENABLE_ROCM
 #include "thread_model/rocm.h"
 #endif
+#ifdef HERMES_ENABLE_WINDOWS_THREADS
+#include "thread_model/windows.h"
+#endif
 
 #include "hermes_shm/util/singleton/_easy_singleton.h"
 #define HERMES_THREAD_MODEL \
   hshm::EasySingleton<HSHM_DEFAULT_THREAD_MODEL>::GetInstance()
-#define HERMES_THREAD_MODEL_T \
-  hshm::HSHM_DEFAULT_THREAD_MODEL*
+#define HERMES_THREAD_MODEL_T hshm::HSHM_DEFAULT_THREAD_MODEL*
 
 #endif  // HERMES_THREAD_THREAD_MANAGER_H_
