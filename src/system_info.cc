@@ -145,6 +145,9 @@ int SystemInfo::GetPageSize() {
 #elif defined(HERMES_ENABLE_WINDOWS_SYSINFO)
   SYSTEM_INFO sys_info;
   GetSystemInfo(&sys_info);
+  if (sys_info.dwAllocationGranularity != 0) {
+    return sys_info.dwAllocationGranularity;
+  }
   return sys_info.dwPageSize;
 #endif
 }
@@ -305,11 +308,25 @@ void *SystemInfo::MapSharedMemory(const File &fd, size_t size, i64 off) {
   return mmap(nullptr, size, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS,
               -1, 0);
 #elif defined(HERMES_ENABLE_WINDOWS_SYSINFO)
-  return MapViewOfFile(fd.windows_fd_,       // handle to map object
-                       FILE_MAP_ALL_ACCESS,  // read/write permission
-                       0,                    // file offset high
-                       (DWORD)off,           // file offset low
-                       size);                // number of bytes to map
+  // Convert i64 to low and high dwords
+  DWORD highDword = (DWORD)((off >> 32) & 0xFFFFFFFF);
+  DWORD lowDword = (DWORD)(off & 0xFFFFFFFF);
+  void *ret = MapViewOfFile(fd.windows_fd_,       // handle to map object
+                            FILE_MAP_ALL_ACCESS,  // read/write permission
+                            highDword,            // file offset high
+                            lowDword,             // file offset low
+                            size);                // number of bytes to map
+  if (ret == nullptr) {
+    DWORD error = GetLastError();
+    LPVOID msg_buf;
+    FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM |
+                      FORMAT_MESSAGE_IGNORE_INSERTS,
+                  NULL, error, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+                  (LPTSTR)&msg_buf, 0, NULL);
+    printf("MapViewOfFile failed with error: %s\n", (char *)msg_buf);
+    LocalFree(msg_buf);
+  }
+  return ret;
 #endif
 }
 
