@@ -22,6 +22,7 @@
 #include <fstream>
 #include <iostream>
 
+#include "hermes_shm/thread/thread_model/thread_model.h"
 #include "hermes_shm/util/formatter.h"
 #include "hermes_shm/util/singleton/_singleton.h"
 
@@ -30,25 +31,6 @@
 #define HERMES_SYSTEM_INFO_T hshm::SystemInfo *
 
 namespace hshm {
-
-/** DWORD type for windows compatability */
-typedef u32 DWORD;
-
-/** HANDLE type for windows compatability */
-typedef void *HANDLE;
-
-/** Thread-local key */
-union ThreadLocalKey {
-#ifdef HERMES_ENABLE_PTHREADS
-  pthread_key_t pthread_key_;
-#endif
-#ifdef HERMES_RPC_THALLIUM
-  ABT_key argobots_key_;
-#endif
-#ifdef HERMES_ENABLE_WINDOWS_THREADS
-  DWORD windows_key_;
-#endif
-};
 
 /** File wrapper */
 union File {

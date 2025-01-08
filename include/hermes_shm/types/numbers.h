@@ -139,6 +139,12 @@ class Unit {
   }
 };
 
+/** DWORD type for windows compatability */
+typedef u32 DWORD;
+
+/** HANDLE type for windows compatability */
+typedef void *HANDLE;
+
 }  // namespace hshm
 
 /** Bytes -> Bytes */

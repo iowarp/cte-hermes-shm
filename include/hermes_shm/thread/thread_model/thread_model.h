@@ -39,9 +39,26 @@ namespace hshm {
 /** Available threads that are mapped */
 enum class ThreadType { kNone, kPthread, kArgobots, kCuda, kRocm, kWindows };
 
+/** Thread-local key */
+union ThreadLocalKey {
+#ifdef HERMES_ENABLE_PTHREADS
+  pthread_key_t pthread_key_;
+#endif
+#ifdef HERMES_RPC_THALLIUM
+  ABT_key argobots_key_;
+#endif
+#ifdef HERMES_ENABLE_WINDOWS_THREADS
+  DWORD windows_key_;
+#endif
+};
+
 }  // namespace hshm
 
 namespace hshm::thread {
+
+/** Thread-local key */
+using hshm::ThreadLocalKey;
+
 /** Thread-local storage */
 class ThreadLocalData {
  public:
@@ -57,9 +74,6 @@ class ThreadLocalData {
     }
   }
 };
-
-/** Thread-local key */
-using hshm::ThreadLocalKey;
 
 /** Represents the generic operations of a thread */
 class ThreadModel {
