@@ -14,7 +14,8 @@
         "boost-filesystem",
         "boost-serialization",
         "boost-math",
-        "cereal"
+        "cereal",
+        "pkgconf"
     ],
     "features": {
         "cereal": {
