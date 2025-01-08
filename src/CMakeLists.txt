@@ -96,17 +96,17 @@ install(TARGETS
 #-----------------------------------------------------------------------------
 # Export all exported targets to the build tree for use by parent project
 #-----------------------------------------------------------------------------
-set(HERMES_EXPORTED_LIBS
-        ${HSHM_LIBS}
-        gpu_lib_deps
-        host_deps
-        ${HERMES_EXPORTED_LIBS})
-EXPORT (
-        TARGETS
-        ${HERMES_EXPORTED_LIBS}
-        FILE
-        ${HERMES_EXPORTED_TARGETS}.cmake
-)
+# set(HERMES_EXPORTED_LIBS
+#         ${HSHM_LIBS}
+#         gpu_lib_deps
+#         host_deps
+#         ${HERMES_EXPORTED_LIBS})
+# EXPORT (
+#         TARGETS
+#         ${HERMES_EXPORTED_LIBS}
+#         FILE
+#         ${HERMES_EXPORTED_TARGETS}.cmake
+# )
 
 #-----------------------------------------------------------------------------
 # Coverage
