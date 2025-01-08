@@ -46,6 +46,7 @@ if(HERMES_RPC_THALLIUM)
         message(STATUS "found thallium at ${thallium_DIR}")
     endif()
     set(SERIALIZATION_LIBS thallium ${SERIALIZATION_LIBS})
+    set(HERMES_ENABLE_CEREAL ON)
 endif()
 
 # Cereal
