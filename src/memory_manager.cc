@@ -195,7 +195,7 @@ void MemoryManager::ScanBackends(bool find_allocs) {
   cudaGetDeviceCount(&num_gpus);
 #endif
 #if defined(HERMES_ENABLE_ROCM) && defined(HSHM_IS_HOST)
-  hipGetDeviceCount(&num_gpus);
+  HIP_ERROR_CHECK(hipGetDeviceCount(&num_gpus));
 #endif
   for (int i = 0; i < MAX_BACKENDS; ++i) {
     MemoryBackend *backend = backends_[i];

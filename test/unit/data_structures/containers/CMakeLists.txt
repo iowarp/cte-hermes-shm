@@ -30,9 +30,9 @@ add_executable(test_data_structure_exec
         ${SOURCES}
 )
 
-add_dependencies(test_data_structure_exec hermes_shm_data_structures)
+add_dependencies(test_data_structure_exec hermes_shm_host)
 target_link_libraries(test_data_structure_exec
-        hermes_shm_data_structures Catch2::Catch2
+        hermes_shm_host Catch2::Catch2
         ${MPI_LIBS} ${OpenMP_LIBS})
 
 #------------------------------------------------------------------------------

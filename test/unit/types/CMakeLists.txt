@@ -10,9 +10,9 @@ add_executable(test_types_exec
         test_argpack.cc
         test_util.cc
         test_atomics.cc)
-add_dependencies(test_types_exec hermes_shm_data_structures)
+add_dependencies(test_types_exec hermes_shm_host)
 target_link_libraries(test_types_exec
-        hermes_shm_data_structures Catch2::Catch2 ${MPI_LIBS} ${OpenMP_LIBS})
+        hermes_shm_host Catch2::Catch2 ${MPI_LIBS} ${OpenMP_LIBS})
 
 add_test(NAME test_types COMMAND
         ${CMAKE_BINARY_DIR}/bin/test_types_exec "~[error=FatalError]")
@@ -31,9 +31,9 @@ if (HERMES_ENABLE_MPI AND HERMES_ENABLE_OPENMP)
             ${TEST_MAIN}/main_mpi.cc
             test_init.cc
             test_timers.cc)
-    add_dependencies(test_timers_exec hermes_shm_data_structures)
+    add_dependencies(test_timers_exec hermes_shm_host)
     target_link_libraries(test_timers_exec
-            hermes_shm_data_structures Catch2::Catch2 ${MPI_LIBS} ${OpenMP_LIBS})
+            hermes_shm_host Catch2::Catch2 ${MPI_LIBS} ${OpenMP_LIBS})
 
     add_test(NAME test_timers COMMAND
             ${CMAKE_BINARY_DIR}/bin/test_timers_exec)

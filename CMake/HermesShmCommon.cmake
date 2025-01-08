@@ -138,37 +138,59 @@ endif()
 #-----------------------------------------------------------------------------
 # Link to HSHM Dependencies
 #-----------------------------------------------------------------------------
-add_library(hermes_shm_deps INTERFACE)
-target_link_libraries(hermes_shm_deps INTERFACE
+add_library(host_deps INTERFACE)
+target_link_libraries(host_deps INTERFACE
         yaml-cpp
         ${REAL_TIME_FLAGS}
         ${SERIALIZATION_LIBS}
         ${COMPRESS_LIBS}
         ${ENCRYPT_LIBS}
 )
-target_link_directories(hermes_shm_deps INTERFACE ${COMPRESS_LIB_DIRS} ${ENCRYPT_LIB_DIRS})
-target_include_directories(hermes_shm_deps INTERFACE ${COMPRESS_INCLUDES} ${ENCRYPT_INCLUDES})
+target_link_directories(host_deps INTERFACE ${COMPRESS_LIB_DIRS} ${ENCRYPT_LIB_DIRS})
+target_include_directories(host_deps INTERFACE ${COMPRESS_INCLUDES} ${ENCRYPT_INCLUDES})
 if (HERMES_ENABLE_PTHREADS)
-    target_link_libraries(hermes_shm_deps INTERFACE pthread)
+    target_link_libraries(host_deps INTERFACE pthread)
 endif()
+
+add_library(gpu_lib_deps INTERFACE)
 if (HERMES_ENABLE_CUDA)
-    target_compile_definitions(hermes_shm_deps INTERFACE HERMES_ENABLE_CUDA)
-    target_compile_options(hermes_shm_deps INTERFACE
+    target_compile_definitions(gpu_lib_deps INTERFACE HERMES_ENABLE_CUDA)
+    target_compile_options(gpu_lib_deps INTERFACE
             $<$<COMPILE_LANGUAGE:CUDA>:--expt-relaxed-constexpr>)
 endif()
 if (HERMES_ENABLE_ROCM)
-    target_compile_definitions(hermes_shm_deps INTERFACE HERMES_ENABLE_ROCM)
-    target_compile_options(hermes_shm_deps INTERFACE -fgpu-rdc)
-    target_link_libraries(hermes_shm_deps INTERFACE -fgpu-rdc)
-    target_include_directories(hermes_shm_deps INTERFACE ${CMAKE_PREFIX_PATH}/hsa/include)
+    target_compile_definitions(gpu_lib_deps INTERFACE HERMES_ENABLE_ROCM)
+    target_compile_options(gpu_lib_deps INTERFACE -fgpu-rdc)
+    target_link_libraries(gpu_lib_deps INTERFACE -fgpu-rdc)
+    target_include_directories(gpu_lib_deps INTERFACE ${CMAKE_PREFIX_PATH}/hsa/include)
+    target_link_libraries(gpu_lib_deps INTERFACE -fgpu-rdc)
+endif()
+
+add_library(gpu_exec_deps INTERFACE)
+if (HERMES_ENABLE_CUDA)
+    target_link_libraries(gpu_exec_deps INTERFACE gpu_lib_deps)
+endif()
+if (HERMES_ENABLE_ROCM)
+    target_link_libraries(gpu_exec_deps INTERFACE gpu_exec_deps)
+    target_link_libraries(gpu_exec_deps INTERFACE amdhip64 amd_comgr)
 endif()
 
 #-----------------------------------------------------------------------------
-# Link to HSHM
+# Create HSHM Interfaces
 #-----------------------------------------------------------------------------
-add_library(hermes_shm INTERFACE)
-target_link_libraries(hermes_shm_deps INTERFACE
-        hermes_shm_data_structures
-        hermes_shm_deps
+add_library(cxx INTERFACE)
+target_link_libraries(cxx INTERFACE
+        hermes_shm_host
 )
-add_dependencies(hermes_shm hermes_shm)
+if (HERMES_ENABLE_CUDA)
+    add_library(cudacxx INTERFACE)
+    target_link_libraries(cudacxx INTERFACE
+        hermes_shm_cuda
+    )
+endif()
+if (HERMES_ENABLE_ROCM)
+    add_library(rocmcxx INTERFACE)
+    target_link_libraries(rocmcxx INTERFACE
+        hermes_shm_rocm
+    )
+endif()

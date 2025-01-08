@@ -11,9 +11,9 @@ add_executable(test_allocator_exec
         ${TEST_MAIN}/main.cc
         test_init.cc
         allocator.cc)
-add_dependencies(test_allocator_exec hermes_shm_data_structures)
+add_dependencies(test_allocator_exec hermes_shm_host)
 target_link_libraries(test_allocator_exec
-        hermes_shm_data_structures Catch2::Catch2)
+        hermes_shm_host Catch2::Catch2)
 
 if (HERMES_ENABLE_OPENMP)
     add_executable(test_allocator_mp_exec
@@ -21,9 +21,9 @@ if (HERMES_ENABLE_OPENMP)
             test_init.cc
             allocator.cc
             allocator_thread.cc)
-    add_dependencies(test_allocator_mp_exec hermes_shm_data_structures)
+    add_dependencies(test_allocator_mp_exec hermes_shm_host)
     target_link_libraries(test_allocator_mp_exec
-            hermes_shm_data_structures Catch2::Catch2 ${OpenMP_LIBS})
+            hermes_shm_host Catch2::Catch2 ${OpenMP_LIBS})
 endif()
 
 #------------------------------------------------------------------------------

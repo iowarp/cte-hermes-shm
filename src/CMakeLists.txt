@@ -14,60 +14,51 @@ project(hermes_shm LANGUAGES ${LANG})
 #-----------------------------------------------------------------------------
 # Build HSHM
 #-----------------------------------------------------------------------------
+# BUILD HSHM FOR HOST-ONLY
 set (SOURCE_FILES
         memory_manager.cc
         system_info.cc
         data_structure_singleton.cc)
-if (BUILD_SHARED_LIBS)
-    message("Building dynamic library")
-    add_library(hermes_shm_data_structures SHARED ${SOURCE_FILES})
-else()
-    message("Building static library")
-    add_library(hermes_shm_data_structures STATIC ${SOURCE_FILES})
-endif()
-target_link_libraries(hermes_shm_data_structures PUBLIC
-        yaml-cpp
-        ${REAL_TIME_FLAGS}
-        ${SERIALIZATION_LIBS}
-        ${COMPRESS_LIBS}
-        ${ENCRYPT_LIBS}
-)
-if (HERMES_ENABLE_PTHREADS)
-    target_link_libraries(hermes_shm_data_structures PUBLIC pthread)
-endif()
+add_library(hermes_shm_host ${SOURCE_FILES})
+target_link_libraries(hermes_shm_host PUBLIC host_deps)
+
 if (HERMES_ENABLE_CUDA)
+    set(CUDA_SOURCE_FILES "")
     foreach (SOURCE IN LISTS SOURCE_FILES)
-        set_source_files_properties(${SOURCE} PROPERTIES LANGUAGE CUDA)
-        message(${SOURCE})
+        set(CUDA_SOURCE ${CMAKE_CURRENT_BINARY_DIR}/cuda/${SOURCE})
+        configure_file(${SOURCE} ${CUDA_SOURCE} COPYONLY)
+        set_source_files_properties(${CUDA_SOURCE} PROPERTIES LANGUAGE CUDA)
+        list(APPEND CUDA_SOURCE_FILES ${CUDA_SOURCE}/${SOURCE})
     endforeach()
-    set_target_properties(hermes_shm_data_structures PROPERTIES
+    add_library(hermes_shm_cuda ${CUDA_SOURCE_FILES})
+    target_link_libraries(hermes_shm_cuda PUBLIC gpu_lib_deps)
+    set_target_properties(hermes_shm_cuda PROPERTIES
             CUDA_SEPARABLE_COMPILATION ON
     )
     if (BUILD_SHARED_LIBS)
-        set_target_properties(hermes_shm_data_structures PROPERTIES
+        set_target_properties(hermes_shm_host PROPERTIES
                 POSITION_INDEPENDENT_CODE ON
         )
     endif()
-    target_compile_definitions(hermes_shm_data_structures PRIVATE HERMES_ENABLE_CUDA)
-    target_compile_options(hermes_shm_data_structures PRIVATE
-            $<$<COMPILE_LANGUAGE:CUDA>:--expt-relaxed-constexpr>)
 endif()
 if (HERMES_ENABLE_ROCM)
+    set(ROCM_SOURCE_FILES "")
     foreach (SOURCE IN LISTS SOURCE_FILES)
-        set_source_files_properties(${SOURCE} PROPERTIES LANGUAGE ${GPU_RUNTIME})
+        set(ROCM_SOURCE ${CMAKE_CURRENT_BINARY_DIR}/rocm/${SOURCE})
+        configure_file(${SOURCE} ${ROCM_SOURCE} COPYONLY)
+        set_source_files_properties(${ROCM_SOURCE} PROPERTIES LANGUAGE ${GPU_RUNTIME})
+        list(APPEND ROCM_SOURCE_FILES ${ROCM_SOURCE})
     endforeach()
-    target_compile_definitions(hermes_shm_data_structures PRIVATE HERMES_ENABLE_ROCM)
-    target_compile_options(hermes_shm_data_structures PRIVATE -fgpu-rdc)
-    target_link_libraries(hermes_shm_data_structures PUBLIC -fgpu-rdc)
-    target_include_directories(hermes_shm_data_structures PRIVATE ${CMAKE_PREFIX_PATH}/hsa/include)
-
+    message(STATUS "ROCM_SOURCE_FILES: ${ROCM_SOURCE_FILES}")
+    add_library(hermes_shm_rocm ${ROCM_SOURCE_FILES})
+    target_link_libraries(hermes_shm_rocm PUBLIC gpu_lib_deps)
 endif()
 
 #-----------------------------------------------------------------------------
 # Add Target(s) to CMake Install
 #-----------------------------------------------------------------------------
 install(TARGETS
-        hermes_shm_data_structures
+        hermes_shm_host
         EXPORT
         ${HERMES_EXPORTED_TARGETS}
         LIBRARY DESTINATION ${HERMES_INSTALL_LIB_DIR}
@@ -77,21 +68,21 @@ install(TARGETS
 #-----------------------------------------------------------------------------
 # Export all exported targets to the build tree for use by parent project
 #-----------------------------------------------------------------------------
-set(HERMES_EXPORTED_LIBS
-        hermes_shm_data_structures
-        ${HERMES_EXPORTED_LIBS})
-if(NOT HERMES_EXTERNALLY_CONFIGURED)
-    EXPORT (
-            TARGETS
-            ${HERMES_EXPORTED_LIBS}
-            FILE
-            ${HERMES_EXPORTED_TARGETS}.cmake
-    )
-endif()
+# set(HERMES_EXPORTED_LIBS
+#         hermes_shm_host
+#         ${HERMES_EXPORTED_LIBS})
+# if(NOT HERMES_EXTERNALLY_CONFIGURED)
+#     EXPORT (
+#             TARGETS
+#             ${HERMES_EXPORTED_LIBS}
+#             FILE
+#             ${HERMES_EXPORTED_TARGETS}.cmake
+#     )
+# endif()
 
 #-----------------------------------------------------------------------------
 # Coverage
 #-----------------------------------------------------------------------------
 if(HERMES_ENABLE_COVERAGE)
-    set_coverage_flags(hermes_shm_data_structures)
+    set_coverage_flags(hermes_shm_host)
 endif()

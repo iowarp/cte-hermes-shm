@@ -12,9 +12,9 @@ if (HERMES_ENABLE_MPI)
             mpsc_queue.cc
     )
 
-    add_dependencies(test_data_structure_mpi_exec hermes_shm_data_structures)
+    add_dependencies(test_data_structure_mpi_exec hermes_shm_host)
     target_link_libraries(test_data_structure_mpi_exec
-            hermes_shm_data_structures Catch2::Catch2 ${MPI_LIBS} ${OpenMP_LIBS})
+            hermes_shm_host Catch2::Catch2 ${MPI_LIBS} ${OpenMP_LIBS})
 
     #------------------------------------------------------------------------------
     # Build Tests

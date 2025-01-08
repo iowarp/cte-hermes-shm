@@ -18,9 +18,9 @@ if (HERMES_ENABLE_OPENMP)
             queue.cc
             lock.cc
     )
-    add_dependencies(benchmark_data_structures_exec hermes_shm_data_structures)
+    add_dependencies(benchmark_data_structures_exec hermes_shm_host)
     target_link_libraries(benchmark_data_structures_exec
-            hermes_shm_data_structures
+            hermes_shm_host
             Catch2::Catch2
             ${OpenMP_LIBS}
             ${Boost_LIBRARIES})

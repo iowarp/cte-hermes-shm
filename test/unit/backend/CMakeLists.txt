@@ -12,9 +12,9 @@ if (HERMES_ENABLE_MPI)
             backend.cc
             memory_slots.cc
             memory_manager.cc)
-    add_dependencies(test_backend_exec hermes_shm_data_structures)
+    add_dependencies(test_backend_exec hermes_shm_host)
     target_link_libraries(test_backend_exec
-            hermes_shm_data_structures Catch2::Catch2 ${MPI_LIBS})
+            hermes_shm_host Catch2::Catch2 ${MPI_LIBS})
 
     #------------------------------------------------------------------------------
     # Test Cases

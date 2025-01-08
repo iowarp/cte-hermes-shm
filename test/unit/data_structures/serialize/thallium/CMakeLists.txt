@@ -7,7 +7,7 @@ project(hermes_shm)
 # Build Tests
 #------------------------------------------------------------------------------
 set (LIBS
-        hermes_shm_data_structures
+        hermes_shm_host
         Catch2::Catch2
         ${MPI_LIBS}
         ${OpenMP_LIBS}
@@ -15,7 +15,7 @@ set (LIBS
 
 add_executable(test_thallium_server server.cc)
 add_dependencies(test_thallium_server
-        hermes_shm_data_structures)
+        hermes_shm_host)
 target_link_libraries(test_thallium_server ${LIBS})
 target_compile_definitions(test_thallium_server PRIVATE
         HSHM_DEFAULT_THREAD_MODEL=hshm::thread::Argobots)
@@ -28,7 +28,7 @@ add_executable(test_thallium_exec
         test_init.cc
         test_thallium.cc)
 add_dependencies(test_thallium_exec
-        hermes_shm_data_structures)
+        hermes_shm_host)
 target_link_libraries(test_thallium_exec ${LIBS})
 target_compile_definitions(test_thallium_server PRIVATE
         HSHM_DEFAULT_THREAD_MODEL=hshm::thread::Argobots)

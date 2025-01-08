@@ -11,9 +11,9 @@ if (HERMES_ENABLE_OPENMP)
             ${TEST_MAIN}/main.cc
             test_init.cc
             test_lock.cc)
-    add_dependencies(test_thread_exec hermes_shm_data_structures)
+    add_dependencies(test_thread_exec hermes_shm_host)
     target_link_libraries(test_thread_exec
-            hermes_shm_data_structures
+            hermes_shm_host
             $<$<BOOL:${HERMES_RPC_THALLIUM}>:thallium>
             Catch2::Catch2
             ${OpenMP_LIBS})
