@@ -10,8 +10,7 @@ set (LIBS
         hermes_shm_host
         Catch2::Catch2
         ${MPI_LIBS}
-        ${OpenMP_LIBS}
-        ${SERIALIZATION_LIBS})
+        ${OpenMP_LIBS})
 add_executable(test_cereal_exec
         ${TEST_MAIN}/main.cc
         test_init.cc

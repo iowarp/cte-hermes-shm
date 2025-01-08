@@ -94,21 +94,6 @@ install(TARGETS
         RUNTIME DESTINATION ${HERMES_INSTALL_BIN_DIR})
 
 #-----------------------------------------------------------------------------
-# Export all exported targets to the build tree for use by parent project
-#-----------------------------------------------------------------------------
-# set(HERMES_EXPORTED_LIBS
-#         ${HSHM_LIBS}
-#         gpu_lib_deps
-#         host_deps
-#         ${HERMES_EXPORTED_LIBS})
-# EXPORT (
-#         TARGETS
-#         ${HERMES_EXPORTED_LIBS}
-#         FILE
-#         ${HERMES_EXPORTED_TARGETS}.cmake
-# )
-
-#-----------------------------------------------------------------------------
 # Coverage
 #-----------------------------------------------------------------------------
 if(HERMES_ENABLE_COVERAGE)
