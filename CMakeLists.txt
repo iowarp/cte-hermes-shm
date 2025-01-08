@@ -24,7 +24,7 @@ option(BUILD_HSHM_BENCHMARKS "Build benchmarks" OFF)
 option(HERMES_ENABLE_MPI "Enable MPI support" OFF)
 option(HERMES_RPC_THALLIUM "Build tests which depend on thallium" OFF)
 option(HERMES_ENABLE_OPENMP "Enable the use of OpenMP" OFF)
-option(HERMES_ENABLE_CEREAL "Enable serialization using cereal" OFF)
+option(HERMES_ENABLE_CEREAL "Enable serialization using cereal" ON)
 option(HERMES_ENABLE_COVERAGE "Check how well tests cover code" OFF)
 option(HERMES_ENABLE_DOXYGEN "Check how well the code is documented" OFF)
 
