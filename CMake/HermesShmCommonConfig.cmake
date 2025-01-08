@@ -3,6 +3,9 @@ message("Importing packages for hermes_shm")
 #------------------------------------------------------------------------------
 # External libraries
 #------------------------------------------------------------------------------
+# This is for compatability with CLANG
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 # This is for compatability with SPACK
 SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
