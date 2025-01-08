@@ -16,6 +16,7 @@
 #include <errno.h>
 
 #include "hermes_shm/introspect/system_info.h"
+#include "hermes_shm/types/atomic.h"
 #include "hermes_shm/util/errors.h"
 #include "thread_model.h"
 
@@ -23,9 +24,16 @@ namespace hshm::thread {
 
 class Pthread : public ThreadModel {
  public:
+  ThreadLocalKey tid_key_;
+  hipc::atomic<size_t> tid_counter_;
+
+ public:
   /** Default constructor */
   HSHM_INLINE_CROSS_FUN
-  Pthread() : ThreadModel(ThreadType::kPthread) {}
+  Pthread() : ThreadModel(ThreadType::kPthread) {
+    tid_counter_ = 1;
+    CreateTls<void>(tid_key_, nullptr);
+  }
 
   /** Virtual destructor */
   virtual ~Pthread() = default;
@@ -87,8 +95,13 @@ class Pthread : public ThreadModel {
   HSHM_CROSS_FUN
   ThreadId GetTid() override {
 #ifdef HSHM_IS_HOST
-    return ThreadId{(hshm::u64)omp_get_thread_num()};
-    // return static_cast<ThreadId>(pthread_self());
+    size_t tid = (size_t)GetTls<void>(tid_key_);
+    if (!tid) {
+      tid = tid_counter_.fetch_add(1);
+      SetTls<void>(tid_key_, (void *)tid);
+    }
+    tid -= 1;
+    return ThreadId{(hshm::u64)tid};
 #else
     return ThreadId{0};
 #endif

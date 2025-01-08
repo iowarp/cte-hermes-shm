@@ -37,6 +37,10 @@ class GlobalSingleton {
   /** Get ref of type T */
   static T& GetRef() { return obj_; }
 };
+
+template <typename T>
+T hshm::GlobalSingleton<T>::obj_;
+
 #define DEFINE_GLOBAL_SINGLETON_CC(T) \
   template <>                         \
   T hshm::GlobalSingleton<T>::obj_ = T();

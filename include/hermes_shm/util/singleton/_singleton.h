@@ -36,27 +36,26 @@ class SingletonBase {
 
  public:
   /** Get or create an instance of type T */
-  template <typename... Args>
-  inline static T *GetInstance(Args &&...args) {
+  inline static T *GetInstance() {
     if (!obj_) {
       if constexpr (WithLock) {
         hshm::ScopedSpinLock lock(lock_, 0);
-        new ((T *)data_) T(std::forward<Args>(args)...);
+        new ((T *)data_) T();
         obj_ = (T *)data_;
       } else {
-        new ((T *)data_) T(std::forward<Args>(args)...);
+        new ((T *)data_) T();
         obj_ = (T *)data_;
       }
     }
     return obj_;
   }
 };
-// template <typename T, bool WithLock>
-// T *SingletonBase<T, WithLock>::obj_;
-// template <typename T, bool WithLock>
-// char SingletonBase<T, WithLock>::data_[sizeof(T)];
-// template <typename T, bool WithLock>
-// hshm::SpinLock SingletonBase<T, WithLock>::lock_;
+template <typename T, bool WithLock>
+T *SingletonBase<T, WithLock>::obj_;
+template <typename T, bool WithLock>
+char SingletonBase<T, WithLock>::data_[sizeof(T)];
+template <typename T, bool WithLock>
+hshm::SpinLock SingletonBase<T, WithLock>::lock_;
 
 template <typename T>
 using Singleton = SingletonBase<T, true>;

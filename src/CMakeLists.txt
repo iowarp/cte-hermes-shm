@@ -25,7 +25,7 @@ else()
     message("Building static library")
     add_library(hermes_shm_data_structures STATIC ${SOURCE_FILES})
 endif()
-target_link_libraries(hermes_shm_data_structures PRIVATE
+target_link_libraries(hermes_shm_data_structures PUBLIC
         yaml-cpp
         ${REAL_TIME_FLAGS}
         ${SERIALIZATION_LIBS}
@@ -33,7 +33,7 @@ target_link_libraries(hermes_shm_data_structures PRIVATE
         ${ENCRYPT_LIBS}
 )
 if (HERMES_ENABLE_PTHREADS)
-    target_link_libraries(hermes_shm_data_structures PRIVATE pthread)
+    target_link_libraries(hermes_shm_data_structures PUBLIC pthread)
 endif()
 if (HERMES_ENABLE_CUDA)
     foreach (SOURCE IN LISTS SOURCE_FILES)
@@ -58,7 +58,7 @@ if (HERMES_ENABLE_ROCM)
     endforeach()
     target_compile_definitions(hermes_shm_data_structures PRIVATE HERMES_ENABLE_ROCM)
     target_compile_options(hermes_shm_data_structures PRIVATE -fgpu-rdc)
-    target_link_libraries(hermes_shm_data_structures PRIVATE -fgpu-rdc)
+    target_link_libraries(hermes_shm_data_structures PUBLIC -fgpu-rdc)
     target_include_directories(hermes_shm_data_structures PRIVATE ${CMAKE_PREFIX_PATH}/hsa/include)
 
 endif()

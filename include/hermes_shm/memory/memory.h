@@ -341,9 +341,7 @@ struct PointerBase : public ShmPointer {
 
   /** Get the null pointer */
   HSHM_INLINE_CROSS_FUN static PointerBase GetNull() {
-    static const PointerBase p(AllocatorId::GetNull(),
-                               OffsetPointer::GetNull());
-    return p;
+    return PointerBase{AllocatorId::GetNull(), OffsetPointer::GetNull()};
   }
 
   /** Copy assignment operator */

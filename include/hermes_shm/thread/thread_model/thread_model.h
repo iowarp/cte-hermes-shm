@@ -51,7 +51,9 @@ class ThreadLocalData {
   template <typename TLS>
   HSHM_CROSS_FUN static void destroy_wrap(void *data) {
     if (data) {
-      static_cast<TLS *>(data)->destroy();
+      if constexpr (std::is_base_of_v<ThreadLocalData, TLS>) {
+        static_cast<TLS *>(data)->destroy();
+      }
     }
   }
 };

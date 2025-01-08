@@ -8,16 +8,14 @@ add_executable(test_memory_rocm_exec
         backend_rocm.cc)
 add_dependencies(test_memory_rocm_exec
         hermes_shm_data_structures)
-target_link_libraries(test_memory_rocm_exec
-        PRIVATE hermes_shm_data_structures)
 set_source_files_properties(backend_rocm.cc PROPERTIES LANGUAGE ${GPU_RUNTIME})
 target_compile_definitions(test_memory_rocm_exec PRIVATE HERMES_ENABLE_ROCM) 
 target_compile_options(test_memory_rocm_exec PRIVATE -fgpu-rdc)
 set_source_files_properties(${TEST_SOURCES} PROPERTIES LANGUAGE ${GPU_RUNTIME})
 if (WIN32)
-  target_link_libraries(test_memory_rocm_exec PRIVATE -lHipDevice -L${CMAKE_CURRENT_BINARY_DIR})
+  target_link_libraries(test_memory_rocm_exec PRIVATE -lhermes_shm_data_structures -L${CMAKE_CURRENT_BINARY_DIR})
 else()
-  target_link_libraries(test_memory_rocm_exec PRIVATE HipDevice)
+  target_link_libraries(test_memory_rocm_exec PRIVATE hermes_shm_data_structures)
 endif()
 target_link_libraries(test_memory_rocm_exec PRIVATE -fgpu-rdc amdhip64 amd_comgr)
 
