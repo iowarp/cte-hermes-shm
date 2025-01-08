@@ -8,16 +8,15 @@
 #include <cassert>
 
 #include "hermes_shm/constants/macros.h"
-#include "hermes_shm/data_structures/ipc/ring_queue.h"
-#include "hermes_shm/data_structures/ipc/string.h"
-#include "hermes_shm/data_structures/ipc/unordered_map.h"
-#include "hermes_shm/memory/backend/cuda_shm_mmap.h"
-#include "hermes_shm/memory/memory_manager.h"
-#include "hermes_shm/thread/lock/mutex.h"
+#include "hermes_shm/data_structures/all.h"
 #include "hermes_shm/types/argpack.h"
 #include "hermes_shm/types/atomic.h"
-#include "hermes_shm/util/singleton/_easy_singleton.h"
-#include "hermes_shm/util/singleton/_global_singleton.h"
+#include "hermes_shm/util/singleton.h"
+
+#define HSHM_DEFAULT_GPU_ALLOC_T hipc::ThreadLocalAllocator
+
+HSHM_DATA_STRUCTURES_TEMPLATE_BASE(gpu::ipc, hshm::ipc,
+                                   HSHM_DEFAULT_GPU_ALLOC_T)
 
 struct MyStruct {
   int x;

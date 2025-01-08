@@ -9,11 +9,6 @@
 
 #include "hermes_shm/constants/macros.h"
 #include "hermes_shm/data_structures/all.h"
-#include "hermes_shm/data_structures/ipc/ring_queue.h"
-#include "hermes_shm/data_structures/ipc/string.h"
-#include "hermes_shm/data_structures/ipc/unordered_map.h"
-#include "hermes_shm/memory/memory_manager.h"
-#include "hermes_shm/thread/lock/mutex.h"
 #include "hermes_shm/types/argpack.h"
 #include "hermes_shm/types/atomic.h"
 #include "hermes_shm/util/singleton.h"
