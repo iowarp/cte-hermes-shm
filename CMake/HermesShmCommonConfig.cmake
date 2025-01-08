@@ -1,4 +1,4 @@
-message("BEGINNING TO FIND PACKAGE!!!")
+message("Importing packages for hermes_shm")
 
 #------------------------------------------------------------------------------
 # External libraries

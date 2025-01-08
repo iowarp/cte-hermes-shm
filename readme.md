@@ -34,12 +34,25 @@ make -j8
 
 ## CMake
 
-To include hermes_shm in your cmake project, do:
+### For CPU-Only Version
 ```
 find_package(HermesShm CONFIG REQUIRED)
 message(STATUS "found hermes_shm.h at ${HermesShm_INCLUDE_DIRS}")
-include_directories(${HermesShm_INCLUDE_DIRS})
-target_link_libraries(my_target ${HermesShm_LIBRARIES})
+target_link_libraries(HermesShm::cxx)
+```
+
+### For CUDA Version
+```
+find_package(HermesShm CONFIG REQUIRED)
+message(STATUS "found hermes_shm.h at ${HermesShm_INCLUDE_DIRS}")
+target_link_libraries(HermesShm::cudacxx)
+```
+
+### For ROCM Version
+```
+find_package(HermesShm CONFIG REQUIRED)
+message(STATUS "found hermes_shm.h at ${HermesShm_INCLUDE_DIRS}")
+target_link_libraries(HermesShm::rocmcxx)
 ```
 
 ## Tests

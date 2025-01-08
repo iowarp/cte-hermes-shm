@@ -1,4 +1,4 @@
-# Find labstor header and library.
+# Find HermesShm header and library.
 #
 
 # This module defines the following uncached variables:
@@ -88,7 +88,7 @@ endif()
 #-----------------------------------------------------------------------------
 # Find all packages needed by hermes_shm
 #-----------------------------------------------------------------------------
-include(./HermesShmCommonConfig.cmake)
+find_package(HermesShmCommon REQUIRED)
 
 #-----------------------------------------------------------------------------
 # Mark hermes as found and set all needed packages
@@ -101,15 +101,16 @@ set(HermesShm_FOUND ON)
 #-----------------------------------------------------------------------------
 # Create imported target HermesShm::cxx
 #-----------------------------------------------------------------------------
+# The host-only library
 add_library(HermesShm::cxx UNKNOWN IMPORTED)
 set_target_properties(HermesShm::cxx PROPERTIES
   IMPORTED_LOCATION "${HermesShm_LIBRARY}"
   INTERFACE_INCLUDE_DIRECTORIES "${HermesShm_INCLUDE_DIR}"
   INTERFACE_COMPILE_DEFINITIONS "HERMES_SHM_CPU"
 )
-target_link_library(HermesShm::cxx INTERFACE host_deps)
-message(STATUS "HERE!!!!!!!")
+target_link_libraries(HermesShm::cxx INTERFACE host_deps)
 
+# The CUDA library
 if (HERMES_ENABLE_CUDA)
   add_library(HermesShm::cudacxx UNKNOWN IMPORTED)
   set_target_properties(HermesShm::cudacxx PROPERTIES
@@ -117,9 +118,10 @@ if (HERMES_ENABLE_CUDA)
     INTERFACE_INCLUDE_DIRECTORIES "${HermesShm_INCLUDE_DIR}"
     INTERFACE_COMPILE_DEFINITIONS "HERMES_SHM_CUDA"
   )
-  target_link_library(HermesShm::cudacxx INTERFACE host_deps gpu_lib_deps)
+  target_link_libraries(HermesShm::cudacxx INTERFACE host_deps gpu_lib_deps)
 endif()
 
+# The ROCM library
 if (HERMES_ENABLE_ROCM)
   add_library(HermesShm::rocmcxx UNKNOWN IMPORTED)
   set_target_properties(HermesShm::rocmcxx PROPERTIES
@@ -127,5 +129,5 @@ if (HERMES_ENABLE_ROCM)
     INTERFACE_INCLUDE_DIRECTORIES "${HermesShm_INCLUDE_DIR}"
     INTERFACE_COMPILE_DEFINITIONS "HERMES_SHM_ROCM"
   )
-  target_link_library(HermesShm::rocmcxx INTERFACE host_deps gpu_lib_deps)
+  target_link_libraries(HermesShm::rocmcxx INTERFACE host_deps gpu_lib_deps)
 endif()

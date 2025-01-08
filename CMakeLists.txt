@@ -252,7 +252,7 @@ configure_file(
 install(
     FILES
         ${PROJECT_BINARY_DIR}/CMakeFiles/HermesShmConfig.cmake
-        ${CMAKE_SOURCE_DIR}/CMake/HermesShmConfig.cmake
+        ${PROJECT_BINARY_DIR}/CMakeFiles/HermesShmCommonConfig.cmake
         ${PROJECT_BINARY_DIR}/CMakeFiles/UseDoxygenDoc.cmake
     DESTINATION
         ${CMAKE_INSTALL_PREFIX}/cmake
