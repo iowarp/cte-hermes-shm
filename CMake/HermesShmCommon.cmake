@@ -101,7 +101,7 @@ if(HERMES_ENABLE_COMPRESS)
             ${snappy_LIBRARIES}
             ${blosc2_LIBRARIES}
     )
-    include_directories(
+    set(COMPRESS_INCLUDES 
             ${bzip2_INCLUDE_DIRS}
             ${lzo2_INCLUDE_DIRS} ${lzo2_dir}
             ${libzstd_INCLUDE_DIRS}
@@ -112,7 +112,7 @@ if(HERMES_ENABLE_COMPRESS)
             ${snappy_INCLUDE_DIRS}
             ${blosc2_INCLUDE_DIRS}
     )
-    link_directories(
+    set(COMPRESS_LIB_DIRS
             ${bzip2_LIBRARY_DIRS}
             ${lzo2_LIBRARY_DIRS}
             ${libzstd_LIBRARY_DIRS}
@@ -131,8 +131,8 @@ if(HERMES_ENABLE_ENCRYPT)
     message(STATUS "found libcrypto.h at ${libcrypto_INCLUDE_DIRS}")
 
     set(ENCRYPT_LIBS ${libcrypto_LIBRARIES})
-    include_directories(${libcrypto_INCLUDE_DIRS})
-    link_directories(${libcrypto_LIBRARY_DIRS})
+    set(ENCRYPT_INCLUDES ${libcrypto_INCLUDE_DIRS})
+    set(ENCRYPT_LIB_DIRS ${libcrypto_LIBRARY_DIRS})
 endif()
 
 #-----------------------------------------------------------------------------
@@ -146,6 +146,8 @@ target_link_libraries(hermes_shm_deps INTERFACE
         ${COMPRESS_LIBS}
         ${ENCRYPT_LIBS}
 )
+target_link_directories(hermes_shm_deps INTERFACE ${COMPRESS_LIB_DIRS} ${ENCRYPT_LIB_DIRS})
+target_include_directories(hermes_shm_deps INTERFACE ${COMPRESS_INCLUDES} ${ENCRYPT_INCLUDES})
 if (HERMES_ENABLE_PTHREADS)
     target_link_libraries(hermes_shm_deps INTERFACE pthread)
 endif()
