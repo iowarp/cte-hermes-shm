@@ -32,8 +32,6 @@ if (HERMES_ENABLE_MPI)
     #------------------------------------------------------------------------------
     install(TARGETS
             test_backend_exec
-            EXPORT
-            ${HERMES_EXPORTED_TARGETS}
             LIBRARY DESTINATION ${HERMES_INSTALL_LIB_DIR}
             ARCHIVE DESTINATION ${HERMES_INSTALL_LIB_DIR}
             RUNTIME DESTINATION ${HERMES_INSTALL_BIN_DIR})

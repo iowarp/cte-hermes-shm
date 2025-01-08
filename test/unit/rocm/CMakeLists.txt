@@ -14,13 +14,11 @@ set_source_files_properties(backend_rocm.cc PROPERTIES LANGUAGE ${GPU_RUNTIME})
 #------------------------------------------------------------------------------
 # Install Targets
 #------------------------------------------------------------------------------
-# install(TARGETS
-#         test_memory_rocm_exec
-#         EXPORT
-#         ${HERMES_EXPORTED_TARGETS}
-#         LIBRARY DESTINATION ${HERMES_INSTALL_LIB_DIR}
-#         ARCHIVE DESTINATION ${HERMES_INSTALL_LIB_DIR}
-#         RUNTIME DESTINATION ${HERMES_INSTALL_BIN_DIR})
+install(TARGETS
+        test_memory_rocm_exec
+        LIBRARY DESTINATION ${HERMES_INSTALL_LIB_DIR}
+        ARCHIVE DESTINATION ${HERMES_INSTALL_LIB_DIR}
+        RUNTIME DESTINATION ${HERMES_INSTALL_BIN_DIR})
 
 #-----------------------------------------------------------------------------
 # Coverage

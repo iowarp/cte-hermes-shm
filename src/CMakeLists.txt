@@ -58,6 +58,29 @@ if (HERMES_ENABLE_ROCM)
 endif()
 
 #-----------------------------------------------------------------------------
+# Create HSHM Interfaces
+#-----------------------------------------------------------------------------
+add_library(cxx INTERFACE)
+target_link_libraries(cxx INTERFACE
+        hermes_shm_host
+)
+list(APPEND HSHM_LIBS cxx)
+if (HERMES_ENABLE_CUDA)
+    add_library(cudacxx INTERFACE)
+    target_link_libraries(cudacxx INTERFACE
+        hermes_shm_cuda
+    )
+    list(APPEND HSHM_LIBS cudacxx)
+endif()
+if (HERMES_ENABLE_ROCM)
+    add_library(rocmcxx INTERFACE)
+    target_link_libraries(rocmcxx INTERFACE
+        hermes_shm_rocm
+    )
+    list(APPEND HSHM_LIBS rocmcxx)
+endif()
+
+#-----------------------------------------------------------------------------
 # Add Target(s) to CMake Install
 #-----------------------------------------------------------------------------
 install(TARGETS
