@@ -16,3 +16,5 @@ Testing
 *.env
 CMakePresets.json
 vcpkg_installed
+
+.vscode/launch.json
