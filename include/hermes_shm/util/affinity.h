@@ -10,8 +10,8 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef LABSTOR_INCLUDE_LABSTOR_WORK_ORCHESTRATOR_AFFINITY_H_
-#define LABSTOR_INCLUDE_LABSTOR_WORK_ORCHESTRATOR_AFFINITY_H_
+#ifndef HERMES_SHM_AFFINITY_H
+#define HERMES_SHM_AFFINITY_H
 
 // Reference:
 // https://stackoverflow.com/questions/63372288/getting-list-of-pids-from-proc-in-linux
@@ -168,4 +168,4 @@ class ProcessAffiner {
 
 }  // namespace hshm
 
-#endif  // LABSTOR_INCLUDE_LABSTOR_WORK_ORCHESTRATOR_AFFINITY_H_
+#endif  // HERMES_SHM_AFFINITY_H
