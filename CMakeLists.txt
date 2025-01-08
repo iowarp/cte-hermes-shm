@@ -93,15 +93,14 @@ endif()
 #------------------------------------------------------------------------------
 # Setup CMake Environment
 #------------------------------------------------------------------------------
-if(NOT HERMES_EXTERNALLY_CONFIGURED)
-    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY
-            ${PROJECT_BINARY_DIR}/bin CACHE PATH "Single Directory for all Executables.")
-    set(EXECUTABLE_OUTPUT_PATH ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
-    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY
-            ${PROJECT_BINARY_DIR}/bin CACHE PATH "Single Directory for all Libraries")
-    set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY
-            ${PROJECT_BINARY_DIR}/bin CACHE PATH "Single Directory for all static libraries.")
-endif()
+set(HERMES_EXPORTED_TARGETS "hermes_shm_targets")
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY
+        ${PROJECT_BINARY_DIR}/bin CACHE PATH "Single Directory for all Executables.")
+set(EXECUTABLE_OUTPUT_PATH ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY
+        ${PROJECT_BINARY_DIR}/bin CACHE PATH "Single Directory for all Libraries")
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY
+        ${PROJECT_BINARY_DIR}/bin CACHE PATH "Single Directory for all static libraries.")
 
 #------------------------------------------------------------------------------
 # Setup install and output Directories
@@ -160,7 +159,7 @@ endif()
 #------------------------------------------------------------------------------
 # External libraries
 #------------------------------------------------------------------------------
-include(CMake/HermesShmCommon.cmake)
+include(CMake/HermesShmCommonConfig.cmake)
 
 #-----------------------------------------------------------------------------
 # Documentation
@@ -241,6 +240,11 @@ configure_file(
 )
 
 configure_file(
+        ${CMAKE_CURRENT_SOURCE_DIR}/CMake/HermesShmCommonConfig.cmake
+        ${PROJECT_BINARY_DIR}/CMakeFiles/HermesShmCommonConfig.cmake @ONLY
+)
+
+configure_file(
         ${CMAKE_CURRENT_SOURCE_DIR}/CMake/UseDoxygenDoc.cmake
         ${PROJECT_BINARY_DIR}/CMakeFiles/UseDoxygenDoc.cmake @ONLY
 )
@@ -248,6 +252,7 @@ configure_file(
 install(
     FILES
         ${PROJECT_BINARY_DIR}/CMakeFiles/HermesShmConfig.cmake
+        ${CMAKE_SOURCE_DIR}/CMake/HermesShmConfig.cmake
         ${PROJECT_BINARY_DIR}/CMakeFiles/UseDoxygenDoc.cmake
     DESTINATION
         ${CMAKE_INSTALL_PREFIX}/cmake
@@ -258,4 +263,9 @@ install(
         ${PROJECT_BINARY_DIR}/include/hermes_shm/constants/settings.h
         DESTINATION
         ${CMAKE_INSTALL_PREFIX}/include/hermes_shm/constants/
+)
+
+install(EXPORT ${HERMES_EXPORTED_TARGETS}
+  FILE ${HERMES_EXPORTED_TARGETS}.cmake
+  DESTINATION cmake/${HERMES_EXPORTED_TARGETS}
 )

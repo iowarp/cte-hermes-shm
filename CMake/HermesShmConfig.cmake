@@ -3,8 +3,6 @@
 
 # This module defines the following uncached variables:
 #  HermesShm_FOUND, if false, do not try to use hermes_shm.
-#  HermesShm_INCLUDE_DIRS, where to find hermes_shm.h.
-#  HermesShm_LIBRARIES, the libraries to link against to use the hermes_shm library
 #  HermesShm_LIBRARY_DIRS, the directory where the hermes_shm library is found.
 
 #-----------------------------------------------------------------------------
@@ -56,20 +54,78 @@ find_library(
         HINTS ENV LD_LIBRARY_PATH ENV PATH
 )
 if( NOT HermesShm_LIBRARY )
-  message(STATUS "FindHermesShm: Could not find hermes_shm_host.so")
+  message(STATUS "FindHermesShm: Could not find hermes_shm_host")
   set(HermesShm_FOUND OFF)
   return()
+endif()
+
+if (HERMES_ENABLE_CUDA)
+  find_library(
+          HermesShm_CUDA_LIBRARY
+          NAMES hermes_shm_cuda
+          HINTS ENV LD_LIBRARY_PATH ENV PATH
+  )
+  if( NOT HermesShm_CUDA_LIBRARY )
+    message(STATUS "FindHermesShm: Could not find hermes_shm_cuda")
+    set(HermesShm_FOUND OFF)
+    return()
+  endif()
+endif()
+
+if (HERMES_ENABLE_ROCM)
+  find_library(
+          HermesShm_ROCM_LIBRARY
+          NAMES hermes_shm_rocm
+          HINTS ENV LD_LIBRARY_PATH ENV PATH
+  )
+  if( NOT HermesShm_ROCM_LIBRARY )
+    message(STATUS "FindHermesShm: Could not find hermes_shm_rocm")
+    set(HermesShm_FOUND OFF)
+    return()
+  endif()
 endif()
 
 #-----------------------------------------------------------------------------
 # Find all packages needed by hermes_shm
 #-----------------------------------------------------------------------------
-include(HermesShmCommon.cmake)
+include(./HermesShmCommonConfig.cmake)
 
 #-----------------------------------------------------------------------------
 # Mark hermes as found and set all needed packages
 #-----------------------------------------------------------------------------
 set(HermesShm_LIBRARY_DIR "")
-get_filename_component(HermesShm_LIBRARY_DIRS ${HermesShm_LIBRARY} PATH)
+get_filename_component(HermesShm_LIBRARY_DIR ${HermesShm_LIBRARY} PATH)
 # Set uncached variables as per standard.
 set(HermesShm_FOUND ON)
+
+#-----------------------------------------------------------------------------
+# Create imported target HermesShm::cxx
+#-----------------------------------------------------------------------------
+add_library(HermesShm::cxx UNKNOWN IMPORTED)
+set_target_properties(HermesShm::cxx PROPERTIES
+  IMPORTED_LOCATION "${HermesShm_LIBRARY}"
+  INTERFACE_INCLUDE_DIRECTORIES "${HermesShm_INCLUDE_DIR}"
+  INTERFACE_COMPILE_DEFINITIONS "HERMES_SHM_CPU"
+)
+target_link_library(HermesShm::cxx INTERFACE host_deps)
+message(STATUS "HERE!!!!!!!")
+
+if (HERMES_ENABLE_CUDA)
+  add_library(HermesShm::cudacxx UNKNOWN IMPORTED)
+  set_target_properties(HermesShm::cudacxx PROPERTIES
+    IMPORTED_LOCATION "${HermesShm_CUDA_LIBRARY}"
+    INTERFACE_INCLUDE_DIRECTORIES "${HermesShm_INCLUDE_DIR}"
+    INTERFACE_COMPILE_DEFINITIONS "HERMES_SHM_CUDA"
+  )
+  target_link_library(HermesShm::cudacxx INTERFACE host_deps gpu_lib_deps)
+endif()
+
+if (HERMES_ENABLE_ROCM)
+  add_library(HermesShm::rocmcxx UNKNOWN IMPORTED)
+  set_target_properties(HermesShm::rocmcxx PROPERTIES
+    IMPORTED_LOCATION "${HermesShm_ROCM_LIBRARY}"
+    INTERFACE_INCLUDE_DIRECTORIES "${HermesShm_INCLUDE_DIR}"
+    INTERFACE_COMPILE_DEFINITIONS "HERMES_SHM_ROCM"
+  )
+  target_link_library(HermesShm::rocmcxx INTERFACE host_deps gpu_lib_deps)
+endif()
