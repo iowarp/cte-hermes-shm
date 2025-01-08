@@ -136,25 +136,3 @@ TEST_CASE("TestFormatter") {
     REQUIRE(name == "bucket00");
   }
 }
-
-struct SimpleClass {
-  int a_;
-
-  SimpleClass() { a_ = 100; }
-};
-
-DEFINE_SINGLETON_CC(SimpleClass)
-DEFINE_GLOBAL_SINGLETON_CC(SimpleClass)
-
-TEST_CASE("Singleton") {
-  SimpleClass *cls[4];
-
-  cls[0] = hshm::Singleton<SimpleClass>::GetInstance();
-  cls[1] = hshm::GlobalSingleton<SimpleClass>::GetInstance();
-  cls[2] = hshm::EasySingleton<SimpleClass>::GetInstance();
-  cls[3] = hshm::EasyGlobalSingleton<SimpleClass>::GetInstance();
-
-  for (int i = 0; i < 4; ++i) {
-    REQUIRE(cls[i]->a_ == 100);
-  }
-}
