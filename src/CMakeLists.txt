@@ -14,14 +14,14 @@ project(hermes_shm LANGUAGES ${LANG})
 #-----------------------------------------------------------------------------
 # Build HSHM
 #-----------------------------------------------------------------------------
-# BUILD HSHM FOR HOST-ONLY
+# BUILD HSHM FOR HOST ONLY
 set (SOURCE_FILES
         memory_manager.cc
         system_info.cc
         data_structure_singleton.cc)
 add_library(hermes_shm_host ${SOURCE_FILES})
 target_link_libraries(hermes_shm_host PUBLIC host_deps)
-
+# BUILD HSHM FOR CUDA ONLY
 if (HERMES_ENABLE_CUDA)
     set(CUDA_SOURCE_FILES "")
     foreach (SOURCE IN LISTS SOURCE_FILES)
@@ -41,6 +41,7 @@ if (HERMES_ENABLE_CUDA)
         )
     endif()
 endif()
+# BUILD HSHM FOR ROCM ONLY
 if (HERMES_ENABLE_ROCM)
     set(ROCM_SOURCE_FILES "")
     foreach (SOURCE IN LISTS SOURCE_FILES)
