@@ -177,23 +177,3 @@ if (HERMES_ENABLE_ROCM)
     target_link_libraries(gpu_exec_deps INTERFACE gpu_exec_deps)
     target_link_libraries(gpu_exec_deps INTERFACE amdhip64 amd_comgr)
 endif()
-
-#-----------------------------------------------------------------------------
-# Create HSHM Interfaces
-#-----------------------------------------------------------------------------
-add_library(cxx INTERFACE)
-target_link_libraries(cxx INTERFACE
-        hermes_shm_host
-)
-if (HERMES_ENABLE_CUDA)
-    add_library(cudacxx INTERFACE)
-    target_link_libraries(cudacxx INTERFACE
-        hermes_shm_cuda
-    )
-endif()
-if (HERMES_ENABLE_ROCM)
-    add_library(rocmcxx INTERFACE)
-    target_link_libraries(rocmcxx INTERFACE
-        hermes_shm_rocm
-    )
-endif()
