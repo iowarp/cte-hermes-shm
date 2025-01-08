@@ -18,8 +18,7 @@ set(HSHM_LIBS "")
 # BUILD HSHM FOR HOST ONLY
 set (SOURCE_FILES
         memory_manager.cc
-        system_info.cc
-        data_structure_singleton.cc)
+        system_info.cc)
 add_library(hermes_shm_host ${SOURCE_FILES})
 target_link_libraries(hermes_shm_host PUBLIC host_deps)
 list(APPEND HSHM_LIBS hermes_shm_host)

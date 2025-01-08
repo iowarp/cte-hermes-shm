@@ -72,11 +72,11 @@ void backend_test() {
 }
 
 __global__ void singleton_kernel_p1() {
-  *hshm::EasyLockfreeSingleton<int>::GetInstance() = 25;
+  *hshm::LockfreeSingleton<int>::GetInstance() = 25;
 }
 
 __global__ void singleton_kernel(MyStruct *ptr) {
-  ptr->x = *hshm::EasyLockfreeSingleton<int>::GetInstance();
+  ptr->x = *hshm::LockfreeSingleton<int>::GetInstance();
   ptr->y = 3;
 }
 

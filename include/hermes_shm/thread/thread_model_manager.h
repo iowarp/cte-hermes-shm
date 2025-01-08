@@ -32,9 +32,9 @@
 #include "thread_model/windows.h"
 #endif
 
-#include "hermes_shm/util/singleton/_easy_singleton.h"
+#include "hermes_shm/util/singleton.h"
 #define HERMES_THREAD_MODEL \
-  hshm::EasySingleton<HSHM_DEFAULT_THREAD_MODEL>::GetInstance()
+  hshm::Singleton<HSHM_DEFAULT_THREAD_MODEL>::GetInstance()
 #define HERMES_THREAD_MODEL_T hshm::HSHM_DEFAULT_THREAD_MODEL*
 
 #endif  // HERMES_THREAD_THREAD_MANAGER_H_

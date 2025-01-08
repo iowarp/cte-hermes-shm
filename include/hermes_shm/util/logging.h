@@ -33,7 +33,7 @@ namespace hshm {
 // #pragma message XSTR(HERMES_LOG_EXCLUDE)
 
 /** Simplify access to Logger singleton */
-#define HERMES_LOG hshm::EasySingleton<hshm::Logger>::GetInstance()
+#define HERMES_LOG hshm::Singleton<hshm::Logger>::GetInstance()
 
 /** Max number of log codes */
 #define HSHM_MAX_LOGGING_CODES 256

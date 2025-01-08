@@ -57,7 +57,7 @@ struct BoostSegment {
   }
 };
 #define BOOST_SEGMENT \
-  hshm::EasySingleton<BoostSegment>::GetInstance()->segment_.get()
+  hshm::Singleton<BoostSegment>::GetInstance()->segment_.get()
 
 /** Create boost allocator singleton */
 template <typename T>
@@ -68,7 +68,7 @@ struct BoostAllocator {
   BoostAllocator() : alloc_(BOOST_SEGMENT->get_segment_manager()) {}
 };
 #define BOOST_ALLOCATOR(T) \
-  hshm::EasySingleton<BoostAllocator<TYPE_UNWRAP(T)>>::GetInstance()->alloc_
+  hshm::Singleton<BoostAllocator<TYPE_UNWRAP(T)>>::GetInstance()->alloc_
 
 /** A generic string using allocator */
 typedef boost::interprocess::basic_string<

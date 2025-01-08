@@ -24,7 +24,7 @@
 
 #include "hermes_shm/thread/thread_model/thread_model.h"
 #include "hermes_shm/util/formatter.h"
-#include "hermes_shm/util/singleton/_singleton.h"
+#include "hermes_shm/util/singleton.h"
 
 #define HERMES_SYSTEM_INFO \
   hshm::LockfreeSingleton<hshm::SystemInfo>::GetInstance()

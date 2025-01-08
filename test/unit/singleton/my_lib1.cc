@@ -3,19 +3,19 @@
 #include "singleton_lib.h"
 
 void MyLib1::SetEasySingleton(const std::string &value) {
-  hshm::EasySingleton<MyStruct>::GetInstance()->string_ = value;
+  hshm::Singleton<MyStruct>::GetInstance()->string_ = value;
 }
 
 std::string MyLib1::GetEasySingleton() {
-  return hshm::EasySingleton<MyStruct>::GetInstance()->string_;
+  return hshm::Singleton<MyStruct>::GetInstance()->string_;
 }
 
 void MyLib1::SetEasyGlobalSingleton(const std::string &value) {
-  hshm::EasyGlobalSingleton<MyStruct>::GetInstance()->string_ = value;
+  hshm::GlobalSingleton<MyStruct>::GetInstance()->string_ = value;
 }
 
 std::string MyLib1::GetEasyGlobalSingleton() {
-  return hshm::EasyGlobalSingleton<MyStruct>::GetInstance()->string_;
+  return hshm::GlobalSingleton<MyStruct>::GetInstance()->string_;
 }
 
 void MyLib1::SetSingleton(const std::string &value) {
