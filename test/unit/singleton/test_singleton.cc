@@ -10,8 +10,10 @@ TEST_CASE("TestEasyGlobalSingleton") {
   std::string p2_val("p2");
   p1.SetEasyGlobalSingleton(p1_val);
   p2.SetEasyGlobalSingleton(p2_val);
-  REQUIRE(p1.GetEasyGlobalSingleton() == p1_val);
+  REQUIRE(p1.GetEasyGlobalSingleton() == p2_val);
   REQUIRE(p2.GetEasyGlobalSingleton() == p2_val);
+  REQUIRE(hshm::EasyGlobalSingleton<MyStruct>::GetInstance()->string_ ==
+          p2_val);
 }
 
 TEST_CASE("TestEasySingleton") {
@@ -21,8 +23,9 @@ TEST_CASE("TestEasySingleton") {
   std::string p2_val("p2");
   p1.SetEasySingleton(p1_val);
   p2.SetEasySingleton(p2_val);
-  REQUIRE(p1.GetEasySingleton() == p1_val);
+  REQUIRE(p1.GetEasySingleton() == p2_val);
   REQUIRE(p2.GetEasySingleton() == p2_val);
+  REQUIRE(hshm::EasySingleton<MyStruct>::GetInstance()->string_ == p2_val);
 }
 
 TEST_CASE("TestSingleton") {
@@ -34,6 +37,7 @@ TEST_CASE("TestSingleton") {
   p2.SetSingleton(p2_val);
   REQUIRE(p1.GetSingleton() == p2_val);
   REQUIRE(p2.GetSingleton() == p2_val);
+  REQUIRE(hshm::Singleton<MyStruct>::GetInstance()->string_ == p2_val);
 }
 
 TEST_CASE("TestGlobalSingleton") {
@@ -45,4 +49,5 @@ TEST_CASE("TestGlobalSingleton") {
   p2.SetGlobalSingleton(p2_val);
   REQUIRE(p1.GetGlobalSingleton() == p2_val);
   REQUIRE(p2.GetGlobalSingleton() == p2_val);
+  REQUIRE(hshm::GlobalSingleton<MyStruct>::GetInstance()->string_ == p2_val);
 }

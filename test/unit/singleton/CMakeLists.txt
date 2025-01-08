@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 3.10)
 project(hermes_shm)
 
-add_library(singleton_lib SHARED singleton_lib.cc)
-add_library(my_lib1 SHARED my_lib1.cc)
-add_library(my_lib2 SHARED my_lib2.cc)
+add_library(singleton_lib STATIC singleton_lib.cc)
+add_library(my_lib1 STATIC my_lib1.cc)
+add_library(my_lib2 STATIC my_lib2.cc)
 
 add_dependencies(my_lib1 singleton_lib)
 add_dependencies(my_lib2 singleton_lib)

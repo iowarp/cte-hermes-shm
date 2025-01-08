@@ -27,6 +27,10 @@ configurations:
       program: test_allocator_exec
       args: [""]
     - macro: debug
+      launch-name: test-singleton
+      program: test_singleton
+      args: [""]
+    - macro: debug
       launch-name: test-rocm
       program: test_memory_rocm_exec
       args: [""]
