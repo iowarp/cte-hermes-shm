@@ -8,6 +8,7 @@
 #include <cassert>
 
 #include "hermes_shm/constants/macros.h"
+#include "hermes_shm/data_structures/all.h"
 #include "hermes_shm/data_structures/ipc/ring_queue.h"
 #include "hermes_shm/data_structures/ipc/string.h"
 #include "hermes_shm/data_structures/ipc/unordered_map.h"
@@ -15,8 +16,12 @@
 #include "hermes_shm/thread/lock/mutex.h"
 #include "hermes_shm/types/argpack.h"
 #include "hermes_shm/types/atomic.h"
-#include "hermes_shm/util/singleton/_easy_singleton.h"
-#include "hermes_shm/util/singleton/_global_singleton.h"
+#include "hermes_shm/util/singleton.h"
+
+#define HSHM_DEFAULT_GPU_ALLOC_T hipc::ThreadLocalAllocator
+
+HSHM_DATA_STRUCTURES_TEMPLATE_BASE(gpu::ipc, hshm::ipc,
+                                   HSHM_DEFAULT_GPU_ALLOC_T)
 
 struct MyStruct {
   int x;
@@ -71,8 +76,11 @@ void backend_test() {
   shm.shm_destroy();
 }
 
-__global__ void singleton_kernel(MyStruct *ptr) {
+__global__ void singleton_kernel_p1() {
   *hshm::EasyLockfreeSingleton<int>::GetInstance() = 25;
+}
+
+__global__ void singleton_kernel(MyStruct *ptr) {
   ptr->x = *hshm::EasyLockfreeSingleton<int>::GetInstance();
   ptr->y = 3;
 }
@@ -94,6 +102,7 @@ void singleton_test() {
   int numBlocks = 1;
   dim3 block(blockSize);
   dim3 grid(numBlocks);
+  singleton_kernel_p1<<<1, 1>>>();
   singleton_kernel<<<grid, block>>>(shm_struct);
   HIP_ERROR_CHECK(hipDeviceSynchronize());
 
@@ -107,8 +116,8 @@ void singleton_test() {
   shm.shm_destroy();
 }
 
-__global__ void mpsc_kernel(hipc::mpsc_queue<int> *queue) {
-  hipc::ScopedTlsAllocator<HSHM_DEFAULT_ALLOC_T> ctx_alloc(
+__global__ void mpsc_kernel(gpu::ipc::mpsc_queue<int> *queue) {
+  hipc::ScopedTlsAllocator<HSHM_DEFAULT_GPU_ALLOC_T> ctx_alloc(
       queue->GetCtxAllocator());
   queue->GetThreadLocal(ctx_alloc);
   queue->emplace(10);
@@ -122,12 +131,11 @@ void mpsc_test() {
   mem_mngr->DestroyBackend(hipc::MemoryBackendId::Get(0));
   mem_mngr->CreateBackend<hipc::RocmShmMmap>(hipc::MemoryBackendId::Get(0),
                                              MEGABYTES(100), shm_url, 0);
-  auto *alloc = mem_mngr->CreateAllocator<HSHM_DEFAULT_ALLOC_T>(
+  auto *alloc = mem_mngr->CreateAllocator<HSHM_DEFAULT_GPU_ALLOC_T>(
       hipc::MemoryBackendId::Get(0), alloc_id, 0);
-  hipc::CtxAllocator<HSHM_DEFAULT_ALLOC_T> ctx_alloc(alloc);
-
+  hipc::CtxAllocator<HSHM_DEFAULT_GPU_ALLOC_T> ctx_alloc(alloc);
   auto *queue =
-      ctx_alloc->NewObj<hipc::mpsc_queue<int>>(ctx_alloc.ctx_, 256 * 256);
+      ctx_alloc->NewObj<gpu::ipc::mpsc_queue<int>>(ctx_alloc.ctx_, 256 * 256);
   printf("GetSize: %lu\n", queue->GetSize());
   mpsc_kernel<<<16, 16>>>(queue);
   HIP_ERROR_CHECK(hipDeviceSynchronize());
@@ -152,11 +160,12 @@ void atomic_test() {
   atomic_kernel<<<64, 64>>>(x);
   HIP_ERROR_CHECK(hipDeviceSynchronize());
   HILOG(kInfo, "ATOMIC: {}", x->load());
+  assert(x->load() == 64 * 64);
 }
 
 int main() {
-  // mpsc_test();
   // atomic_test();
+  // singleton_test();
   // backend_test();
-  singleton_test();
+  mpsc_test();
 }

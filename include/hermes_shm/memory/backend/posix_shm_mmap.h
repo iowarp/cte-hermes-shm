@@ -39,12 +39,15 @@ class PosixShmMmap : public MemoryBackend, public UrlMemoryBackend {
   PosixShmMmap() {}
 
   /** Destructor */
+  HSHM_CROSS_FUN
   ~PosixShmMmap() override {
+#ifdef HSHM_IS_HOST
     if (IsOwned()) {
       _Destroy();
     } else {
       _Detach();
     }
+#endif
   }
 
   /** Initialize backend */

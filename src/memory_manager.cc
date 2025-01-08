@@ -25,10 +25,6 @@
 
 namespace hshm::ipc {
 
-#ifdef HERMES_ENABLE_CUDA
-__global__ void Init() {}
-#endif
-
 /** Create the root allocator */
 HSHM_CROSS_FUN
 MemoryManager::MemoryManager() { Init(); }
@@ -109,7 +105,7 @@ HSHM_CROSS_FUN void MemoryManager::DestroyBackend(
   alloc->DelObjLocal(HSHM_DEFAULT_MEM_CTX, ptr);
 }
 
-#ifdef HERMES_ENABLE_CUDA
+#if defined(HERMES_ENABLE_CUDA) || defined(HERMES_ENABLE_ROCM)
 template <typename BackendT>
 __global__ void AttachBackendKernel(BackendT *pack, BackendT *cpy) {
   HERMES_MEMORY_MANAGER;
@@ -119,7 +115,9 @@ __global__ void AttachBackendKernel(BackendT *pack, BackendT *cpy) {
   HERMES_MEMORY_MANAGER->RegisterBackend(cpy);
   HERMES_MEMORY_MANAGER->ScanBackends();
 }
+#endif
 
+#ifdef HERMES_ENABLE_CUDA
 /** Check if a backend is cuda-compatible */
 void AllocateCudaBackend(int dev, MemoryBackend *other) {
   cudaSetDevice(dev);
@@ -153,14 +151,51 @@ void AllocateCudaBackend(int dev, MemoryBackend *other) {
 }
 #endif
 
+#ifdef HERMES_ENABLE_ROCM
+/** Check if a backend is cuda-compatible */
+void AllocateRocmBackend(int dev, MemoryBackend *other) {
+  HIP_ERROR_CHECK(hipSetDevice(dev));
+  switch (other->header_->type_) {
+    case MemoryBackendType::kRocmMalloc: {
+      RocmMalloc *pack, *cpy;
+      HIP_ERROR_CHECK(hipMallocManaged(&pack, sizeof(RocmMalloc)));
+      HIP_ERROR_CHECK(hipMallocManaged(&cpy, sizeof(RocmMalloc)));
+      memcpy((char *)pack, (char *)other, sizeof(RocmMalloc));
+      pack->UnsetScanned();
+      pack->Disown();
+      AttachBackendKernel<<<1, 1>>>(pack, cpy);
+      HIP_ERROR_CHECK(hipDeviceSynchronize());
+      HIP_ERROR_CHECK(hipFree(pack));
+    }
+    case MemoryBackendType::kRocmShmMmap: {
+      RocmShmMmap *pack, *cpy;
+      HIP_ERROR_CHECK(hipMallocManaged(&pack, sizeof(RocmShmMmap)));
+      HIP_ERROR_CHECK(hipMallocManaged(&cpy, sizeof(RocmShmMmap)));
+      memcpy((char *)pack, (char *)other, sizeof(RocmShmMmap));
+      pack->UnsetScanned();
+      pack->Disown();
+      AttachBackendKernel<<<1, 1>>>(pack, cpy);
+      HIP_ERROR_CHECK(hipDeviceSynchronize());
+      HIP_ERROR_CHECK(hipFree(pack));
+    }
+    default: {
+      break;
+    }
+  }
+}
+#endif
+
 /**
  * Scans all attached backends for new memory allocators.
  * */
 HSHM_CROSS_FUN
 void MemoryManager::ScanBackends(bool find_allocs) {
-#if defined(HERMES_ENABLE_CUDA) && defined(HSHM_IS_HOST)
   int num_gpus = 0;
+#if defined(HERMES_ENABLE_CUDA) && defined(HSHM_IS_HOST)
   cudaGetDeviceCount(&num_gpus);
+#endif
+#if defined(HERMES_ENABLE_ROCM) && defined(HSHM_IS_HOST)
+  hipGetDeviceCount(&num_gpus);
 #endif
   for (int i = 0; i < MAX_BACKENDS; ++i) {
     MemoryBackend *backend = backends_[i];
@@ -178,6 +213,11 @@ void MemoryManager::ScanBackends(bool find_allocs) {
 #if defined(HERMES_ENABLE_CUDA) && defined(HSHM_IS_HOST)
     for (int dev = 0; dev < num_gpus; ++dev) {
       AllocateCudaBackend(dev, backend);
+    }
+#endif
+#if defined(HERMES_ENABLE_ROCM) && defined(HSHM_IS_HOST)
+    for (int dev = 0; dev < num_gpus; ++dev) {
+      AllocateRocmBackend(dev, backend);
     }
 #endif
   }
