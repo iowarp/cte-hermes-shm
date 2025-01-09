@@ -113,7 +113,8 @@ struct SystemInfo {
 
   HSHM_DLL static void *AlignedAlloc(size_t alignment, size_t size);
 
-  HSHM_DLL static std::string Getenv(const char *name, size_t max_size);
+  HSHM_DLL static std::string Getenv(
+      const char *name, size_t max_size = hshm::Unit<size_t>::Megabytes(1));
 
   HSHM_DLL static void Setenv(const char *name, const std::string &value,
                               int overwrite);
