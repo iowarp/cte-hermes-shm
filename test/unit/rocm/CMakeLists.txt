@@ -4,12 +4,10 @@ project(hermes_shm_cuda LANGUAGES C CXX)
 #------------------------------------------------------------------------------
 # Build Tests
 #------------------------------------------------------------------------------
-add_executable(test_memory_rocm_exec
-        backend_rocm.cc)
+add_rocm_executable(test_memory_rocm_exec "backend_rocm.cc")
 add_dependencies(test_memory_rocm_exec
         hermes_shm_rocm)
-target_link_libraries(test_memory_rocm_exec hermes_shm_rocm)
-set_source_files_properties(backend_rocm.cc PROPERTIES LANGUAGE ${GPU_RUNTIME})
+target_link_libraries(test_memory_rocm_exec PUBLIC hermes_shm_rocm)
 
 #------------------------------------------------------------------------------
 # Install Targets

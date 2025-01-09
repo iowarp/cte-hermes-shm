@@ -141,27 +141,111 @@ if(HERMES_ENABLE_ENCRYPT)
     set(ENCRYPT_LIB_DIRS ${libcrypto_LIBRARY_DIRS})
 endif()
 
+#------------------------------------------------------------------------------
+# GPU Support Functions
+#------------------------------------------------------------------------------
+
+# Enable cuda boilerplate
+macro(hermes_enable_cuda CXX_STANDARD)
+    set(CMAKE_CUDA_STANDARD ${CXX_STANDARD})
+    set(CMAKE_CUDA_STANDARD_REQUIRED ON)
+    set(CMAKE_CUDA_ARCHITECTURES native)
+    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --forward-unknown-to-host-compiler")
+    enable_language(CUDA)
+endmacro()
+
+# Enable rocm boilerplate
+macro(hermes_enable_rocm GPU_RUNTIME CXX_STANDARD)
+    set(GPU_RUNTIME ${GPU_RUNTIME})
+    enable_language(${GPU_RUNTIME})
+    set(CMAKE_${GPU_RUNTIME}_STANDARD 17)
+    set(CMAKE_${GPU_RUNTIME}_EXTENSIONS OFF)
+    set(CMAKE_${GPU_RUNTIME}_STANDARD_REQUIRED ON)
+    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --forward-unknown-to-host-compiler")
+    set(ROCM_ROOT
+            "/opt/rocm"
+            CACHE PATH
+            "Root directory of the ROCm installation"
+    )
+    if(GPU_RUNTIME STREQUAL "CUDA")
+        list(APPEND include_dirs "${ROCM_ROOT}/include")
+    endif()
+    find_package(HIP REQUIRED)
+endmacro()
+
 # Function for setting source files for rocm
-function(set_rocm_sources SOURCE_FILES ROCM_SOURCE_FILES)
-    foreach(SOURCE IN LISTS SOURCE_FILES)
+function(set_rocm_sources SRC_FILES ROCM_SOURCE_FILES_VAR) 
+    set(ROCM_SOURCE_FILES ${${ROCM_SOURCE_FILES_VAR}} PARENT_SCOPE)
+    set(GPU_RUNTIME ${GPU_RUNTIME} PARENT_SCOPE)
+    foreach(SOURCE IN LISTS SRC_FILES)
         set(ROCM_SOURCE ${CMAKE_CURRENT_BINARY_DIR}/rocm/${SOURCE})
         configure_file(${SOURCE} ${ROCM_SOURCE} COPYONLY)
         set_source_files_properties(${ROCM_SOURCE} PROPERTIES LANGUAGE ${GPU_RUNTIME})
         list(APPEND ROCM_SOURCE_FILES ${ROCM_SOURCE})
     endforeach()
-    set(ROCM_SOURCE_FILES ${ROCM_SOURCE_FILES} PARENT_SCOPE)
-    return(PROPAGATE ROCM_SOURCE_FILES)
+    set(${ROCM_SOURCE_FILES_VAR} ${ROCM_SOURCE_FILES} PARENT_SCOPE)
 endfunction()
 
 # Function for setting source files for cuda
-function(set_cuda_sources SOURCE_FILES CUDA_SOURCE_FILES)
-    set(CUDA_SOURCE_FILES "")
-    foreach(SOURCE IN LISTS SOURCE_FILES)
+function(set_cuda_sources SRC_FILES CUDA_SOURCE_FILES_VAR)
+    set(CUDA_SOURCE_FILES ${${CUDA_SOURCE_FILES_VAR}} PARENT_SCOPE)
+    foreach(SOURCE IN LISTS SRC_FILES_VAR)
         set(CUDA_SOURCE ${CMAKE_CURRENT_BINARY_DIR}/cuda/${SOURCE})
         configure_file(${SOURCE} ${CUDA_SOURCE} COPYONLY)
         set_source_files_properties(${CUDA_SOURCE} PROPERTIES LANGUAGE CUDA)
         list(APPEND CUDA_SOURCE_FILES ${CUDA_SOURCE})
     endforeach()
-    set(CUDA_SOURCE_FILES ${CUDA_SOURCE_FILES} PARENT_SCOPE)
-    return(PROPAGATE CUDA_SOURCE_FILES)
+    set(${CUDA_SOURCE_FILES_VAR} ${CUDA_SOURCE_FILES} PARENT_SCOPE)
+endfunction()
+
+# Function for adding a ROCm library
+function(add_rocm_library LIB_NAME)
+    set(SRC_FILES ${ARGN})
+    set(ROCM_SOURCE_FILES "")
+    set_rocm_sources("${SRC_FILES}" ROCM_SOURCE_FILES)
+    add_library(${LIB_NAME} ${ROCM_SOURCE_FILES})
+    target_link_libraries(${LIB_NAME} PUBLIC HermesShm::gpu_rocm_lib_deps)
+endfunction()
+
+# Function for adding a ROCm executable
+function(add_rocm_executable EXE_NAME)
+    set(SRC_FILES ${ARGN})
+    set(ROCM_SOURCE_FILES "")
+    set_rocm_sources("${SRC_FILES}" ROCM_SOURCE_FILES)
+    add_executable(${EXE_NAME} ${ROCM_SOURCE_FILES})
+    target_link_libraries(${EXE_NAME} PUBLIC HermesShm::gpu_rocm_exec_deps)
+endfunction()
+
+# Function for adding a CUDA library
+function(add_cuda_library LIB_NAME)
+    set(SRC_FILES ${ARGN})
+    set(CUDA_SOURCE_FILES "")
+    set_cuda_sources("${SRC_FILES}" CUDA_SOURCE_FILES)
+    add_library(${LIB_NAME} ${CUDA_SOURCE_FILES})
+    target_link_libraries(${LIB_NAME} PUBLIC HermesShm::gpu_cuda_lib_deps)
+    set_target_properties(${LIB_NAME} PROPERTIES
+            CUDA_SEPARABLE_COMPILATION ON
+    )
+    if (BUILD_SHARED_LIBS)
+        set_target_properties(${LIB_NAME} PROPERTIES
+                POSITION_INDEPENDENT_CODE ON
+        )
+    endif()
+endfunction()
+
+# Function for adding a CUDA executable
+function(add_cuda_executable EXE_NAME)
+    set(SRC_FILES ${ARGN})
+    set(CUDA_SOURCE_FILES "")
+    set_cuda_sources("${SRC_FILES}" CUDA_SOURCE_FILES)
+    add_executable(${EXE_NAME} ${CUDA_SOURCE_FILES})
+    target_link_libraries(${EXE_NAME} PUBLIC HermesShm::gpu_cuda_exec_deps)
+    set_target_properties(${EXE_NAME} PROPERTIES
+            CUDA_SEPARABLE_COMPILATION ON
+    )
+    if (BUILD_SHARED_LIBS)
+        set_target_properties(${EXE_NAME} PROPERTIES
+                POSITION_INDEPENDENT_CODE ON
+        )
+    endif()
 endfunction()

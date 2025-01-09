@@ -59,37 +59,6 @@ if (HERMES_NO_COMPILE)
 endif()
 
 #------------------------------------------------------------------------------
-# ROCm GPU support
-#------------------------------------------------------------------------------
-if (HERMES_ENABLE_ROCM)
-    set(GPU_RUNTIME "HIP" CACHE STRING "Switches between HIP and CUDA")
-    set(GPU_RUNTIMES "HIP" "CUDA")
-    set_property(CACHE GPU_RUNTIME PROPERTY STRINGS ${GPU_RUNTIMES})
-    set(GPU_RUNTIME "HIP" CACHE STRING "Switches between HIP and CUDA")
-    if(NOT "${GPU_RUNTIME}" IN_LIST GPU_RUNTIMES)
-        set(ERROR_MESSAGE
-            "GPU_RUNTIME is set to \"${GPU_RUNTIME}\".\nGPU_RUNTIME must be either HIP or CUDA."
-        )
-        message(FATAL_ERROR ${ERROR_MESSAGE})
-    endif()
-    enable_language(${GPU_RUNTIME})
-    set(CMAKE_${GPU_RUNTIME}_STANDARD 17)
-    set(CMAKE_${GPU_RUNTIME}_EXTENSIONS OFF)
-    set(CMAKE_${GPU_RUNTIME}_STANDARD_REQUIRED ON)
-    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --forward-unknown-to-host-compiler")
-    set(ROCM_ROOT
-            "/opt/rocm"
-            CACHE PATH
-            "Root directory of the ROCm installation"
-    )
-    if(GPU_RUNTIME STREQUAL "CUDA")
-        list(APPEND include_dirs "${ROCM_ROOT}/include")
-    endif()
-    message(STATUS "found hip at ${HIP_DIR}")
-endif()
-
-
-#------------------------------------------------------------------------------
 # Setup CMake Environment
 #------------------------------------------------------------------------------
 set(HERMES_EXPORTED_TARGETS "HermesShm")
@@ -160,6 +129,15 @@ endif()
 # External libraries
 #------------------------------------------------------------------------------
 include(CMake/HermesShmCommonConfig.cmake) 
+
+# ENABLE GPU SUPPORT
+if (HERMES_ENABLE_CUDA)
+    hermes_enable_cuda(17)
+endif()
+if (HERMES_ENABLE_ROCM)
+    hermes_enable_rocm("HIP" 17)
+endif()
+
 # HOST DEPENDENCIES
 add_library(host_deps INTERFACE)
 target_link_libraries(host_deps INTERFACE
@@ -178,29 +156,30 @@ if (HERMES_ENABLE_PTHREADS)
     target_link_libraries(host_deps INTERFACE pthread)
 endif()
 
-# GPU LIB DEPENDENCIES
-add_library(gpu_lib_deps INTERFACE)
+# CUDA INTERFACES
+add_library(gpu_cuda_lib_deps INTERFACE)
+add_library(HermesShm::gpu_cuda_lib_deps ALIAS gpu_cuda_lib_deps)
+add_library(gpu_cuda_exec_deps INTERFACE)
+add_library(HermesShm::gpu_cuda_exec_deps ALIAS gpu_cuda_exec_deps)
 if (HERMES_ENABLE_CUDA)
-    target_compile_definitions(gpu_lib_deps INTERFACE HERMES_ENABLE_CUDA)
-    target_compile_options(gpu_lib_deps INTERFACE
+    target_link_libraries(gpu_cuda_lib_deps INTERFACE host_deps)
+    target_compile_definitions(gpu_cuda_lib_deps INTERFACE HERMES_ENABLE_CUDA)
+    target_compile_options(gpu_cuda_lib_deps INTERFACE
             $<$<COMPILE_LANGUAGE:CUDA>:--expt-relaxed-constexpr>)
-endif()
-if (HERMES_ENABLE_ROCM)
-    target_compile_definitions(gpu_lib_deps INTERFACE HERMES_ENABLE_ROCM)
-    target_compile_options(gpu_lib_deps INTERFACE -fgpu-rdc)
-    target_link_libraries(gpu_lib_deps INTERFACE -fgpu-rdc)
-    target_include_directories(gpu_lib_deps INTERFACE ${CMAKE_PREFIX_PATH}/hsa/include)
-    target_link_libraries(gpu_lib_deps INTERFACE -fgpu-rdc)
+    target_link_libraries(gpu_cuda_exec_deps INTERFACE gpu_cuda_lib_deps) 
 endif()
 
-# GPU EXEC DEPENDENCIES
-add_library(gpu_exec_deps INTERFACE)
-if (HERMES_ENABLE_CUDA)
-    target_link_libraries(gpu_exec_deps INTERFACE gpu_lib_deps)
-endif()
+# ROCM INTERFACES
+add_library(gpu_rocm_lib_deps INTERFACE)
+add_library(HermesShm::gpu_rocm_lib_deps ALIAS gpu_rocm_lib_deps)
+add_library(gpu_rocm_exec_deps INTERFACE)
+add_library(HermesShm::gpu_rocm_exec_deps ALIAS gpu_rocm_exec_deps)
 if (HERMES_ENABLE_ROCM)
-    target_link_libraries(gpu_exec_deps INTERFACE gpu_exec_deps)
-    target_link_libraries(gpu_exec_deps INTERFACE amdhip64 amd_comgr)
+    target_link_libraries(gpu_rocm_lib_deps INTERFACE -fgpu-rdc host_deps)
+    target_compile_options(gpu_rocm_lib_deps INTERFACE -fgpu-rdc)
+    target_compile_definitions(gpu_rocm_lib_deps INTERFACE HERMES_ENABLE_ROCM)
+    target_include_directories(gpu_rocm_lib_deps INTERFACE ${CMAKE_PREFIX_PATH}/hsa/include)
+    target_link_libraries(gpu_rocm_exec_deps INTERFACE gpu_rocm_lib_deps amdhip64 amd_comgr)
 endif()
 
 #-----------------------------------------------------------------------------

@@ -1,49 +1,26 @@
 cmake_minimum_required(VERSION 3.10)
-set(LANG C CXX)
-if (HERMES_ENABLE_CUDA)
-    set(CMAKE_CUDA_STANDARD 17)
-    set(CMAKE_CUDA_STANDARD_REQUIRED ON)
-    set(CMAKE_CUDA_ARCHITECTURES native)
-    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --forward-unknown-to-host-compiler")
-    set(LANG ${LANG} CUDA)
-endif()
-project(hermes_shm LANGUAGES ${LANG})
-
-
+project(hermes_shm)
 
 #-----------------------------------------------------------------------------
 # Build HSHM
 #-----------------------------------------------------------------------------
 set(HSHM_LIBS "")
 # BUILD HSHM FOR HOST ONLY
-set (SOURCE_FILES
+set (SRC_FILES
         memory_manager.cc
         system_info.cc)
-add_library(hermes_shm_host ${SOURCE_FILES})
+add_library(hermes_shm_host ${SRC_FILES})
 target_link_libraries(hermes_shm_host PUBLIC host_deps)
 list(APPEND HSHM_LIBS hermes_shm_host)
 # BUILD HSHM FOR CUDA ONLY
 if (HERMES_ENABLE_CUDA)
-    set(CUDA_SOURCE_FILES "")
-    set_cuda_sources(SOURCE_FILES CUDA_SOURCE_FILES)
-    add_library(hermes_shm_cuda ${CUDA_SOURCE_FILES})
-    target_link_libraries(hermes_shm_cuda PUBLIC gpu_lib_deps)
-    set_target_properties(hermes_shm_cuda PROPERTIES
-            CUDA_SEPARABLE_COMPILATION ON
-    )
-    if (BUILD_SHARED_LIBS)
-        set_target_properties(hermes_shm_host PROPERTIES
-                POSITION_INDEPENDENT_CODE ON
-        )
-    endif()
+    add_cuda_library(hermes_shm_cuda ${SRC_FILES})
     list(APPEND HSHM_LIBS hermes_shm_cuda)
 endif()
 # BUILD HSHM FOR ROCM ONLY
 if (HERMES_ENABLE_ROCM)
-    set(ROCM_SOURCE_FILES "")
-    set_rocm_sources(SOURCE_FILES ROCM_SOURCE_FILES)
-    add_library(hermes_shm_rocm ${ROCM_SOURCE_FILES})
-    target_link_libraries(hermes_shm_rocm PUBLIC gpu_lib_deps)
+    add_rocm_library(hermes_shm_rocm ${SRC_FILES})
+    target_link_libraries(hermes_shm_rocm PUBLIC gpu_rocm_lib_deps)
     list(APPEND HSHM_LIBS hermes_shm_rocm)
 endif()
 
@@ -75,7 +52,10 @@ endif()
 #-----------------------------------------------------------------------------
 install(TARGETS
         ${HSHM_LIBS}
-        gpu_lib_deps
+        gpu_rocm_lib_deps
+        gpu_rocm_exec_deps
+        gpu_cuda_lib_deps
+        gpu_cuda_exec_deps
         host_deps
         EXPORT
         ${HERMES_EXPORTED_TARGETS}
