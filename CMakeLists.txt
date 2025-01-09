@@ -178,7 +178,7 @@ if (HERMES_ENABLE_ROCM)
     target_link_libraries(gpu_rocm_lib_deps INTERFACE -fgpu-rdc host_deps)
     target_compile_options(gpu_rocm_lib_deps INTERFACE -fgpu-rdc)
     target_compile_definitions(gpu_rocm_lib_deps INTERFACE HERMES_ENABLE_ROCM)
-    target_include_directories(gpu_rocm_lib_deps INTERFACE ${CMAKE_PREFIX_PATH}/hsa/include)
+    # target_include_directories(gpu_rocm_lib_deps INTERFACE ${CMAKE_PREFIX_PATH}/hsa/include)
     target_link_libraries(gpu_rocm_exec_deps INTERFACE gpu_rocm_lib_deps amdhip64 amd_comgr)
 endif()
 
