@@ -116,6 +116,12 @@ struct SystemInfo {
   HSHM_DLL static std::string Getenv(
       const char *name, size_t max_size = hshm::Unit<size_t>::Megabytes(1));
 
+  static std::string Getenv(
+      const std::string &name,
+      size_t max_size = hshm::Unit<size_t>::Megabytes(1)) {
+    return Getenv(name.c_str(), max_size);
+  }
+
   HSHM_DLL static void Setenv(const char *name, const std::string &value,
                               int overwrite);
 
