@@ -35,3 +35,11 @@ find_package(HermesShmCore REQUIRED)
 
 # Find the HermesShm dependencies
 find_package(HermesShmCommon REQUIRED)
+
+target_include_directories(HermesShm::cxx INTERFACE "@CMAKE_INSTALL_PREFIX@/include")
+if (HERMES_ENABLE_CUDA)
+    target_include_directories(HermesShm::cudacxx INTERFACE "@CMAKE_INSTALL_PREFIX@/include")
+endif()
+if (HERMES_ENABLE_ROCM)
+    target_include_directories(HermesShm::rocmcxx INTERFACE "@CMAKE_INSTALL_PREFIX@/include")
+endif()
