@@ -44,8 +44,9 @@ if (HERMES_ENABLE_ROCM)
     execute_process(COMMAND hipconfig --rocmpath
         OUTPUT_VARIABLE rocm_path)
     message(STATUS "ROCm SDK path: ${rocm_path}")
-    set(CMAKE_HIP_FLAGS "${CMAKE_HIP_FLAGS} -isystem ${rocm_path}/include")
+    # TODO(llogan): This is a hack to make vscode detect HIP headers and not show errors
+    set(CMAKE_HIP_FLAGS "${CMAKE_HIP_FLAGS} -isystem ${rocm_path}/include -D__HIP_PLATFORM_AMD__")
 
     target_include_directories(HermesShm::rocmcxx INTERFACE "@CMAKE_INSTALL_PREFIX@/include")
-    set(CMAKE_HIP_FLAGS "-I@CMAKE_INSTALL_PREFIX@/include")
+    set(CMAKE_HIP_FLAGS "${CMAKE_HIP_FLAGS} -isystem @CMAKE_INSTALL_PREFIX@/include")
 endif()
