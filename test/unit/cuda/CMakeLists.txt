@@ -3,8 +3,7 @@ project(hermes_shm_cuda)
 #------------------------------------------------------------------------------
 # Build Tests
 #------------------------------------------------------------------------------
-add_cuda_executable(test_memory_cuda_exec
-        backend_cuda.cc)
+add_cuda_executable(test_memory_cuda_exec FALSE backend_cuda.cc)
 add_dependencies(test_memory_cuda_exec
         hermes_shm_cuda)
 target_link_libraries(test_memory_cuda_exec

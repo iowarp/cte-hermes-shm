@@ -3,7 +3,7 @@ project(hermes_shm_cuda LANGUAGES C CXX)
 #------------------------------------------------------------------------------
 # Build Tests
 #------------------------------------------------------------------------------
-add_rocm_executable(test_memory_rocm_exec "backend_rocm.cc")
+add_rocm_executable(test_memory_rocm_exec FALSE "backend_rocm.cc")
 add_dependencies(test_memory_rocm_exec
         hermes_shm_rocm)
 target_link_libraries(test_memory_rocm_exec PUBLIC hermes_shm_rocm)
