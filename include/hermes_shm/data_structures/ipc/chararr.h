@@ -134,7 +134,7 @@ class chararr_templ {
   HSHM_INLINE_CROSS_FUN size_t size() const { return length_; }
 
   /** Convert to std::string */
-  HSHM_INLINE_HOST const std::string str() const {
+  HSHM_INLINE_HOST_FUN const std::string str() const {
     return std::string(data(), size());
   }
 

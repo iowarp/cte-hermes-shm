@@ -429,7 +429,7 @@ class vector : public ShmContainer {
   /**
    * Convert to std::vector
    * */
-  HSHM_INLINE_HOST
+  HSHM_INLINE_HOST_FUN
   std::vector<T> vec() {
     std::vector<T> v;
     v.reserve(size());

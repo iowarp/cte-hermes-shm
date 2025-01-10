@@ -352,7 +352,7 @@ class string_templ : public ShmContainer {
   }
 
   /** Convert into a std::string */
-  HSHM_INLINE_HOST std::string str() const { return {c_str(), length_}; }
+  HSHM_INLINE_HOST_FUN std::string str() const { return {c_str(), length_}; }
 
   /** Get the size of the current string */
   HSHM_INLINE_CROSS_FUN size_t size() const { return length_; }
