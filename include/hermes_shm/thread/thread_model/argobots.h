@@ -29,9 +29,9 @@ class Argobots : public ThreadModel {
   HSHM_INLINE_CROSS_FUN
   Argobots() : ThreadModel(ThreadType::kArgobots) {}
 
-  /** Virtual destructor */
+  /** Destructor */
   HSHM_CROSS_FUN
-  virtual ~Argobots() = default;
+  ~Argobots() = default;
 
   /** Yield the current thread for a period of time */
   HSHM_CROSS_FUN

@@ -35,8 +35,8 @@ class Pthread : public ThreadModel {
     CreateTls<void>(tid_key_, nullptr);
   }
 
-  /** Virtual destructor */
-  virtual ~Pthread() = default;
+  /** Destructor */
+  ~Pthread() = default;
 
   /** Yield the thread for a period of time */
   HSHM_CROSS_FUN

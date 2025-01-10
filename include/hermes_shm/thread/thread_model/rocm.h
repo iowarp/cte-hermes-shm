@@ -27,9 +27,9 @@ class Rocm : public ThreadModel {
   HSHM_INLINE_CROSS_FUN
   Rocm() : ThreadModel(ThreadType::kRocm) {}
 
-  /** Virtual destructor */
+  /** Destructor */
   HSHM_CROSS_FUN
-  virtual ~Rocm() = default;
+  ~Rocm() = default;
 
   /** Yield the current thread for a period of time */
   HSHM_CROSS_FUN

@@ -29,9 +29,9 @@ class Cuda : public ThreadModel {
   HSHM_INLINE_CROSS_FUN
   Cuda() : ThreadModel(ThreadType::kCuda) {}
 
-  /** Virtual destructor */
+  /** Destructor */
   HSHM_CROSS_FUN
-  virtual ~Cuda() = default;
+  ~Cuda() = default;
 
   /** Yield the current thread for a period of time */
   HSHM_CROSS_FUN

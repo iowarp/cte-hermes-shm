@@ -17,13 +17,13 @@ class WindowsThread : public ThreadModel {
 
   /** Sleep thread for a period of time */
   HSHM_CROSS_FUN
-  virtual void SleepForUs(size_t us) {
+  void SleepForUs(size_t us) {
     std::this_thread::sleep_for(std::chrono::microseconds(us));
   }
 
   /** Yield thread time slice */
   HSHM_CROSS_FUN
-  virtual void Yield() { std::this_thread::yield(); }
+  void Yield() { std::this_thread::yield(); }
 
   /** Create thread-local storage */
   template <typename TLS>
@@ -57,7 +57,7 @@ class WindowsThread : public ThreadModel {
 
   /** Get the TID of the current thread */
   HSHM_CROSS_FUN
-  virtual ThreadId GetTid() { return ThreadId(SystemInfo::GetTid()); }
+  ThreadId GetTid() { return ThreadId(SystemInfo::GetTid()); }
 
   /** Get the thread model type */
   HSHM_INLINE_CROSS_FUN
