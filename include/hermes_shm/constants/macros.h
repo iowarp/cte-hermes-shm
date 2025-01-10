@@ -172,12 +172,12 @@ namespace hipc = hshm::ipc;
 
 /** Define the default thread model class */
 // CUDA
-#if defined(HSHM_IS_CUDA_GPU)
-#define HSHM_DEFAULT_THREAD_MODEL hshm::thread::Cuda
+#if defined(HSHM_IS_CUDA_GPU) && !defined(HSHM_DEFAULT_THREAD_MODEL_GPU)
+#define HSHM_DEFAULT_THREAD_MODEL_GPU hshm::thread::Cuda
 #endif
 // ROCM
-#if defined(HSHM_IS_ROCM_GPU)
-#define HSHM_DEFAULT_THREAD_MODEL hshm::thread::Rocm
+#if defined(HSHM_IS_ROCM_GPU) && !defined(HSHM_DEFAULT_THREAD_MODEL_GPU)
+#define HSHM_DEFAULT_THREAD_MODEL_GPU hshm::thread::Rocm
 #endif
 // CPU
 #ifndef HSHM_DEFAULT_THREAD_MODEL

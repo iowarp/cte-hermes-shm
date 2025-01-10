@@ -13,6 +13,7 @@
 #ifndef HERMES_THREAD_THREAD_MANAGER_H_
 #define HERMES_THREAD_THREAD_MANAGER_H_
 
+#include "hermes_shm/constants/macros.h"
 #include "hermes_shm/introspect/system_info.h"
 #include "hermes_shm/thread/thread_model/thread_model.h"
 
@@ -33,8 +34,15 @@
 #endif
 
 #include "hermes_shm/util/singleton.h"
+
+#if defined(HSHM_IS_HOST)
 #define HERMES_THREAD_MODEL \
   hshm::Singleton<HSHM_DEFAULT_THREAD_MODEL>::GetInstance()
 #define HERMES_THREAD_MODEL_T hshm::HSHM_DEFAULT_THREAD_MODEL*
+#elif defined(HSHM_IS_GPU)
+#define HERMES_THREAD_MODEL \
+  hshm::Singleton<HSHM_DEFAULT_THREAD_MODEL_GPU>::GetInstance()
+#define HERMES_THREAD_MODEL_T hshm::HSHM_DEFAULT_THREAD_MODEL_GPU*
+#endif
 
 #endif  // HERMES_THREAD_THREAD_MANAGER_H_

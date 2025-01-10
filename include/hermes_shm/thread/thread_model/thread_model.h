@@ -85,17 +85,17 @@ class ThreadModel {
   HSHM_INLINE_CROSS_FUN
   ThreadModel(ThreadType type) : type_(type) {}
 
-  /** Sleep thread for a period of time */
-  HSHM_CROSS_FUN
-  virtual void SleepForUs(size_t us) = 0;
+  // /** Sleep thread for a period of time */
+  // HSHM_CROSS_FUN
+  // virtual void SleepForUs(size_t us) = 0;
 
-  /** Yield thread time slice */
-  HSHM_CROSS_FUN
-  virtual void Yield() = 0;
+  // /** Yield thread time slice */
+  // HSHM_CROSS_FUN
+  // virtual void Yield() = 0;
 
-  /** Get the TID of the current thread */
-  HSHM_CROSS_FUN
-  virtual ThreadId GetTid() = 0;
+  // /** Get the TID of the current thread */
+  // HSHM_CROSS_FUN
+  // virtual ThreadId GetTid() = 0;
 
   /** Get the thread model type */
   HSHM_INLINE_CROSS_FUN

@@ -35,7 +35,7 @@ class Argobots : public ThreadModel {
 
   /** Yield the current thread for a period of time */
   HSHM_CROSS_FUN
-  void SleepForUs(size_t us) override {
+  void SleepForUs(size_t us) {
     /**
      * TODO(llogan): make this API flexible enough to support argobots fully
      * tl::thread::self().sleep(*HERMES->rpc_.server_engine_,
@@ -48,7 +48,7 @@ class Argobots : public ThreadModel {
 
   /** Yield thread time slice */
   HSHM_CROSS_FUN
-  void Yield() override {
+  void Yield() {
 #ifdef HSHM_IS_HOST
     ABT_thread_yield();
 #endif
@@ -94,7 +94,7 @@ class Argobots : public ThreadModel {
 
   /** Get the TID of the current thread */
   HSHM_CROSS_FUN
-  ThreadId GetTid() override {
+  ThreadId GetTid() {
 #ifdef HSHM_IS_HOST
     ABT_thread thread;
     ABT_thread_id tid;

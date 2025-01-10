@@ -33,11 +33,11 @@ class Rocm : public ThreadModel {
 
   /** Yield the current thread for a period of time */
   HSHM_CROSS_FUN
-  void SleepForUs(size_t us) override {}
+  void SleepForUs(size_t us) {}
 
   /** Yield thread time slice */
   HSHM_CROSS_FUN
-  void Yield() override {}
+  void Yield() {}
 
   /** Create thread-local storage */
   template <typename TLS>
@@ -59,7 +59,7 @@ class Rocm : public ThreadModel {
 
   /** Get the TID of the current thread */
   HSHM_CROSS_FUN
-  ThreadId GetTid() override { return ThreadId::GetNull(); }
+  ThreadId GetTid() { return ThreadId::GetNull(); }
 };
 
 }  // namespace hshm::thread

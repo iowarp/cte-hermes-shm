@@ -40,7 +40,7 @@ class Pthread : public ThreadModel {
 
   /** Yield the thread for a period of time */
   HSHM_CROSS_FUN
-  void SleepForUs(size_t us) override {
+  void SleepForUs(size_t us) {
 #ifdef HSHM_IS_HOST
     usleep(us);
 #endif
@@ -48,7 +48,7 @@ class Pthread : public ThreadModel {
 
   /** Yield thread time slice */
   HSHM_CROSS_FUN
-  void Yield() override {
+  void Yield() {
 #ifdef HSHM_IS_HOST
     sched_yield();
 #endif
@@ -93,7 +93,7 @@ class Pthread : public ThreadModel {
 
   /** Get the TID of the current thread */
   HSHM_CROSS_FUN
-  ThreadId GetTid() override {
+  ThreadId GetTid() {
 #ifdef HSHM_IS_HOST
     size_t tid = (size_t)GetTls<void>(tid_key_);
     if (!tid) {
