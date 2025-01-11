@@ -208,6 +208,30 @@ class string_templ : public ShmContainer {
   }
 
   /**
+   * const char * copy constructors
+   */
+
+  /** Copy constructor. From const char *. */
+  HSHM_INLINE_CROSS_FUN explicit string_templ(const char *&other) {
+    shm_strong_or_weak_copy_op<false, false>(
+        HERMES_MEMORY_MANAGER->GetDefaultAllocator<AllocT>(), other, 0);
+  }
+
+  /** SHM copy constructor. From const char *. */
+  HSHM_INLINE_CROSS_FUN explicit string_templ(
+      const hipc::CtxAllocator<AllocT> &alloc, const char *&other) {
+    shm_strong_or_weak_copy_op<false, false>(alloc, other, 0);
+  }
+
+  /** SHM copy assignment operator. const char *. */
+  HSHM_INLINE_CROSS_FUN string_templ &operator=(const char *&other) {
+    if (this != reinterpret_cast<const string_templ *>(&other)) {
+      shm_strong_or_weak_copy_op<true, false>(GetCtxAllocator(), other, 0);
+    }
+    return *this;
+  }
+
+  /**
    * Core copy operations
    */
 
