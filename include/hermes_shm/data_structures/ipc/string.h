@@ -138,6 +138,32 @@ class string_templ : public ShmContainer {
   }
 
   /**
+   * std::string copy constructors
+   */
+
+  /** Copy constructor. From std::string. */
+  HSHM_HOST_FUN string_templ(const std::string &other) {
+    shm_strong_or_weak_copy_op<false, true>(
+        HERMES_MEMORY_MANAGER->GetDefaultAllocator<AllocT>(), other.data(),
+        other.size());
+  }
+
+  /** SHM copy constructor. From std::string. */
+  HSHM_HOST_FUN explicit string_templ(const hipc::CtxAllocator<AllocT> &alloc,
+                                      const std::string &other) {
+    shm_strong_or_weak_copy_op<false, true>(alloc, other.data(), other.size());
+  }
+
+  /** SHM copy assignment operator. From std::string. */
+  HSHM_HOST_FUN string_templ &operator=(const std::string &other) {
+    if (this != reinterpret_cast<const string_templ *>(&other)) {
+      shm_strong_or_weak_copy_op<true, true>(GetCtxAllocator(), other.data(),
+                                             other.size());
+    }
+    return *this;
+  }
+
+  /**
    * Templated string_templ copy constructors
    */
 
@@ -187,32 +213,6 @@ class string_templ : public ShmContainer {
   /** SHM copy assignment operator. From this string_templ. */
   HSHM_CROSS_FUN string_templ &operator=(const string_templ &other) {
     if ((char *)this != (char *)&other) {
-      shm_strong_or_weak_copy_op<true, true>(GetCtxAllocator(), other.data(),
-                                             other.size());
-    }
-    return *this;
-  }
-
-  /**
-   * std::string copy constructors
-   */
-
-  /** Copy constructor. From std::string. */
-  HSHM_HOST_FUN explicit string_templ(const std::string &other) {
-    shm_strong_or_weak_copy_op<false, true>(
-        HERMES_MEMORY_MANAGER->GetDefaultAllocator<AllocT>(), other.data(),
-        other.size());
-  }
-
-  /** SHM copy constructor. From std::string. */
-  HSHM_HOST_FUN explicit string_templ(const hipc::CtxAllocator<AllocT> &alloc,
-                                      const std::string &other) {
-    shm_strong_or_weak_copy_op<false, true>(alloc, other.data(), other.size());
-  }
-
-  /** SHM copy assignment operator. From std::string. */
-  HSHM_HOST_FUN string_templ &operator=(const std::string &other) {
-    if (this != reinterpret_cast<const string_templ *>(&other)) {
       shm_strong_or_weak_copy_op<true, true>(GetCtxAllocator(), other.data(),
                                              other.size());
     }
