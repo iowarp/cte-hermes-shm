@@ -31,7 +31,7 @@ struct MyStruct {
   }
 };
 
-__global__ void backend_kernel(MyStruct *ptr) {
+HSHM_GPU_KERNEL void backend_kernel(MyStruct *ptr) {
   // int idx = blockIdx.x * blockDim.x + threadIdx.x;
   MyStruct quest;
   ptr->x = quest.DoSomething();
@@ -71,11 +71,11 @@ void backend_test() {
   shm.shm_destroy();
 }
 
-__global__ void singleton_kernel_p1() {
+HSHM_GPU_KERNEL void singleton_kernel_p1() {
   *hshm::LockfreeSingleton<int>::GetInstance() = 25;
 }
 
-__global__ void singleton_kernel(MyStruct *ptr) {
+HSHM_GPU_KERNEL void singleton_kernel(MyStruct *ptr) {
   ptr->x = *hshm::LockfreeSingleton<int>::GetInstance();
   ptr->y = 3;
 }
@@ -111,7 +111,7 @@ void singleton_test() {
   shm.shm_destroy();
 }
 
-__global__ void mpsc_kernel(gpu::ipc::mpsc_queue<int> *queue) {
+HSHM_GPU_KERNEL void mpsc_kernel(gpu::ipc::mpsc_queue<int> *queue) {
   hipc::ScopedTlsAllocator<HSHM_DEFAULT_GPU_ALLOC_T> ctx_alloc(
       queue->GetCtxAllocator());
   queue->GetThreadLocal(ctx_alloc);
@@ -142,7 +142,7 @@ void mpsc_test() {
   printf("SUM: %d\n", sum);
 }
 
-__global__ void atomic_kernel(hipc::rocm_atomic<hshm::min_u64> *x) {
+HSHM_GPU_KERNEL void atomic_kernel(hipc::rocm_atomic<hshm::min_u64> *x) {
   x->fetch_add(1);
 }
 

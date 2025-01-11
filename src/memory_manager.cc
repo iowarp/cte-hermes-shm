@@ -107,7 +107,7 @@ HSHM_CROSS_FUN void MemoryManager::DestroyBackend(
 
 #if defined(HERMES_ENABLE_CUDA) || defined(HERMES_ENABLE_ROCM)
 template <typename BackendT>
-__global__ void AttachBackendKernel(BackendT *pack, BackendT *cpy) {
+HSHM_GPU_KERNEL void AttachBackendKernel(BackendT *pack, BackendT *cpy) {
   HERMES_MEMORY_MANAGER;
   HERMES_THREAD_MODEL;
   HERMES_SYSTEM_INFO;

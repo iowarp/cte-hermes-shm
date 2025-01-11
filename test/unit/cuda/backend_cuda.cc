@@ -31,7 +31,7 @@ struct MyStruct {
   }
 };
 
-__global__ void backend_kernel(MyStruct *ptr) {
+HSHM_GPU_KERNEL void backend_kernel(MyStruct *ptr) {
   // int idx = blockIdx.x * blockDim.x + threadIdx.x;
   MyStruct quest;
   ptr->x = quest.DoSomething();
@@ -72,7 +72,7 @@ void backend_test() {
   shm.shm_destroy();
 }
 
-__global__ void mpsc_kernel(hipc::mpsc_queue<int> *queue) {
+HSHM_GPU_KERNEL void mpsc_kernel(hipc::mpsc_queue<int> *queue) {
   hipc::ScopedTlsAllocator<HSHM_DEFAULT_ALLOC_T> ctx_alloc(
       queue->GetCtxAllocator());
   queue->GetThreadLocal(ctx_alloc);
@@ -103,7 +103,7 @@ void mpsc_test() {
   printf("SUM: %d\n", sum);
 }
 
-__global__ void atomic_kernel(hipc::atomic<hshm::min_u64> *x) {
+HSHM_GPU_KERNEL void atomic_kernel(hipc::atomic<hshm::min_u64> *x) {
   x->fetch_add(1);
 }
 

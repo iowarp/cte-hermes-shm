@@ -88,10 +88,12 @@
 #define ROCM_HOST __host__
 #define ROCM_DEVICE __device__
 #define ROCM_HOST_DEVICE __device__ __host__
+#define ROCM_KERNEL __global__
 #else
 #define ROCM_HOST_DEVICE
 #define ROCM_HOST
 #define ROCM_DEVICE
+#define ROCM_KERNEL
 #endif
 
 /** Error checking for ROCM */
@@ -123,6 +125,7 @@
 #define HSHM_HOST_FUN ROCM_HOST
 #define HSHM_GPU_FUN ROCM_DEVICE
 #define HSHM_CROSS_FUN ROCM_HOST_DEVICE
+#define HSHM_GPU_KERNEL ROCM_KERNEL
 
 /** Macro for inline function */
 #define HSHM_INLINE_CROSS_FUN HSHM_INLINE HSHM_CROSS_FUN

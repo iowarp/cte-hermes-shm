@@ -449,6 +449,12 @@ class string_templ : public ShmContainer {
     load_string<Ar, string_templ>(ar, *this);
   }
 
+  /** ostream */
+  friend std::ostream &operator<<(std::ostream &os, const string_templ &str) {
+    os << str.str();
+    return os;
+  }
+
   /**====================================
    * Comparison Operations
    * ===================================*/
