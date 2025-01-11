@@ -212,7 +212,7 @@ function(add_rocm_library LIB_NAME DO_COPY)
     set(SRC_FILES ${ARGN})
     set(ROCM_SOURCE_FILES "")
     set_rocm_sources("${DO_COPY}" "${SRC_FILES}" ROCM_SOURCE_FILES)
-    add_library(${LIB_NAME} ${ROCM_SOURCE_FILES})
+    add_library(${LIB_NAME} STATIC ${ROCM_SOURCE_FILES})
     target_link_libraries(${LIB_NAME} PUBLIC HermesShm::gpu_rocm_lib_deps)
 endfunction()
 
@@ -230,7 +230,7 @@ function(add_cuda_library LIB_NAME DO_COPY)
     set(SRC_FILES ${ARGN})
     set(CUDA_SOURCE_FILES "")
     set_cuda_sources("${DO_COPY}" "${SRC_FILES}" CUDA_SOURCE_FILES)
-    add_library(${LIB_NAME} ${CUDA_SOURCE_FILES})
+    add_library(${LIB_NAME} STATIC ${CUDA_SOURCE_FILES})
     target_link_libraries(${LIB_NAME} PUBLIC HermesShm::gpu_cuda_lib_deps)
     set_target_properties(${LIB_NAME} PROPERTIES
             CUDA_SEPARABLE_COMPILATION ON
