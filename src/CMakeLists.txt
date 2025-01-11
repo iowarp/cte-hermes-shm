@@ -4,46 +4,43 @@ project(hermes_shm)
 # Build HSHM
 #-----------------------------------------------------------------------------
 set(HSHM_LIBS "")
+
 # BUILD HSHM FOR HOST ONLY
 set (SRC_FILES
-        memory_manager.cc
-        system_info.cc)
+    # system_info.cc   # NOTE(llogan): Commented out because ROCm is annoying and buggy
+    memory_manager.cc)
 add_library(hermes_shm_host ${SRC_FILES})
 target_link_libraries(hermes_shm_host PUBLIC host_deps)
 list(APPEND HSHM_LIBS hermes_shm_host)
+add_library(cxx INTERFACE)
+target_link_libraries(cxx INTERFACE hermes_shm_host)
+list(APPEND HSHM_LIBS cxx)
+
 # BUILD HSHM FOR CUDA ONLY
 if (HERMES_ENABLE_CUDA)
     add_cuda_library(hermes_shm_cuda TRUE ${SRC_FILES})
+    target_link_libraries(hermes_shm_cuda PUBLIC cuda_gpu_lib_deps)
     list(APPEND HSHM_LIBS hermes_shm_cuda)
-endif()
-# BUILD HSHM FOR ROCM ONLY
-if (HERMES_ENABLE_ROCM)
-    add_rocm_library(hermes_shm_rocm TRUE ${SRC_FILES})
-    target_link_libraries(hermes_shm_rocm PUBLIC gpu_rocm_lib_deps)
-    list(APPEND HSHM_LIBS hermes_shm_rocm)
-endif()
-
-#-----------------------------------------------------------------------------
-# Create HSHM Interfaces
-#-----------------------------------------------------------------------------
-add_library(cxx INTERFACE)
-target_link_libraries(cxx INTERFACE
-        hermes_shm_host
-)
-list(APPEND HSHM_LIBS cxx)
-if (HERMES_ENABLE_CUDA)
     add_library(cudacxx INTERFACE)
-    target_link_libraries(cudacxx INTERFACE
-        hermes_shm_cuda
-    )
+    target_link_libraries(cudacxx INTERFACE hermes_shm_cuda)
     list(APPEND HSHM_LIBS cudacxx)
 endif()
+
+# BUILD HSHM FOR ROCM ONLY
 if (HERMES_ENABLE_ROCM)
-    add_library(rocmcxx INTERFACE)
-    target_link_libraries(rocmcxx INTERFACE
-        hermes_shm_rocm
-    )
-    list(APPEND HSHM_LIBS rocmcxx)
+    add_rocm_library(hermes_shm_rocm_gpu TRUE ${SRC_FILES})
+    target_link_libraries(hermes_shm_rocm_gpu PUBLIC rocm_gpu_lib_deps)
+    list(APPEND HSHM_LIBS hermes_shm_rocm_gpu)
+    add_library(rocmcxx_gpu INTERFACE)
+    target_link_libraries(rocmcxx_gpu INTERFACE hermes_shm_rocm_gpu)
+    list(APPEND HSHM_LIBS rocmcxx_gpu)
+
+    add_rocm_host_library(hermes_shm_rocm_host TRUE ${SRC_FILES})
+    target_link_libraries(hermes_shm_rocm_host PUBLIC rocm_host_lib_deps)
+    list(APPEND HSHM_LIBS hermes_shm_rocm_host)
+    add_library(rocmcxx_host INTERFACE)
+    target_link_libraries(rocmcxx_host INTERFACE hermes_shm_rocm_host)
+    list(APPEND HSHM_LIBS rocmcxx_host)
 endif()
 
 #-----------------------------------------------------------------------------
@@ -51,10 +48,11 @@ endif()
 #-----------------------------------------------------------------------------
 install(TARGETS
         ${HSHM_LIBS}
-        gpu_rocm_lib_deps
-        gpu_rocm_exec_deps
-        gpu_cuda_lib_deps
-        gpu_cuda_exec_deps
+        rocm_gpu_lib_deps
+        rocm_host_lib_deps
+        rocm_gpu_exec_deps
+        cuda_gpu_lib_deps
+        cuda_gpu_exec_deps
         host_deps
         EXPORT
         ${HERMES_EXPORTED_TARGETS}

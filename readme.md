@@ -51,7 +51,7 @@ target_link_libraries(HermesShm::cudacxx)
 ```
 find_package(HermesShm CONFIG REQUIRED)
 message(STATUS "found hermes_shm.h at ${HermesShm_INCLUDE_DIRS}")
-target_link_libraries(HermesShm::rocmcxx)
+target_link_libraries(HermesShm::rocmcxx_gpu)
 ```
 
 ## Tests

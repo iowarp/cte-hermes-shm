@@ -98,7 +98,7 @@ endif()
 # Optimization
 #------------------------------------------------------------------------------
 
-set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+# set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "MinGW" OR CMAKE_CXX_COMPILER STREQUAL "Intel")
     if(CMAKE_BUILD_TYPE STREQUAL "Debug")
         message("IN DEBUG MODE")
@@ -156,30 +156,44 @@ if (HERMES_ENABLE_PTHREADS)
     target_link_libraries(host_deps INTERFACE pthread)
 endif()
 
-# CUDA INTERFACES
-add_library(gpu_cuda_lib_deps INTERFACE)
-add_library(HermesShm::gpu_cuda_lib_deps ALIAS gpu_cuda_lib_deps)
-add_library(gpu_cuda_exec_deps INTERFACE)
-add_library(HermesShm::gpu_cuda_exec_deps ALIAS gpu_cuda_exec_deps)
+# CUDA (GPU) LIB DEPS
+add_library(cuda_gpu_lib_deps INTERFACE)
+add_library(HermesShm::cuda_gpu_lib_deps ALIAS cuda_gpu_lib_deps)
 if (HERMES_ENABLE_CUDA)
-    target_link_libraries(gpu_cuda_lib_deps INTERFACE host_deps)
-    target_compile_definitions(gpu_cuda_lib_deps INTERFACE HERMES_ENABLE_CUDA)
-    target_compile_options(gpu_cuda_lib_deps INTERFACE
+    target_compile_definitions(cuda_gpu_lib_deps INTERFACE HERMES_ENABLE_CUDA)
+    target_compile_options(cuda_gpu_lib_deps INTERFACE
             $<$<COMPILE_LANGUAGE:CUDA>:--expt-relaxed-constexpr>)
-    target_link_libraries(gpu_cuda_exec_deps INTERFACE gpu_cuda_lib_deps) 
 endif()
 
-# ROCM INTERFACES
-add_library(gpu_rocm_lib_deps INTERFACE)
-add_library(HermesShm::gpu_rocm_lib_deps ALIAS gpu_rocm_lib_deps)
-add_library(gpu_rocm_exec_deps INTERFACE)
-add_library(HermesShm::gpu_rocm_exec_deps ALIAS gpu_rocm_exec_deps)
+# CUDA (GPU) EXEC DEPS
+add_library(cuda_gpu_exec_deps INTERFACE)
+add_library(HermesShm::cuda_gpu_exec_deps ALIAS cuda_gpu_exec_deps)
+if (HERMES_ENABLE_CUDA)
+    target_link_libraries(cuda_gpu_exec_deps INTERFACE cuda_gpu_lib_deps) 
+endif()
+
+# ROCM (GPU) LIB DEPS
+add_library(rocm_gpu_lib_deps INTERFACE)
+add_library(HermesShm::rocm_gpu_lib_deps ALIAS rocm_gpu_lib_deps)
 if (HERMES_ENABLE_ROCM)
-    target_link_libraries(gpu_rocm_lib_deps INTERFACE -fgpu-rdc host_deps)
-    target_compile_options(gpu_rocm_lib_deps INTERFACE -fgpu-rdc)
-    target_compile_definitions(gpu_rocm_lib_deps INTERFACE HERMES_ENABLE_ROCM)
-    # target_include_directories(gpu_rocm_lib_deps INTERFACE ${CMAKE_PREFIX_PATH}/hsa/include)
-    target_link_libraries(gpu_rocm_exec_deps INTERFACE gpu_rocm_lib_deps amdhip64 amd_comgr)
+    target_link_libraries(rocm_gpu_lib_deps INTERFACE -fgpu-rdc host_deps)
+    target_compile_options(rocm_gpu_lib_deps INTERFACE -fgpu-rdc)
+    target_compile_definitions(rocm_gpu_lib_deps INTERFACE HERMES_ENABLE_ROCM)
+    # target_include_directories(rocm_gpu_lib_deps INTERFACE ${CMAKE_PREFIX_PATH}/hsa/include)
+endif()
+
+# ROCM (HOST) LIB DEPS
+add_library(rocm_host_lib_deps INTERFACE)
+add_library(HermesShm::rocm_host_lib_deps ALIAS rocm_host_lib_deps)
+if (HERMES_ENABLE_ROCM)
+    target_link_libraries(rocm_host_lib_deps INTERFACE host_deps)
+endif()
+
+# ROCM (EXEC) DEPS
+add_library(rocm_gpu_exec_deps INTERFACE)
+add_library(HermesShm::rocm_gpu_exec_deps ALIAS rocm_gpu_exec_deps)
+if (HERMES_ENABLE_ROCM)
+    target_link_libraries(rocm_gpu_exec_deps INTERFACE rocm_gpu_lib_deps amdhip64 amd_comgr)
 endif()
 
 #-----------------------------------------------------------------------------

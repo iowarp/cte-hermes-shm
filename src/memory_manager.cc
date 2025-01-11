@@ -15,7 +15,6 @@
 
 #include "hermes_shm/memory/memory_manager.h"
 
-#include "hermes_shm/data_structures/ipc/unordered_map.h"
 #include "hermes_shm/introspect/system_info.h"
 #include "hermes_shm/memory/allocator/allocator_factory.h"
 #include "hermes_shm/memory/backend/memory_backend_factory.h"
@@ -251,3 +250,8 @@ Allocator *MemoryManager::RegisterAllocator(Allocator *alloc, bool do_scan) {
 }
 
 }  // namespace hshm::ipc
+
+// TODO(llogan): Fix. A hack for HIP compiler to function
+// I would love to spend more time figuring out why ROCm
+// Fails to compile without this, but whatever.
+#include "hermes_shm/introspect/system_info.cc"

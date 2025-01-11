@@ -47,6 +47,6 @@ if (HERMES_ENABLE_ROCM)
     # TODO(llogan): This is a hack to make vscode detect HIP headers and not show errors
     set(CMAKE_HIP_FLAGS "${CMAKE_HIP_FLAGS} -isystem ${rocm_path}/include -D__HIP_PLATFORM_AMD__")
 
-    target_include_directories(HermesShm::rocmcxx INTERFACE "@CMAKE_INSTALL_PREFIX@/include")
+    target_include_directories(HermesShm::rocmcxx_gpu INTERFACE "@CMAKE_INSTALL_PREFIX@/include")
     set(CMAKE_HIP_FLAGS "${CMAKE_HIP_FLAGS} -isystem @CMAKE_INSTALL_PREFIX@/include")
 endif()

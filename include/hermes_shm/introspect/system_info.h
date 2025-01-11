@@ -39,7 +39,8 @@ union File {
 };
 
 /** A unification of certain OS system calls */
-struct SystemInfo {
+class SystemInfo {
+ public:
   int pid_;
   int ncpu_;
   int page_size_;
@@ -50,9 +51,9 @@ struct SystemInfo {
   std::vector<size_t> cur_cpu_freq_;
 #endif
 
-  HSHM_DLL
+ public:
   HSHM_CROSS_FUN
-  void RefreshInfo();
+  HSHM_DLL void RefreshInfo();
 
   HSHM_DLL void RefreshCpuFreqKhz();
 
