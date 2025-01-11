@@ -7,6 +7,8 @@
 
 #include <cstddef>
 
+#include "hermes_shm/constants/macros.h"
+
 namespace hshm {
 
 /** General hash template */
@@ -24,6 +26,14 @@ HSHM_CROSS_FUN size_t string_hash(const StringT &text) {
   }
   return sum;
 }
+
+/** Pointer hash function */
+template <typename T>
+struct hash<T *> {
+  HSHM_CROSS_FUN size_t operator()(T *const &ptr) const {
+    return reinterpret_cast<size_t>(ptr);
+  }
+};
 
 /** Integer hash function */
 template <typename T>

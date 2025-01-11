@@ -1,4 +1,5 @@
 #include "basic_test.h"
+#include "hermes_shm/data_structures/ipc/hash.h"
 #include "hermes_shm/types/atomic.h"
 
 template <typename AtomicT>
