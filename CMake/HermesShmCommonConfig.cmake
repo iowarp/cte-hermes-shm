@@ -231,8 +231,7 @@ endfunction()
 # Function for adding a ROCm executable
 function(add_rocm_host_executable EXE_NAME)
     set(SRC_FILES ${ARGN})
-    set(ROCM_SOURCE_FILES "")
-    add_executable(${EXE_NAME} ${ROCM_SOURCE_FILES})
+    add_executable(${EXE_NAME} ${SRC_FILES})
     target_link_libraries(${EXE_NAME} PUBLIC HermesShm::rocm_host_exec_deps)
 endfunction()
 
