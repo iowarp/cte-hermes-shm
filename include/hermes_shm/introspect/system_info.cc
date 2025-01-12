@@ -311,7 +311,7 @@ void *SystemInfo::MapPrivateMemory(size_t size) {
 void *SystemInfo::MapSharedMemory(const File &fd, size_t size, i64 off) {
 #if defined(HERMES_ENABLE_PROCFS_SYSINFO)
   return mmap(nullptr, size, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS,
-              -1, 0);
+              fd.posix_fd_, 0);
 #elif defined(HERMES_ENABLE_WINDOWS_SYSINFO)
   // Convert i64 to low and high dwords
   DWORD highDword = (DWORD)((off >> 32) & 0xFFFFFFFF);
