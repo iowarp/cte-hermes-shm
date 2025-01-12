@@ -28,7 +28,7 @@ endif()
 
 # BUILD HSHM FOR ROCM ONLY
 if (HERMES_ENABLE_ROCM)
-    add_rocm_library(hermes_shm_rocm_gpu TRUE ${SRC_FILES})
+    add_rocm_gpu_library(hermes_shm_rocm_gpu TRUE ${SRC_FILES})
     target_link_libraries(hermes_shm_rocm_gpu PUBLIC rocm_gpu_lib_deps)
     list(APPEND HSHM_LIBS hermes_shm_rocm_gpu)
     add_library(rocmcxx_gpu INTERFACE)

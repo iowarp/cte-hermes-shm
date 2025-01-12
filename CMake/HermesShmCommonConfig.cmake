@@ -208,7 +208,7 @@ function(set_cuda_sources DO_COPY SRC_FILES CUDA_SOURCE_FILES_VAR)
 endfunction()
 
 # Function for adding a ROCm library
-function(add_rocm_library LIB_NAME DO_COPY)
+function(add_rocm_gpu_library LIB_NAME DO_COPY)
     set(SRC_FILES ${ARGN})
     set(ROCM_SOURCE_FILES "")
     set_rocm_sources(gpu "${DO_COPY}" "${SRC_FILES}" ROCM_SOURCE_FILES)
