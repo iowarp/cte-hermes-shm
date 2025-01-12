@@ -50,6 +50,7 @@ install(TARGETS
         ${HSHM_LIBS}
         rocm_gpu_lib_deps
         rocm_host_lib_deps
+        rocm_host_exec_deps
         rocm_gpu_exec_deps
         cuda_gpu_lib_deps
         cuda_gpu_exec_deps

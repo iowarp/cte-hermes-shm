@@ -229,7 +229,15 @@ function(add_rocm_host_library LIB_NAME DO_COPY)
 endfunction()
 
 # Function for adding a ROCm executable
-function(add_rocm_executable EXE_NAME DO_COPY)
+function(add_rocm_host_executable EXE_NAME)
+    set(SRC_FILES ${ARGN})
+    set(ROCM_SOURCE_FILES "")
+    add_executable(${EXE_NAME} ${ROCM_SOURCE_FILES})
+    target_link_libraries(${EXE_NAME} PUBLIC HermesShm::rocm_host_exec_deps)
+endfunction()
+
+# Function for adding a ROCm executable
+function(add_rocm_gpu_executable EXE_NAME DO_COPY)
     set(SRC_FILES ${ARGN})
     set(ROCM_SOURCE_FILES "")
     set_rocm_sources(exec "${DO_COPY}" "${SRC_FILES}" ROCM_SOURCE_FILES)

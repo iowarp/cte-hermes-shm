@@ -189,7 +189,14 @@ if (HERMES_ENABLE_ROCM)
     target_link_libraries(rocm_host_lib_deps INTERFACE host_deps)
 endif()
 
-# ROCM (EXEC) DEPS
+# ROCM (HOST) EXEC DEPS
+add_library(rocm_host_exec_deps INTERFACE)
+add_library(HermesShm::rocm_host_exec_deps ALIAS rocm_host_exec_deps)
+if (HERMES_ENABLE_ROCM)
+    target_link_libraries(rocm_host_exec_deps INTERFACE rocm_host_lib_deps amdhip64 amd_comgr)
+endif()
+
+# ROCM (GPU) EXEC DEPS
 add_library(rocm_gpu_exec_deps INTERFACE)
 add_library(HermesShm::rocm_gpu_exec_deps ALIAS rocm_gpu_exec_deps)
 if (HERMES_ENABLE_ROCM)
