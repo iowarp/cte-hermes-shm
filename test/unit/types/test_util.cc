@@ -9,7 +9,7 @@
  * the COPYING file, which can be found at the top directory. If you do not  *
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-#define HSHM_IS_COMPILING_SINGLETONS
+#define HSHM_COMPILING_DLL
 
 #include "basic_test.h"
 #include "hermes_shm/thread/thread_model_manager.h"

@@ -10,8 +10,8 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#define HSHM_IS_COMPILING_SINGLETONS
-#define HSHM_IS_COMPILING
+#define HSHM_COMPILING_DLL
+#define __HSHM_IS_COMPILING__
 
 #include "hermes_shm/memory/memory_manager.h"
 

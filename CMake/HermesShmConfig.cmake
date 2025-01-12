@@ -49,4 +49,7 @@ if (HERMES_ENABLE_ROCM)
 
     target_include_directories(HermesShm::rocmcxx_gpu INTERFACE "@CMAKE_INSTALL_PREFIX@/include")
     set(CMAKE_HIP_FLAGS "${CMAKE_HIP_FLAGS} -isystem @CMAKE_INSTALL_PREFIX@/include")
+
+    target_include_directories(HermesShm::rocmcxx_host INTERFACE "@CMAKE_INSTALL_PREFIX@/include")
+    set(CMAKE_HIP_FLAGS "${CMAKE_HIP_FLAGS} -isystem @CMAKE_INSTALL_PREFIX@/include")
 endif()

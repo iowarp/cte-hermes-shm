@@ -44,15 +44,23 @@
 #define HSHM_DLL_IMPORT  // __attribute__((visibility("default")))
 #endif
 
+// The following should be set internally in HSHM source files.
+// This is used only internally by this project
+// #define __HSHM_IS_COMPILING__
+
+// The following should be set externally by your project.
+// This is used to switch DLLs
+// #define HSHM_COMPILING_DLL
+
 /** DLL import / export for HSHM code */
-#ifdef HSHM_IS_COMPILING
+#ifdef __HSHM_IS_COMPILING__
 #define HSHM_DLL HSHM_DLL_EXPORT
 #else
 #define HSHM_DLL HSHM_DLL_IMPORT
 #endif
 
 /** DLL import / export for singletons */
-#ifdef HSHM_IS_COMPILING_SINGLETONS
+#ifdef HSHM_COMPILING_DLL
 #define HSHM_DLL_SINGLETON HSHM_DLL_EXPORT
 #else
 #define HSHM_DLL_SINGLETON HSHM_DLL_IMPORT

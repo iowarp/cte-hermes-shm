@@ -1,5 +1,5 @@
-#define HSHM_IS_COMPILING_SINGLETONS
-#define HSHM_IS_COMPILING
+#define HSHM_COMPILING_DLL
+#define __HSHM_IS_COMPILING__
 
 #include "hermes_shm/introspect/system_info.h"
 

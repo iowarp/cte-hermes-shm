@@ -1,14 +1,17 @@
 message("Importing packages for hermes_shm")
-
 #------------------------------------------------------------------------------
-# External libraries
+# Boilerplate neeeded for spack / clang
 #------------------------------------------------------------------------------
 # This is for compatability with CLANG
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # This is for compatability with SPACK
+SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
+#------------------------------------------------------------------------------
+# External libraries
+#------------------------------------------------------------------------------
 # Pkg-Config
 find_package(PkgConfig REQUIRED)
 if(PkgConfig)
