@@ -36,20 +36,34 @@ find_package(HermesShmCore REQUIRED)
 # Find the HermesShm dependencies
 find_package(HermesShmCommon REQUIRED)
 
-target_include_directories(HermesShm::cxx INTERFACE "@CMAKE_INSTALL_PREFIX@/include")
+# Add my library to RPATH
+list(APPEND CMAKE_INSTALL_RPATH "@HERMES_INSTALL_LIB_DIR@")
+
+# Basic: Target link directories / includes
+target_include_directories(HermesShm::cxx INTERFACE "@HERMES_INSTALL_INCLUDE_DIR@")
+target_link_directories(HermesShm::cxx INTERFACE "@HERMES_INSTALL_LIB_DIR@")
+
+# CUDA: Target link directories / includes
 if (HERMES_ENABLE_CUDA)
-    target_include_directories(HermesShm::cudacxx INTERFACE "@CMAKE_INSTALL_PREFIX@/include")
+    target_include_directories(HermesShm::cudacxx INTERFACE "@HERMES_INSTALL_INCLUDE_DIR@")
+    target_link_directories(HermesShm::cudacxx INTERFACE "@HERMES_INSTALL_LIB_DIR@")
 endif()
+
+# ROCm: Target link directories / includes
 if (HERMES_ENABLE_ROCM)
     execute_process(COMMAND hipconfig --rocmpath
         OUTPUT_VARIABLE rocm_path)
     message(STATUS "ROCm SDK path: ${rocm_path}")
+
     # TODO(llogan): This is a hack to make vscode detect HIP headers and not show errors
     set(CMAKE_HIP_FLAGS "${CMAKE_HIP_FLAGS} -isystem ${rocm_path}/include -D__HIP_PLATFORM_AMD__")
+    set(CMAKE_HIP_FLAGS "${CMAKE_HIP_FLAGS} -isystem @HERMES_INSTALL_INCLUDE_DIR@")
 
-    target_include_directories(HermesShm::rocmcxx_gpu INTERFACE "@CMAKE_INSTALL_PREFIX@/include")
-    set(CMAKE_HIP_FLAGS "${CMAKE_HIP_FLAGS} -isystem @CMAKE_INSTALL_PREFIX@/include")
+    # GPU code
+    target_include_directories(HermesShm::rocmcxx_gpu INTERFACE "@HERMES_INSTALL_INCLUDE_DIR@")
+    target_link_directories(HermesShm::rocmcxx_gpu INTERFACE "@HERMES_INSTALL_LIB_DIR@")
 
-    target_include_directories(HermesShm::rocmcxx_host INTERFACE "@CMAKE_INSTALL_PREFIX@/include")
-    set(CMAKE_HIP_FLAGS "${CMAKE_HIP_FLAGS} -isystem @CMAKE_INSTALL_PREFIX@/include")
+    # Host-only code
+    target_include_directories(HermesShm::rocmcxx_host INTERFACE "@HERMES_INSTALL_INCLUDE_DIR@")
+    target_link_directories(HermesShm::rocmcxx_host INTERFACE "@HERMES_INSTALL_LIB_DIR@")
 endif()

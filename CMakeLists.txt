@@ -130,6 +130,12 @@ endif()
 #------------------------------------------------------------------------------
 include(CMake/HermesShmCommonConfig.cmake) 
 
+# This is for compatability with CLANG + Spack
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+list(APPEND CMAKE_INSTALL_RPATH "${HERMES_INSTALL_LIB_DIR}")
+set(CMAKE_BUILD_WITH_INSTALL_RPATH ON)
+SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+
 # ENABLE GPU SUPPORT
 if (HERMES_ENABLE_CUDA)
     hermes_enable_cuda(17)
