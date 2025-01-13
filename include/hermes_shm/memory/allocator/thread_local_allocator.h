@@ -71,7 +71,8 @@ struct _ThreadLocalAllocatorHeader : public AllocatorHeader {
     } else {
       tid = tid_heap_.fetch_add(1);
     }
-    HILOG(kInfo, "Allocating TID: {} (tid size: {})", tid, free_tids_->size());
+    // HILOG(kInfo, "Allocating TID: {} (tid size: {})", tid,
+    // free_tids_->size());
     return hshm::ThreadId(tid);
   }
 
@@ -79,7 +80,7 @@ struct _ThreadLocalAllocatorHeader : public AllocatorHeader {
   void FreeTid(hshm::ThreadId tid) {
     ScopedSpinLock lock(lock_, 0);
     free_tids_->emplace_back(tid.tid_);
-    HILOG(kInfo, "Freeing TID: {} (tid size: {})", tid, free_tids_->size());
+    // HILOG(kInfo, "Freeing TID: {} (tid size: {})", tid, free_tids_->size());
   }
 
   HSHM_INLINE_CROSS_FUN
