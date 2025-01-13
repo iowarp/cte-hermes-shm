@@ -167,6 +167,7 @@ endif()
 add_library(cuda_gpu_lib_deps INTERFACE)
 add_library(hshm::cuda_gpu_lib_deps ALIAS cuda_gpu_lib_deps)
 if (HSHM_ENABLE_CUDA)
+    target_link_libraries(cuda_gpu_lib_deps INTERFACE host_deps)
     target_compile_definitions(cuda_gpu_lib_deps INTERFACE HSHM_ENABLE_CUDA)
     target_compile_options(cuda_gpu_lib_deps INTERFACE
             $<$<COMPILE_LANGUAGE:CUDA>:--expt-relaxed-constexpr>)
