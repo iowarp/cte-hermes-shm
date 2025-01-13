@@ -27,7 +27,7 @@ class CudaMalloc : public MemoryBackend {
   CudaMalloc() = default;
 
   /** Destructor */
-  ~CudaMalloc() override {
+  ~CudaMalloc() {
     if (IsOwned()) {
       _Destroy();
     } else {

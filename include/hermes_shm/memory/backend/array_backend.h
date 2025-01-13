@@ -32,7 +32,7 @@ class ArrayBackend : public MemoryBackend {
   HSHM_CROSS_FUN
   ArrayBackend() = default;
 
-  ~ArrayBackend() override {}
+  ~ArrayBackend() {}
 
   HSHM_CROSS_FUN
   bool shm_init(const MemoryBackendId &backend_id, size_t size, char *region) {
@@ -50,15 +50,15 @@ class ArrayBackend : public MemoryBackend {
     return true;
   }
 
-  bool shm_deserialize(const hshm::chararr &url) override {
+  bool shm_deserialize(const hshm::chararr &url) {
     (void)url;
     HSHM_THROW_ERROR(SHMEM_NOT_SUPPORTED);
     return false;
   }
 
-  void shm_detach() override {}
+  void shm_detach() {}
 
-  void shm_destroy() override {}
+  void shm_destroy() {}
 };
 
 }  // namespace hshm::ipc

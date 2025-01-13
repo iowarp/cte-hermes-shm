@@ -34,7 +34,7 @@ class MallocBackend : public MemoryBackend {
   HSHM_CROSS_FUN
   MallocBackend() = default;
 
-  ~MallocBackend() override {}
+  ~MallocBackend() {}
 
   HSHM_CROSS_FUN
   bool shm_init(const MemoryBackendId &backend_id, size_t size) {
@@ -51,15 +51,15 @@ class MallocBackend : public MemoryBackend {
     return true;
   }
 
-  bool shm_deserialize(const hshm::chararr &url) override {
+  bool shm_deserialize(const hshm::chararr &url) {
     (void)url;
     HSHM_THROW_ERROR(SHMEM_NOT_SUPPORTED);
     return false;
   }
 
-  void shm_detach() override { _Detach(); }
+  void shm_detach() { _Detach(); }
 
-  void shm_destroy() override { _Destroy(); }
+  void shm_destroy() { _Destroy(); }
 
  protected:
   void _Detach() { free(header_); }

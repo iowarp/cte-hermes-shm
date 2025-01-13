@@ -40,7 +40,7 @@ class PosixShmMmap : public MemoryBackend, public UrlMemoryBackend {
 
   /** Destructor */
   HSHM_CROSS_FUN
-  ~PosixShmMmap() override {
+  ~PosixShmMmap() {
 #ifdef HSHM_IS_HOST
     if (IsOwned()) {
       _Destroy();
@@ -73,7 +73,7 @@ class PosixShmMmap : public MemoryBackend, public UrlMemoryBackend {
   }
 
   /** Deserialize the backend */
-  bool shm_deserialize(const hshm::chararr &url) override {
+  bool shm_deserialize(const hshm::chararr &url) {
     SetInitialized();
     Disown();
     if (!SystemInfo::OpenSharedMemory(fd_, url.c_str())) {
@@ -88,10 +88,10 @@ class PosixShmMmap : public MemoryBackend, public UrlMemoryBackend {
   }
 
   /** Detach the mapped memory */
-  void shm_detach() override { _Detach(); }
+  void shm_detach() { _Detach(); }
 
   /** Destroy the mapped memory */
-  void shm_destroy() override { _Destroy(); }
+  void shm_destroy() { _Destroy(); }
 
  protected:
   /** Map shared memory */

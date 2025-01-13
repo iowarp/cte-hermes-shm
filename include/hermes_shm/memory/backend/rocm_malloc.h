@@ -27,7 +27,7 @@ class RocmMalloc : public MemoryBackend {
   RocmMalloc() = default;
 
   /** Destructor */
-  ~RocmMalloc() override {
+  ~RocmMalloc() {
     if (IsOwned()) {
       _Destroy();
     } else {
@@ -51,17 +51,17 @@ class RocmMalloc : public MemoryBackend {
   }
 
   /** Deserialize the backend */
-  bool shm_deserialize(const hshm::chararr &url) override {
+  bool shm_deserialize(const hshm::chararr &url) {
     (void)url;
     HSHM_THROW_ERROR(SHMEM_NOT_SUPPORTED);
     return false;
   }
 
   /** Detach the mapped memory */
-  void shm_detach() override { _Detach(); }
+  void shm_detach() { _Detach(); }
 
   /** Destroy the mapped memory */
-  void shm_destroy() override { _Destroy(); }
+  void shm_destroy() { _Destroy(); }
 
  protected:
   /** Map shared memory */
