@@ -63,14 +63,19 @@ struct _ThreadLocalAllocatorHeader : public AllocatorHeader {
   HSHM_INLINE_CROSS_FUN
   hshm::ThreadId CreateTid() {
     hshm::min_u64 tid = 0;
-    if (free_tids_->pop(tid).IsNull()) {
+    qtok_t qtok = free_tids_->pop(tid);
+    if (qtok.IsNull()) {
       tid = tid_heap_.fetch_add(1);
     }
+    HILOG(kInfo, "Allocating TID: {} (tid size: {})", tid, free_tids_->size());
     return hshm::ThreadId(tid);
   }
 
   HSHM_INLINE_CROSS_FUN
-  void FreeTid(hshm::ThreadId tid) { free_tids_->emplace(tid.tid_); }
+  void FreeTid(hshm::ThreadId tid) {
+    free_tids_->emplace(tid.tid_);
+    HILOG(kInfo, "Freeing TID: {} (tid size: {})", tid, free_tids_->size());
+  }
 
   HSHM_INLINE_CROSS_FUN
   TLS *GetTls(hshm::ThreadId tid) {

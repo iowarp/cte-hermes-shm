@@ -77,7 +77,7 @@ class PageAllocator {
   HSHM_INLINE_CROSS_FUN
   explicit PageAllocator(
       StackAllocator *alloc,
-      size_t local_heap_size = hshm::Unit<size_t>::Kilobytes(64)) {
+      size_t local_heap_size = hshm::Unit<size_t>::Kilobytes(1)) {
     for (size_t i = 0; i < PageId::num_caches_; ++i) {
       HSHM_MAKE_AR0(free_lists_[i], alloc);
     }
