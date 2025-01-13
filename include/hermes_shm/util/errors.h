@@ -10,8 +10,8 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_ERRORS_H
-#define HERMES_ERRORS_H
+#ifndef HSHM_ERRORS_H
+#define HSHM_ERRORS_H
 
 #ifdef __cplusplus
 
@@ -44,4 +44,4 @@ const Error ARGPACK_INDEX_OUT_OF_BOUNDS("Argpack index out of bounds");
 
 #endif
 
-#endif  // HERMES_ERRORS_H
+#endif  // HSHM_ERRORS_H

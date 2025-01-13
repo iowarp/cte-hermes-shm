@@ -10,8 +10,8 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_DATA_STRUCTURES__MPMC_LIST_lifo_list_queue_H
-#define HERMES_DATA_STRUCTURES__MPMC_LIST_lifo_list_queue_H
+#ifndef HSHM_DATA_STRUCTURES__MPMC_LIST_lifo_list_queue_H
+#define HSHM_DATA_STRUCTURES__MPMC_LIST_lifo_list_queue_H
 
 #include "hermes_shm/memory/memory.h"
 #include "hermes_shm/util/logging.h"
@@ -48,13 +48,13 @@ class mpsc_lifo_list_queue : public ShmContainer {
   /** Constructor. Default. */
   HSHM_CROSS_FUN
   mpsc_lifo_list_queue() {
-    shm_init(HERMES_MEMORY_MANAGER->GetDefaultAllocator<AllocT>());
+    shm_init(HSHM_MEMORY_MANAGER->GetDefaultAllocator<AllocT>());
   }
 
   /** Constructor. Int */
   HSHM_CROSS_FUN
   explicit mpsc_lifo_list_queue(size_t depth) {
-    shm_init(HERMES_MEMORY_MANAGER->GetDefaultAllocator<AllocT>());
+    shm_init(HSHM_MEMORY_MANAGER->GetDefaultAllocator<AllocT>());
   }
 
   /** SHM constructor. Default. */
@@ -84,7 +84,7 @@ class mpsc_lifo_list_queue : public ShmContainer {
   /** Copy constructor */
   HSHM_CROSS_FUN
   explicit mpsc_lifo_list_queue(const mpsc_lifo_list_queue &other) {
-    init_shm_container(HERMES_MEMORY_MANAGER->GetDefaultAllocator<AllocT>());
+    init_shm_container(HSHM_MEMORY_MANAGER->GetDefaultAllocator<AllocT>());
     shm_strong_copy_op(other);
   }
 
@@ -301,4 +301,4 @@ using mpsc_lifo_list_queue =
 #undef CLASS_NAME
 #undef CLASS_NEW_ARGS
 
-#endif  // HERMES_DATA_STRUCTURES__MPMC_LIST_lifo_list_queue_H
+#endif  // HSHM_DATA_STRUCTURES__MPMC_LIST_lifo_list_queue_H

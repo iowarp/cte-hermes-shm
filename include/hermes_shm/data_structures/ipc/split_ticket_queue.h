@@ -1,27 +1,27 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-* Distributed under BSD 3-Clause license.                                   *
-* Copyright by The HDF Group.                                               *
-* Copyright by the Illinois Institute of Technology.                        *
-* All rights reserved.                                                      *
-*                                                                           *
-* This file is part of Hermes. The full Hermes copyright notice, including  *
-* terms governing use, modification, and redistribution, is contained in    *
-* the COPYING file, which can be found at the top directory. If you do not  *
-* have access to the file, you may request a copy from help@hdfgroup.org.   *
-* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+ * Distributed under BSD 3-Clause license.                                   *
+ * Copyright by The HDF Group.                                               *
+ * Copyright by the Illinois Institute of Technology.                        *
+ * All rights reserved.                                                      *
+ *                                                                           *
+ * This file is part of Hermes. The full Hermes copyright notice, including  *
+ * terms governing use, modification, and redistribution, is contained in    *
+ * the COPYING file, which can be found at the top directory. If you do not  *
+ * have access to the file, you may request a copy from help@hdfgroup.org.   *
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_SHM__DATA_STRUCTURES_IPC_SPLIT_TICKET_QUEUE_H_
-#define HERMES_SHM__DATA_STRUCTURES_IPC_SPLIT_TICKET_QUEUE_H_
+#ifndef HSHM_SHM__DATA_STRUCTURES_IPC_SPLIT_TICKET_QUEUE_H_
+#define HSHM_SHM__DATA_STRUCTURES_IPC_SPLIT_TICKET_QUEUE_H_
 
 #include "hermes_shm/data_structures/internal/shm_internal.h"
 #include "hermes_shm/thread/lock.h"
-#include "vector.h"
 #include "ticket_queue.h"
+#include "vector.h"
 
 namespace hshm::ipc {
 
 /** Forward declaration of split_ticket_queue */
-template<typename T, HSHM_CLASS_TEMPL_WITH_DEFAULTS>
+template <typename T, HSHM_CLASS_TEMPL_WITH_DEFAULTS>
 class split_ticket_queue;
 
 /**
@@ -35,7 +35,7 @@ class split_ticket_queue;
  * A MPMC queue for allocating tickets. Handles concurrency
  * without blocking.
  * */
-template<typename T, HSHM_CLASS_TEMPL>
+template <typename T, HSHM_CLASS_TEMPL>
 class split_ticket_queue : public ShmContainer {
  public:
   HIPC_CONTAINER_TEMPLATE((CLASS_NAME), (CLASS_NEW_ARGS))
@@ -51,27 +51,24 @@ class split_ticket_queue : public ShmContainer {
 
   /** Constructor. Default. */
   HSHM_CROSS_FUN
-  explicit split_ticket_queue(size_t depth_per_split = 1024,
-                              size_t split = 0) {
-    shm_init(HERMES_MEMORY_MANAGER->GetDefaultAllocator<AllocT>(),
-      depth_per_split, split);
+  explicit split_ticket_queue(size_t depth_per_split = 1024, size_t split = 0) {
+    shm_init(HSHM_MEMORY_MANAGER->GetDefaultAllocator<AllocT>(),
+             depth_per_split, split);
   }
 
   /** SHM constructor. Default. */
   HSHM_CROSS_FUN
   explicit split_ticket_queue(const hipc::CtxAllocator<AllocT> &alloc,
-                              size_t depth_per_split = 1024,
-                              size_t split = 0) {
+                              size_t depth_per_split = 1024, size_t split = 0) {
     shm_init(alloc, depth_per_split, split);
   }
 
   /** SHM constructor */
   void shm_init(const hipc::CtxAllocator<AllocT> &alloc,
-                size_t depth_per_split = 1024,
-                size_t split = 0) {
+                size_t depth_per_split = 1024, size_t split = 0) {
     init_shm_container(alloc);
     if (split == 0) {
-      split = HERMES_SYSTEM_INFO->ncpu_;
+      split = HSHM_SYSTEM_INFO->ncpu_;
     }
     HSHM_MAKE_AR(splits_, GetCtxAllocator(), split, depth_per_split);
     SetNull();
@@ -100,7 +97,7 @@ class split_ticket_queue : public ShmContainer {
 
   /** SHM copy assignment operator */
   HSHM_CROSS_FUN
-  split_ticket_queue& operator=(const split_ticket_queue &other) {
+  split_ticket_queue &operator=(const split_ticket_queue &other) {
     if (this != &other) {
       shm_destroy();
       shm_strong_copy_op(other);
@@ -133,7 +130,7 @@ class split_ticket_queue : public ShmContainer {
 
   /** SHM move assignment operator. */
   HSHM_CROSS_FUN
-  split_ticket_queue& operator=(split_ticket_queue &&other) noexcept {
+  split_ticket_queue &operator=(split_ticket_queue &&other) noexcept {
     if (this != &other) {
       shm_move_op<true>(GetCtxAllocator(), std::move(other));
     }
@@ -141,9 +138,9 @@ class split_ticket_queue : public ShmContainer {
   }
 
   /** SHM move assignment operator. */
-  template<bool IS_ASSIGN>
-  HSHM_CROSS_FUN
-  void shm_move_op(const hipc::CtxAllocator<AllocT> &alloc, split_ticket_queue &&other) noexcept {
+  template <bool IS_ASSIGN>
+  HSHM_CROSS_FUN void shm_move_op(const hipc::CtxAllocator<AllocT> &alloc,
+                                  split_ticket_queue &&other) noexcept {
     if constexpr (IS_ASSIGN) {
       shm_destroy();
     } else {
@@ -164,15 +161,11 @@ class split_ticket_queue : public ShmContainer {
 
   /** SHM destructor.  */
   HSHM_CROSS_FUN
-  void shm_destroy_main() {
-    (*splits_).shm_destroy();
-  }
+  void shm_destroy_main() { (*splits_).shm_destroy(); }
 
   /** Check if the list is empty */
   HSHM_CROSS_FUN
-  bool IsNull() const {
-    return (*splits_).IsNull();
-  }
+  bool IsNull() const { return (*splits_).IsNull(); }
 
   /** Sets this list as empty */
   HSHM_CROSS_FUN
@@ -186,9 +179,8 @@ class split_ticket_queue : public ShmContainer {
    * ===================================*/
 
   /** Construct an element at \a pos position in the queue */
-  template<typename ...Args>
-  HSHM_CROSS_FUN
-  qtok_t emplace(T &tkt) {
+  template <typename... Args>
+  HSHM_CROSS_FUN qtok_t emplace(T &tkt) {
     uint16_t rr = rr_tail_.fetch_add(1);
     auto &splits = (*splits_);
     size_t num_splits = splits.size();
@@ -228,7 +220,7 @@ class split_ticket_queue : public ShmContainer {
 
 namespace hshm {
 
-template<typename T, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
+template <typename T, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
 using split_ticket_queue = hipc::split_ticket_queue<T, HSHM_CLASS_TEMPL_ARGS>;
 
 }  // namespace hshm
@@ -236,4 +228,4 @@ using split_ticket_queue = hipc::split_ticket_queue<T, HSHM_CLASS_TEMPL_ARGS>;
 #undef CLASS_NEW_ARGS
 #undef CLASS_NAME
 
-#endif  // HERMES_SHM__DATA_STRUCTURES_IPC_SPLIT_TICKET_QUEUE_H_
+#endif  // HSHM_SHM__DATA_STRUCTURES_IPC_SPLIT_TICKET_QUEUE_H_

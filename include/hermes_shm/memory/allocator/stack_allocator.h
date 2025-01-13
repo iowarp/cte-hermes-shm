@@ -10,8 +10,8 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_MEMORY_ALLOCATOR_STACK_ALLOCATOR_H_
-#define HERMES_MEMORY_ALLOCATOR_STACK_ALLOCATOR_H_
+#ifndef HSHM_MEMORY_ALLOCATOR_STACK_ALLOCATOR_H_
+#define HSHM_MEMORY_ALLOCATOR_STACK_ALLOCATOR_H_
 
 #include "allocator.h"
 #include "heap.h"
@@ -130,7 +130,7 @@ class _StackAllocator : public Allocator {
   HSHM_CROSS_FUN
   OffsetPointer AlignedAllocateOffset(const hipc::MemContext &ctx, size_t size,
                                       size_t alignment) {
-    HERMES_THROW_ERROR(NOT_IMPLEMENTED, "AlignedAllocateOffset");
+    HSHM_THROW_ERROR(NOT_IMPLEMENTED, "AlignedAllocateOffset");
     return OffsetPointer::GetNull();
   }
 
@@ -160,7 +160,7 @@ class _StackAllocator : public Allocator {
   void FreeOffsetNoNullCheck(const hipc::MemContext &ctx, OffsetPointer p) {
     auto hdr = Convert<MpPage>(p - sizeof(MpPage));
     if (!hdr->IsAllocated()) {
-      HERMES_THROW_ERROR(DOUBLE_FREE);
+      HSHM_THROW_ERROR(DOUBLE_FREE);
     }
     hdr->UnsetAllocated();
     header_->SubSize(hdr->page_size_);
@@ -190,4 +190,4 @@ class _StackAllocator : public Allocator {
 
 }  // namespace hshm::ipc
 
-#endif  // HERMES_MEMORY_ALLOCATOR_STACK_ALLOCATOR_H_
+#endif  // HSHM_MEMORY_ALLOCATOR_STACK_ALLOCATOR_H_

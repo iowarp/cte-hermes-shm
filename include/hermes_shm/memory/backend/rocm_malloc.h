@@ -53,7 +53,7 @@ class RocmMalloc : public MemoryBackend {
   /** Deserialize the backend */
   bool shm_deserialize(const hshm::chararr &url) override {
     (void)url;
-    HERMES_THROW_ERROR(SHMEM_NOT_SUPPORTED);
+    HSHM_THROW_ERROR(SHMEM_NOT_SUPPORTED);
     return false;
   }
 

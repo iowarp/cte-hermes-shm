@@ -10,8 +10,8 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_DATA_STRUCTURES_LOCKLESS_VECTOR_H_
-#define HERMES_DATA_STRUCTURES_LOCKLESS_VECTOR_H_
+#ifndef HSHM_DATA_STRUCTURES_LOCKLESS_VECTOR_H_
+#define HSHM_DATA_STRUCTURES_LOCKLESS_VECTOR_H_
 
 #include <vector>
 
@@ -250,7 +250,7 @@ class vector : public ShmContainer {
   /** SHM constructor. Default. */
   HSHM_CROSS_FUN
   explicit vector() {
-    init_shm_container(HERMES_MEMORY_MANAGER->GetDefaultAllocator<AllocT>());
+    init_shm_container(HSHM_MEMORY_MANAGER->GetDefaultAllocator<AllocT>());
     SetNull();
   }
 
@@ -264,7 +264,7 @@ class vector : public ShmContainer {
   /** Constructor. Resize + construct. */
   template <typename... Args>
   HSHM_CROSS_FUN explicit vector(size_t length, Args &&...args) {
-    shm_init(HERMES_MEMORY_MANAGER->GetDefaultAllocator<AllocT>(), length,
+    shm_init(HSHM_MEMORY_MANAGER->GetDefaultAllocator<AllocT>(), length,
              std::forward<Args>(args)...);
   }
 
@@ -361,7 +361,7 @@ class vector : public ShmContainer {
   /** Move constructor. */
   HSHM_CROSS_FUN
   vector(vector &&other) {
-    shm_move_op<false>(HERMES_MEMORY_MANAGER->GetDefaultAllocator<AllocT>(),
+    shm_move_op<false>(HSHM_MEMORY_MANAGER->GetDefaultAllocator<AllocT>(),
                        std::move(other));
   }
 
@@ -655,8 +655,8 @@ class vector : public ShmContainer {
       vec_ptr_ = new_p;
     }
     if (new_vec == nullptr) {
-      HERMES_THROW_ERROR(OUT_OF_MEMORY, max_length * sizeof(delay_ar<T>),
-                         alloc->GetCurrentlyAllocatedSize());
+      HSHM_THROW_ERROR(OUT_OF_MEMORY, max_length * sizeof(delay_ar<T>),
+                       alloc->GetCurrentlyAllocatedSize());
     }
     if (resize) {
       for (size_t i = length_; i < max_length; ++i) {
@@ -776,4 +776,4 @@ using vector = hipc::vector<T, HSHM_CLASS_TEMPL_ARGS>;
 #undef CLASS_NAME
 #undef CLASS_NEW_ARGS
 
-#endif  // HERMES_DATA_STRUCTURES_LOCKLESS_VECTOR_H_
+#endif  // HSHM_DATA_STRUCTURES_LOCKLESS_VECTOR_H_

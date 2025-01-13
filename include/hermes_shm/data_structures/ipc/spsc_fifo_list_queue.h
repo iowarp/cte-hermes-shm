@@ -10,8 +10,8 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_DATA_STRUCTURES__SPSC_LIST_lifo_list_queue_H
-#define HERMES_DATA_STRUCTURES__SPSC_LIST_lifo_list_queue_H
+#ifndef HSHM_DATA_STRUCTURES__SPSC_LIST_lifo_list_queue_H
+#define HSHM_DATA_STRUCTURES__SPSC_LIST_lifo_list_queue_H
 
 #include "hermes_shm/memory/memory.h"
 #include "lifo_list_queue.h"
@@ -47,13 +47,13 @@ class spsc_fifo_list_queue : public ShmContainer {
   /** Constructor. Default. */
   HSHM_CROSS_FUN
   spsc_fifo_list_queue() {
-    shm_init(HERMES_MEMORY_MANAGER->GetDefaultAllocator<AllocT>());
+    shm_init(HSHM_MEMORY_MANAGER->GetDefaultAllocator<AllocT>());
   }
 
   /** Constructor. Int */
   HSHM_CROSS_FUN
   explicit spsc_fifo_list_queue(size_t depth) {
-    shm_init(HERMES_MEMORY_MANAGER->GetDefaultAllocator<AllocT>());
+    shm_init(HSHM_MEMORY_MANAGER->GetDefaultAllocator<AllocT>());
   }
 
   /** SHM constructor. Default. */
@@ -85,7 +85,7 @@ class spsc_fifo_list_queue : public ShmContainer {
   /** Copy constructor */
   HSHM_CROSS_FUN
   explicit spsc_fifo_list_queue(const spsc_fifo_list_queue &other) {
-    init_shm_container(HERMES_MEMORY_MANAGER->GetDefaultAllocator<AllocT>());
+    init_shm_container(HSHM_MEMORY_MANAGER->GetDefaultAllocator<AllocT>());
     shm_strong_copy_op(other);
   }
 
@@ -303,4 +303,4 @@ using spsc_fifo_list_queue =
 #undef CLASS_NAME
 #undef CLASS_NEW_ARGS
 
-#endif  // HERMES_DATA_STRUCTURES__SPSC_LIST_lifo_list_queue_H
+#endif  // HSHM_DATA_STRUCTURES__SPSC_LIST_lifo_list_queue_H

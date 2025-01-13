@@ -10,8 +10,8 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_INCLUDE_MEMORY_BACKEND_CUDA_SHM_MMAP_H
-#define HERMES_INCLUDE_MEMORY_BACKEND_CUDA_SHM_MMAP_H
+#ifndef HSHM_INCLUDE_MEMORY_BACKEND_CUDA_SHM_MMAP_H
+#define HSHM_INCLUDE_MEMORY_BACKEND_CUDA_SHM_MMAP_H
 
 #include <cuda_runtime.h>
 #include <stdio.h>
@@ -61,4 +61,4 @@ class CudaShmMmap : public PosixShmMmap {
 
 }  // namespace hshm::ipc
 
-#endif  // HERMES_INCLUDE_MEMORY_BACKEND_CUDA_SHM_MMAP_H
+#endif  // HSHM_INCLUDE_MEMORY_BACKEND_CUDA_SHM_MMAP_H

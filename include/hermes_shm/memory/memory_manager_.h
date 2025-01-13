@@ -2,8 +2,8 @@
 // Created by llogan on 10/11/24.
 //
 
-#ifndef HERMES_SHM_INCLUDE_HERMES_SHM_MEMORY_MEMORY_MANAGER__H_
-#define HERMES_SHM_INCLUDE_HERMES_SHM_MEMORY_MEMORY_MANAGER__H_
+#ifndef HSHM_SHM_INCLUDE_HSHM_SHM_MEMORY_MEMORY_MANAGER__H_
+#define HSHM_SHM_INCLUDE_HSHM_SHM_MEMORY_MEMORY_MANAGER__H_
 
 #include "allocator/allocator_factory_.h"
 #include "hermes_shm/memory/allocator/allocator.h"
@@ -12,9 +12,9 @@
 #include "hermes_shm/util/singleton.h"
 
 /** Singleton declaration */
-#define HERMES_MEMORY_MANAGER \
+#define HSHM_MEMORY_MANAGER \
   hshm::GlobalSingleton<hshm::ipc::MemoryManager>::GetInstance()
-#define HERMES_MEMORY_MANAGER_T hshm::ipc::MemoryManager *
+#define HSHM_MEMORY_MANAGER_T hshm::ipc::MemoryManager *
 
 namespace hshm::ipc {
 
@@ -91,7 +91,7 @@ class MemoryManager {
   HSHM_CROSS_FUN
   MemoryBackend *RegisterBackend(MemoryBackend *backend) {
     if (GetBackend(backend->GetId())) {
-      HERMES_THROW_ERROR(MEMORY_BACKEND_REPEATED);
+      HSHM_THROW_ERROR(MEMORY_BACKEND_REPEATED);
     }
     backends_[backend->GetId().id_] = backend;
     return backend;
@@ -237,7 +237,7 @@ class MemoryManager {
    * */
   template <typename T, typename POINTER_T = Pointer>
   HSHM_INLINE_CROSS_FUN POINTER_T Convert(T *ptr) {
-    for (auto &alloc : HERMES_MEMORY_MANAGER->allocators_) {
+    for (auto &alloc : HSHM_MEMORY_MANAGER->allocators_) {
       if (alloc && alloc->ContainsPtr(ptr)) {
         return alloc->template Convert<T, POINTER_T>(ptr);
       }
@@ -248,4 +248,4 @@ class MemoryManager {
 
 }  // namespace hshm::ipc
 
-#endif  // HERMES_SHM_INCLUDE_HERMES_SHM_MEMORY_MEMORY_MANAGER__H_
+#endif  // HSHM_SHM_INCLUDE_HSHM_SHM_MEMORY_MEMORY_MANAGER__H_

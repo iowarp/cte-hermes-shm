@@ -17,7 +17,7 @@ target_link_libraries(cxx INTERFACE hermes_shm_host)
 list(APPEND HSHM_LIBS cxx)
 
 # BUILD HSHM FOR CUDA ONLY
-if (HERMES_ENABLE_CUDA)
+if (HSHM_ENABLE_CUDA)
     add_cuda_library(hermes_shm_cuda TRUE ${SRC_FILES})
     target_link_libraries(hermes_shm_cuda PUBLIC cuda_gpu_lib_deps)
     list(APPEND HSHM_LIBS hermes_shm_cuda)
@@ -27,7 +27,7 @@ if (HERMES_ENABLE_CUDA)
 endif()
 
 # BUILD HSHM FOR ROCM ONLY
-if (HERMES_ENABLE_ROCM)
+if (HSHM_ENABLE_ROCM)
     add_rocm_gpu_library(hermes_shm_rocm_gpu TRUE ${SRC_FILES})
     target_link_libraries(hermes_shm_rocm_gpu PUBLIC rocm_gpu_lib_deps)
     list(APPEND HSHM_LIBS hermes_shm_rocm_gpu)
@@ -56,14 +56,14 @@ install(TARGETS
         cuda_gpu_exec_deps
         host_deps
         EXPORT
-        ${HERMES_EXPORTED_TARGETS}
-        LIBRARY DESTINATION ${HERMES_INSTALL_LIB_DIR}
-        ARCHIVE DESTINATION ${HERMES_INSTALL_LIB_DIR}
-        RUNTIME DESTINATION ${HERMES_INSTALL_BIN_DIR})
+        ${HSHM_EXPORTED_TARGETS}
+        LIBRARY DESTINATION ${HSHM_INSTALL_LIB_DIR}
+        ARCHIVE DESTINATION ${HSHM_INSTALL_LIB_DIR}
+        RUNTIME DESTINATION ${HSHM_INSTALL_BIN_DIR})
 
 #-----------------------------------------------------------------------------
 # Coverage
 #-----------------------------------------------------------------------------
-if(HERMES_ENABLE_COVERAGE)
+if(HSHM_ENABLE_COVERAGE)
     set_coverage_flags(hermes_shm_host)
 endif()

@@ -38,7 +38,7 @@ TEST_CASE("TestTimer") {
   HILOG(kInfo, "Print timer: {}", timer.GetSec());
 }
 
-#ifdef HERMES_ENABLE_MPI
+#ifdef HSHM_ENABLE_MPI
 TEST_CASE("TestMpiTimer") {
   hshm::MpiTimer mpi_timer(MPI_COMM_WORLD);
   mpi_timer.Resume();
@@ -49,7 +49,7 @@ TEST_CASE("TestMpiTimer") {
 }
 #endif
 
-#ifdef HERMES_ENABLE_OPENMP
+#ifdef HSHM_ENABLE_OPENMP
 TEST_CASE("TestOmpTimer") {
   hshm::ThreadTimer omp_timer(4);
 #pragma omp parallel shared(omp_timer) num_threads(4)

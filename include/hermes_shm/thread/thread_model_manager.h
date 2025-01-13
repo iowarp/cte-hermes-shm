@@ -10,39 +10,39 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_THREAD_THREAD_MANAGER_H_
-#define HERMES_THREAD_THREAD_MANAGER_H_
+#ifndef HSHM_THREAD_THREAD_MANAGER_H_
+#define HSHM_THREAD_THREAD_MANAGER_H_
 
 #include "hermes_shm/constants/macros.h"
 #include "hermes_shm/introspect/system_info.h"
 #include "hermes_shm/thread/thread_model/thread_model.h"
 
-#ifdef HERMES_ENABLE_PTHREADS
+#ifdef HSHM_ENABLE_PTHREADS
 #include "thread_model/pthread.h"
 #endif
-#ifdef HERMES_RPC_THALLIUM
+#ifdef HSHM_RPC_THALLIUM
 #include "thread_model/argobots.h"
 #endif
-#ifdef HERMES_ENABLE_CUDA
+#ifdef HSHM_ENABLE_CUDA
 #include "thread_model/cuda.h"
 #endif
-#ifdef HERMES_ENABLE_ROCM
+#ifdef HSHM_ENABLE_ROCM
 #include "thread_model/rocm.h"
 #endif
-#ifdef HERMES_ENABLE_WINDOWS_THREADS
+#ifdef HSHM_ENABLE_WINDOWS_THREADS
 #include "thread_model/windows.h"
 #endif
 
 #include "hermes_shm/util/singleton.h"
 
 #if defined(HSHM_IS_HOST)
-#define HERMES_THREAD_MODEL \
+#define HSHM_THREAD_MODEL \
   hshm::Singleton<HSHM_DEFAULT_THREAD_MODEL>::GetInstance()
-#define HERMES_THREAD_MODEL_T hshm::HSHM_DEFAULT_THREAD_MODEL*
+#define HSHM_THREAD_MODEL_T hshm::HSHM_DEFAULT_THREAD_MODEL*
 #elif defined(HSHM_IS_GPU)
-#define HERMES_THREAD_MODEL \
+#define HSHM_THREAD_MODEL \
   hshm::Singleton<HSHM_DEFAULT_THREAD_MODEL_GPU>::GetInstance()
-#define HERMES_THREAD_MODEL_T hshm::HSHM_DEFAULT_THREAD_MODEL_GPU*
+#define HSHM_THREAD_MODEL_T hshm::HSHM_DEFAULT_THREAD_MODEL_GPU*
 #endif
 
-#endif  // HERMES_THREAD_THREAD_MANAGER_H_
+#endif  // HSHM_THREAD_THREAD_MANAGER_H_

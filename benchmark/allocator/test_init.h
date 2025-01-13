@@ -10,8 +10,8 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_BENCHMARK_DATA_STRUCTURE_TEST_INIT_H_
-#define HERMES_BENCHMARK_DATA_STRUCTURE_TEST_INIT_H_
+#ifndef HSHM_BENCHMARK_DATA_STRUCTURE_TEST_INIT_H_
+#define HSHM_BENCHMARK_DATA_STRUCTURE_TEST_INIT_H_
 
 #include <boost/container/scoped_allocator.hpp>
 #include <boost/interprocess/allocators/allocator.hpp>
@@ -41,4 +41,4 @@ using Timer = hshm::HighResMonotonicTimer;
 
 extern const std::string shm_url;
 
-#endif  // HERMES_BENCHMARK_DATA_STRUCTURE_TEST_INIT_H_
+#endif  // HSHM_BENCHMARK_DATA_STRUCTURE_TEST_INIT_H_

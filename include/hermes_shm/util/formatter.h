@@ -10,8 +10,8 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_ERROR_SERIALIZER_H
-#define HERMES_ERROR_SERIALIZER_H
+#ifndef HSHM_ERROR_SERIALIZER_H
+#define HSHM_ERROR_SERIALIZER_H
 
 #include <cstring>
 #include <list>
@@ -84,4 +84,4 @@ class Formatter {
 
 }  // namespace hshm
 
-#endif  // HERMES_ERROR_SERIALIZER_H
+#endif  // HSHM_ERROR_SERIALIZER_H

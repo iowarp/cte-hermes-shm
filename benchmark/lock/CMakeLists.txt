@@ -2,7 +2,7 @@ project(hermes_shm)
 
 
 
-if (HERMES_ENABLE_OPENMP)
+if (HSHM_ENABLE_OPENMP)
     include_directories( ${Boost_INCLUDE_DIRS} )
     include_directories( ${TEST_MAIN} )
     add_executable(benchmark_lock

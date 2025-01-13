@@ -10,8 +10,8 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_THREAD_RWLOCK_H_
-#define HERMES_THREAD_RWLOCK_H_
+#ifndef HSHM_THREAD_RWLOCK_H_
+#define HSHM_THREAD_RWLOCK_H_
 
 #include "hermes_shm/constants/macros.h"
 #include "hermes_shm/thread/lock.h"
@@ -36,7 +36,7 @@ struct RwLock {
   ipc::atomic<hshm::reg_uint> writers_;
   ipc::atomic<hshm::reg_uint> cur_writer_;
   ipc::atomic<hshm::big_uint> ticket_;
-#ifdef HERMES_DEBUG_LOCK
+#ifdef HSHM_DEBUG_LOCK
   uint32_t owner_;
 #endif
 
@@ -102,14 +102,14 @@ struct RwLock {
       if (mode == RwLockMode::kNone) {
         bool ret = mode_.compare_exchange_weak(mode, RwLockMode::kRead);
         if (ret) {
-#ifdef HERMES_DEBUG_LOCK
+#ifdef HSHM_DEBUG_LOCK
           owner_ = owner;
           HILOG(kDebug, "Acquired read lock for {}", owner);
 #endif
           return;
         }
       }
-      HERMES_THREAD_MODEL->Yield();
+      HSHM_THREAD_MODEL->Yield();
     } while (true);
   }
 
@@ -137,14 +137,14 @@ struct RwLock {
       if (mode == RwLockMode::kWrite) {
         cur_writer = cur_writer_.load();
         if (cur_writer == tkt) {
-#ifdef HERMES_DEBUG_LOCK
+#ifdef HSHM_DEBUG_LOCK
           owner_ = owner;
           HILOG(kDebug, "Acquired write lock for {}", owner);
 #endif
           return;
         }
       }
-      HERMES_THREAD_MODEL->Yield();
+      HSHM_THREAD_MODEL->Yield();
     } while (true);
   }
 
@@ -249,4 +249,4 @@ using hshm::ScopedRwWriteLock;
 
 }  // namespace hshm::ipc
 
-#endif  // HERMES_THREAD_RWLOCK_H_
+#endif  // HSHM_THREAD_RWLOCK_H_

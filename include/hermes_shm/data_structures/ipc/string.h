@@ -10,8 +10,8 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_DATA_STRUCTURES_LOCKLESS_STRING_H_
-#define HERMES_DATA_STRUCTURES_LOCKLESS_STRING_H_
+#ifndef HSHM_DATA_STRUCTURES_LOCKLESS_STRING_H_
+#define HSHM_DATA_STRUCTURES_LOCKLESS_STRING_H_
 
 #include <string>
 
@@ -63,7 +63,7 @@ class string_templ : public ShmContainer {
   /** Constructor. Default. */
   HSHM_CROSS_FUN
   explicit string_templ() {
-    init_shm_container(HERMES_MEMORY_MANAGER->GetDefaultAllocator<AllocT>());
+    init_shm_container(HSHM_MEMORY_MANAGER->GetDefaultAllocator<AllocT>());
     SetNull();
   }
 
@@ -81,7 +81,7 @@ class string_templ : public ShmContainer {
   /** SHM Constructor. Just allocate space. */
   HSHM_CROSS_FUN
   explicit string_templ(size_t length) {
-    init_shm_container(HERMES_MEMORY_MANAGER->GetDefaultAllocator<AllocT>());
+    init_shm_container(HSHM_MEMORY_MANAGER->GetDefaultAllocator<AllocT>());
     _create_str(length);
   }
 
@@ -105,7 +105,7 @@ class string_templ : public ShmContainer {
   HSHM_CROSS_FUN
   string_templ(const char *text) {
     shm_strong_or_weak_copy_op<false, false>(
-        HERMES_MEMORY_MANAGER->GetDefaultAllocator<AllocT>(), text, 0);
+        HSHM_MEMORY_MANAGER->GetDefaultAllocator<AllocT>(), text, 0);
   }
 
   /** SHM Constructor. From const char* */
@@ -119,7 +119,7 @@ class string_templ : public ShmContainer {
   HSHM_CROSS_FUN
   explicit string_templ(const char *text, size_t length) {
     shm_strong_or_weak_copy_op<false, true>(
-        HERMES_MEMORY_MANAGER->GetDefaultAllocator<AllocT>(), text, length);
+        HSHM_MEMORY_MANAGER->GetDefaultAllocator<AllocT>(), text, length);
   }
 
   /** SHM Constructor. From const char* and size */
@@ -144,7 +144,7 @@ class string_templ : public ShmContainer {
   /** Copy constructor. From std::string. */
   HSHM_HOST_FUN string_templ(const std::string &other) {
     shm_strong_or_weak_copy_op<false, true>(
-        HERMES_MEMORY_MANAGER->GetDefaultAllocator<AllocT>(), other.data(),
+        HSHM_MEMORY_MANAGER->GetDefaultAllocator<AllocT>(), other.data(),
         other.size());
   }
 
@@ -471,7 +471,7 @@ class string_templ : public ShmContainer {
    * Comparison Operations
    * ===================================*/
 
-#define HERMES_STR_CMP_OPERATOR(op)                                            \
+#define HSHM_STR_CMP_OPERATOR(op)                                              \
   bool operator TYPE_UNWRAP(op)(const char *other) const {                     \
     return hshm::strncmp(data(), size(), other, hshm::strlen(other)) op 0;     \
   }                                                                            \
@@ -484,13 +484,13 @@ class string_templ : public ShmContainer {
     return hshm::strncmp(data(), size(), other.data(), other.size()) op 0;     \
   }
 
-  HERMES_STR_CMP_OPERATOR(==)  // NOLINT
-  HERMES_STR_CMP_OPERATOR(!=)  // NOLINT
-  HERMES_STR_CMP_OPERATOR(<)   // NOLINT
-  HERMES_STR_CMP_OPERATOR(>)   // NOLINT
-  HERMES_STR_CMP_OPERATOR(<=)  // NOLINT
-  HERMES_STR_CMP_OPERATOR(>=)  // NOLINT
-#undef HERMES_STR_CMP_OPERATOR
+  HSHM_STR_CMP_OPERATOR(==)  // NOLINT
+  HSHM_STR_CMP_OPERATOR(!=)  // NOLINT
+  HSHM_STR_CMP_OPERATOR(<)   // NOLINT
+  HSHM_STR_CMP_OPERATOR(>)   // NOLINT
+  HSHM_STR_CMP_OPERATOR(<=)  // NOLINT
+  HSHM_STR_CMP_OPERATOR(>=)  // NOLINT
+#undef HSHM_STR_CMP_OPERATOR
 
  private:
   HSHM_INLINE_CROSS_FUN void _create_str(size_t length) {
@@ -563,4 +563,4 @@ struct hash<hshm::ipc::string_templ<SSO, FLAGS, HSHM_CLASS_TEMPL_ARGS>> {
 #undef CLASS_NAME
 #undef CLASS_NEW_ARGS
 
-#endif  // HERMES_DATA_STRUCTURES_LOCKLESS_STRING_H_
+#endif  // HSHM_DATA_STRUCTURES_LOCKLESS_STRING_H_

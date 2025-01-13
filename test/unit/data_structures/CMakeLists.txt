@@ -2,7 +2,7 @@ project(hermes_shm)
 
 
 
-include_directories(${HERMES_SHM_ROOT}/test/unit)
+include_directories(${HSHM_SHM_ROOT}/test/unit)
 add_subdirectory(containers)
 add_subdirectory(containers_mpi)
 add_subdirectory(serialize)

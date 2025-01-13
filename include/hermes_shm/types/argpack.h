@@ -10,8 +10,8 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_INCLUDE_HERMES_TYPES_ARGPACK_H_
-#define HERMES_INCLUDE_HERMES_TYPES_ARGPACK_H_
+#ifndef HSHM_INCLUDE_HSHM_TYPES_ARGPACK_H_
+#define HSHM_INCLUDE_HSHM_TYPES_ARGPACK_H_
 
 #include "hermes_shm/constants/macros.h"
 // #include <functional>
@@ -250,4 +250,4 @@ using ReverseIterateArgpack = IterateArgpack<true>;
 
 }  // namespace hshm
 
-#endif  // HERMES_INCLUDE_HERMES_TYPES_ARGPACK_H_
+#endif  // HSHM_INCLUDE_HSHM_TYPES_ARGPACK_H_

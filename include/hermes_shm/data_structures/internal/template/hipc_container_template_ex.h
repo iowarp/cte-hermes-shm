@@ -10,8 +10,8 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_INCLUDE_HERMES_DATA_STRUCTURES_INTERNAL_SHM_CONTAINER_EXAMPLE_H_
-#define HERMES_INCLUDE_HERMES_DATA_STRUCTURES_INTERNAL_SHM_CONTAINER_EXAMPLE_H_
+#ifndef HSHM_INCLUDE_HSHM_DATA_STRUCTURES_INTERNAL_SHM_CONTAINER_EXAMPLE_H_
+#define HSHM_INCLUDE_HSHM_DATA_STRUCTURES_INTERNAL_SHM_CONTAINER_EXAMPLE_H_
 
 #include "hermes_shm/data_structures/internal/shm_container.h"
 #include "hermes_shm/memory/memory_manager.h"
@@ -135,7 +135,7 @@ class ShmContainerExample : public hipc::ShmContainer {
   HSHM_INLINE_CROSS_FUN
   AllocT *GetAllocator() const {
     if constexpr (!(HSHM_FLAGS & hipc::ShmFlag::kIsPrivate)) {
-      return HERMES_MEMORY_MANAGER->GetAllocator<AllocT>(alloc_info_);
+      return HSHM_MEMORY_MANAGER->GetAllocator<AllocT>(alloc_info_);
     } else {
       return alloc_info_.alloc_;
     }
@@ -188,4 +188,4 @@ class ShmContainerExample : public hipc::ShmContainer {
 #undef TYPED_CLASS
 #undef TYPED_CLASS_TLS
 
-#endif  // HERMES_INCLUDE_HERMES_DATA_STRUCTURES_INTERNAL_SHM_CONTAINER_EXAMPLE_H_
+#endif  // HSHM_INCLUDE_HSHM_DATA_STRUCTURES_INTERNAL_SHM_CONTAINER_EXAMPLE_H_

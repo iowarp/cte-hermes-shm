@@ -10,8 +10,8 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_INCLUDE_HERMES_MEMORY_BACKEND_ARRAY_BACKEND_H_
-#define HERMES_INCLUDE_HERMES_MEMORY_BACKEND_ARRAY_BACKEND_H_
+#ifndef HSHM_INCLUDE_HSHM_MEMORY_BACKEND_ARRAY_BACKEND_H_
+#define HSHM_INCLUDE_HSHM_MEMORY_BACKEND_ARRAY_BACKEND_H_
 
 #include <fcntl.h>
 #include <stdio.h>
@@ -37,7 +37,7 @@ class ArrayBackend : public MemoryBackend {
   HSHM_CROSS_FUN
   bool shm_init(const MemoryBackendId &backend_id, size_t size, char *region) {
     if (size < sizeof(MemoryBackendHeader)) {
-      HERMES_THROW_ERROR(SHMEM_CREATE_FAILED);
+      HSHM_THROW_ERROR(SHMEM_CREATE_FAILED);
     }
     SetInitialized();
     Own();
@@ -52,7 +52,7 @@ class ArrayBackend : public MemoryBackend {
 
   bool shm_deserialize(const hshm::chararr &url) override {
     (void)url;
-    HERMES_THROW_ERROR(SHMEM_NOT_SUPPORTED);
+    HSHM_THROW_ERROR(SHMEM_NOT_SUPPORTED);
     return false;
   }
 
@@ -63,4 +63,4 @@ class ArrayBackend : public MemoryBackend {
 
 }  // namespace hshm::ipc
 
-#endif  // HERMES_INCLUDE_HERMES_MEMORY_BACKEND_ARRAY_BACKEND_H_
+#endif  // HSHM_INCLUDE_HSHM_MEMORY_BACKEND_ARRAY_BACKEND_H_

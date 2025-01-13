@@ -6,7 +6,7 @@ project(hermes_shm)
 # Build Tests
 #------------------------------------------------------------------------------
 
-if (HERMES_ENABLE_MPI)
+if (HSHM_ENABLE_MPI)
     add_executable(test_allocator_mpi_exec
             ${TEST_MAIN}/main_mpi.cc
             test_init.cc
@@ -32,17 +32,17 @@ endforeach()
 #------------------------------------------------------------------------------
 # Install Targets
 #------------------------------------------------------------------------------
-if (HERMES_ENABLE_MPI)
+if (HSHM_ENABLE_MPI)
     install(TARGETS
             test_allocator_mpi_exec
-            LIBRARY DESTINATION ${HERMES_INSTALL_LIB_DIR}
-            ARCHIVE DESTINATION ${HERMES_INSTALL_LIB_DIR}
-            RUNTIME DESTINATION ${HERMES_INSTALL_BIN_DIR})
+            LIBRARY DESTINATION ${HSHM_INSTALL_LIB_DIR}
+            ARCHIVE DESTINATION ${HSHM_INSTALL_LIB_DIR}
+            RUNTIME DESTINATION ${HSHM_INSTALL_BIN_DIR})
 endif()
 
 #-----------------------------------------------------------------------------
 # Coverage
 #-----------------------------------------------------------------------------
-if(HERMES_ENABLE_COVERAGE)
+if(HSHM_ENABLE_COVERAGE)
     set_coverage_flags(test_allocator_mpi_exec)
 endif()

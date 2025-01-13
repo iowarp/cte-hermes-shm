@@ -25,7 +25,7 @@ TEST_CASE("MemorySlot") {
   std::string shm_url = "test_mem_backend";
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-  HERMES_ERROR_HANDLE_START()
+  HSHM_ERROR_HANDLE_START()
 
   PosixShmMmap backend;
   if (rank == 0) {
@@ -58,5 +58,5 @@ TEST_CASE("MemorySlot") {
     }
   }
 
-  HERMES_ERROR_HANDLE_END()
+  HSHM_ERROR_HANDLE_END()
 }

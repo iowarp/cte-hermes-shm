@@ -10,8 +10,8 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_THREAD_THREAD_H_
-#define HERMES_THREAD_THREAD_H_
+#ifndef HSHM_THREAD_THREAD_H_
+#define HSHM_THREAD_THREAD_H_
 
 #include <atomic>
 #include <cstdint>
@@ -21,16 +21,16 @@
 #include "hermes_shm/types/bitfield.h"
 #include "hermes_shm/types/numbers.h"
 
-#ifdef HERMES_ENABLE_PTHREADS
+#ifdef HSHM_ENABLE_PTHREADS
 #include <omp.h>
 #endif
-#ifdef HERMES_RPC_THALLIUM
+#ifdef HSHM_RPC_THALLIUM
 #include <thallium.hpp>
 #endif
-#ifdef HERMES_ENABLE_CUDA
+#ifdef HSHM_ENABLE_CUDA
 #include <cuda_runtime.h>
 #endif
-#ifdef HERMES_ENABLE_ROCM
+#ifdef HSHM_ENABLE_ROCM
 #include <hip/hip_runtime.h>
 #endif
 
@@ -41,13 +41,13 @@ enum class ThreadType { kNone, kPthread, kArgobots, kCuda, kRocm, kWindows };
 
 /** Thread-local key */
 union ThreadLocalKey {
-#ifdef HERMES_ENABLE_PTHREADS
+#ifdef HSHM_ENABLE_PTHREADS
   pthread_key_t pthread_key_;
 #endif
-#ifdef HERMES_RPC_THALLIUM
+#ifdef HSHM_RPC_THALLIUM
   ABT_key argobots_key_;
 #endif
-#ifdef HERMES_ENABLE_WINDOWS_THREADS
+#ifdef HSHM_ENABLE_WINDOWS_THREADS
   DWORD windows_key_;
 #endif
 };
@@ -104,4 +104,4 @@ class ThreadModel {
 
 }  // namespace hshm::thread
 
-#endif  // HERMES_THREAD_THREAD_H_
+#endif  // HSHM_THREAD_THREAD_H_

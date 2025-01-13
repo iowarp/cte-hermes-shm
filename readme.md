@@ -1,5 +1,5 @@
 
-# hermes_shmn
+# hermes_shm
 
 This library contains a variety of data structures and synchronization
 primitives which are compatible with shared memory. This library is also
@@ -27,7 +27,7 @@ spack load --only dependencies hermes_shm
 
 mkdir build
 cd build
-cmake ../ -DHERMES_ENABLE_CUDA=OFF -DHERMES_ENABLE_ROCM=OFF
+cmake ../ -DHSHM_ENABLE_CUDA=OFF -DHSHM_ENABLE_ROCM=OFF
 make -j8
 ```
 
@@ -37,21 +37,21 @@ make -j8
 ```
 find_package(HermesShm CONFIG REQUIRED)
 message(STATUS "found hermes_shm.h at ${HermesShm_INCLUDE_DIRS}")
-target_link_libraries(HermesShm::cxx)
+target_link_libraries(hshm::cxx)
 ```
 
 ### For CUDA Version
 ```
 find_package(HermesShm CONFIG REQUIRED)
 message(STATUS "found hermes_shm.h at ${HermesShm_INCLUDE_DIRS}")
-target_link_libraries(HermesShm::cudacxx)
+target_link_libraries(hshm::cudacxx)
 ```
 
 ### For ROCM Version
 ```
 find_package(HermesShm CONFIG REQUIRED)
 message(STATUS "found hermes_shm.h at ${HermesShm_INCLUDE_DIRS}")
-target_link_libraries(HermesShm::rocmcxx_gpu)
+target_link_libraries(hshm::rocmcxx_gpu)
 ```
 
 ## Tests

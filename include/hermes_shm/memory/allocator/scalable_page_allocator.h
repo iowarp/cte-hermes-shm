@@ -10,8 +10,8 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_MEMORY_ALLOCATOR_SCALABLE_PAGE_ALLOCATOR_H
-#define HERMES_MEMORY_ALLOCATOR_SCALABLE_PAGE_ALLOCATOR_H
+#ifndef HSHM_MEMORY_ALLOCATOR_SCALABLE_PAGE_ALLOCATOR_H
+#define HSHM_MEMORY_ALLOCATOR_SCALABLE_PAGE_ALLOCATOR_H
 
 #include <cmath>
 
@@ -83,7 +83,7 @@ class _ScalablePageAllocator : public Allocator {
     size_t region_size = buffer_size_ - region_off;
     AllocatorId sub_id(id.bits_.major_, id.bits_.minor_ + 1);
     alloc_.shm_init(sub_id, 0, buffer + region_off, region_size);
-    HERMES_MEMORY_MANAGER->RegisterSubAllocator(&alloc_);
+    HSHM_MEMORY_MANAGER->RegisterSubAllocator(&alloc_);
     header_->Configure(id, custom_header_size, &alloc_, buffer_size);
     alloc_.Align();
   }
@@ -103,7 +103,7 @@ class _ScalablePageAllocator : public Allocator {
         (custom_header_ - buffer_) + header_->custom_header_size_;
     size_t region_size = buffer_size_ - region_off;
     alloc_.shm_deserialize(buffer + region_off, region_size);
-    HERMES_MEMORY_MANAGER->RegisterSubAllocator(&alloc_);
+    HSHM_MEMORY_MANAGER->RegisterSubAllocator(&alloc_);
   }
 
   /**
@@ -132,7 +132,7 @@ class _ScalablePageAllocator : public Allocator {
 
     // Case 4: Completely out of memory
     if (page == nullptr) {
-      HERMES_THROW_ERROR(OUT_OF_MEMORY, size, GetCurrentlyAllocatedSize());
+      HSHM_THROW_ERROR(OUT_OF_MEMORY, size, GetCurrentlyAllocatedSize());
     }
 
     // Mark as allocated
@@ -151,7 +151,7 @@ class _ScalablePageAllocator : public Allocator {
   HSHM_CROSS_FUN
   OffsetPointer AlignedAllocateOffset(const hipc::MemContext &ctx, size_t size,
                                       size_t alignment) {
-    HERMES_THROW_ERROR(NOT_IMPLEMENTED, "AlignedAllocateOffset");
+    HSHM_THROW_ERROR(NOT_IMPLEMENTED, "AlignedAllocateOffset");
     return OffsetPointer::GetNull();
   }
 
@@ -181,7 +181,7 @@ class _ScalablePageAllocator : public Allocator {
     auto hdr_offset = p - sizeof(MpPage);
     MpPage *hdr = Convert<MpPage>(hdr_offset);
     if (!hdr->IsAllocated()) {
-      HERMES_THROW_ERROR(DOUBLE_FREE, hdr);
+      HSHM_THROW_ERROR(DOUBLE_FREE, hdr);
     }
     hdr->UnsetAllocated();
     header_->SubSize(hdr->page_size_);
@@ -213,4 +213,4 @@ class _ScalablePageAllocator : public Allocator {
 
 }  // namespace hshm::ipc
 
-#endif  // HERMES_MEMORY_ALLOCATOR_SCALABLE_PAGE_ALLOCATOR_H
+#endif  // HSHM_MEMORY_ALLOCATOR_SCALABLE_PAGE_ALLOCATOR_H

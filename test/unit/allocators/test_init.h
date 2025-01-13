@@ -10,8 +10,8 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_TEST_UNIT_ALLOCATORS_TEST_INIT_H_
-#define HERMES_TEST_UNIT_ALLOCATORS_TEST_INIT_H_
+#ifndef HSHM_TEST_UNIT_ALLOCATORS_TEST_INIT_H_
+#define HSHM_TEST_UNIT_ALLOCATORS_TEST_INIT_H_
 
 #include "basic_test.h"
 #include "hermes_shm/memory/memory_manager.h"
@@ -34,7 +34,7 @@ template <typename BackendT, typename AllocT>
 AllocT *Pretest() {
   std::string shm_url = "test_allocators";
   AllocatorId alloc_id(0, 1);
-  auto mem_mngr = HERMES_MEMORY_MANAGER;
+  auto mem_mngr = HSHM_MEMORY_MANAGER;
   mem_mngr->UnregisterAllocator(alloc_id);
   mem_mngr->DestroyBackend(hipc::MemoryBackendId::Get(0));
   mem_mngr->CreateBackendWithUrl<BackendT>(
@@ -55,7 +55,7 @@ class Workloads {
   static void PageAllocationTest(AllocT *alloc) {
     size_t count = 1024;
     size_t page_size = hshm::Unit<size_t>::Kilobytes(4);
-    auto mem_mngr = HERMES_MEMORY_MANAGER;
+    auto mem_mngr = HSHM_MEMORY_MANAGER;
 
     // Allocate pages
     std::vector<Pointer> ps(count);
@@ -166,4 +166,4 @@ class Workloads {
   }
 };
 
-#endif  // HERMES_TEST_UNIT_ALLOCATORS_TEST_INIT_H_
+#endif  // HSHM_TEST_UNIT_ALLOCATORS_TEST_INIT_H_

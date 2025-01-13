@@ -10,8 +10,8 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_SHM_INCLUDE_HERMES_SHM_THREAD_THALLIUM_H_
-#define HERMES_SHM_INCLUDE_HERMES_SHM_THREAD_THALLIUM_H_
+#ifndef HSHM_SHM_INCLUDE_HSHM_SHM_THREAD_THALLIUM_H_
+#define HSHM_SHM_INCLUDE_HSHM_SHM_THREAD_THALLIUM_H_
 
 #include <errno.h>
 
@@ -38,8 +38,8 @@ class Argobots : public ThreadModel {
   void SleepForUs(size_t us) {
     /**
      * TODO(llogan): make this API flexible enough to support argobots fully
-     * tl::thread::self().sleep(*HERMES->rpc_.server_engine_,
-                               HERMES->server_config_.borg_.blob_reorg_period_);
+     * tl::thread::self().sleep(*HSHM->rpc_.server_engine_,
+                               HSHM->server_config_.borg_.blob_reorg_period_);
      */
 #ifdef HSHM_IS_HOST
     usleep(us);
@@ -109,4 +109,4 @@ class Argobots : public ThreadModel {
 
 }  // namespace hshm::thread
 
-#endif  // HERMES_SHM_INCLUDE_HERMES_SHM_THREAD_THALLIUM_H_
+#endif  // HSHM_SHM_INCLUDE_HSHM_SHM_THREAD_THALLIUM_H_

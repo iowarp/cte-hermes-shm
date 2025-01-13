@@ -10,8 +10,8 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_INCLUDE_HERMES_DATA_STRUCTURES_PAIR_H_
-#define HERMES_INCLUDE_HERMES_DATA_STRUCTURES_PAIR_H_
+#ifndef HSHM_INCLUDE_HSHM_DATA_STRUCTURES_PAIR_H_
+#define HSHM_INCLUDE_HSHM_DATA_STRUCTURES_PAIR_H_
 
 #include "hermes_shm/constants/macros.h"
 #include "hermes_shm/data_structures/internal/shm_internal.h"
@@ -50,7 +50,7 @@ class pair : public ShmContainer {
   /** Constructor. Default. */
   HSHM_CROSS_FUN
   explicit pair() {
-    shm_init(HERMES_MEMORY_MANAGER->GetDefaultAllocator<AllocT>());
+    shm_init(HSHM_MEMORY_MANAGER->GetDefaultAllocator<AllocT>());
   }
 
   /** SHM constructor. Default. */
@@ -72,7 +72,7 @@ class pair : public ShmContainer {
   /** Constructor. Move parameters. */
   HSHM_CROSS_FUN
   explicit pair(FirstT &&first, SecondT &&second) {
-    init_shm_container(HERMES_MEMORY_MANAGER->GetDefaultAllocator<AllocT>());
+    init_shm_container(HSHM_MEMORY_MANAGER->GetDefaultAllocator<AllocT>());
     HSHM_MAKE_AR(first_, GetCtxAllocator(), std::forward<FirstT>(first))
     HSHM_MAKE_AR(second_, GetCtxAllocator(), std::forward<SecondT>(second))
   }
@@ -89,7 +89,7 @@ class pair : public ShmContainer {
   /** Constructor. Copy parameters. */
   HSHM_CROSS_FUN
   explicit pair(const FirstT &first, const SecondT &second) {
-    init_shm_container(HERMES_MEMORY_MANAGER->GetDefaultAllocator<AllocT>());
+    init_shm_container(HSHM_MEMORY_MANAGER->GetDefaultAllocator<AllocT>());
     HSHM_MAKE_AR(first_, GetCtxAllocator(), first)
     HSHM_MAKE_AR(second_, GetCtxAllocator(), second)
   }
@@ -107,7 +107,7 @@ class pair : public ShmContainer {
   template <typename FirstArgPackT, typename SecondArgPackT>
   HSHM_CROSS_FUN explicit pair(PiecewiseConstruct &&hint, FirstArgPackT &&first,
                                SecondArgPackT &&second) {
-    init_shm_container(HERMES_MEMORY_MANAGER->GetDefaultAllocator<AllocT>());
+    init_shm_container(HSHM_MEMORY_MANAGER->GetDefaultAllocator<AllocT>());
     HSHM_MAKE_AR_PW(first_, GetCtxAllocator(),
                     std::forward<FirstArgPackT>(first))
     HSHM_MAKE_AR_PW(second_, GetCtxAllocator(),
@@ -275,4 +275,4 @@ using pair = hipc::pair<FirstT, SecondT, HSHM_CLASS_TEMPL_ARGS>;
 #undef CLASS_NAME
 #undef CLASS_NEW_ARGS
 
-#endif  // HERMES_INCLUDE_HERMES_DATA_STRUCTURES_PAIR_H_
+#endif  // HSHM_INCLUDE_HSHM_DATA_STRUCTURES_PAIR_H_

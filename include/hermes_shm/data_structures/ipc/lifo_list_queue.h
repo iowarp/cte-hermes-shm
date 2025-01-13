@@ -10,8 +10,8 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_DATA_STRUCTURES_THREAD_UNSAFE_lifo_list_queue_H
-#define HERMES_DATA_STRUCTURES_THREAD_UNSAFE_lifo_list_queue_H
+#ifndef HSHM_DATA_STRUCTURES_THREAD_UNSAFE_lifo_list_queue_H
+#define HSHM_DATA_STRUCTURES_THREAD_UNSAFE_lifo_list_queue_H
 
 #include "hermes_shm/data_structures/internal/shm_internal.h"
 #include "hermes_shm/types/qtok.h"
@@ -189,7 +189,7 @@ class lifo_list_queue : public ShmContainer {
   /** Constructor. Default. */
   HSHM_CROSS_FUN
   lifo_list_queue() {
-    shm_init(HERMES_MEMORY_MANAGER->GetDefaultAllocator<AllocT>());
+    shm_init(HSHM_MEMORY_MANAGER->GetDefaultAllocator<AllocT>());
   }
 
   /** SHM constructor. Default. */
@@ -213,7 +213,7 @@ class lifo_list_queue : public ShmContainer {
   /** Copy constructor */
   HSHM_CROSS_FUN
   explicit lifo_list_queue(const lifo_list_queue &other) {
-    init_shm_container(HERMES_MEMORY_MANAGER->GetDefaultAllocator<AllocT>());
+    init_shm_container(HSHM_MEMORY_MANAGER->GetDefaultAllocator<AllocT>());
     shm_strong_copy_op(other);
   }
 
@@ -464,4 +464,4 @@ using lifo_list_queue = hshm::ipc::lifo_list_queue<T, HSHM_CLASS_TEMPL_ARGS>;
 #undef CLASS_NAME
 #undef CLASS_NEW_ARGS
 
-#endif  // HERMES_DATA_STRUCTURES_THREAD_UNSAFE_lifo_list_queue_H
+#endif  // HSHM_DATA_STRUCTURES_THREAD_UNSAFE_lifo_list_queue_H

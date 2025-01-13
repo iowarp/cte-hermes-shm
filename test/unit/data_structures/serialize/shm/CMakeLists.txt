@@ -25,13 +25,13 @@ add_test(NAME test_shm COMMAND ${CMAKE_BINARY_DIR}/bin/test_shm_exec)
 #------------------------------------------------------------------------------
 install(TARGETS
         test_shm_exec
-        LIBRARY DESTINATION ${HERMES_INSTALL_LIB_DIR}
-        ARCHIVE DESTINATION ${HERMES_INSTALL_LIB_DIR}
-        RUNTIME DESTINATION ${HERMES_INSTALL_BIN_DIR})
+        LIBRARY DESTINATION ${HSHM_INSTALL_LIB_DIR}
+        ARCHIVE DESTINATION ${HSHM_INSTALL_LIB_DIR}
+        RUNTIME DESTINATION ${HSHM_INSTALL_BIN_DIR})
 
 #-----------------------------------------------------------------------------
 # Coverage
 #-----------------------------------------------------------------------------
-if(HERMES_ENABLE_COVERAGE)
+if(HSHM_ENABLE_COVERAGE)
     set_coverage_flags(test_shm_exec)
 endif()

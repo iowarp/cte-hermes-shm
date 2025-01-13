@@ -10,8 +10,8 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_INCLUDE_HERMES_TYPES_BITFIELD_H_
-#define HERMES_INCLUDE_HERMES_TYPES_BITFIELD_H_
+#ifndef HSHM_INCLUDE_HSHM_TYPES_BITFIELD_H_
+#define HSHM_INCLUDE_HSHM_TYPES_BITFIELD_H_
 
 #include <cstdint>
 
@@ -159,4 +159,4 @@ struct big_bitfield {
 
 }  // namespace hshm
 
-#endif  // HERMES_INCLUDE_HERMES_TYPES_BITFIELD_H_
+#endif  // HSHM_INCLUDE_HSHM_TYPES_BITFIELD_H_

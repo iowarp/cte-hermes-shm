@@ -10,8 +10,8 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_INCLUDE_HERMES_DATA_STRUCTURES_TupleBase_H_
-#define HERMES_INCLUDE_HERMES_DATA_STRUCTURES_TupleBase_H_
+#ifndef HSHM_INCLUDE_HSHM_DATA_STRUCTURES_TupleBase_H_
+#define HSHM_INCLUDE_HSHM_DATA_STRUCTURES_TupleBase_H_
 
 #include <utility>
 
@@ -231,4 +231,4 @@ using ReverseIterateTuple = IterateTuple<true>;
 
 }  // namespace hshm
 
-#endif  // HERMES_INCLUDE_HERMES_DATA_STRUCTURES_TupleBase_H_
+#endif  // HSHM_INCLUDE_HSHM_DATA_STRUCTURES_TupleBase_H_

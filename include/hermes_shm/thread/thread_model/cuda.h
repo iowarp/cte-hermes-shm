@@ -10,8 +10,8 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_SHM_INCLUDE_HERMES_SHM_THREAD_CUDA_H__
-#define HERMES_SHM_INCLUDE_HERMES_SHM_THREAD_CUDA_H__
+#ifndef HSHM_SHM_INCLUDE_HSHM_SHM_THREAD_CUDA_H__
+#define HSHM_SHM_INCLUDE_HSHM_SHM_THREAD_CUDA_H__
 
 #include <errno.h>
 
@@ -66,4 +66,4 @@ class Cuda : public ThreadModel {
 
 }  // namespace hshm::thread
 
-#endif  // HERMES_SHM_INCLUDE_HERMES_SHM_THREAD_CUDA_H__
+#endif  // HSHM_SHM_INCLUDE_HSHM_SHM_THREAD_CUDA_H__

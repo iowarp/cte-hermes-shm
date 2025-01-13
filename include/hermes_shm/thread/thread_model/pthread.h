@@ -10,8 +10,8 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_THREAD_PTHREAD_H_
-#define HERMES_THREAD_PTHREAD_H_
+#ifndef HSHM_THREAD_PTHREAD_H_
+#define HSHM_THREAD_PTHREAD_H_
 
 #include <errno.h>
 
@@ -110,4 +110,4 @@ class Pthread : public ThreadModel {
 
 }  // namespace hshm::thread
 
-#endif  // HERMES_THREAD_PTHREAD_H_
+#endif  // HSHM_THREAD_PTHREAD_H_

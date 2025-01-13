@@ -10,8 +10,8 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_SHM_TEST_UNIT_DATA_STRUCTURES_SERIALIZE_THALLIUM_TEST_INIT_H_
-#define HERMES_SHM_TEST_UNIT_DATA_STRUCTURES_SERIALIZE_THALLIUM_TEST_INIT_H_
+#ifndef HSHM_SHM_TEST_UNIT_DATA_STRUCTURES_SERIALIZE_THALLIUM_TEST_INIT_H_
+#define HSHM_SHM_TEST_UNIT_DATA_STRUCTURES_SERIALIZE_THALLIUM_TEST_INIT_H_
 
 #include <thallium.hpp>
 
@@ -64,7 +64,7 @@ template <typename AllocT>
 void ServerPretest() {
   std::string shm_url = "test_serializers";
   AllocatorId alloc_id(0, 1);
-  auto mem_mngr = HERMES_MEMORY_MANAGER;
+  auto mem_mngr = HSHM_MEMORY_MANAGER;
   mem_mngr->UnregisterAllocator(alloc_id);
   mem_mngr->DestroyBackend(hipc::MemoryBackendId::GetRoot());
   mem_mngr->CreateBackend<PosixShmMmap>(hipc::MemoryBackendId::Get(0),
@@ -77,11 +77,11 @@ template <typename AllocT>
 void ClientPretest() {
   std::string shm_url = "test_serializers";
   AllocatorId alloc_id(0, 1);
-  auto mem_mngr = HERMES_MEMORY_MANAGER;
+  auto mem_mngr = HSHM_MEMORY_MANAGER;
   mem_mngr->AttachBackend(MemoryBackendType::kPosixShmMmap, shm_url);
 }
 
 extern std::unique_ptr<tl::engine> client_;
 extern std::unique_ptr<tl::engine> server_;
 
-#endif  // HERMES_SHM_TEST_UNIT_DATA_STRUCTURES_SERIALIZE_THALLIUM_TEST_INIT_H_
+#endif  // HSHM_SHM_TEST_UNIT_DATA_STRUCTURES_SERIALIZE_THALLIUM_TEST_INIT_H_

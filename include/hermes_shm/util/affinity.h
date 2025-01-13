@@ -10,8 +10,8 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_SHM_AFFINITY_H
-#define HERMES_SHM_AFFINITY_H
+#ifndef HSHM_SHM_AFFINITY_H
+#define HSHM_SHM_AFFINITY_H
 
 // Reference:
 // https://stackoverflow.com/questions/63372288/getting-list-of-pids-from-proc-in-linux
@@ -168,4 +168,4 @@ class ProcessAffiner {
 
 }  // namespace hshm
 
-#endif  // HERMES_SHM_AFFINITY_H
+#endif  // HSHM_SHM_AFFINITY_H

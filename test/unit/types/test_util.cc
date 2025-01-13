@@ -87,7 +87,7 @@ TEST_CASE("TestAutoTrace") {
   AUTO_TRACE(0);
 
   TIMER_START("Example");
-  HERMES_THREAD_MODEL->SleepForUs(1000);
+  HSHM_THREAD_MODEL->SleepForUs(1000);
   TIMER_END();
 }
 
@@ -95,7 +95,7 @@ TEST_CASE("TestLogger") {
   HILOG(kInfo, "I'm more likely to be printed: {}", 0);
   HILOG(kDebug, "I'm not likely to be printed: {}", 10);
 
-  HERMES_LOG->DisableCode(kDebug);
+  HSHM_LOG->DisableCode(kDebug);
   HILOG(kInfo, "I'm more likely to be printed (2): {}", 0);
   HILOG(kDebug, "I won't be printed: {}", 10);
 

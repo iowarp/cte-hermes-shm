@@ -2,8 +2,8 @@
 // Created by llogan on 11/29/24.
 //
 
-#ifndef HERMES_SHM_INCLUDE_HERMES_SHM_DATA_STRUCTURES_IPC_KEY_SET_H_
-#define HERMES_SHM_INCLUDE_HERMES_SHM_DATA_STRUCTURES_IPC_KEY_SET_H_
+#ifndef HSHM_SHM_INCLUDE_HSHM_SHM_DATA_STRUCTURES_IPC_KEY_SET_H_
+#define HSHM_SHM_INCLUDE_HSHM_SHM_DATA_STRUCTURES_IPC_KEY_SET_H_
 
 #include "hermes_shm/data_structures/internal/shm_internal.h"
 #include "hermes_shm/data_structures/ipc/functional.h"
@@ -14,22 +14,22 @@ namespace hshm::ipc {
 
 /**
  * Stores a set of numeric keys and their value. Keys can be reused.
- * Programs must store the keys themselves. 
+ * Programs must store the keys themselves.
  */
-template<typename T, RING_BUFFER_FLAGS, HSHM_CLASS_TEMPL_WITH_DEFAULTS>
+template <typename T, RING_BUFFER_FLAGS, HSHM_CLASS_TEMPL_WITH_DEFAULTS>
 class key_set_templ : public ShmContainer {
  public:
-  hipc::ring_queue_base<size_t, RING_BUFFER_FLAGS_ARGS, HSHM_CLASS_TEMPL_ARGS> keys_;
+  hipc::ring_queue_base<size_t, RING_BUFFER_FLAGS_ARGS, HSHM_CLASS_TEMPL_ARGS>
+      keys_;
   hipc::vector<T, HSHM_CLASS_TEMPL_ARGS> set_;
   size_t heap_;
   size_t max_size_;
 
  public:
-  key_set_templ()
-  : keys_(), set_() {}
+  key_set_templ() : keys_(), set_() {}
 
   key_set_templ(const hipc::CtxAllocator<AllocT> &alloc)
-  : keys_(alloc), set_(alloc) {}
+      : keys_(alloc), set_(alloc) {}
 
   void Init(size_t max_size) {
     keys_.resize(max_size);
@@ -43,9 +43,7 @@ class key_set_templ : public ShmContainer {
     set_[key] = entry;
   }
 
-  void peek(size_t key, T *&entry) {
-    entry = &set_[key];
-  }
+  void peek(size_t key, T *&entry) { entry = &set_[key]; }
 
   void pop(size_t key, T &entry) {
     entry = set_[key];
@@ -55,7 +53,7 @@ class key_set_templ : public ShmContainer {
   void pop(size_t key) { erase(key); }
 
   void erase(size_t key) { keys_.emplace(key); }
-  
+
  private:
   void resize() {
     size_t new_size = set_.capacity() * 2;
@@ -78,28 +76,32 @@ class key_set_templ : public ShmContainer {
     if constexpr (!IsPushAtomic && !IsPopAtomic) {
       resize();
     } else {
-      HERMES_THROW_ERROR(KEY_SET_OUT_OF_BOUNDS, "Key set is full");
+      HSHM_THROW_ERROR(KEY_SET_OUT_OF_BOUNDS, "Key set is full");
     }
     key = heap_++;
   }
 };
 
-template<typename T, HSHM_CLASS_TEMPL_WITH_DEFAULTS>
-using spsc_key_set = key_set_templ<T, RING_BUFFER_FIXED_MPMC_FLAGS, HSHM_CLASS_TEMPL_ARGS>;
+template <typename T, HSHM_CLASS_TEMPL_WITH_DEFAULTS>
+using spsc_key_set =
+    key_set_templ<T, RING_BUFFER_FIXED_MPMC_FLAGS, HSHM_CLASS_TEMPL_ARGS>;
 
-template<typename T, HSHM_CLASS_TEMPL_WITH_DEFAULTS>
-using mpmc_key_set = key_set_templ<T, RING_BUFFER_FIXED_MPMC_FLAGS, HSHM_CLASS_TEMPL_ARGS>;
+template <typename T, HSHM_CLASS_TEMPL_WITH_DEFAULTS>
+using mpmc_key_set =
+    key_set_templ<T, RING_BUFFER_FIXED_MPMC_FLAGS, HSHM_CLASS_TEMPL_ARGS>;
 
 }  // namespace hshm::ipc
 
 namespace hshm {
 
-template<typename T, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
-using spsc_key_set = ipc::key_set_templ<T, RING_BUFFER_FIXED_SPSC_FLAGS, HSHM_CLASS_TEMPL_ARGS>;
+template <typename T, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
+using spsc_key_set =
+    ipc::key_set_templ<T, RING_BUFFER_FIXED_SPSC_FLAGS, HSHM_CLASS_TEMPL_ARGS>;
 
-template<typename T, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
-using mpmc_key_set = ipc::key_set_templ<T, RING_BUFFER_FIXED_MPMC_FLAGS, HSHM_CLASS_TEMPL_ARGS>;
+template <typename T, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
+using mpmc_key_set =
+    ipc::key_set_templ<T, RING_BUFFER_FIXED_MPMC_FLAGS, HSHM_CLASS_TEMPL_ARGS>;
 
 }  // namespace hshm
 
-#endif  // HERMES_SHM_INCLUDE_HERMES_SHM_DATA_STRUCTURES_IPC_KEY_SET_H_
+#endif  // HSHM_SHM_INCLUDE_HSHM_SHM_DATA_STRUCTURES_IPC_KEY_SET_H_

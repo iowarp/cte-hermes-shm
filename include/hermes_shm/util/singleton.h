@@ -10,8 +10,8 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_SHM_SINGLETON_H
-#define HERMES_SHM_SINGLETON_H
+#ifndef HSHM_SHM_SINGLETON_H
+#define HSHM_SHM_SINGLETON_H
 
 #include <memory>
 
@@ -93,4 +93,4 @@ using GlobalSingleton = LockfreeSingleton<T>;
 
 }  // namespace hshm
 
-#endif  // HERMES_SHM_SINGLETON_H
+#endif  // HSHM_SHM_SINGLETON_H

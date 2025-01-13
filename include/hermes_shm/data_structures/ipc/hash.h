@@ -2,8 +2,8 @@
 // Created by llogan on 10/17/24.
 //
 
-#ifndef HERMES_SHM_INCLUDE_HERMES_SHM_DATA_STRUCTURES_CONTAINERS_HASH_H_
-#define HERMES_SHM_INCLUDE_HERMES_SHM_DATA_STRUCTURES_CONTAINERS_HASH_H_
+#ifndef HSHM_SHM_INCLUDE_HSHM_SHM_DATA_STRUCTURES_CONTAINERS_HASH_H_
+#define HSHM_SHM_INCLUDE_HSHM_SHM_DATA_STRUCTURES_CONTAINERS_HASH_H_
 
 #include <cstddef>
 
@@ -52,7 +52,7 @@ HSHM_INLINE_CROSS_FUN static size_t number_hash(const T &val) {
 }
 
 /** HSHM integer hash */
-#define HERMES_INTEGER_HASH(T)                                \
+#define HSHM_INTEGER_HASH(T)                                  \
   template <>                                                 \
   struct hash<T> {                                            \
     HSHM_CROSS_FUN size_t operator()(const T &number) const { \
@@ -60,21 +60,21 @@ HSHM_INLINE_CROSS_FUN static size_t number_hash(const T &val) {
     }                                                         \
   };
 
-HERMES_INTEGER_HASH(bool);
-HERMES_INTEGER_HASH(char);
-HERMES_INTEGER_HASH(short);
-HERMES_INTEGER_HASH(int);
-HERMES_INTEGER_HASH(long);
-HERMES_INTEGER_HASH(long long);
-HERMES_INTEGER_HASH(float);
-HERMES_INTEGER_HASH(double);
+HSHM_INTEGER_HASH(bool);
+HSHM_INTEGER_HASH(char);
+HSHM_INTEGER_HASH(short);
+HSHM_INTEGER_HASH(int);
+HSHM_INTEGER_HASH(long);
+HSHM_INTEGER_HASH(long long);
+HSHM_INTEGER_HASH(float);
+HSHM_INTEGER_HASH(double);
 
-HERMES_INTEGER_HASH(unsigned char);
-HERMES_INTEGER_HASH(unsigned short);
-HERMES_INTEGER_HASH(unsigned int);
-HERMES_INTEGER_HASH(unsigned long);
-HERMES_INTEGER_HASH(unsigned long long);
+HSHM_INTEGER_HASH(unsigned char);
+HSHM_INTEGER_HASH(unsigned short);
+HSHM_INTEGER_HASH(unsigned int);
+HSHM_INTEGER_HASH(unsigned long);
+HSHM_INTEGER_HASH(unsigned long long);
 
 }  // namespace hshm
 
-#endif  // HERMES_SHM_INCLUDE_HERMES_SHM_DATA_STRUCTURES_CONTAINERS_HASH_H_
+#endif  // HSHM_SHM_INCLUDE_HSHM_SHM_DATA_STRUCTURES_CONTAINERS_HASH_H_

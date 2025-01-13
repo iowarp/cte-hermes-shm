@@ -10,8 +10,8 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_TEST_UNIT_DATA_STRUCTURES_TEST_INIT_H_
-#define HERMES_TEST_UNIT_DATA_STRUCTURES_TEST_INIT_H_
+#ifndef HSHM_TEST_UNIT_DATA_STRUCTURES_TEST_INIT_H_
+#define HSHM_TEST_UNIT_DATA_STRUCTURES_TEST_INIT_H_
 
 #include "hermes_shm/data_structures/all.h"
 
@@ -36,7 +36,7 @@ GLOBAL_CONST AllocatorId alloc_id(0, 1);
 template <typename AllocT>
 void PretestRank0() {
   std::string shm_url = "test_allocators";
-  auto mem_mngr = HERMES_MEMORY_MANAGER;
+  auto mem_mngr = HSHM_MEMORY_MANAGER;
   mem_mngr->UnregisterAllocator(alloc_id);
   mem_mngr->DestroyBackend(hipc::MemoryBackendId::Get(0));
   mem_mngr->CreateBackend<PosixShmMmap>(
@@ -46,4 +46,4 @@ void PretestRank0() {
 
 void PretestRankN();
 
-#endif  // HERMES_TEST_UNIT_DATA_STRUCTURES_TEST_INIT_H_
+#endif  // HSHM_TEST_UNIT_DATA_STRUCTURES_TEST_INIT_H_

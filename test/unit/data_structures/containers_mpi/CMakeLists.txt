@@ -1,6 +1,6 @@
 project(hermes_shm)
 
-if (HERMES_ENABLE_MPI)
+if (HSHM_ENABLE_MPI)
     #------------------------------------------------------------------------------
     # Test Cases
     #------------------------------------------------------------------------------
@@ -29,14 +29,14 @@ if (HERMES_ENABLE_MPI)
     #------------------------------------------------------------------------------
     install(TARGETS
             test_data_structure_mpi_exec
-            LIBRARY DESTINATION ${HERMES_INSTALL_LIB_DIR}
-            ARCHIVE DESTINATION ${HERMES_INSTALL_LIB_DIR}
-            RUNTIME DESTINATION ${HERMES_INSTALL_BIN_DIR})
+            LIBRARY DESTINATION ${HSHM_INSTALL_LIB_DIR}
+            ARCHIVE DESTINATION ${HSHM_INSTALL_LIB_DIR}
+            RUNTIME DESTINATION ${HSHM_INSTALL_BIN_DIR})
 
     #-----------------------------------------------------------------------------
     # Coverage
     #-----------------------------------------------------------------------------
-    if(HERMES_ENABLE_COVERAGE)
+    if(HSHM_ENABLE_COVERAGE)
         set_coverage_flags(test_data_structure_mpi_exec)
     endif()
 

@@ -10,8 +10,8 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_SHM_TEST_UNIT_DATA_STRUCTURES_CONTAINERS_QUEUE_H_
-#define HERMES_SHM_TEST_UNIT_DATA_STRUCTURES_CONTAINERS_QUEUE_H_
+#ifndef HSHM_SHM_TEST_UNIT_DATA_STRUCTURES_CONTAINERS_QUEUE_H_
+#define HSHM_SHM_TEST_UNIT_DATA_STRUCTURES_CONTAINERS_QUEUE_H_
 
 #include "basic_test.h"
 #include "hermes_shm/data_structures/all.h"
@@ -222,4 +222,4 @@ void ProduceAndConsume(size_t nproducers, size_t nconsumers,
   }
 }
 
-#endif  // HERMES_SHM_TEST_UNIT_DATA_STRUCTURES_CONTAINERS_QUEUE_H_
+#endif  // HSHM_SHM_TEST_UNIT_DATA_STRUCTURES_CONTAINERS_QUEUE_H_

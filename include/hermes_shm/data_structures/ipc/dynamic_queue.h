@@ -2,8 +2,8 @@
 // Created by llogan on 11/29/24.
 //
 
-#ifndef HERMES_SHM_INCLUDE_HERMES_SHM_DATA_STRUCTURES_IPC_DYNAMIC_QUEUE_H_
-#define HERMES_SHM_INCLUDE_HERMES_SHM_DATA_STRUCTURES_IPC_DYNAMIC_QUEUE_H_
+#ifndef HSHM_SHM_INCLUDE_HSHM_SHM_DATA_STRUCTURES_IPC_DYNAMIC_QUEUE_H_
+#define HSHM_SHM_INCLUDE_HSHM_SHM_DATA_STRUCTURES_IPC_DYNAMIC_QUEUE_H_
 
 #include <utility>
 
@@ -42,7 +42,7 @@ class dynamic_queue : public ShmContainer {
    * ===================================*/
  public:
   dynamic_queue(size_t block_size = 64) : splits_() {
-    shm_init(HERMES_MEMORY_MANAGER->GetDefaultAllocator<AllocT>(), block_size);
+    shm_init(HSHM_MEMORY_MANAGER->GetDefaultAllocator<AllocT>(), block_size);
   }
 
   dynamic_queue(const hipc::CtxAllocator<AllocT> &alloc, size_t block_size = 64)
@@ -235,4 +235,4 @@ using dynamic_queue = ipc::dynamic_queue<T, HSHM_CLASS_TEMPL_ARGS>;
 #undef CLASS_NAME
 #undef CLASS_NEW_ARGS
 
-#endif  // HERMES_SHM_INCLUDE_HERMES_SHM_DATA_STRUCTURES_IPC_DYNAMIC_QUEUE_H_
+#endif  // HSHM_SHM_INCLUDE_HSHM_SHM_DATA_STRUCTURES_IPC_DYNAMIC_QUEUE_H_

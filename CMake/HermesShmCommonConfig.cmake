@@ -17,36 +17,36 @@ find_package(yaml-cpp REQUIRED)
 message(STATUS "found yaml-cpp at ${yaml-cpp_DIR}")
 
 # MPICH
-if(HERMES_ENABLE_MPI)
+if(HSHM_ENABLE_MPI)
     find_package(MPI REQUIRED COMPONENTS C CXX)
     set(MPI_LIBS MPI::MPI_CXX)
     message(STATUS "found mpi.h at ${MPI_CXX_INCLUDE_DIRS}")
 endif()
 
 # ROCm
-if (HERMES_ENABLE_ROCM)
+if (HSHM_ENABLE_ROCM)
     find_package(HIP REQUIRED)
 endif()
 
 # OpenMP
-if(HERMES_ENABLE_OPENMP)
+if(HSHM_ENABLE_OPENMP)
     find_package(OpenMP REQUIRED COMPONENTS C CXX)
     set(OpenMP_LIBS OpenMP::OpenMP_CXX)
     message(STATUS "found omp.h at ${OpenMP_CXX_INCLUDE_DIRS}")
 endif()
 
 # thallium
-if(HERMES_RPC_THALLIUM)
+if(HSHM_RPC_THALLIUM)
     find_package(thallium CONFIG REQUIRED)
     if(thallium_FOUND)
         message(STATUS "found thallium at ${thallium_DIR}")
     endif()
     set(SERIALIZATION_LIBS thallium ${SERIALIZATION_LIBS})
-    set(HERMES_ENABLE_CEREAL ON)
+    set(HSHM_ENABLE_CEREAL ON)
 endif()
 
 # Cereal
-if(HERMES_ENABLE_CEREAL)
+if(HSHM_ENABLE_CEREAL)
     find_package(cereal CONFIG REQUIRED)
     if(cereal_FOUND)
         message(STATUS "found cereal at ${cereal_DIR}")
@@ -59,8 +59,8 @@ find_package(Boost REQUIRED)
 message(STATUS "found boost.h at ${Boost_INCLUDE_DIRS}")
 
 # Compression libraries
-if(HERMES_ENABLE_COMPRESS)
-    message("HERMES_ENABLE_COMPRESS is ON")
+if(HSHM_ENABLE_COMPRESS)
+    message("HSHM_ENABLE_COMPRESS is ON")
     pkg_check_modules(bzip2 REQUIRED bzip2)
     message(STATUS "found bz2.h at ${bzip2_INCLUDE_DIRS}")
 
@@ -125,7 +125,7 @@ if(HERMES_ENABLE_COMPRESS)
 endif()
 
 # Encryption libraries
-if(HERMES_ENABLE_ENCRYPT)
+if(HSHM_ENABLE_ENCRYPT)
     pkg_check_modules(libcrypto REQUIRED libcrypto)
     message(STATUS "found libcrypto.h at ${libcrypto_INCLUDE_DIRS}")
 
@@ -139,7 +139,7 @@ endif()
 #------------------------------------------------------------------------------
 
 # Enable cuda boilerplate
-macro(hermes_enable_cuda CXX_STANDARD)
+macro(hshm_enable_cuda CXX_STANDARD)
     set(CMAKE_CUDA_STANDARD ${CXX_STANDARD})
     set(CMAKE_CUDA_STANDARD_REQUIRED ON)
     set(CMAKE_CUDA_ARCHITECTURES native)
@@ -148,7 +148,7 @@ macro(hermes_enable_cuda CXX_STANDARD)
 endmacro()
 
 # Enable rocm boilerplate
-macro(hermes_enable_rocm GPU_RUNTIME CXX_STANDARD)
+macro(hshm_enable_rocm GPU_RUNTIME CXX_STANDARD)
     set(GPU_RUNTIME ${GPU_RUNTIME})
     enable_language(${GPU_RUNTIME})
     set(CMAKE_${GPU_RUNTIME}_STANDARD 17)
@@ -206,7 +206,7 @@ function(add_rocm_gpu_library LIB_NAME DO_COPY)
     set(ROCM_SOURCE_FILES "")
     set_rocm_sources(gpu "${DO_COPY}" "${SRC_FILES}" ROCM_SOURCE_FILES)
     add_library(${LIB_NAME} STATIC ${ROCM_SOURCE_FILES})
-    target_link_libraries(${LIB_NAME} PUBLIC HermesShm::rocm_gpu_lib_deps)
+    target_link_libraries(${LIB_NAME} PUBLIC hshm::rocm_gpu_lib_deps)
     set_target_properties(${LIB_NAME} PROPERTIES POSITION_INDEPENDENT_CODE OFF)
 endfunction()
 
@@ -216,8 +216,8 @@ function(add_rocm_host_library LIB_NAME DO_COPY)
     set(ROCM_SOURCE_FILES "")
     set_rocm_sources(host "${DO_COPY}" "${SRC_FILES}" ROCM_SOURCE_FILES)
     add_library(${LIB_NAME} ${ROCM_SOURCE_FILES})
-    target_link_libraries(${LIB_NAME} PUBLIC HermesShm::rocm_host_lib_deps)
-    target_compile_definitions(${LIB_NAME} PRIVATE HERMES_ENABLE_ROCM)
+    target_link_libraries(${LIB_NAME} PUBLIC hshm::rocm_host_lib_deps)
+    target_compile_definitions(${LIB_NAME} PRIVATE HSHM_ENABLE_ROCM)
     set_target_properties(${LIB_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
 endfunction()
 
@@ -225,7 +225,7 @@ endfunction()
 function(add_rocm_host_executable EXE_NAME)
     set(SRC_FILES ${ARGN})
     add_executable(${EXE_NAME} ${SRC_FILES})
-    target_link_libraries(${EXE_NAME} PUBLIC HermesShm::rocm_host_exec_deps)
+    target_link_libraries(${EXE_NAME} PUBLIC hshm::rocm_host_exec_deps)
 endfunction()
 
 # Function for adding a ROCm executable
@@ -234,7 +234,7 @@ function(add_rocm_gpu_executable EXE_NAME DO_COPY)
     set(ROCM_SOURCE_FILES "")
     set_rocm_sources(exec "${DO_COPY}" "${SRC_FILES}" ROCM_SOURCE_FILES)
     add_executable(${EXE_NAME} ${ROCM_SOURCE_FILES})
-    target_link_libraries(${EXE_NAME} PUBLIC HermesShm::rocm_gpu_exec_deps)
+    target_link_libraries(${EXE_NAME} PUBLIC hshm::rocm_gpu_exec_deps)
 endfunction()
 
 # Function for adding a CUDA library
@@ -243,7 +243,7 @@ function(add_cuda_library LIB_NAME DO_COPY)
     set(CUDA_SOURCE_FILES "")
     set_cuda_sources("${DO_COPY}" "${SRC_FILES}" CUDA_SOURCE_FILES)
     add_library(${LIB_NAME} STATIC ${CUDA_SOURCE_FILES})
-    target_link_libraries(${LIB_NAME} PUBLIC HermesShm::cuda_gpu_lib_deps)
+    target_link_libraries(${LIB_NAME} PUBLIC hshm::cuda_gpu_lib_deps)
     set_target_properties(${LIB_NAME} PROPERTIES
             CUDA_SEPARABLE_COMPILATION ON
     )
@@ -260,7 +260,7 @@ function(add_cuda_executable EXE_NAME DO_COPY)
     set(CUDA_SOURCE_FILES "")
     set_cuda_sources("${DO_COPY}" "${SRC_FILES}" CUDA_SOURCE_FILES)
     add_executable(${EXE_NAME} ${CUDA_SOURCE_FILES})
-    target_link_libraries(${EXE_NAME} PUBLIC HermesShm::cuda_gpu_exec_deps)
+    target_link_libraries(${EXE_NAME} PUBLIC hshm::cuda_gpu_exec_deps)
     set_target_properties(${EXE_NAME} PROPERTIES
             CUDA_SEPARABLE_COMPILATION ON
     )

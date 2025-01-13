@@ -10,8 +10,8 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_BASICS_H
-#define HERMES_BASICS_H
+#ifndef HSHM_BASICS_H
+#define HSHM_BASICS_H
 
 #include <cstddef>
 #include <cstdint>
@@ -100,4 +100,4 @@ struct RealNumber {
 
 #endif
 
-#endif  // HERMES_BASICS_H
+#endif  // HSHM_BASICS_H

@@ -10,8 +10,8 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_INCLUDE_HERMES_MEMORY_BACKEND_MALLOC_H
-#define HERMES_INCLUDE_HERMES_MEMORY_BACKEND_MALLOC_H
+#ifndef HSHM_INCLUDE_HSHM_MEMORY_BACKEND_MALLOC_H
+#define HSHM_INCLUDE_HSHM_MEMORY_BACKEND_MALLOC_H
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -53,7 +53,7 @@ class MallocBackend : public MemoryBackend {
 
   bool shm_deserialize(const hshm::chararr &url) override {
     (void)url;
-    HERMES_THROW_ERROR(SHMEM_NOT_SUPPORTED);
+    HSHM_THROW_ERROR(SHMEM_NOT_SUPPORTED);
     return false;
   }
 
@@ -69,4 +69,4 @@ class MallocBackend : public MemoryBackend {
 
 }  // namespace hshm::ipc
 
-#endif  // HERMES_INCLUDE_HERMES_MEMORY_BACKEND_MALLOC_H
+#endif  // HSHM_INCLUDE_HSHM_MEMORY_BACKEND_MALLOC_H

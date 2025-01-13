@@ -10,8 +10,8 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_MEMORY_BACKEND_MEMORY_BACKEND_FACTORY_H_
-#define HERMES_MEMORY_BACKEND_MEMORY_BACKEND_FACTORY_H_
+#ifndef HSHM_MEMORY_BACKEND_MEMORY_BACKEND_FACTORY_H_
+#define HSHM_MEMORY_BACKEND_MEMORY_BACKEND_FACTORY_H_
 
 #include "array_backend.h"
 #include "hermes_shm/memory/allocator/allocator_factory.h"
@@ -20,11 +20,11 @@
 #include "memory_backend.h"
 #include "posix_mmap.h"
 #include "posix_shm_mmap.h"
-#ifdef HERMES_ENABLE_CUDA
+#ifdef HSHM_ENABLE_CUDA
 #include "cuda_malloc.h"
 #include "cuda_shm_mmap.h"
 #endif
-#ifdef HERMES_ENABLE_ROCM
+#ifdef HSHM_ENABLE_ROCM
 #include "rocm_malloc.h"
 #include "rocm_shm_mmap.h"
 #endif
@@ -36,7 +36,7 @@ namespace hshm::ipc {
     auto alloc = HSHM_ROOT_ALLOC;                                            \
     auto backend = alloc->template NewObj<T>(HSHM_DEFAULT_MEM_CTX);          \
     if (!backend->shm_init(backend_id, size, std::forward<Args>(args)...)) { \
-      HERMES_THROW_ERROR(MEMORY_BACKEND_CREATE_FAILED);                      \
+      HSHM_THROW_ERROR(MEMORY_BACKEND_CREATE_FAILED);                        \
     }                                                                        \
     return backend;                                                          \
   }
@@ -46,7 +46,7 @@ namespace hshm::ipc {
     auto alloc = HSHM_ROOT_ALLOC;                                   \
     auto backend = alloc->template NewObj<T>(HSHM_DEFAULT_MEM_CTX); \
     if (!backend->shm_deserialize(url)) {                           \
-      HERMES_THROW_ERROR(MEMORY_BACKEND_NOT_FOUND);                 \
+      HSHM_THROW_ERROR(MEMORY_BACKEND_NOT_FOUND);                   \
     }                                                               \
     return backend;                                                 \
   }
@@ -62,16 +62,16 @@ class MemoryBackendFactory {
       auto alloc = HSHM_ROOT_ALLOC;
       auto backend = alloc->template NewObj<PosixShmMmap>(HSHM_DEFAULT_MEM_CTX);
       if (!backend->shm_init(backend_id, size, std::forward<Args>(args)...)) {
-        HERMES_THROW_ERROR(MEMORY_BACKEND_CREATE_FAILED);
+        HSHM_THROW_ERROR(MEMORY_BACKEND_CREATE_FAILED);
       }
       return backend;
     }
-#ifdef HERMES_ENABLE_CUDA
+#ifdef HSHM_ENABLE_CUDA
     HSHM_CREATE_BACKEND(CudaShmMmap)
     HSHM_CREATE_BACKEND(CudaMalloc)
 #endif
 
-#ifdef HERMES_ENABLE_ROCM
+#ifdef HSHM_ENABLE_ROCM
     HSHM_CREATE_BACKEND(RocmMalloc)
     HSHM_CREATE_BACKEND(RocmShmMmap)
 #endif
@@ -81,7 +81,7 @@ class MemoryBackendFactory {
     HSHM_CREATE_BACKEND(ArrayBackend)
 
     // Error handling
-    HERMES_THROW_ERROR(MEMORY_BACKEND_NOT_FOUND);
+    HSHM_THROW_ERROR(MEMORY_BACKEND_NOT_FOUND);
   }
 
   /** Deserialize an existing backend */
@@ -89,12 +89,12 @@ class MemoryBackendFactory {
                                         const hshm::chararr &url) {
     switch (type) {
       HSHM_DESERIALIZE_BACKEND(PosixShmMmap)
-#ifdef HERMES_ENABLE_CUDA
+#ifdef HSHM_ENABLE_CUDA
       HSHM_DESERIALIZE_BACKEND(CudaShmMmap)
       HSHM_DESERIALIZE_BACKEND(CudaMalloc)
 #endif
 
-#ifdef HERMES_ENABLE_ROCM
+#ifdef HSHM_ENABLE_ROCM
       HSHM_DESERIALIZE_BACKEND(RocmMalloc)
       HSHM_DESERIALIZE_BACKEND(RocmShmMmap)
 #endif
@@ -137,7 +137,7 @@ class MemoryBackendFactory {
             .ptr_;
       }
 
-#ifdef HERMES_ENABLE_CUDA
+#ifdef HSHM_ENABLE_CUDA
         // Cuda Malloc
       case MemoryBackendType::kCudaMalloc: {
         return HSHM_ROOT_ALLOC
@@ -155,7 +155,7 @@ class MemoryBackendFactory {
       }
 #endif
 
-#ifdef HERMES_ENABLE_ROCM
+#ifdef HSHM_ENABLE_ROCM
         // Rocm Malloc
       case MemoryBackendType::kRocmMalloc: {
         return HSHM_ROOT_ALLOC
@@ -175,7 +175,7 @@ class MemoryBackendFactory {
 
         // Default
       default: {
-        HERMES_THROW_ERROR(MEMORY_BACKEND_NOT_FOUND);
+        HSHM_THROW_ERROR(MEMORY_BACKEND_NOT_FOUND);
       }
     }
 
@@ -185,4 +185,4 @@ class MemoryBackendFactory {
 
 }  // namespace hshm::ipc
 
-#endif  // HERMES_MEMORY_BACKEND_MEMORY_BACKEND_FACTORY_H_
+#endif  // HSHM_MEMORY_BACKEND_MEMORY_BACKEND_FACTORY_H_

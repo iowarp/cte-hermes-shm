@@ -10,8 +10,8 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_INCLUDE_MEMORY_BACKEND_ROCM_SHM_MMAP_H
-#define HERMES_INCLUDE_MEMORY_BACKEND_ROCM_SHM_MMAP_H
+#ifndef HSHM_INCLUDE_MEMORY_BACKEND_ROCM_SHM_MMAP_H
+#define HSHM_INCLUDE_MEMORY_BACKEND_ROCM_SHM_MMAP_H
 
 #include <fcntl.h>
 #include <hip/hip_runtime.h>
@@ -62,4 +62,4 @@ class RocmShmMmap : public PosixShmMmap {
 
 }  // namespace hshm::ipc
 
-#endif  // HERMES_INCLUDE_MEMORY_BACKEND_ROCM_SHM_MMAP_H
+#endif  // HSHM_INCLUDE_MEMORY_BACKEND_ROCM_SHM_MMAP_H

@@ -10,8 +10,8 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_SHM_INCLUDE_HERMES_SHM_TYPES_NUMBERS_H_
-#define HERMES_SHM_INCLUDE_HERMES_SHM_TYPES_NUMBERS_H_
+#ifndef HSHM_SHM_INCLUDE_HSHM_SHM_TYPES_NUMBERS_H_
+#define HSHM_SHM_INCLUDE_HSHM_SHM_TYPES_NUMBERS_H_
 
 #include <cstdint>
 #include <iostream>
@@ -83,7 +83,7 @@ struct ThreadId {
   }
 };
 
-#ifndef HERMES_ENABLE_CUDA
+#ifndef HSHM_ENABLE_CUDA
 typedef i16 min_i16;
 typedef i32 min_i32;
 typedef i64 min_i64;
@@ -204,4 +204,4 @@ typedef void *HANDLE;
 #define NANOSECONDS(n) (hshm::u64)(n)
 #endif
 
-#endif  // HERMES_SHM_INCLUDE_HERMES_SHM_TYPES_NUMBERS_H_
+#endif  // HSHM_SHM_INCLUDE_HSHM_SHM_TYPES_NUMBERS_H_

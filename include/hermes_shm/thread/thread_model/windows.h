@@ -1,5 +1,5 @@
-#ifndef HERMES_SHM_THREAD_THREAD_MODEL_WINDOWS_H_
-#define HERMES_SHM_THREAD_THREAD_MODEL_WINDOWS_H_
+#ifndef HSHM_SHM_THREAD_THREAD_MODEL_WINDOWS_H_
+#define HSHM_SHM_THREAD_THREAD_MODEL_WINDOWS_H_
 
 #include <thread>
 
@@ -66,4 +66,4 @@ class WindowsThread : public ThreadModel {
 
 }  // namespace hshm::thread
 
-#endif  // HERMES_SHM_THREAD_THREAD_MODEL_WINDOWS_H_
+#endif  // HSHM_SHM_THREAD_THREAD_MODEL_WINDOWS_H_

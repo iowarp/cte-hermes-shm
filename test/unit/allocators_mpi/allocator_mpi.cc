@@ -58,7 +58,7 @@ AllocT *TestAllocatorMpi() {
   if (rank != 0) {
     PretestRankN();
   }
-  return HERMES_MEMORY_MANAGER->GetAllocator<AllocT>(alloc_id);
+  return HSHM_MEMORY_MANAGER->GetAllocator<AllocT>(alloc_id);
 }
 
 TEST_CASE("StackAllocatorMpi") {

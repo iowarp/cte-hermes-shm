@@ -6,7 +6,7 @@
 #include <cstdlib>
 
 #include "hermes_shm/constants/macros.h"
-#if defined(HERMES_ENABLE_PROCFS_SYSINFO)
+#if defined(HSHM_ENABLE_PROCFS_SYSINFO)
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
@@ -14,11 +14,11 @@
 #include <sys/sysinfo.h>
 #include <sys/types.h>
 #include <unistd.h>
-#elif defined(HERMES_ENABLE_WINDOWS_SYSINFO)
+#elif defined(HSHM_ENABLE_WINDOWS_SYSINFO)
 #include <windows.h>
 #else
 #error \
-    "Must define either HERMES_ENABLE_PROCFS_SYSINFO or HERMES_ENABLE_WINDOWS_SYSINFO"
+    "Must define either HSHM_ENABLE_PROCFS_SYSINFO or HSHM_ENABLE_WINDOWS_SYSINFO"
 #endif
 
 namespace hshm {
@@ -47,7 +47,7 @@ void SystemInfo::RefreshCpuFreqKhz() {
 
 size_t SystemInfo::GetCpuFreqKhz(int cpu) {
 #ifdef HSHM_IS_HOST
-#if defined(HERMES_ENABLE_PROCFS_SYSINFO)
+#if defined(HSHM_ENABLE_PROCFS_SYSINFO)
   // Read /sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_cur_freq
   std::string cpu_str = hshm::Formatter::format(
       "/sys/devices/system/cpu/cpu{}/cpufreq/cpuinfo_cur_freq", cpu);
@@ -55,7 +55,7 @@ size_t SystemInfo::GetCpuFreqKhz(int cpu) {
   size_t freq_khz;
   cpu_file >> freq_khz;
   return freq_khz;
-#elif defined(HERMES_ENABLE_WINDOWS_SYSINFO)
+#elif defined(HSHM_ENABLE_WINDOWS_SYSINFO)
   return 0;
 #endif
 #else
@@ -65,7 +65,7 @@ size_t SystemInfo::GetCpuFreqKhz(int cpu) {
 
 size_t SystemInfo::GetCpuMaxFreqKhz(int cpu) {
 #ifdef HSHM_IS_HOST
-#if defined(HERMES_ENABLE_PROCFS_SYSINFO)
+#if defined(HSHM_ENABLE_PROCFS_SYSINFO)
   // Read /sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_cur_freq
   std::string cpu_str = hshm::Formatter::format(
       "/sys/devices/system/cpu/cpu{}/cpufreq/cpuinfo_max_freq", cpu);
@@ -73,7 +73,7 @@ size_t SystemInfo::GetCpuMaxFreqKhz(int cpu) {
   size_t freq_khz;
   cpu_file >> freq_khz;
   return freq_khz;
-#elif defined(HERMES_ENABLE_WINDOWS_SYSINFO)
+#elif defined(HSHM_ENABLE_WINDOWS_SYSINFO)
   return 0;
 #endif
 #else
@@ -83,7 +83,7 @@ size_t SystemInfo::GetCpuMaxFreqKhz(int cpu) {
 
 size_t SystemInfo::GetCpuMinFreqKhz(int cpu) {
 #ifdef HSHM_IS_HOST
-#if defined(HERMES_ENABLE_PROCFS_SYSINFO)
+#if defined(HSHM_ENABLE_PROCFS_SYSINFO)
   // Read /sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_cur_freq
   std::string cpu_str = hshm::Formatter::format(
       "/sys/devices/system/cpu/cpu{}/cpufreq/cpuinfo_min_freq", cpu);
@@ -91,7 +91,7 @@ size_t SystemInfo::GetCpuMinFreqKhz(int cpu) {
   size_t freq_khz;
   cpu_file >> freq_khz;
   return freq_khz;
-#elif defined(HERMES_ENABLE_WINDOWS_SYSINFO)
+#elif defined(HSHM_ENABLE_WINDOWS_SYSINFO)
   return 0;
 #endif
 #else
@@ -117,7 +117,7 @@ void SystemInfo::SetCpuFreqKhz(int cpu, size_t cpu_freq_khz) {
 }
 
 void SystemInfo::SetCpuMinFreqKhz(int cpu, size_t cpu_freq_khz) {
-#if defined(HERMES_ENABLE_PROCFS_SYSINFO)
+#if defined(HSHM_ENABLE_PROCFS_SYSINFO)
   std::string cpu_str = hshm::Formatter::format(
       "/sys/devices/system/cpu/cpu{}/cpufreq/scaling_min_freq", cpu);
   std::ofstream min_freq_file(cpu_str);
@@ -126,7 +126,7 @@ void SystemInfo::SetCpuMinFreqKhz(int cpu, size_t cpu_freq_khz) {
 }
 
 void SystemInfo::SetCpuMaxFreqKhz(int cpu, size_t cpu_freq_khz) {
-#if defined(HERMES_ENABLE_PROCFS_SYSINFO)
+#if defined(HSHM_ENABLE_PROCFS_SYSINFO)
   std::string cpu_str = hshm::Formatter::format(
       "/sys/devices/system/cpu/cpu{}/cpufreq/scaling_max_freq", cpu);
   std::ofstream max_freq_file(cpu_str);
@@ -135,9 +135,9 @@ void SystemInfo::SetCpuMaxFreqKhz(int cpu, size_t cpu_freq_khz) {
 }
 
 int SystemInfo::GetCpuCount() {
-#if defined(HERMES_ENABLE_PROCFS_SYSINFO)
+#if defined(HSHM_ENABLE_PROCFS_SYSINFO)
   return get_nprocs_conf();
-#elif defined(HERMES_ENABLE_WINDOWS_SYSINFO)
+#elif defined(HSHM_ENABLE_WINDOWS_SYSINFO)
   SYSTEM_INFO sys_info;
   GetSystemInfo(&sys_info);
   return sys_info.dwNumberOfProcessors;
@@ -145,9 +145,9 @@ int SystemInfo::GetCpuCount() {
 }
 
 int SystemInfo::GetPageSize() {
-#if defined(HERMES_ENABLE_PROCFS_SYSINFO)
+#if defined(HSHM_ENABLE_PROCFS_SYSINFO)
   return getpagesize();
-#elif defined(HERMES_ENABLE_WINDOWS_SYSINFO)
+#elif defined(HSHM_ENABLE_WINDOWS_SYSINFO)
   SYSTEM_INFO sys_info;
   GetSystemInfo(&sys_info);
   if (sys_info.dwAllocationGranularity != 0) {
@@ -158,53 +158,53 @@ int SystemInfo::GetPageSize() {
 }
 
 int SystemInfo::GetTid() {
-#if defined(HERMES_ENABLE_PROCFS_SYSINFO)
+#if defined(HSHM_ENABLE_PROCFS_SYSINFO)
 #ifdef SYS_gettid
   return (pid_t)syscall(SYS_gettid);
 #else
 #warning "GetTid is not defined"
   return GetPid();
 #endif
-#elif defined(HERMES_ENABLE_WINDOWS_SYSINFO)
+#elif defined(HSHM_ENABLE_WINDOWS_SYSINFO)
   return GetCurrentThreadId();
 #endif
 }
 
 int SystemInfo::GetPid() {
-#if defined(HERMES_ENABLE_PROCFS_SYSINFO)
+#if defined(HSHM_ENABLE_PROCFS_SYSINFO)
 #ifdef SYS_getpid
   return (pid_t)syscall(SYS_getpid);
 #else
 #warning "GetPid is not defined"
   return 0;
 #endif
-#elif defined(HERMES_ENABLE_WINDOWS_SYSINFO)
+#elif defined(HSHM_ENABLE_WINDOWS_SYSINFO)
   return GetCurrentProcessId();
 #endif
 }
 
 int SystemInfo::GetUid() {
-#if defined(HERMES_ENABLE_PROCFS_SYSINFO)
+#if defined(HSHM_ENABLE_PROCFS_SYSINFO)
   return getuid();
-#elif defined(HERMES_ENABLE_WINDOWS_SYSINFO)
+#elif defined(HSHM_ENABLE_WINDOWS_SYSINFO)
   return 0;
 #endif
 };
 
 int SystemInfo::GetGid() {
-#if defined(HERMES_ENABLE_PROCFS_SYSINFO)
+#if defined(HSHM_ENABLE_PROCFS_SYSINFO)
   return getgid();
-#elif defined(HERMES_ENABLE_WINDOWS_SYSINFO)
+#elif defined(HSHM_ENABLE_WINDOWS_SYSINFO)
   return 0;
 #endif
 };
 
 size_t SystemInfo::GetRamCapacity() {
-#if defined(HERMES_ENABLE_PROCFS_SYSINFO)
+#if defined(HSHM_ENABLE_PROCFS_SYSINFO)
   struct sysinfo info;
   sysinfo(&info);
   return info.totalram;
-#elif defined(HERMES_ENABLE_WINDOWS_SYSINFO)
+#elif defined(HSHM_ENABLE_WINDOWS_SYSINFO)
   MEMORYSTATUSEX mem_info;
   mem_info.dwLength = sizeof(mem_info);
   GlobalMemoryStatusEx(&mem_info);
@@ -213,18 +213,18 @@ size_t SystemInfo::GetRamCapacity() {
 }
 
 void SystemInfo::YieldThread() {
-#if defined(HERMES_ENABLE_PROCFS_SYSINFO)
+#if defined(HSHM_ENABLE_PROCFS_SYSINFO)
   sched_yield();
-#elif defined(HERMES_ENABLE_WINDOWS_SYSINFO)
+#elif defined(HSHM_ENABLE_WINDOWS_SYSINFO)
   Yield();
 #endif
 }
 
 bool SystemInfo::CreateTls(ThreadLocalKey &key, void *data) {
-#ifdef HERMES_ENABLE_PROCFS_SYSINFO
+#ifdef HSHM_ENABLE_PROCFS_SYSINFO
   key.pthread_key_ = pthread_key_create(&key.pthread_key_, nullptr);
   return key.pthread_key_ == 0;
-#elif defined(HERMES_ENABLE_WINDOWS_SYSINFO)
+#elif defined(HSHM_ENABLE_WINDOWS_SYSINFO)
   key.windows_key_ = TlsAlloc();
   if (key.windows_key_ == TLS_OUT_OF_INDEXES) {
     return false;
@@ -234,24 +234,24 @@ bool SystemInfo::CreateTls(ThreadLocalKey &key, void *data) {
 }
 
 bool SystemInfo::SetTls(const ThreadLocalKey &key, void *data) {
-#ifdef HERMES_ENABLE_PROCFS_SYSINFO
+#ifdef HSHM_ENABLE_PROCFS_SYSINFO
   return pthread_setspecific(key.pthread_key_, data) == 0;
-#elif defined(HERMES_ENABLE_WINDOWS_SYSINFO)
+#elif defined(HSHM_ENABLE_WINDOWS_SYSINFO)
   return TlsSetValue(key.windows_key_, data);
 #endif
 }
 
 void *SystemInfo::GetTls(const ThreadLocalKey &key) {
-#ifdef HERMES_ENABLE_PROCFS_SYSINFO
+#ifdef HSHM_ENABLE_PROCFS_SYSINFO
   return pthread_getspecific(key.pthread_key_);
-#elif defined(HERMES_ENABLE_WINDOWS_SYSINFO)
+#elif defined(HSHM_ENABLE_WINDOWS_SYSINFO)
   return TlsGetValue(key.windows_key_);
 #endif
 }
 
 bool SystemInfo::CreateNewSharedMemory(File &fd, const std::string &name,
                                        size_t size) {
-#if defined(HERMES_ENABLE_PROCFS_SYSINFO)
+#if defined(HSHM_ENABLE_PROCFS_SYSINFO)
   fd.posix_fd_ = shm_open(name.c_str(), O_CREAT | O_RDWR, 0666);
   if (fd.posix_fd_ < 0) {
     return false;
@@ -262,7 +262,7 @@ bool SystemInfo::CreateNewSharedMemory(File &fd, const std::string &name,
     return false;
   }
   return true;
-#elif defined(HERMES_ENABLE_WINDOWS_SYSINFO)
+#elif defined(HSHM_ENABLE_WINDOWS_SYSINFO)
   fd.windows_fd_ =
       CreateFileMapping(INVALID_HANDLE_VALUE,  // use paging file
                         nullptr,               // default security
@@ -275,41 +275,41 @@ bool SystemInfo::CreateNewSharedMemory(File &fd, const std::string &name,
 }
 
 bool SystemInfo::OpenSharedMemory(File &fd, const std::string &name) {
-#if defined(HERMES_ENABLE_PROCFS_SYSINFO)
+#if defined(HSHM_ENABLE_PROCFS_SYSINFO)
   fd.posix_fd_ = shm_open(name.c_str(), O_RDWR, 0666);
   return fd.posix_fd_ >= 0;
-#elif defined(HERMES_ENABLE_WINDOWS_SYSINFO)
+#elif defined(HSHM_ENABLE_WINDOWS_SYSINFO)
   fd.windows_fd_ = OpenFileMapping(FILE_MAP_ALL_ACCESS, FALSE, name.c_str());
   return fd.windows_fd_ != nullptr;
 #endif
 }
 
 void SystemInfo::CloseSharedMemory(File &file) {
-#if defined(HERMES_ENABLE_PROCFS_SYSINFO)
+#if defined(HSHM_ENABLE_PROCFS_SYSINFO)
   close(file.posix_fd_);
-#elif defined(HERMES_ENABLE_WINDOWS_SYSINFO)
+#elif defined(HSHM_ENABLE_WINDOWS_SYSINFO)
   CloseHandle(file.windows_fd_);
 #endif
 }
 
 void SystemInfo::DestroySharedMemory(const std::string &name) {
-#if defined(HERMES_ENABLE_PROCFS_SYSINFO)
+#if defined(HSHM_ENABLE_PROCFS_SYSINFO)
   shm_unlink(name.c_str());
-#elif defined(HERMES_ENABLE_WINDOWS_SYSINFO)
+#elif defined(HSHM_ENABLE_WINDOWS_SYSINFO)
 #endif
 }
 
 void *SystemInfo::MapPrivateMemory(size_t size) {
-#if defined(HERMES_ENABLE_PROCFS_SYSINFO)
+#if defined(HSHM_ENABLE_PROCFS_SYSINFO)
   return mmap64(nullptr, size, PROT_READ | PROT_WRITE,
                 MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-#elif defined(HERMES_ENABLE_WINDOWS_SYSINFO)
+#elif defined(HSHM_ENABLE_WINDOWS_SYSINFO)
   return VirtualAlloc(nullptr, size, MEM_COMMIT, PAGE_READWRITE);
 #endif
 }
 
 void *SystemInfo::MapSharedMemory(const File &fd, size_t size, i64 off) {
-#if defined(HERMES_ENABLE_PROCFS_SYSINFO)
+#if defined(HSHM_ENABLE_PROCFS_SYSINFO)
   void *ptr = mmap(nullptr, size, PROT_READ | PROT_WRITE, MAP_SHARED,
                    fd.posix_fd_, off);
   if (ptr == MAP_FAILED) {
@@ -317,7 +317,7 @@ void *SystemInfo::MapSharedMemory(const File &fd, size_t size, i64 off) {
     return nullptr;
   }
   return ptr;
-#elif defined(HERMES_ENABLE_WINDOWS_SYSINFO)
+#elif defined(HSHM_ENABLE_WINDOWS_SYSINFO)
   // Convert i64 to low and high dwords
   DWORD highDword = (DWORD)((off >> 32) & 0xFFFFFFFF);
   DWORD lowDword = (DWORD)(off & 0xFFFFFFFF);
@@ -341,29 +341,29 @@ void *SystemInfo::MapSharedMemory(const File &fd, size_t size, i64 off) {
 }
 
 void SystemInfo::UnmapMemory(void *ptr, size_t size) {
-#if defined(HERMES_ENABLE_PROCFS_SYSINFO)
+#if defined(HSHM_ENABLE_PROCFS_SYSINFO)
   munmap(ptr, size);
-#elif defined(HERMES_ENABLE_WINDOWS_SYSINFO)
+#elif defined(HSHM_ENABLE_WINDOWS_SYSINFO)
   VirtualFree(ptr, size, MEM_RELEASE);
 #endif
 }
 
 void *SystemInfo::AlignedAlloc(size_t alignment, size_t size) {
-#if defined(HERMES_ENABLE_PROCFS_SYSINFO)
+#if defined(HSHM_ENABLE_PROCFS_SYSINFO)
   return aligned_alloc(alignment, size);
-#elif defined(HERMES_ENABLE_WINDOWS_SYSINFO)
+#elif defined(HSHM_ENABLE_WINDOWS_SYSINFO)
   return _aligned_malloc(size, alignment);
 #endif
 }
 
 std::string SystemInfo::Getenv(const char *name, size_t max_size) {
-#if defined(HERMES_ENABLE_PROCFS_SYSINFO)
+#if defined(HSHM_ENABLE_PROCFS_SYSINFO)
   char *var = getenv(name);
   if (var == nullptr) {
     return "";
   }
   return std::string(var);
-#elif defined(HERMES_ENABLE_WINDOWS_SYSINFO)
+#elif defined(HSHM_ENABLE_WINDOWS_SYSINFO)
   std::string var;
   var.resize(max_size);
   GetEnvironmentVariable(name, var.data(), var.size());
@@ -373,17 +373,17 @@ std::string SystemInfo::Getenv(const char *name, size_t max_size) {
 
 void SystemInfo::Setenv(const char *name, const std::string &value,
                         int overwrite) {
-#if defined(HERMES_ENABLE_PROCFS_SYSINFO)
+#if defined(HSHM_ENABLE_PROCFS_SYSINFO)
   setenv(name, value.c_str(), overwrite);
-#elif defined(HERMES_ENABLE_WINDOWS_SYSINFO)
+#elif defined(HSHM_ENABLE_WINDOWS_SYSINFO)
   SetEnvironmentVariable(name, value.c_str());
 #endif
 }
 
 void SystemInfo::Unsetenv(const char *name) {
-#if defined(HERMES_ENABLE_PROCFS_SYSINFO)
+#if defined(HSHM_ENABLE_PROCFS_SYSINFO)
   unsetenv(name);
-#elif defined(HERMES_ENABLE_WINDOWS_SYSINFO)
+#elif defined(HSHM_ENABLE_WINDOWS_SYSINFO)
   SetEnvironmentVariable(name, nullptr);
 #endif
 }

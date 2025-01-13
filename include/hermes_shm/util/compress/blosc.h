@@ -10,8 +10,8 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_SHM_INCLUDE_HERMES_SHM_COMPRESS_Blosc_H_
-#define HERMES_SHM_INCLUDE_HERMES_SHM_COMPRESS_Blosc_H_
+#ifndef HSHM_SHM_INCLUDE_HSHM_SHM_COMPRESS_Blosc_H_
+#define HSHM_SHM_INCLUDE_HSHM_SHM_COMPRESS_Blosc_H_
 
 #include <blosc2.h>
 
@@ -68,4 +68,4 @@ class Blosc : public Compressor {
 
 }  // namespace hshm
 
-#endif  // HERMES_SHM_INCLUDE_HERMES_SHM_COMPRESS_Blosc_H_
+#endif  // HSHM_SHM_INCLUDE_HSHM_SHM_COMPRESS_Blosc_H_

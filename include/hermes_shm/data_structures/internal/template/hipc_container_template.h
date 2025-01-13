@@ -104,7 +104,7 @@ HSHM_INLINE_CROSS_FUN POINTER_T GetShmPointer() const {
 HSHM_INLINE_CROSS_FUN
 AllocT *GetAllocator() const {
   if constexpr (!(HSHM_FLAGS & hipc::ShmFlag::kIsPrivate)) {
-    return HERMES_MEMORY_MANAGER->GetAllocator<AllocT>(alloc_info_);
+    return HSHM_MEMORY_MANAGER->GetAllocator<AllocT>(alloc_info_);
   } else {
     return alloc_info_.alloc_;
   }

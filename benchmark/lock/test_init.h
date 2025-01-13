@@ -10,11 +10,11 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_BENCHMARK_DATA_STRUCTURE_TEST_INIT_H_
-#define HERMES_BENCHMARK_DATA_STRUCTURE_TEST_INIT_H_
+#ifndef HSHM_BENCHMARK_DATA_STRUCTURE_TEST_INIT_H_
+#define HSHM_BENCHMARK_DATA_STRUCTURE_TEST_INIT_H_
 
 #include "hermes_shm/util/timer.h"
 
 using Timer = hshm::HighResMonotonicTimer;
 
-#endif  // HERMES_BENCHMARK_DATA_STRUCTURE_TEST_INIT_H_
+#endif  // HSHM_BENCHMARK_DATA_STRUCTURE_TEST_INIT_H_

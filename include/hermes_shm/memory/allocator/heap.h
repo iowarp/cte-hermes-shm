@@ -10,8 +10,8 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_SHM_INCLUDE_HERMES_SHM_MEMORY_ALLOCATOR_HEAP_H_
-#define HERMES_SHM_INCLUDE_HERMES_SHM_MEMORY_ALLOCATOR_HEAP_H_
+#ifndef HSHM_SHM_INCLUDE_HSHM_SHM_MEMORY_ALLOCATOR_HEAP_H_
+#define HSHM_SHM_INCLUDE_HSHM_SHM_MEMORY_ALLOCATOR_HEAP_H_
 
 #include "allocator.h"
 #include "hermes_shm/thread/lock.h"
@@ -56,7 +56,7 @@ struct HeapAllocator {
     // }
     hshm::min_u64 off = heap_off_.fetch_add((hshm::min_u64)size);
     if (off + size > heap_size_) {
-      // HERMES_THROW_ERROR(OUT_OF_MEMORY, size, heap_size_);
+      // HSHM_THROW_ERROR(OUT_OF_MEMORY, size, heap_size_);
       return OffsetPointer::GetNull();
     }
     return OffsetPointer((size_t)(region_off_ + off));
@@ -74,4 +74,4 @@ struct HeapAllocator {
 
 }  // namespace hshm::ipc
 
-#endif  // HERMES_SHM_INCLUDE_HERMES_SHM_MEMORY_ALLOCATOR_HEAP_H_
+#endif  // HSHM_SHM_INCLUDE_HSHM_SHM_MEMORY_ALLOCATOR_HEAP_H_

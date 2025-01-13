@@ -10,8 +10,8 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_TEST_UNIT_DATA_STRUCTURES_TEST_INIT_H_
-#define HERMES_TEST_UNIT_DATA_STRUCTURES_TEST_INIT_H_
+#ifndef HSHM_TEST_UNIT_DATA_STRUCTURES_TEST_INIT_H_
+#define HSHM_TEST_UNIT_DATA_STRUCTURES_TEST_INIT_H_
 
 #include <mpi.h>
 
@@ -35,4 +35,4 @@ using hshm::ipc::Pointer;
 
 void Posttest();
 
-#endif  // HERMES_TEST_UNIT_DATA_STRUCTURES_TEST_INIT_H_
+#endif  // HSHM_TEST_UNIT_DATA_STRUCTURES_TEST_INIT_H_

@@ -10,8 +10,8 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_MEMORY_ALLOCATOR_MALLOC_ALLOCATOR_H_
-#define HERMES_MEMORY_ALLOCATOR_MALLOC_ALLOCATOR_H_
+#ifndef HSHM_MEMORY_ALLOCATOR_MALLOC_ALLOCATOR_H_
+#define HSHM_MEMORY_ALLOCATOR_MALLOC_ALLOCATOR_H_
 
 #include <cstdint>
 #include <cstdlib>
@@ -75,7 +75,7 @@ class _MallocAllocator : public Allocator {
    * */
   HSHM_CROSS_FUN
   void shm_deserialize(char *buffer, size_t buffer_size) {
-    HERMES_THROW_ERROR(NOT_IMPLEMENTED, "_MallocAllocator::shm_deserialize");
+    HSHM_THROW_ERROR(NOT_IMPLEMENTED, "_MallocAllocator::shm_deserialize");
   }
 
   /**
@@ -170,4 +170,4 @@ class _MallocAllocator : public Allocator {
 
 }  // namespace hshm::ipc
 
-#endif  // HERMES_MEMORY_ALLOCATOR_MALLOC_ALLOCATOR_H_
+#endif  // HSHM_MEMORY_ALLOCATOR_MALLOC_ALLOCATOR_H_

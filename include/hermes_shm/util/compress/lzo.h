@@ -10,33 +10,34 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_SHM_INCLUDE_HERMES_SHM_COMPRESS_Lzo_H_
-#define HERMES_SHM_INCLUDE_HERMES_SHM_COMPRESS_Lzo_H_
+#ifndef HSHM_SHM_INCLUDE_HSHM_SHM_COMPRESS_Lzo_H_
+#define HSHM_SHM_INCLUDE_HSHM_SHM_COMPRESS_Lzo_H_
+
+#include <lzo/lzo1x.h>
 
 #include "compress.h"
-#include <lzo/lzo1x.h>
 
 namespace hshm {
 
 class Lzo : public Compressor {
  public:
-  bool Compress(void *output, size_t &output_size,
-                void *input, size_t input_size) override {
+  bool Compress(void *output, size_t &output_size, void *input,
+                size_t input_size) override {
     int ret = lzo1x_1_15_compress(
         reinterpret_cast<const lzo_bytep>(input), input_size,
         reinterpret_cast<lzo_bytep>(output), &output_size, nullptr);
     return ret != 0;
   }
 
-  bool Decompress(void *output, size_t &output_size,
-                  void *input, size_t input_size) override {
-    int ret = lzo1x_decompress(
-        reinterpret_cast<const lzo_bytep>(input), input_size,
-        reinterpret_cast<lzo_bytep>(output), &output_size, nullptr);
+  bool Decompress(void *output, size_t &output_size, void *input,
+                  size_t input_size) override {
+    int ret = lzo1x_decompress(reinterpret_cast<const lzo_bytep>(input),
+                               input_size, reinterpret_cast<lzo_bytep>(output),
+                               &output_size, nullptr);
     return ret != 0;
   }
 };
 
 }  // namespace hshm
 
-#endif  // HERMES_SHM_INCLUDE_HERMES_SHM_COMPRESS_Lzo_H_
+#endif  // HSHM_SHM_INCLUDE_HSHM_SHM_COMPRESS_Lzo_H_

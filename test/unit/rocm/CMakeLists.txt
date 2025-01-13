@@ -13,13 +13,13 @@ target_link_libraries(test_memory_rocm_exec PUBLIC hermes_shm_rocm_gpu)
 #------------------------------------------------------------------------------
 install(TARGETS
         test_memory_rocm_exec
-        LIBRARY DESTINATION ${HERMES_INSTALL_LIB_DIR}
-        ARCHIVE DESTINATION ${HERMES_INSTALL_LIB_DIR}
-        RUNTIME DESTINATION ${HERMES_INSTALL_BIN_DIR})
+        LIBRARY DESTINATION ${HSHM_INSTALL_LIB_DIR}
+        ARCHIVE DESTINATION ${HSHM_INSTALL_LIB_DIR}
+        RUNTIME DESTINATION ${HSHM_INSTALL_BIN_DIR})
 
 #-----------------------------------------------------------------------------
 # Coverage
 #-----------------------------------------------------------------------------
-if(HERMES_ENABLE_COVERAGE)
+if(HSHM_ENABLE_COVERAGE)
     set_coverage_flags(test_memory_rocm_exec)
 endif()

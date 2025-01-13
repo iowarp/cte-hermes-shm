@@ -14,4 +14,4 @@ message(STATUS "found hermes_shm at ${HermesShm_DIR}")
 #------------------------------------------------------------------------------
 
 add_executable(test test.cc)
-target_link_libraries(test HermesShm::cxx)
+target_link_libraries(test hshm::cxx)

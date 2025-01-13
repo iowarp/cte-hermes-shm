@@ -10,8 +10,8 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_SHM_INCLUDE_HERMES_SHM_UTIL_LOGGING_H_
-#define HERMES_SHM_INCLUDE_HERMES_SHM_UTIL_LOGGING_H_
+#ifndef HSHM_SHM_INCLUDE_HSHM_SHM_UTIL_LOGGING_H_
+#define HSHM_SHM_INCLUDE_HSHM_SHM_UTIL_LOGGING_H_
 
 #include <climits>
 #include <filesystem>
@@ -30,10 +30,10 @@ namespace hshm {
 /** Prints log verbosity at compile time */
 #define XSTR(s) STR(s)
 #define STR(s) #s
-// #pragma message XSTR(HERMES_LOG_EXCLUDE)
+// #pragma message XSTR(HSHM_LOG_EXCLUDE)
 
 /** Simplify access to Logger singleton */
-#define HERMES_LOG hshm::Singleton<hshm::Logger>::GetInstance()
+#define HSHM_LOG hshm::Singleton<hshm::Logger>::GetInstance()
 
 /** Max number of log codes */
 #define HSHM_MAX_LOGGING_CODES 256
@@ -62,17 +62,17 @@ namespace hshm {
 /**
  * Hermes Print. Like printf, except types are inferred
  * */
-#define HIPRINT(...) HERMES_LOG->Print(__VA_ARGS__)
+#define HIPRINT(...) HSHM_LOG->Print(__VA_ARGS__)
 
 /**
  * Hermes SHM Log
  * */
-#define HLOG(LOG_CODE, SUB_CODE, ...)                                   \
-  do {                                                                  \
-    if constexpr (LOG_CODE >= 0 && SUB_CODE >= 0) {                     \
-      HERMES_LOG->Log<LOG_CODE, SUB_CODE>(__FILE__, __func__, __LINE__, \
-                                          __VA_ARGS__);                 \
-    }                                                                   \
+#define HLOG(LOG_CODE, SUB_CODE, ...)                                 \
+  do {                                                                \
+    if constexpr (LOG_CODE >= 0 && SUB_CODE >= 0) {                   \
+      HSHM_LOG->Log<LOG_CODE, SUB_CODE>(__FILE__, __func__, __LINE__, \
+                                        __VA_ARGS__);                 \
+    }                                                                 \
   } while (false)
 
 /** Hermes info log */
@@ -99,7 +99,7 @@ class Logger {
     memset(disabled_, 0, sizeof(disabled_));
     // exe_name_ = std::filesystem::path(exe_path_).filename().string();
     std::string verbosity_env = hshm::SystemInfo::Getenv(
-        "HERMES_LOG_EXCLUDE", hshm::Unit<size_t>::Megabytes(1));
+        "HSHM_LOG_EXCLUDE", hshm::Unit<size_t>::Megabytes(1));
     if (!verbosity_env.empty()) {
       std::vector<int> verbosity_levels;
       std::string verbosity_str(verbosity_env);
@@ -112,7 +112,7 @@ class Logger {
     }
 
     std::string env = hshm::SystemInfo::Getenv(
-        "HERMES_LOG_OUT", hshm::Unit<size_t>::Megabytes(1));
+        "HSHM_LOG_OUT", hshm::Unit<size_t>::Megabytes(1));
     if (env.empty()) {
       fout_ = nullptr;
     } else {
@@ -196,4 +196,4 @@ class Logger {
 
 }  // namespace hshm
 
-#endif  // HERMES_SHM_INCLUDE_HERMES_SHM_UTIL_LOGGING_H_
+#endif  // HSHM_SHM_INCLUDE_HSHM_SHM_UTIL_LOGGING_H_

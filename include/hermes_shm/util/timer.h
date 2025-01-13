@@ -10,8 +10,8 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_TIMER_H
-#define HERMES_TIMER_H
+#ifndef HSHM_TIMER_H
+#define HSHM_TIMER_H
 
 #include <chrono>
 #include <functional>
@@ -131,4 +131,4 @@ class PeriodicRun {
 
 }  // namespace hshm
 
-#endif  // HERMES_TIMER_H
+#endif  // HSHM_TIMER_H

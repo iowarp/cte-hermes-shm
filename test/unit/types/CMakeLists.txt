@@ -25,7 +25,7 @@ set(INSTALLS ${INSTALLS} test_types_exec)
 #------------------------------------------------------------------------------
 # Build Timer Tests
 #------------------------------------------------------------------------------
-if (HERMES_ENABLE_MPI AND HERMES_ENABLE_OPENMP)
+if (HSHM_ENABLE_MPI AND HSHM_ENABLE_OPENMP)
     add_executable(test_timers_exec
             ${TEST_MAIN}/main_mpi.cc
             test_init.cc
@@ -44,14 +44,14 @@ endif()
 #------------------------------------------------------------------------------
 install(TARGETS
         ${INSTALLS}
-        LIBRARY DESTINATION ${HERMES_INSTALL_LIB_DIR}
-        ARCHIVE DESTINATION ${HERMES_INSTALL_LIB_DIR}
-        RUNTIME DESTINATION ${HERMES_INSTALL_BIN_DIR})
+        LIBRARY DESTINATION ${HSHM_INSTALL_LIB_DIR}
+        ARCHIVE DESTINATION ${HSHM_INSTALL_LIB_DIR}
+        RUNTIME DESTINATION ${HSHM_INSTALL_BIN_DIR})
 
 #-----------------------------------------------------------------------------
 # Coverage
 #-----------------------------------------------------------------------------
-if(HERMES_ENABLE_COVERAGE)
+if(HSHM_ENABLE_COVERAGE)
     set_coverage_flags(test_types_exec)
     set_coverage_flags(test_timers_exec)
 endif()

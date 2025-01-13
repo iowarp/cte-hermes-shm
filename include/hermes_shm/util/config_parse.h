@@ -10,8 +10,8 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_CONFIG_PARSE_PARSER_H
-#define HERMES_CONFIG_PARSE_PARSER_H
+#ifndef HSHM_CONFIG_PARSE_PARSER_H
+#define HSHM_CONFIG_PARSE_PARSER_H
 
 #include <float.h>
 #include <limits.h>
@@ -312,4 +312,4 @@ class BaseConfig {
 
 }  // namespace hshm
 
-#endif  // HERMES_CONFIG_PARSE_PARSER_H
+#endif  // HSHM_CONFIG_PARSE_PARSER_H

@@ -10,8 +10,8 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_SHM_INCLUDE_HERMES_SHM_UTIL_TIMER_THREAD_H_
-#define HERMES_SHM_INCLUDE_HERMES_SHM_UTIL_TIMER_THREAD_H_
+#ifndef HSHM_SHM_INCLUDE_HSHM_SHM_UTIL_TIMER_THREAD_H_
+#define HSHM_SHM_INCLUDE_HSHM_SHM_UTIL_TIMER_THREAD_H_
 
 #include "timer.h"
 
@@ -49,4 +49,4 @@ class ThreadTimer : public NsecTimer {
 
 }  // namespace hshm
 
-#endif  // HERMES_SHM_INCLUDE_HERMES_SHM_UTIL_TIMER_THREAD_H_
+#endif  // HSHM_SHM_INCLUDE_HSHM_SHM_UTIL_TIMER_THREAD_H_

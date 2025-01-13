@@ -10,8 +10,8 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_MACROS_H
-#define HERMES_MACROS_H
+#ifndef HSHM_MACROS_H
+#define HSHM_MACROS_H
 
 #include "hermes_shm/constants/settings.h"
 
@@ -83,16 +83,16 @@
 #define __TU(X) TYPE_UNWRAP(X)
 
 /** Includes for CUDA and ROCm */
-#ifdef HERMES_ENABLE_CUDA
+#ifdef HSHM_ENABLE_CUDA
 #include <cuda_runtime.h>
 #endif
 
-#ifdef HERMES_ENABLE_ROCM
+#ifdef HSHM_ENABLE_ROCM
 #include <hip/hip_runtime.h>
 #endif
 
 /** Macros for CUDA functions */
-#if defined(HERMES_ENABLE_CUDA) || defined(HERMES_ENABLE_ROCM)
+#if defined(HSHM_ENABLE_CUDA) || defined(HSHM_ENABLE_ROCM)
 #define ROCM_HOST __host__
 #define ROCM_DEVICE __device__
 #define ROCM_HOST_DEVICE __device__ __host__
@@ -172,7 +172,7 @@ namespace hipc = hshm::ipc;
 #define HSHM_ROOT_ALLOC_T hipc::StackAllocator
 #endif
 #define HSHM_ROOT_ALLOC \
-  HERMES_MEMORY_MANAGER->template GetRootAllocator<HSHM_ROOT_ALLOC_T>()
+  HSHM_MEMORY_MANAGER->template GetRootAllocator<HSHM_ROOT_ALLOC_T>()
 
 /** Define the default allocator class */
 #ifndef HSHM_DEFAULT_ALLOC_T
@@ -180,7 +180,7 @@ namespace hipc = hshm::ipc;
 // #define HSHM_DEFAULT_ALLOC_T hipc::ThreadLocalAllocator
 #endif
 #define HSHM_DEFAULT_ALLOC \
-  HERMES_MEMORY_MANAGER->template GetDefaultAllocator<HSHM_DEFAULT_ALLOC_T>()
+  HSHM_MEMORY_MANAGER->template GetDefaultAllocator<HSHM_DEFAULT_ALLOC_T>()
 
 /** Define the default thread model class */
 // CUDA
@@ -193,9 +193,9 @@ namespace hipc = hshm::ipc;
 #endif
 // CPU
 #ifndef HSHM_DEFAULT_THREAD_MODEL
-#if defined(HERMES_ENABLE_PTHREADS)
+#if defined(HSHM_ENABLE_PTHREADS)
 #define HSHM_DEFAULT_THREAD_MODEL hshm::thread::Pthread
-#elif defined(HERMES_ENABLE_WINDOWS_THREADS)
+#elif defined(HSHM_ENABLE_WINDOWS_THREADS)
 #define HSHM_DEFAULT_THREAD_MODEL hshm::thread::WindowsThread
 #endif
 #endif
@@ -215,4 +215,4 @@ class assert_hack {
 #define STATIC_ASSERT(TRUTH, MSG, T) \
   static_assert(assert_hack<TRUTH, __TU(T)>::value, MSG)
 
-#endif  // HERMES_MACROS_H
+#endif  // HSHM_MACROS_H

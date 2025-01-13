@@ -10,12 +10,12 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_SHM_SERIALIZE_COMMON_H_
-#define HERMES_SHM_SERIALIZE_COMMON_H_
+#ifndef HSHM_SHM_SERIALIZE_COMMON_H_
+#define HSHM_SHM_SERIALIZE_COMMON_H_
 
 #include <stddef.h>
 
-#ifdef HERMES_ENABLE_CEREAL
+#ifdef HSHM_ENABLE_CEREAL
 #include <cereal/archives/binary.hpp>
 #endif
 
@@ -106,7 +106,7 @@ inline constexpr bool is_serializeable_v =
 
 template <typename Ar, typename T>
 HSHM_CROSS_FUN void write_binary(Ar &ar, const T *data, size_t size) {
-#ifdef HERMES_ENABLE_CEREAL
+#ifdef HSHM_ENABLE_CEREAL
   auto binary = cereal::binary_data(data, size);
   ar(binary);
 #else
@@ -115,7 +115,7 @@ HSHM_CROSS_FUN void write_binary(Ar &ar, const T *data, size_t size) {
 }
 template <typename Ar, typename T>
 HSHM_CROSS_FUN void read_binary(Ar &ar, T *data, size_t size) {
-#ifdef HERMES_ENABLE_CEREAL
+#ifdef HSHM_ENABLE_CEREAL
   auto binary = cereal::binary_data(data, size);
   ar(binary);
 #else
@@ -211,4 +211,4 @@ HSHM_CROSS_FUN void load_map(Ar &ar, ContainerT &obj) {
 
 }  // namespace hshm::ipc
 
-#endif  // HERMES_SHM_SERIALIZE_COMMON_H_
+#endif  // HSHM_SHM_SERIALIZE_COMMON_H_

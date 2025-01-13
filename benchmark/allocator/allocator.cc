@@ -185,7 +185,7 @@ template <typename BackendT, typename AllocT, typename... Args>
 AllocT *Pretest(MemoryBackendType backend_type, Args &&...args) {
   int rank = omp_get_thread_num();
   AllocatorId alloc_id(0, minor);
-  auto mem_mngr = HERMES_MEMORY_MANAGER;
+  auto mem_mngr = HSHM_MEMORY_MANAGER;
 
   if (rank == 0) {
     // Create the allocator + backend
@@ -212,8 +212,8 @@ void Posttest() {
 #pragma omp barrier
   if (rank == 0) {
     AllocatorId alloc_id(0, minor);
-    HERMES_MEMORY_MANAGER->UnregisterAllocator(alloc_id);
-    HERMES_MEMORY_MANAGER->UnregisterBackend(hipc::MemoryBackendId::Get(0));
+    HSHM_MEMORY_MANAGER->UnregisterAllocator(alloc_id);
+    HSHM_MEMORY_MANAGER->UnregisterBackend(hipc::MemoryBackendId::Get(0));
     minor += 1;
   }
 #pragma omp barrier
@@ -283,12 +283,12 @@ void FullAllocatorTestThreaded(int nthreads) {
 }
 
 TEST_CASE("AllocatorBenchmark") {
-  HERMES_ERROR_HANDLE_START();
+  HSHM_ERROR_HANDLE_START();
   AllocatorTestSuite<hipc::NullAllocator>::PrintTestHeader();
   FullAllocatorTestThreaded(1);
   // FullAllocatorTestThreaded(2);
   // FullAllocatorTestThreaded(4);
   // FullAllocatorTestThreaded(8);
   // FullAllocatorTestThreaded(16);
-  HERMES_ERROR_HANDLE_END();
+  HSHM_ERROR_HANDLE_END();
 }

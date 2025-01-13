@@ -10,8 +10,8 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_INCLUDE_MEMORY_BACKEND_POSIX_SHM_MMAP_H
-#define HERMES_INCLUDE_MEMORY_BACKEND_POSIX_SHM_MMAP_H
+#ifndef HSHM_INCLUDE_MEMORY_BACKEND_POSIX_SHM_MMAP_H
+#define HSHM_INCLUDE_MEMORY_BACKEND_POSIX_SHM_MMAP_H
 
 #include <fcntl.h>
 #include <stdio.h>
@@ -57,18 +57,18 @@ class PosixShmMmap : public MemoryBackend, public UrlMemoryBackend {
     Own();
     SystemInfo::DestroySharedMemory(url.c_str());
     if (!SystemInfo::CreateNewSharedMemory(
-            fd_, url.c_str(), size + HERMES_SYSTEM_INFO->page_size_)) {
+            fd_, url.c_str(), size + HSHM_SYSTEM_INFO->page_size_)) {
       char *err_buf = strerror(errno);
       HILOG(kError, "shm_open failed: {}", err_buf);
       return false;
     }
     url_ = url;
-    header_ = (MemoryBackendHeader *)_Map(HERMES_SYSTEM_INFO->page_size_, 0);
+    header_ = (MemoryBackendHeader *)_Map(HSHM_SYSTEM_INFO->page_size_, 0);
     header_->type_ = MemoryBackendType::kPosixShmMmap;
     header_->id_ = backend_id;
     header_->data_size_ = size;
     data_size_ = size;
-    data_ = _Map(size, HERMES_SYSTEM_INFO->page_size_);
+    data_ = _Map(size, HSHM_SYSTEM_INFO->page_size_);
     return true;
   }
 
@@ -81,9 +81,9 @@ class PosixShmMmap : public MemoryBackend, public UrlMemoryBackend {
       HILOG(kError, "shm_open failed: {}", err_buf);
       return false;
     }
-    header_ = (MemoryBackendHeader *)_Map(HERMES_SYSTEM_INFO->page_size_, 0);
+    header_ = (MemoryBackendHeader *)_Map(HSHM_SYSTEM_INFO->page_size_, 0);
     data_size_ = header_->data_size_;
-    data_ = _Map(data_size_, HERMES_SYSTEM_INFO->page_size_);
+    data_ = _Map(data_size_, HSHM_SYSTEM_INFO->page_size_);
     return true;
   }
 
@@ -102,7 +102,7 @@ class PosixShmMmap : public MemoryBackend, public UrlMemoryBackend {
     char *ptr =
         reinterpret_cast<char *>(SystemInfo::MapSharedMemory(fd_, size, off));
     if (!ptr) {
-      HERMES_THROW_ERROR(SHMEM_CREATE_FAILED);
+      HSHM_THROW_ERROR(SHMEM_CREATE_FAILED);
     }
     return ptr;
   }
@@ -116,7 +116,7 @@ class PosixShmMmap : public MemoryBackend, public UrlMemoryBackend {
       return;
     }
     SystemInfo::UnmapMemory(reinterpret_cast<void *>(header_),
-                            HERMES_SYSTEM_INFO->page_size_);
+                            HSHM_SYSTEM_INFO->page_size_);
     SystemInfo::UnmapMemory(data_, data_size_);
     SystemInfo::CloseSharedMemory(fd_);
     UnsetInitialized();
@@ -135,4 +135,4 @@ class PosixShmMmap : public MemoryBackend, public UrlMemoryBackend {
 
 }  // namespace hshm::ipc
 
-#endif  // HERMES_INCLUDE_MEMORY_BACKEND_POSIX_SHM_MMAP_H
+#endif  // HSHM_INCLUDE_MEMORY_BACKEND_POSIX_SHM_MMAP_H

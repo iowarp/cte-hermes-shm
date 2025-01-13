@@ -10,11 +10,11 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_SYSINFO_INFO_H_
-#define HERMES_SYSINFO_INFO_H_
+#ifndef HSHM_SYSINFO_INFO_H_
+#define HSHM_SYSINFO_INFO_H_
 
 #include "hermes_shm/constants/macros.h"
-#ifdef HERMES_ENABLE_PROCFS_SYSINFO
+#ifdef HSHM_ENABLE_PROCFS_SYSINFO
 #include <sys/sysinfo.h>
 #include <unistd.h>
 #endif
@@ -26,9 +26,9 @@
 #include "hermes_shm/util/formatter.h"
 #include "hermes_shm/util/singleton.h"
 
-#define HERMES_SYSTEM_INFO \
+#define HSHM_SYSTEM_INFO \
   hshm::LockfreeSingleton<hshm::SystemInfo>::GetInstance()
-#define HERMES_SYSTEM_INFO_T hshm::SystemInfo *
+#define HSHM_SYSTEM_INFO_T hshm::SystemInfo *
 
 namespace hshm {
 
@@ -133,4 +133,4 @@ class SystemInfo {
 
 #undef WIN32_LEAN_AND_MEAN
 
-#endif  // HERMES_SYSINFO_INFO_H_
+#endif  // HSHM_SYSINFO_INFO_H_

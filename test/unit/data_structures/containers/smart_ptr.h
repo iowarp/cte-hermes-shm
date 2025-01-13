@@ -10,28 +10,26 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_TEST_UNIT_ptr__STRUCTURES_CONTAINERS_SMART_PTR_H_
-#define HERMES_TEST_UNIT_ptr__STRUCTURES_CONTAINERS_SMART_PTR_H_
+#ifndef HSHM_TEST_UNIT_ptr__STRUCTURES_CONTAINERS_SMART_PTR_H_
+#define HSHM_TEST_UNIT_ptr__STRUCTURES_CONTAINERS_SMART_PTR_H_
 
 #include "basic_test.h"
 #include "test_init.h"
 
 namespace hshm::ipc {
 
-template<typename T, typename PointerT>
+template <typename T, typename PointerT>
 class SmartPtrTestSuite {
  public:
-  PointerT &ptr_;     /**< Allocated. Used for all tests. */
-  PointerT &ptr2_;    /**< Unallocated. Used for move tests. */
+  PointerT &ptr_;  /**< Allocated. Used for all tests. */
+  PointerT &ptr2_; /**< Unallocated. Used for move tests. */
 
-  explicit SmartPtrTestSuite(PointerT &ptr,
-                             PointerT &ptr2) : ptr_(ptr), ptr2_(ptr2) {}
+  explicit SmartPtrTestSuite(PointerT &ptr, PointerT &ptr2)
+      : ptr_(ptr), ptr2_(ptr2) {}
 
  public:
   // Test dereference
-  void DereferenceTest(T &num) {
-    REQUIRE(*ptr_ == num);
-  }
+  void DereferenceTest(T &num) { REQUIRE(*ptr_ == num); }
 
   // Test move constructor
   void MoveConstructorTest(T &num) {
@@ -83,4 +81,4 @@ class SmartPtrTestSuite {
 
 }  // namespace hshm::ipc
 
-#endif  // HERMES_TEST_UNIT_ptr__STRUCTURES_CONTAINERS_SMART_PTR_H_
+#endif  // HSHM_TEST_UNIT_ptr__STRUCTURES_CONTAINERS_SMART_PTR_H_

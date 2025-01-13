@@ -10,8 +10,8 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_INCLUDE_MEMORY_BACKEND_POSIX_MMAP_H
-#define HERMES_INCLUDE_MEMORY_BACKEND_POSIX_MMAP_H
+#ifndef HSHM_INCLUDE_MEMORY_BACKEND_POSIX_MMAP_H
+#define HSHM_INCLUDE_MEMORY_BACKEND_POSIX_MMAP_H
 
 #include <fcntl.h>
 #include <stdio.h>
@@ -21,7 +21,7 @@
 #include <string>
 
 #include "hermes_shm/constants/macros.h"
-#ifdef HERMES_ENABLE_PROCFS_SYSINFO
+#ifdef HSHM_ENABLE_PROCFS_SYSINFO
 #include <sys/mman.h>
 #include <sys/shm.h>
 #include <sys/stat.h>
@@ -71,7 +71,7 @@ class PosixMmap : public MemoryBackend {
   /** Deserialize the backend */
   bool shm_deserialize(const hshm::chararr &url) override {
     (void)url;
-    HERMES_THROW_ERROR(SHMEM_NOT_SUPPORTED);
+    HSHM_THROW_ERROR(SHMEM_NOT_SUPPORTED);
     return false;
   }
 
@@ -88,7 +88,7 @@ class PosixMmap : public MemoryBackend {
     T *ptr = reinterpret_cast<T *>(
         SystemInfo::MapPrivateMemory(MemoryAlignment::AlignToPageSize(size)));
     if (!ptr) {
-      HERMES_THROW_ERROR(SHMEM_CREATE_FAILED);
+      HSHM_THROW_ERROR(SHMEM_CREATE_FAILED);
     }
     return ptr;
   }
@@ -114,4 +114,4 @@ class PosixMmap : public MemoryBackend {
 
 }  // namespace hshm::ipc
 
-#endif  // HERMES_INCLUDE_MEMORY_BACKEND_POSIX_MMAP_H
+#endif  // HSHM_INCLUDE_MEMORY_BACKEND_POSIX_MMAP_H

@@ -107,7 +107,7 @@ TEST_CASE("TestMpscLifoListQueueInt") {
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
 }
 
-TEST_CASE("TestMpsLifoListQueueIntMultithreaded") {
+TEST_CASE("TestMpscLifoListQueueIntMultithreaded") {
   auto *alloc = HSHM_DEFAULT_ALLOC;
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
   ProduceAndConsume<hipc::mpsc_lifo_list_queue<IntEntry>, IntEntry *>(

@@ -10,8 +10,8 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_DATA_STRUCTURES_DATA_STRUCTURE_H_
-#define HERMES_DATA_STRUCTURES_DATA_STRUCTURE_H_
+#ifndef HSHM_DATA_STRUCTURES_DATA_STRUCTURE_H_
+#define HSHM_DATA_STRUCTURES_DATA_STRUCTURE_H_
 
 #include "hermes_shm/memory/memory_manager.h"
 #include "internal/shm_internal.h"
@@ -113,4 +113,4 @@
   HSHM_DATA_STRUCTURES_TEMPLATE_BASE(NS, hshm, ALLOC_T) \
   HSHM_DATA_STRUCTURES_TEMPLATE_BASE(NS::ipc, hipc, ALLOC_T)
 
-#endif  // HERMES_DATA_STRUCTURES_DATA_STRUCTURE_H_
+#endif  // HSHM_DATA_STRUCTURES_DATA_STRUCTURE_H_

@@ -2,8 +2,8 @@
 // Created by llogan on 28/10/24.
 //
 
-#ifndef HERMES_SHM_INCLUDE_HERMES_SHM_DATA_STRUCTURES_IPC_ring_queue_base_H_
-#define HERMES_SHM_INCLUDE_HERMES_SHM_DATA_STRUCTURES_IPC_ring_queue_base_H_
+#ifndef HSHM_SHM_INCLUDE_HSHM_SHM_DATA_STRUCTURES_IPC_ring_queue_base_H_
+#define HSHM_SHM_INCLUDE_HSHM_SHM_DATA_STRUCTURES_IPC_ring_queue_base_H_
 
 #include "hermes_shm/constants/macros.h"
 #include "hermes_shm/data_structures/internal/shm_internal.h"
@@ -65,7 +65,7 @@ class ring_queue_base : public ShmContainer {
   /** Constructor. Default. */
   template <typename... Args>
   HSHM_CROSS_FUN explicit ring_queue_base(size_t depth = 1024, Args &&...args) {
-    shm_init(HERMES_MEMORY_MANAGER->GetDefaultAllocator<AllocT>(), depth,
+    shm_init(HSHM_MEMORY_MANAGER->GetDefaultAllocator<AllocT>(), depth,
              std::forward<Args>(args)...);
   }
 
@@ -217,7 +217,7 @@ class ring_queue_base : public ShmContainer {
             if (size <= GetDepth()) {
               break;
             }
-            HERMES_THREAD_MODEL->Yield();
+            HSHM_THREAD_MODEL->Yield();
           }
         }
       }
@@ -433,4 +433,4 @@ using fixed_mpsc_queue = hipc::ring_queue_base<T, RING_BUFFER_FIXED_MPMC_FLAGS,
 #undef CLASS_NAME
 #undef CLASS_NEW_ARGS
 
-#endif  // HERMES_SHM_INCLUDE_HERMES_SHM_DATA_STRUCTURES_IPC_ring_queue_base_H_
+#endif  // HSHM_SHM_INCLUDE_HSHM_SHM_DATA_STRUCTURES_IPC_ring_queue_base_H_

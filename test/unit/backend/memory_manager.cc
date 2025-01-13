@@ -34,8 +34,8 @@ TEST_CASE("MemoryManager") {
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   AllocatorId alloc_id(0, 1);
 
-  HERMES_ERROR_HANDLE_START()
-  auto mem_mngr = HERMES_MEMORY_MANAGER;
+  HSHM_ERROR_HANDLE_START()
+  auto mem_mngr = HSHM_MEMORY_MANAGER;
 
   if (rank == 0) {
     std::cout << "Creating SHMEM (rank 0): " << shm_url << std::endl;
@@ -78,5 +78,5 @@ TEST_CASE("MemoryManager") {
   }
   MPI_Barrier(MPI_COMM_WORLD);
 
-  HERMES_ERROR_HANDLE_END()
+  HSHM_ERROR_HANDLE_END()
 }

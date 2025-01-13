@@ -10,8 +10,8 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_SHM_INCLUDE_HERMES_SHM_UTIL_ENCRYPT_BLOWFISH_H
-#define HERMES_SHM_INCLUDE_HERMES_SHM_UTIL_ENCRYPT_BLOWFISH_H
+#ifndef HSHM_SHM_INCLUDE_HSHM_SHM_UTIL_ENCRYPT_BLOWFISH_H
+#define HSHM_SHM_INCLUDE_HSHM_SHM_UTIL_ENCRYPT_BLOWFISH_H
 
 #include <openssl/aes.h>
 #include <openssl/evp.h>
@@ -108,4 +108,4 @@ class Blowfish {
 
 }  // namespace hshm
 
-#endif  // HERMES_SHM_INCLUDE_HERMES_SHM_UTIL_ENCRYPT_BLOWFISH_H
+#endif  // HSHM_SHM_INCLUDE_HSHM_SHM_UTIL_ENCRYPT_BLOWFISH_H

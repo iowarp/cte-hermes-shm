@@ -13,18 +13,18 @@ add_subdirectory(types)
 add_subdirectory(thread)
 add_subdirectory(singleton)
 
-if (HERMES_ENABLE_CUDA)
+if (HSHM_ENABLE_CUDA)
     add_subdirectory(cuda)
 endif()
 
-if (HERMES_ENABLE_ROCM)
+if (HSHM_ENABLE_ROCM)
     add_subdirectory(rocm)  
 endif()
 
-if (HERMES_ENABLE_COMPRESS)
+if (HSHM_ENABLE_COMPRESS)
     add_subdirectory(compress)
 endif()
 
-if (HERMES_ENABLE_ENCRYPT)
+if (HSHM_ENABLE_ENCRYPT)
     add_subdirectory(encrypt)
 endif()

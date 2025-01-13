@@ -2,8 +2,8 @@
 // Created by llogan on 11/27/24.
 //
 
-#ifndef HERMES_SHM_INCLUDE_HERMES_SHM_DATA_STRUCTURES_SERIALIZATION_LOCAL_SERIALIZE_H_
-#define HERMES_SHM_INCLUDE_HERMES_SHM_DATA_STRUCTURES_SERIALIZATION_LOCAL_SERIALIZE_H_
+#ifndef HSHM_SHM_INCLUDE_HSHM_SHM_DATA_STRUCTURES_SERIALIZATION_LOCAL_SERIALIZE_H_
+#define HSHM_SHM_INCLUDE_HSHM_SHM_DATA_STRUCTURES_SERIALIZATION_LOCAL_SERIALIZE_H_
 
 #include "hermes_shm/constants/macros.h"
 #include "hermes_shm/data_structures/all.h"
@@ -11,7 +11,7 @@
 
 namespace hshm::ipc {
 
-#ifdef HERMES_ENABLE_CEREAL
+#ifdef HSHM_ENABLE_CEREAL
 /** Save cereal binary archive */
 template <typename Ar, typename T>
 void save(Ar &ar, const cereal::BinaryData<T> &data) {
@@ -194,4 +194,4 @@ class LocalDeserialize {
 
 }  // namespace hshm::ipc
 
-#endif  // HERMES_SHM_INCLUDE_HERMES_SHM_DATA_STRUCTURES_SERIALIZATION_LOCAL_SERIALIZE_H_
+#endif  // HSHM_SHM_INCLUDE_HSHM_SHM_DATA_STRUCTURES_SERIALIZATION_LOCAL_SERIALIZE_H_
