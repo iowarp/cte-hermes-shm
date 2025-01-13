@@ -995,7 +995,7 @@ class BaseAllocator : public CoreAllocT {
    * */
   template <typename T, typename... Args>
   HSHM_INLINE_CROSS_FUN static void ConstructObj(T &obj, Args &&...args) {
-    CoreAllocT::template ConstructObj(obj, std::forward<Args>(args)...);
+    CoreAllocT::template ConstructObj<T>(obj, std::forward<Args>(args)...);
   }
 
   /**
@@ -1007,7 +1007,7 @@ class BaseAllocator : public CoreAllocT {
    * */
   template <typename T>
   HSHM_INLINE_CROSS_FUN static void DestructObjs(T *ptr, size_t count) {
-    CoreAllocT::template DestructObjs(ptr, count);
+    CoreAllocT::template DestructObjs<T>(ptr, count);
   }
 
   /**
@@ -1019,7 +1019,7 @@ class BaseAllocator : public CoreAllocT {
    * */
   template <typename T>
   HSHM_INLINE_CROSS_FUN static void DestructObj(T &obj) {
-    CoreAllocT::template DestructObj(obj);
+    CoreAllocT::template DestructObj<T>(obj);
   }
 
   /**====================================
