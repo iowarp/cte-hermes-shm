@@ -404,12 +404,9 @@ template <typename T, HSHM_CLASS_TEMPL_WITH_DEFAULTS>
 using fixed_spsc_queue =
     ring_queue_base<T, RING_BUFFER_FIXED_SPSC_FLAGS, HSHM_CLASS_TEMPL_ARGS>;
 
-template <typename T, HSHM_CLASS_TEMPL_WITH_DEFAULTS>
-using fixed_mpmc_queue =
-    ring_queue_base<T, RING_BUFFER_FIXED_MPMC_FLAGS, HSHM_CLASS_TEMPL_ARGS>;
-
 template <typename T, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
-using fixed_mpsc_queue = fixed_mpmc_queue<T, HSHM_CLASS_TEMPL_ARGS>;
+using fixed_mpsc_queue =
+    ring_queue_base<T, RING_BUFFER_FIXED_MPMC_FLAGS, HSHM_CLASS_TEMPL_ARGS>;
 
 }  // namespace hshm::ipc
 
@@ -428,11 +425,8 @@ using fixed_spsc_queue = hipc::ring_queue_base<T, RING_BUFFER_FIXED_SPSC_FLAGS,
                                                HSHM_CLASS_TEMPL_ARGS>;
 
 template <typename T, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
-using fixed_mpmc_queue = hipc::ring_queue_base<T, RING_BUFFER_FIXED_MPMC_FLAGS,
+using fixed_mpsc_queue = hipc::ring_queue_base<T, RING_BUFFER_FIXED_MPMC_FLAGS,
                                                HSHM_CLASS_TEMPL_ARGS>;
-
-template <typename T, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
-using fixed_mpsc_queue = fixed_mpmc_queue<T, HSHM_CLASS_TEMPL_ARGS>;
 
 }  // namespace hshm
 

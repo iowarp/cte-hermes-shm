@@ -14,6 +14,7 @@
 #define HERMES_SHM_INCLUDE_HERMES_SHM_TYPES_NUMBERS_H_
 
 #include <cstdint>
+#include <iostream>
 
 #include "hermes_shm/constants/macros.h"
 
@@ -74,6 +75,12 @@ struct ThreadId {
 
   HSHM_INLINE_CROSS_FUN
   bool operator>=(const ThreadId &other) const { return tid_ >= other.tid_; }
+
+  HSHM_INLINE_CROSS_FUN
+  friend std::ostream &operator<<(std::ostream &os, const ThreadId &tid) {
+    os << tid.tid_;
+    return os;
+  }
 };
 
 #ifndef HERMES_ENABLE_CUDA

@@ -67,8 +67,6 @@
   using fixed_spsc_queue = HSHM_NS::fixed_spsc_queue<T, ALLOC_T>;            \
   template <typename T>                                                      \
   using fixed_mpsc_queue = HSHM_NS::fixed_mpsc_queue<T, ALLOC_T>;            \
-  template <typename T>                                                      \
-  using fixed_mpmc_queue = HSHM_NS::fixed_mpmc_queue<T, ALLOC_T>;            \
                                                                              \
   template <typename T>                                                      \
   using spsc_ptr_queue = HSHM_NS::spsc_ptr_queue<T, ALLOC_T>;                \
@@ -78,8 +76,6 @@
   using fixed_spsc_ptr_queue = HSHM_NS::fixed_spsc_ptr_queue<T, ALLOC_T>;    \
   template <typename T>                                                      \
   using fixed_mpsc_ptr_queue = HSHM_NS::fixed_mpsc_ptr_queue<T, ALLOC_T>;    \
-  template <typename T>                                                      \
-  using fixed_mpmc_ptr_queue = HSHM_NS::fixed_mpmc_ptr_queue<T, ALLOC_T>;    \
                                                                              \
   template <typename T>                                                      \
   using slist = HSHM_NS::slist<T, ALLOC_T>;                                  \

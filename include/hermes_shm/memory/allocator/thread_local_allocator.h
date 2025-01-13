@@ -37,13 +37,13 @@ struct _ThreadLocalAllocatorHeader : public AllocatorHeader {
   typedef TlsAllocatorInfo<_ThreadLocalAllocator> TLS;
   typedef hipc::PageAllocator<_ThreadLocalAllocator, false, true> PageAllocator;
   typedef hipc::vector<PageAllocator, StackAllocator> PageAllocVec;
-  typedef hipc::fixed_mpmc_ptr_queue<hshm::min_u64, StackAllocator>
-      PageAllocIdVec;
+  typedef hipc::vector<hshm::min_u64, StackAllocator> PageAllocIdVec;
 
   hipc::delay_ar<PageAllocVec> tls_;
   hipc::delay_ar<PageAllocIdVec> free_tids_;
   hipc::atomic<hshm::min_u64> tid_heap_;
   hipc::atomic<hshm::min_u64> total_alloc_;
+  hipc::SpinLock lock_;
 
   HSHM_CROSS_FUN
   _ThreadLocalAllocatorHeader() = default;
@@ -56,15 +56,19 @@ struct _ThreadLocalAllocatorHeader : public AllocatorHeader {
                                custom_header_size);
     HSHM_MAKE_AR(tls_, alloc, max_threads, alloc);
     HSHM_MAKE_AR(free_tids_, alloc, max_threads);
+    free_tids_->resize(0);
     total_alloc_ = 0;
     tid_heap_ = 0;
   }
 
   HSHM_INLINE_CROSS_FUN
   hshm::ThreadId CreateTid() {
+    ScopedSpinLock lock(lock_, 0);
     hshm::min_u64 tid = 0;
-    qtok_t qtok = free_tids_->pop(tid);
-    if (qtok.IsNull()) {
+    if (free_tids_->size()) {
+      tid = free_tids_->back();
+      free_tids_->pop_back();
+    } else {
       tid = tid_heap_.fetch_add(1);
     }
     HILOG(kInfo, "Allocating TID: {} (tid size: {})", tid, free_tids_->size());
@@ -73,7 +77,8 @@ struct _ThreadLocalAllocatorHeader : public AllocatorHeader {
 
   HSHM_INLINE_CROSS_FUN
   void FreeTid(hshm::ThreadId tid) {
-    free_tids_->emplace(tid.tid_);
+    ScopedSpinLock lock(lock_, 0);
+    free_tids_->emplace_back(tid.tid_);
     HILOG(kInfo, "Freeing TID: {} (tid size: {})", tid, free_tids_->size());
   }
 

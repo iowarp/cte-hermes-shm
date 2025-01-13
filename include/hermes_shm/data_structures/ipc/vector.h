@@ -495,6 +495,14 @@ class vector : public ShmContainer {
   HSHM_INLINE_CROSS_FUN
   const T &back() const { return (*this)[size() - 1]; }
 
+  /** Pop element at back of vector  */
+  HSHM_INLINE_CROSS_FUN
+  void pop_back() {
+    if (length_ == 0) return;
+    hipc::Allocator::DestructObj(back());
+    --length_;
+  }
+
   /** Construct an element at the back of the vector */
   template <typename... Args>
   HSHM_CROSS_FUN void emplace_back(Args &&...args) {
