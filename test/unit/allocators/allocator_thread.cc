@@ -12,6 +12,10 @@
 
 #include "test_init.h"
 
+#ifdef HSHM_ENABLE_OPENMP
+#include <omp.h>
+#endif
+
 template <typename AllocT>
 void MultiThreadedPageAllocationTest(AllocT *alloc) {
   size_t nthreads = 8;

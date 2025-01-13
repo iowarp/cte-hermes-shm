@@ -19,6 +19,10 @@
 #include "hermes_shm/util/logging.h"
 #include "test_init.h"
 
+#ifdef HSHM_ENABLE_OPENMP
+#include <omp.h>
+#endif
+
 struct IntEntry : public hipc::list_queue_entry {
   int value;
 

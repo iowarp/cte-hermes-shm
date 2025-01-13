@@ -16,6 +16,14 @@
 #include "hermes_shm/util/timer_mpi.h"
 #include "hermes_shm/util/timer_thread.h"
 
+#ifdef HSHM_ENABLE_MPI
+#include <mpi.h>
+#endif
+
+#ifdef HSHM_ENABLE_OPENMP
+#include <omp.h>
+#endif
+
 TEST_CASE("TestPeriodic") {
   HILOG_PERIODIC(0, 0, hshm::Unit<size_t>::Seconds(1), "Print periodic 1");
   sleep(1);
