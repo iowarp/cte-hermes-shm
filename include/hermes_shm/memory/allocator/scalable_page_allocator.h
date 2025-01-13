@@ -35,7 +35,7 @@ typedef BaseAllocator<_ScalablePageAllocator> ScalablePageAllocator;
 struct _ScalablePageAllocatorHeader : public AllocatorHeader {
   typedef hipc::PageAllocator<_ScalablePageAllocator, true, false>
       PageAllocator;
-  hipc::atomic<hshm::min_u64> total_alloc_;
+  hipc::atomic<hshm::size_t> total_alloc_;
   hipc::delay_ar<PageAllocator> global_;
 
   HSHM_CROSS_FUN

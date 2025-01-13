@@ -103,15 +103,15 @@ void mpsc_test() {
   printf("SUM: %d\n", sum);
 }
 
-HSHM_GPU_KERNEL void atomic_kernel(hipc::atomic<hshm::min_u64> *x) {
+HSHM_GPU_KERNEL void atomic_kernel(hipc::atomic<hshm::size_t> *x) {
   x->fetch_add(1);
 }
 
 void atomic_test() {
-  hipc::atomic<hshm::min_u64> *x;
+  hipc::atomic<hshm::size_t> *x;
   cudaDeviceSynchronize();
   cudaSetDevice(0);
-  size_t size = sizeof(hipc::atomic<hshm::min_u64>);
+  size_t size = sizeof(hipc::atomic<hshm::size_t>);
   cudaHostAlloc(&x, size, cudaHostAllocMapped);
   atomic_kernel<<<64, 64>>>(x);
   cudaDeviceSynchronize();

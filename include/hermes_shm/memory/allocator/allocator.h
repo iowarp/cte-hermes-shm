@@ -44,7 +44,7 @@ struct AllocatorHeader {
   AllocatorType allocator_type_;
   AllocatorId alloc_id_;
   size_t custom_header_size_;
-  hipc::atomic<hshm::min_u64> total_alloc_;
+  hipc::atomic<hshm::size_t> total_alloc_;
 
   HSHM_CROSS_FUN
   AllocatorHeader() = default;
@@ -59,21 +59,21 @@ struct AllocatorHeader {
   }
 
   HSHM_INLINE_CROSS_FUN
-  void AddSize(hshm::min_u64 size) {
+  void AddSize(hshm::size_t size) {
 #ifdef HSHM_ALLOC_TRACK_SIZE
     total_alloc_ += size;
 #endif
   }
 
   HSHM_INLINE_CROSS_FUN
-  void SubSize(hshm::min_u64 size) {
+  void SubSize(hshm::size_t size) {
 #ifdef HSHM_ALLOC_TRACK_SIZE
     total_alloc_ -= size;
 #endif
   }
 
   HSHM_INLINE_CROSS_FUN
-  hshm::min_u64 GetCurrentlyAllocatedSize() { return total_alloc_.load(); }
+  hshm::size_t GetCurrentlyAllocatedSize() { return total_alloc_.load(); }
 };
 
 /** Memory context */

@@ -15,6 +15,7 @@
 
 #include "basic_test.h"
 #include "hermes_shm/data_structures/all.h"
+#include "hermes_shm/types/numbers.h"
 #include "hermes_shm/util/logging.h"
 #include "test_init.h"
 
@@ -32,7 +33,7 @@ template <typename NewT>
 class VariableMaker {
  public:
   std::vector<NewT> vars_;
-  hipc::atomic<size_t> count_;
+  hipc::atomic<hshm::size_t> count_;
 
  public:
   VariableMaker(size_t total_vars) : vars_(total_vars) { count_ = 0; }

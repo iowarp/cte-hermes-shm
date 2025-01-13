@@ -22,7 +22,7 @@
 #include "hermes_shm/types/numbers.h"
 
 #ifdef HSHM_ENABLE_PTHREADS
-#include <omp.h>
+#include <pthread.h>
 #endif
 #ifdef HSHM_RPC_THALLIUM
 #include <thallium.hpp>

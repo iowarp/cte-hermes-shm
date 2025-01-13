@@ -25,7 +25,7 @@ typedef BaseAllocator<_StackAllocator> StackAllocator;
 
 struct _StackAllocatorHeader : public AllocatorHeader {
   HeapAllocator<true> heap_;
-  hipc::atomic<hshm::min_u64> total_alloc_;
+  hipc::atomic<hshm::size_t> total_alloc_;
 
   HSHM_CROSS_FUN
   _StackAllocatorHeader() = default;
@@ -101,9 +101,9 @@ class _StackAllocator : public Allocator {
   /** Align the memory to the next page boundary */
   HSHM_CROSS_FUN
   void Align() {
-    hshm::min_u64 off = heap_->heap_off_.load();
-    hshm::min_u64 page_size = 4096;
-    hshm::min_u64 new_off = (off + page_size - 1) & ~(page_size - 1);
+    hshm::size_t off = heap_->heap_off_.load();
+    hshm::size_t page_size = 4096;
+    hshm::size_t new_off = (off + page_size - 1) & ~(page_size - 1);
     heap_->heap_off_.store(new_off);
   }
 

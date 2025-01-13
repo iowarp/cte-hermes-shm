@@ -142,15 +142,15 @@ void mpsc_test() {
   printf("SUM: %d\n", sum);
 }
 
-HSHM_GPU_KERNEL void atomic_kernel(hipc::rocm_atomic<hshm::min_u64> *x) {
+HSHM_GPU_KERNEL void atomic_kernel(hipc::rocm_atomic<hshm::size_t> *x) {
   x->fetch_add(1);
 }
 
 void atomic_test() {
-  hipc::rocm_atomic<hshm::min_u64> *x;
+  hipc::rocm_atomic<hshm::size_t> *x;
   HIP_ERROR_CHECK(hipDeviceSynchronize());
   HIP_ERROR_CHECK(hipSetDevice(0));
-  size_t size = sizeof(hipc::rocm_atomic<hshm::min_u64>);
+  size_t size = sizeof(hipc::rocm_atomic<hshm::size_t>);
   HIP_ERROR_CHECK(hipHostAlloc(&x, size, hipHostAllocMapped));
   atomic_kernel<<<64, 64>>>(x);
   HIP_ERROR_CHECK(hipDeviceSynchronize());

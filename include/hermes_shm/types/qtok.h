@@ -16,7 +16,7 @@
 namespace hshm {
 
 /** Represents the internal qtok type */
-typedef hshm::min_u64 qtok_id;
+typedef hshm::size_t qtok_id;
 typedef qtok_id _qtok_t;
 
 /** Represents a ticket in the queue */

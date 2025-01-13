@@ -38,7 +38,7 @@ class mpsc_lifo_list_queue : public ShmContainer {
  public:
   HIPC_CONTAINER_TEMPLATE((CLASS_NAME), (CLASS_NEW_ARGS))
   AtomicOffsetPointer tail_shm_;
-  hipc::atomic<size_t> count_;
+  hipc::atomic<hshm::size_t> count_;
 
  public:
   /**====================================
@@ -227,7 +227,7 @@ class mpsc_lifo_list_queue : public ShmContainer {
       val.shm_.off_ = tail_shm.load();
       val.shm_.alloc_id_ = alloc->GetId();
       val.ptr_ = alloc->template Convert<T>(tail_shm);
-      size_t next_tail = val->next_shm_.load();
+      hshm::size_t next_tail = val->next_shm_.load();
       ret = tail_shm_.compare_exchange_weak(tail_shm.off_.ref(), next_tail);
     } while (!ret);
     --count_;

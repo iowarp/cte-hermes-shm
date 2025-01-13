@@ -20,9 +20,9 @@ namespace hshm::ipc {
 
 template <bool ATOMIC>
 struct HeapAllocator {
-  hshm::min_u64 region_off_;
-  hipc::opt_atomic<hshm::min_u64, ATOMIC> heap_off_;
-  hshm::min_u64 heap_size_;
+  hshm::size_t region_off_;
+  hipc::opt_atomic<hshm::size_t, ATOMIC> heap_off_;
+  hshm::size_t heap_size_;
 
   /** Default constructor */
   HSHM_CROSS_FUN
@@ -54,7 +54,7 @@ struct HeapAllocator {
     // if (size % 64 != 0) {
     //   size = (size + 63) & ~63;
     // }
-    hshm::min_u64 off = heap_off_.fetch_add((hshm::min_u64)size);
+    hshm::size_t off = heap_off_.fetch_add((hshm::size_t)size);
     if (off + size > heap_size_) {
       // HSHM_THROW_ERROR(OUT_OF_MEMORY, size, heap_size_);
       return OffsetPointer::GetNull();

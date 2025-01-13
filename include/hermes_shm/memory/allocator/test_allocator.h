@@ -25,12 +25,12 @@ struct _TestAllocatorHeader : public AllocatorHeader {
   typedef TlsAllocatorInfo<_TestAllocator> TLS;
   typedef hipc::PageAllocator<_TestAllocator, false, true> PageAllocator;
   typedef hipc::vector<PageAllocator, StackAllocator> PageAllocVec;
-  typedef hipc::vector<hshm::min_u64, StackAllocator> PageAllocIdVec;
+  typedef hipc::vector<hshm::size_t, StackAllocator> PageAllocIdVec;
 
   hipc::delay_ar<PageAllocVec> tls_;
   hipc::delay_ar<PageAllocIdVec> free_tids_;
-  hipc::atomic<hshm::min_u64> tid_heap_;
-  hipc::atomic<hshm::min_u64> total_alloc_;
+  hipc::atomic<hshm::size_t> tid_heap_;
+  hipc::atomic<hshm::size_t> total_alloc_;
   hipc::SpinLock lock_;
 
   HSHM_CROSS_FUN
@@ -51,7 +51,7 @@ struct _TestAllocatorHeader : public AllocatorHeader {
   HSHM_INLINE_CROSS_FUN
   hshm::ThreadId CreateTid() {
     ScopedSpinLock lock(lock_, 0);
-    hshm::min_u64 tid = 0;
+    hshm::size_t tid = 0;
     if (free_tids_->size()) {
       tid = free_tids_->back();
       free_tids_->pop_back();

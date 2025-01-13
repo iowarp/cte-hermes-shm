@@ -100,7 +100,7 @@ class ShmPointer {};
  * */
 template <bool ATOMIC = false>
 struct OffsetPointerBase : public ShmPointer {
-  hipc::opt_atomic<size_t, ATOMIC>
+  hipc::opt_atomic<hshm::size_t, ATOMIC>
       off_; /**< Offset within the allocator's slot */
 
   /** Default constructor */
@@ -111,7 +111,7 @@ struct OffsetPointerBase : public ShmPointer {
 
   /** Full constructor */
   HSHM_INLINE_CROSS_FUN explicit OffsetPointerBase(
-      hipc::opt_atomic<size_t, ATOMIC> off)
+      hipc::opt_atomic<hshm::size_t, ATOMIC> off)
       : off_(off.load()) {}
 
   /** Pointer constructor */

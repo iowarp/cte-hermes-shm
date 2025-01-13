@@ -34,7 +34,7 @@ class dynamic_queue : public ShmContainer {
  public:
   hshm::Mutex lock_;
   Vector splits_;
-  hipc::atomic<size_t> head_, tail_;
+  hipc::atomic<hshm::size_t> head_, tail_;
   size_t block_size_;
 
   /**====================================
@@ -206,12 +206,12 @@ class dynamic_queue : public ShmContainer {
   /** Get size at this moment */
   HSHM_CROSS_FUN
   size_t GetSize() {
-    size_t tail = tail_.load();
-    size_t head = head_.load();
+    hshm::size_t tail = tail_.load();
+    hshm::size_t head = head_.load();
     if (tail < head) {
       return 0;
     }
-    return tail - head;
+    return (size_t)(tail - head);
   }
 
   /** Get size (wrapper) */

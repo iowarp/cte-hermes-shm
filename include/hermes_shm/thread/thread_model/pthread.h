@@ -25,7 +25,7 @@ namespace hshm::thread {
 class Pthread : public ThreadModel {
  public:
   ThreadLocalKey tid_key_;
-  hipc::atomic<size_t> tid_counter_;
+  hipc::atomic<hshm::size_t> tid_counter_;
 
  public:
   /** Default constructor */
