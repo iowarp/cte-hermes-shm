@@ -72,8 +72,8 @@ void backend_test() {
   shm.shm_destroy();
 }
 
-HSHM_GPU_KERNEL void mpsc_kernel(hipc::mpsc_queue<int> *queue) {
-  hipc::ScopedTlsAllocator<HSHM_DEFAULT_ALLOC_T> ctx_alloc(
+HSHM_GPU_KERNEL void mpsc_kernel(gpu::ipc::mpsc_queue<int> *queue) {
+  hipc::ScopedTlsAllocator<HSHM_DEFAULT_GPU_ALLOC_T> ctx_alloc(
       queue->GetCtxAllocator());
   queue->GetThreadLocal(ctx_alloc);
   queue->emplace(10);
@@ -88,14 +88,15 @@ void mpsc_test() {
   mem_mngr->CreateBackend<hipc::CudaShmMmap>(hipc::MemoryBackendId::Get(0),
                                              hshm::Unit<size_t>::Megabytes(100),
                                              shm_url, 0);
-  auto *alloc = mem_mngr->CreateAllocator<hipc::ScalablePageAllocator>(
+  auto *alloc = mem_mngr->CreateAllocator<HSHM_DEFAULT_GPU_ALLOC_T>(
       hipc::MemoryBackendId::Get(0), alloc_id, 0);
-
-  auto queue = hipc::mpsc_queue<int>(alloc, 256 * 256);
-  printf("GetSize: %lu\n", queue->GetSize());
-  mpsc_kernel<<<16, 16>>>(queue.get());
+  hipc::CtxAllocator<HSHM_DEFAULT_GPU_ALLOC_T> ctx_alloc(alloc);
+  auto *queue =
+      ctx_alloc->NewObj<gpu::ipc::mpsc_queue<int>>(ctx_alloc.ctx_, 256 * 256);
+  printf("GetSize: %lu\n", (long unsigned)queue->GetSize());
+  mpsc_kernel<<<16, 16>>>(queue);
   cudaDeviceSynchronize();
-  printf("GetSize: %lu\n", queue->GetSize());
+  printf("GetSize: %lu\n", (long unsigned)queue->GetSize());
   int val, sum = 0;
   while (!queue->pop(val).IsNull()) {
     sum += val;

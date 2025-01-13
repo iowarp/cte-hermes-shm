@@ -6,7 +6,7 @@ project(hermes_shm_cuda)
 add_cuda_executable(test_memory_cuda_exec FALSE backend_cuda.cc)
 add_dependencies(test_memory_cuda_exec
         hermes_shm_cuda)
-target_link_libraries(test_memory_cuda_exec
+target_link_libraries(test_memory_cuda_exec PUBLIC
         hermes_shm_cuda)
 
 #------------------------------------------------------------------------------
