@@ -21,7 +21,7 @@ set(SOURCES
     namespace.cc
     key_set.cc)
 if (HERMES_ENABLE_OPENMP)
-    list(APPEND SOURCES spsc.cc mpsc.cc)
+    list(APPEND SOURCES queue.cc)
 endif()
 add_executable(test_data_structure_exec
         ${TEST_MAIN}/main.cc

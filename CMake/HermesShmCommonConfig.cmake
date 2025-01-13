@@ -31,7 +31,7 @@ endif()
 # OpenMP
 if(HERMES_ENABLE_OPENMP)
     find_package(OpenMP REQUIRED COMPONENTS C CXX)
-    set(OPENMP_LIBS OpenMP::OpenMP_CXX)
+    set(OpenMP_LIBS OpenMP::OpenMP_CXX)
     message(STATUS "found omp.h at ${OpenMP_CXX_INCLUDE_DIRS}")
 endif()
 

@@ -13,6 +13,8 @@
 #ifndef HERMES_TEST_UNIT_DATA_STRUCTURES_TEST_INIT_H_
 #define HERMES_TEST_UNIT_DATA_STRUCTURES_TEST_INIT_H_
 
+#include <mpi.h>
+
 #include "hermes_shm/data_structures/all.h"
 
 using hshm::ipc::Allocator;

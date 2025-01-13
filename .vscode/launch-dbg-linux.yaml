@@ -13,22 +13,22 @@ macros:
     externalConsole: false
     MIMode: gdb
     setupCommands:
-      - description: Enable pretty-printing for gdb,
-        text: -enable-pretty-printing,
+      - description: Enable pretty-printing for gdb
+        text: -enable-pretty-printing
         ignoreFailures: true
   rdebug:
-    name: $(launch-name),
-    type: cppdbg,
-    request: launch,
-    program: echo,
-    miDebuggerServerAddress: localhost:$(port),
-    miDebuggerPath: /usr/bin/gdb,
-    cwd: ${workspaceFolder},
+    name: $(launch-name)
+    type: cppdbg
+    request: launch
+    program: echo
+    miDebuggerServerAddress: localhost:$(port)
+    miDebuggerPath: /usr/bin/gdb
+    cwd: ${workspaceFolder}
     setupCommands:
-      - description: Enable pretty-printing for gdb,
-        text: -enable-pretty-printing,
+      - description: Enable pretty-printing for gdb
+        text: -enable-pretty-printing
         ignoreFailures: true
-    externalConsole: true,
+    externalConsole: true
     logging: { engineLogging: false }
 
 version: 0.2.0
@@ -46,7 +46,7 @@ configurations:
   - macro: debug
     launch-name: test-data-structures
     program: test_data_structure_exec
-    args: ["TestMpmcFifoListQueueIntMultithreaded"]
+    args: [""]
   - macro: debug
     launch-name: test-allocators
     program: test_allocator_exec

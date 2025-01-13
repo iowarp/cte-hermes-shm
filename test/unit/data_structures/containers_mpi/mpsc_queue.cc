@@ -10,12 +10,14 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+#include <mpi.h>
+
 #include "basic_test.h"
-#include "test_init.h"
-#include "hermes_shm/data_structures/ipc/string.h"
 #include "hermes_shm/data_structures/ipc/ring_ptr_queue.h"
-#include "hermes_shm/util/error.h"
+#include "hermes_shm/data_structures/ipc/string.h"
 #include "hermes_shm/util/affinity.h"
+#include "hermes_shm/util/error.h"
+#include "test_init.h"
 
 TEST_CASE("TestMpscQueueMpi") {
   int rank;
@@ -31,12 +33,12 @@ TEST_CASE("TestMpscQueueMpi") {
     // Rank 0 create the pointer queue
     queue_->shm_init(alloc, 256);
     // Affine to CPU 0
-    ProcessAffiner::SetCpuAffinity(getpid(), 0);
+    hshm::ProcessAffiner::SetCpuAffinity(HERMES_SYSTEM_INFO->pid_, 0);
   }
   MPI_Barrier(MPI_COMM_WORLD);
   if (rank != 0) {
     // Affine to CPU 1
-    ProcessAffiner::SetCpuAffinity(getpid(), 1);
+    hshm::ProcessAffiner::SetCpuAffinity(HERMES_SYSTEM_INFO->pid_, 1);
   }
 
   hipc::mpsc_ptr_queue<int> *queue = queue_->get();

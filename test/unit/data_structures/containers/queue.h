@@ -13,6 +13,7 @@
 #ifndef HERMES_SHM_TEST_UNIT_DATA_STRUCTURES_CONTAINERS_QUEUE_H_
 #define HERMES_SHM_TEST_UNIT_DATA_STRUCTURES_CONTAINERS_QUEUE_H_
 
+#include "basic_test.h"
 #include "hermes_shm/data_structures/all.h"
 #include "hermes_shm/util/logging.h"
 #include "test_init.h"
