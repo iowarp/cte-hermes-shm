@@ -18,7 +18,7 @@ list(APPEND HSHM_LIBS cxx)
 
 # BUILD HSHM FOR CUDA ONLY
 if (HSHM_ENABLE_CUDA)
-    add_cuda_library(hermes_shm_cuda TRUE ${SRC_FILES})
+    add_cuda_library(hermes_shm_cuda STATIC TRUE ${SRC_FILES})
     target_link_libraries(hermes_shm_cuda PUBLIC cuda_gpu_lib_deps)
     list(APPEND HSHM_LIBS hermes_shm_cuda)
     add_library(cudacxx INTERFACE)
@@ -28,7 +28,7 @@ endif()
 
 # BUILD HSHM FOR ROCM ONLY
 if (HSHM_ENABLE_ROCM)
-    add_rocm_gpu_library(hermes_shm_rocm_gpu TRUE ${SRC_FILES})
+    add_rocm_gpu_library(hermes_shm_rocm_gpu STATIC TRUE ${SRC_FILES})
     target_link_libraries(hermes_shm_rocm_gpu PUBLIC rocm_gpu_lib_deps)
     list(APPEND HSHM_LIBS hermes_shm_rocm_gpu)
     add_library(rocmcxx_gpu INTERFACE)
