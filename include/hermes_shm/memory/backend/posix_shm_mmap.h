@@ -63,12 +63,12 @@ class PosixShmMmap : public MemoryBackend, public UrlMemoryBackend {
       return false;
     }
     url_ = url;
-    header_ = (MemoryBackendHeader *)_Map(HSHM_SYSTEM_INFO->page_size_, 0);
+    header_ = (MemoryBackendHeader *)_ShmMap(HSHM_SYSTEM_INFO->page_size_, 0);
     header_->type_ = MemoryBackendType::kPosixShmMmap;
     header_->id_ = backend_id;
     header_->data_size_ = size;
     data_size_ = size;
-    data_ = _Map(size, HSHM_SYSTEM_INFO->page_size_);
+    data_ = _ShmMap(size, HSHM_SYSTEM_INFO->page_size_);
     return true;
   }
 
@@ -81,9 +81,9 @@ class PosixShmMmap : public MemoryBackend, public UrlMemoryBackend {
       HILOG(kError, "shm_open failed: {}", err_buf);
       return false;
     }
-    header_ = (MemoryBackendHeader *)_Map(HSHM_SYSTEM_INFO->page_size_, 0);
+    header_ = (MemoryBackendHeader *)_ShmMap(HSHM_SYSTEM_INFO->page_size_, 0);
     data_size_ = header_->data_size_;
-    data_ = _Map(data_size_, HSHM_SYSTEM_INFO->page_size_);
+    data_ = _ShmMap(data_size_, HSHM_SYSTEM_INFO->page_size_);
     return true;
   }
 
@@ -95,9 +95,6 @@ class PosixShmMmap : public MemoryBackend, public UrlMemoryBackend {
 
  protected:
   /** Map shared memory */
-  virtual char *_Map(size_t size, i64 off) { return _ShmMap(size, off); };
-
-  /** Map shared memory */
   char *_ShmMap(size_t size, i64 off) {
     char *ptr =
         reinterpret_cast<char *>(SystemInfo::MapSharedMemory(fd_, size, off));
@@ -107,11 +104,8 @@ class PosixShmMmap : public MemoryBackend, public UrlMemoryBackend {
     return ptr;
   }
 
-  /** Unmap shared memory (virtual) */
-  virtual void _Detach() { _ShmDetach(); }
-
   /** Unmap shared memory */
-  void _ShmDetach() {
+  void _Detach() {
     if (!IsInitialized()) {
       return;
     }

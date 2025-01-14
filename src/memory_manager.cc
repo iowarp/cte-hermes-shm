@@ -110,7 +110,7 @@ HSHM_GPU_KERNEL void AttachBackendKernel(BackendT *pack, BackendT *cpy) {
   HSHM_MEMORY_MANAGER;
   HSHM_THREAD_MODEL;
   HSHM_SYSTEM_INFO;
-  new (cpy) BackendT(*pack);
+  memcpy((char *)cpy, (char *)pack, sizeof(BackendT));
   HSHM_MEMORY_MANAGER->RegisterBackend(cpy);
   HSHM_MEMORY_MANAGER->ScanBackends();
 }

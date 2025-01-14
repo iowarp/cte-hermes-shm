@@ -20,14 +20,16 @@
 namespace hshm {
 
 struct Mutex {
-  ipc::atomic<u32> lock_;
+  ipc::atomic<hshm::min_u64> lock_;
+  ipc::atomic<hshm::min_u64> head_;
+  ipc::atomic<hshm::min_u32> try_lock_;
 #ifdef HSHM_DEBUG_LOCK
   u32 owner_;
 #endif
 
   /** Default constructor */
   HSHM_INLINE_CROSS_FUN
-  Mutex() : lock_(0) {}
+  Mutex() : lock_(0), head_(0), try_lock_(0) {}
 
   /** Copy constructor */
   HSHM_INLINE_CROSS_FUN
@@ -39,10 +41,11 @@ struct Mutex {
 
   /** Acquire lock */
   HSHM_INLINE_CROSS_FUN
-  void Lock(uint32_t owner) {
+  void Lock(u32 owner) {
+    min_u64 tkt = lock_.fetch_add(1);
     do {
       for (int i = 0; i < 1; ++i) {
-        if (TryLock(owner)) {
+        if (tkt == head_.load()) {
           return;
         }
       }
@@ -52,18 +55,12 @@ struct Mutex {
 
   /** Try to acquire the lock */
   HSHM_INLINE_CROSS_FUN
-  bool TryLock(uint32_t owner) {
-    if (lock_.load() != 0) {
+  bool TryLock(u32 owner) {
+    if (try_lock_.fetch_add(1) > 0 || lock_.load() > head_.load()) {
+      try_lock_.fetch_sub(1);
       return false;
     }
-    uint32_t tkt = lock_.fetch_add(1);
-    if (tkt != 0) {
-      lock_.fetch_sub(1);
-      return false;
-    }
-#ifdef HSHM_DEBUG_LOCK
-    owner_ = owner;
-#endif
+    Lock(owner);
     return true;
   }
 
@@ -73,7 +70,7 @@ struct Mutex {
 #ifdef HSHM_DEBUG_LOCK
     owner_ = 0;
 #endif
-    lock_.fetch_sub(1);
+    head_.fetch_add(1);
   }
 };
 
@@ -82,7 +79,7 @@ struct ScopedMutex {
   bool is_locked_;
 
   /** Acquire the mutex */
-  HSHM_INLINE_CROSS_FUN explicit ScopedMutex(Mutex &lock, uint32_t owner)
+  HSHM_INLINE_CROSS_FUN explicit ScopedMutex(Mutex &lock, u32 owner)
       : lock_(lock), is_locked_(false) {
     Lock(owner);
   }
@@ -93,7 +90,7 @@ struct ScopedMutex {
 
   /** Explicitly acquire the mutex */
   HSHM_INLINE_CROSS_FUN
-  void Lock(uint32_t owner) {
+  void Lock(u32 owner) {
     if (!is_locked_) {
       lock_.Lock(owner);
       is_locked_ = true;
@@ -102,7 +99,7 @@ struct ScopedMutex {
 
   /** Explicitly try to lock the mutex */
   HSHM_INLINE_CROSS_FUN
-  bool TryLock(uint32_t owner) {
+  bool TryLock(u32 owner) {
     if (!is_locked_) {
       is_locked_ = lock_.TryLock(owner);
     }

@@ -11,14 +11,16 @@
 namespace hshm {
 
 struct SpinLock {
-  ipc::atomic<u32> lock_;
+  ipc::atomic<hshm::min_u64> lock_;
+  ipc::atomic<hshm::min_u64> head_;
+  ipc::atomic<hshm::min_u32> try_lock_;
 #ifdef HSHM_DEBUG_LOCK
   u32 owner_;
 #endif
 
   /** Default constructor */
   HSHM_INLINE_CROSS_FUN
-  SpinLock() : lock_(0) {}
+  SpinLock() : lock_(0), head_(0), try_lock_(0) {}
 
   /** Copy constructor */
   HSHM_INLINE_CROSS_FUN
@@ -30,33 +32,25 @@ struct SpinLock {
 
   /** Acquire lock */
   HSHM_INLINE_CROSS_FUN
-  void Lock(uint32_t owner) {
+  void Lock(u32 owner) {
+    min_u64 tkt = lock_.fetch_add(1);
     do {
       for (int i = 0; i < 1; ++i) {
-        if (TryLock(owner)) {
+        if (tkt == head_.load()) {
           return;
         }
       }
-#ifdef HSHM_MAKE_MUTEX
-      HSHM_THREAD_MODEL->Yield();
-#endif
     } while (true);
   }
 
   /** Try to acquire the lock */
   HSHM_INLINE_CROSS_FUN
-  bool TryLock(uint32_t owner) {
-    if (lock_.load() != 0) {
+  bool TryLock(u32 owner) {
+    if (try_lock_.fetch_add(1) > 0 || lock_.load() > head_.load()) {
+      try_lock_.fetch_sub(1);
       return false;
     }
-    uint32_t tkt = lock_.fetch_add(1);
-    if (tkt != 0) {
-      lock_.fetch_sub(1);
-      return false;
-    }
-#ifdef HSHM_DEBUG_LOCK
-    owner_ = owner;
-#endif
+    Lock(owner);
     return true;
   }
 
@@ -66,7 +60,7 @@ struct SpinLock {
 #ifdef HSHM_DEBUG_LOCK
     owner_ = 0;
 #endif
-    lock_.fetch_sub(1);
+    head_.fetch_add(1);
   }
 };
 
