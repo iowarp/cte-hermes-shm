@@ -237,7 +237,7 @@ class MemoryManager {
    * */
   template <typename T, typename POINTER_T = Pointer>
   HSHM_INLINE_CROSS_FUN POINTER_T Convert(T *ptr) {
-    for (auto &alloc : HSHM_MEMORY_MANAGER->allocators_) {
+    for (auto &alloc : allocators_) {
       if (alloc && alloc->ContainsPtr(ptr)) {
         return alloc->template Convert<T, POINTER_T>(ptr);
       }

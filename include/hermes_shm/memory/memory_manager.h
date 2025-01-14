@@ -67,9 +67,8 @@ HSHM_CROSS_FUN void MemoryManager::DestroyAllocator(
     return;
   }
   FullPtr<AllocT> ptr((AllocT *)dead_alloc);
-  auto alloc =
-      HSHM_MEMORY_MANAGER->GetAllocator<HSHM_ROOT_ALLOC_T>(ptr.shm_.alloc_id_);
-  alloc->template DelObjLocal(HSHM_DEFAULT_MEM_CTX, ptr);
+  auto alloc = GetAllocator<HSHM_ROOT_ALLOC_T>(ptr.shm_.alloc_id_);
+  alloc->template DelObjLocal<AllocT>(HSHM_DEFAULT_MEM_CTX, ptr);
 }
 
 template <typename T, typename PointerT>
