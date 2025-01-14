@@ -10,8 +10,8 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_DATA_STRUCTURES_DATA_STRUCTURE_H_
-#define HERMES_DATA_STRUCTURES_DATA_STRUCTURE_H_
+#ifndef HSHM_DATA_STRUCTURES_DATA_STRUCTURE_H_
+#define HSHM_DATA_STRUCTURES_DATA_STRUCTURE_H_
 
 #include "hermes_shm/memory/memory_manager.h"
 #include "internal/shm_internal.h"
@@ -67,8 +67,6 @@
   using fixed_spsc_queue = HSHM_NS::fixed_spsc_queue<T, ALLOC_T>;            \
   template <typename T>                                                      \
   using fixed_mpsc_queue = HSHM_NS::fixed_mpsc_queue<T, ALLOC_T>;            \
-  template <typename T>                                                      \
-  using fixed_mpmc_queue = HSHM_NS::fixed_mpmc_queue<T, ALLOC_T>;            \
                                                                              \
   template <typename T>                                                      \
   using spsc_ptr_queue = HSHM_NS::spsc_ptr_queue<T, ALLOC_T>;                \
@@ -78,8 +76,6 @@
   using fixed_spsc_ptr_queue = HSHM_NS::fixed_spsc_ptr_queue<T, ALLOC_T>;    \
   template <typename T>                                                      \
   using fixed_mpsc_ptr_queue = HSHM_NS::fixed_mpsc_ptr_queue<T, ALLOC_T>;    \
-  template <typename T>                                                      \
-  using fixed_mpmc_ptr_queue = HSHM_NS::fixed_mpmc_ptr_queue<T, ALLOC_T>;    \
                                                                              \
   template <typename T>                                                      \
   using slist = HSHM_NS::slist<T, ALLOC_T>;                                  \
@@ -117,4 +113,4 @@
   HSHM_DATA_STRUCTURES_TEMPLATE_BASE(NS, hshm, ALLOC_T) \
   HSHM_DATA_STRUCTURES_TEMPLATE_BASE(NS::ipc, hipc, ALLOC_T)
 
-#endif  // HERMES_DATA_STRUCTURES_DATA_STRUCTURE_H_
+#endif  // HSHM_DATA_STRUCTURES_DATA_STRUCTURE_H_

@@ -1,0 +1,41 @@
+{
+    "name": "hermes-shm",
+    "version-string": "2.0.0",
+    "description": "Hermes shared memory library for HPC applications.",
+    "homepage": "https://github.com/lukemartinlogan/hermes_shm/wiki",
+    "dependencies": [
+        "catch2",
+        "yaml-cpp",
+        "boost-context",
+        "boost-fiber",
+        "boost-coroutine",
+        "boost-regex",
+        "boost-system",
+        "boost-filesystem",
+        "boost-serialization",
+        "boost-math",
+        "cereal",
+        "pkgconf"
+    ],
+    "features": {
+        "cereal": {
+            "description": "Build with cereal support.",
+            "dependencies": [
+                "cereal"
+            ]
+        },
+        "boost": {
+            "description": "Build with Boost support.",
+            "dependencies": [
+                "boost-context",
+                "boost-fiber",
+                "boost-coroutine",
+                "boost-regex",
+                "boost-system",
+                "boost-filesystem",
+                "boost-serialization",
+                "boost-math"
+            ]
+        }
+    }
+}

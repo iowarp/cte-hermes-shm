@@ -2,8 +2,8 @@
 // Created by llogan on 11/29/24.
 //
 
-#ifndef HERMES_SHM_INCLUDE_HERMES_SHM_DATA_STRUCTURES_IPC_DYNAMIC_QUEUE_H_
-#define HERMES_SHM_INCLUDE_HERMES_SHM_DATA_STRUCTURES_IPC_DYNAMIC_QUEUE_H_
+#ifndef HSHM_SHM_INCLUDE_HSHM_SHM_DATA_STRUCTURES_IPC_DYNAMIC_QUEUE_H_
+#define HSHM_SHM_INCLUDE_HSHM_SHM_DATA_STRUCTURES_IPC_DYNAMIC_QUEUE_H_
 
 #include <utility>
 
@@ -34,7 +34,7 @@ class dynamic_queue : public ShmContainer {
  public:
   hshm::Mutex lock_;
   Vector splits_;
-  hipc::atomic<size_t> head_, tail_;
+  hipc::atomic<hshm::size_t> head_, tail_;
   size_t block_size_;
 
   /**====================================
@@ -42,7 +42,7 @@ class dynamic_queue : public ShmContainer {
    * ===================================*/
  public:
   dynamic_queue(size_t block_size = 64) : splits_() {
-    shm_init(HERMES_MEMORY_MANAGER->GetDefaultAllocator<AllocT>(), block_size);
+    shm_init(HSHM_MEMORY_MANAGER->GetDefaultAllocator<AllocT>(), block_size);
   }
 
   dynamic_queue(const hipc::CtxAllocator<AllocT> &alloc, size_t block_size = 64)
@@ -206,12 +206,12 @@ class dynamic_queue : public ShmContainer {
   /** Get size at this moment */
   HSHM_CROSS_FUN
   size_t GetSize() {
-    size_t tail = tail_.load();
-    size_t head = head_.load();
+    hshm::size_t tail = tail_.load();
+    hshm::size_t head = head_.load();
     if (tail < head) {
       return 0;
     }
-    return tail - head;
+    return (size_t)(tail - head);
   }
 
   /** Get size (wrapper) */
@@ -235,4 +235,4 @@ using dynamic_queue = ipc::dynamic_queue<T, HSHM_CLASS_TEMPL_ARGS>;
 #undef CLASS_NAME
 #undef CLASS_NEW_ARGS
 
-#endif  // HERMES_SHM_INCLUDE_HERMES_SHM_DATA_STRUCTURES_IPC_DYNAMIC_QUEUE_H_
+#endif  // HSHM_SHM_INCLUDE_HSHM_SHM_DATA_STRUCTURES_IPC_DYNAMIC_QUEUE_H_

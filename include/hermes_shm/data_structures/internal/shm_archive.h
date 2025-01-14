@@ -10,8 +10,8 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_DATA_STRUCTURES_SHM_ARCHIVE_H_
-#define HERMES_DATA_STRUCTURES_SHM_ARCHIVE_H_
+#ifndef HSHM_DATA_STRUCTURES_SHM_ARCHIVE_H_
+#define HSHM_DATA_STRUCTURES_SHM_ARCHIVE_H_
 
 #include "hermes_shm/constants/macros.h"
 #include "hermes_shm/memory/allocator/allocator.h"
@@ -166,4 +166,4 @@ using delay_ar = ShmArchive<T>;
 
 }  // namespace hshm::ipc
 
-#endif  // HERMES_DATA_STRUCTURES_SHM_ARCHIVE_H_
+#endif  // HSHM_DATA_STRUCTURES_SHM_ARCHIVE_H_

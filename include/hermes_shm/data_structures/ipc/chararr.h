@@ -2,8 +2,8 @@
 // Created by llogan on 10/16/24.
 //
 
-#ifndef HERMES_SHM_INCLUDE_HERMES_SHM_DATA_STRUCTURES_CONTAINERS_chararr_templ_H_
-#define HERMES_SHM_INCLUDE_HERMES_SHM_DATA_STRUCTURES_CONTAINERS_chararr_templ_H_
+#ifndef HSHM_SHM_INCLUDE_HSHM_SHM_DATA_STRUCTURES_CONTAINERS_chararr_templ_H_
+#define HSHM_SHM_INCLUDE_HSHM_SHM_DATA_STRUCTURES_CONTAINERS_chararr_templ_H_
 
 #include "hermes_shm/constants/macros.h"
 #include "hermes_shm/data_structures/serialization/serialize_common.h"
@@ -134,7 +134,7 @@ class chararr_templ {
   HSHM_INLINE_CROSS_FUN size_t size() const { return length_; }
 
   /** Convert to std::string */
-  HSHM_INLINE_HOST const std::string str() const {
+  HSHM_INLINE_HOST_FUN const std::string str() const {
     return std::string(data(), size());
   }
 
@@ -175,7 +175,7 @@ class chararr_templ {
    * Comparison Operators
    * ===================================*/
 
-#define HERMES_STR_CMP_OPERATOR(op)                                        \
+#define HSHM_STR_CMP_OPERATOR(op)                                          \
   HSHM_CROSS_FUN                                                           \
   bool operator TYPE_UNWRAP(op)(const char *other) const {                 \
     return hshm::strncmp(data(), size(), other, hshm::strlen(other)) op 0; \
@@ -189,13 +189,13 @@ class chararr_templ {
     return hshm::strncmp(data(), size(), other.data(), other.size()) op 0; \
   }
 
-  HERMES_STR_CMP_OPERATOR(==)  // NOLINT
-  HERMES_STR_CMP_OPERATOR(!=)  // NOLINT
-  HERMES_STR_CMP_OPERATOR(<)   // NOLINT
-  HERMES_STR_CMP_OPERATOR(>)   // NOLINT
-  HERMES_STR_CMP_OPERATOR(<=)  // NOLINT
-  HERMES_STR_CMP_OPERATOR(>=)  // NOLINT
-#undef HERMES_STR_CMP_OPERATOR
+  HSHM_STR_CMP_OPERATOR(==)  // NOLINT
+  HSHM_STR_CMP_OPERATOR(!=)  // NOLINT
+  HSHM_STR_CMP_OPERATOR(<)   // NOLINT
+  HSHM_STR_CMP_OPERATOR(>)   // NOLINT
+  HSHM_STR_CMP_OPERATOR(<=)  // NOLINT
+  HSHM_STR_CMP_OPERATOR(>=)  // NOLINT
+#undef HSHM_STR_CMP_OPERATOR
 };
 
 #ifdef HSHM_IS_HOST
@@ -234,4 +234,4 @@ struct hash<hshm::chararr_templ<LENGTH, WithNull>> {
 };
 }  // namespace hshm
 
-#endif  // HERMES_SHM_INCLUDE_HERMES_SHM_DATA_STRUCTURES_CONTAINERS_chararr_templ_H_
+#endif  // HSHM_SHM_INCLUDE_HSHM_SHM_DATA_STRUCTURES_CONTAINERS_chararr_templ_H_

@@ -10,38 +10,9 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_SHM_INCLUDE_HERMES_SHM_UTIL_SINGLETON_EASY_GLOBAL_SINGLETON_H_
-#define HERMES_SHM_INCLUDE_HERMES_SHM_UTIL_SINGLETON_EASY_GLOBAL_SINGLETON_H_
 
-#include <memory>
-#include "hermes_shm/constants/macros.h"
-#include "_easy_singleton.h"
+#include "basic_test.h"
 
-namespace hshm {
+void MainPretest() {}
 
-/**
- * Makes a singleton. Constructs during initialization of program.
- * Does not require specific initialization of the static variable.
- * */
-#ifdef HSHM_IS_HOST
-template<typename T>
-class EasyGlobalSingleton {
- private:
-  static T obj_;
- public:
-  EasyGlobalSingleton() = default;
-
-  static T* GetInstance() {
-    return &obj_;
-  }
-};
-template <typename T>
-T EasyGlobalSingleton<T>::obj_;
-#else
-template<typename T>
-using EasyGlobalSingleton = EasyLockfreeSingleton<T>;
-#endif
-
-}  // namespace hshm
-
-#endif  // HERMES_SHM_INCLUDE_HERMES_SHM_UTIL_SINGLETON_EASY_GLOBAL_SINGLETON_H_
+void MainPosttest() {}

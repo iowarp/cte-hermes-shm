@@ -10,9 +10,10 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+#include <mpi.h>
 
-#include "test_init.h"
 #include "basic_test.h"
+#include "test_init.h"
 
 struct Record {
   char *data;
@@ -24,7 +25,7 @@ template <typename AllocT>
 void MpiPageAllocationTest(AllocT *alloc, size_t count) {
   size_t window_length = 32;
   size_t min_page = 64;
-  size_t max_page = MEGABYTES(1);
+  size_t max_page = hshm::Unit<size_t>::Megabytes(1);
   std::mt19937 rng(23522523);
   std::uniform_int_distribution<size_t> uni(min_page, max_page);
 
@@ -35,8 +36,7 @@ void MpiPageAllocationTest(AllocT *alloc, size_t count) {
     for (size_t i = 0; i < window_length; ++i) {
       window[i].size = uni(rng);
       window[i].data = alloc->template AllocatePtr<char>(
-          HSHM_DEFAULT_MEM_CTX,
-          window[i].size, window[i].ptr);
+          HSHM_DEFAULT_MEM_CTX, window[i].size, window[i].ptr);
       memset(window[i].data, (char)i, window[i].size);
     }
     for (size_t i = 0; i < window_length; ++i) {
@@ -58,7 +58,7 @@ AllocT *TestAllocatorMpi() {
   if (rank != 0) {
     PretestRankN();
   }
-  return HERMES_MEMORY_MANAGER->GetAllocator<AllocT>(alloc_id);
+  return HSHM_MEMORY_MANAGER->GetAllocator<AllocT>(alloc_id);
 }
 
 TEST_CASE("StackAllocatorMpi") {

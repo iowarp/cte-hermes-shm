@@ -18,18 +18,19 @@ template <typename AllocT>
 void PretestRank0() {
   std::string shm_url = "test_allocators";
   AllocatorId alloc_id(0, 1);
-  auto mem_mngr = HERMES_MEMORY_MANAGER;
+  auto mem_mngr = HSHM_MEMORY_MANAGER;
   mem_mngr->UnregisterAllocator(alloc_id);
   mem_mngr->DestroyBackend(hipc::MemoryBackendId::GetRoot());
   mem_mngr->CreateBackend<PosixShmMmap>(hipc::MemoryBackendId::Get(0),
-                                        MEGABYTES(100), shm_url);
+                                        hshm::Unit<size_t>::Megabytes(100),
+                                        shm_url);
   mem_mngr->CreateAllocator<AllocT>(hipc::MemoryBackendId::Get(0), alloc_id, 0);
 }
 
 void PretestRankN() {
   std::string shm_url = "test_allocators";
   AllocatorId alloc_id(0, 1);
-  auto mem_mngr = HERMES_MEMORY_MANAGER;
+  auto mem_mngr = HSHM_MEMORY_MANAGER;
   mem_mngr->AttachBackend(MemoryBackendType::kPosixShmMmap, shm_url);
 }
 

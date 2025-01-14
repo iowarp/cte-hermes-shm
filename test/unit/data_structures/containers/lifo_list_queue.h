@@ -10,12 +10,11 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_TEST_UNIT_DATA_STRUCTURES_CONTAINERS_lifo_list_queue_H_
-#define HERMES_TEST_UNIT_DATA_STRUCTURES_CONTAINERS_lifo_list_queue_H_
-
-#include <hermes_shm/memory/allocator/mp_page.h>
+#ifndef HSHM_TEST_UNIT_DATA_STRUCTURES_CONTAINERS_lifo_list_queue_H_
+#define HSHM_TEST_UNIT_DATA_STRUCTURES_CONTAINERS_lifo_list_queue_H_
 
 #include "basic_test.h"
+#include "hermes_shm/memory/allocator/mp_page.h"
 #include "test_init.h"
 
 using hipc::MpPage;
@@ -107,4 +106,4 @@ class lifo_list_queueTestSuite {
   }
 };
 
-#endif  // HERMES_TEST_UNIT_DATA_STRUCTURES_CONTAINERS_lifo_list_queue_H_
+#endif  // HSHM_TEST_UNIT_DATA_STRUCTURES_CONTAINERS_lifo_list_queue_H_

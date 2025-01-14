@@ -10,11 +10,10 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_SHM_INCLUDE_HERMES_SHM_THREAD_THALLIUM_H_
-#define HERMES_SHM_INCLUDE_HERMES_SHM_THREAD_THALLIUM_H_
+#ifndef HSHM_SHM_INCLUDE_HSHM_SHM_THREAD_THALLIUM_H_
+#define HSHM_SHM_INCLUDE_HSHM_SHM_THREAD_THALLIUM_H_
 
 #include <errno.h>
-#include <omp.h>
 
 #include <thallium.hpp>
 
@@ -30,17 +29,17 @@ class Argobots : public ThreadModel {
   HSHM_INLINE_CROSS_FUN
   Argobots() : ThreadModel(ThreadType::kArgobots) {}
 
-  /** Virtual destructor */
+  /** Destructor */
   HSHM_CROSS_FUN
-  virtual ~Argobots() = default;
+  ~Argobots() = default;
 
   /** Yield the current thread for a period of time */
   HSHM_CROSS_FUN
-  void SleepForUs(size_t us) override {
+  void SleepForUs(size_t us) {
     /**
      * TODO(llogan): make this API flexible enough to support argobots fully
-     * tl::thread::self().sleep(*HERMES->rpc_.server_engine_,
-                               HERMES->server_config_.borg_.blob_reorg_period_);
+     * tl::thread::self().sleep(*HSHM->rpc_.server_engine_,
+                               HSHM->server_config_.borg_.blob_reorg_period_);
      */
 #ifdef HSHM_IS_HOST
     usleep(us);
@@ -49,7 +48,7 @@ class Argobots : public ThreadModel {
 
   /** Yield thread time slice */
   HSHM_CROSS_FUN
-  void Yield() override {
+  void Yield() {
 #ifdef HSHM_IS_HOST
     ABT_thread_yield();
 #endif
@@ -95,7 +94,7 @@ class Argobots : public ThreadModel {
 
   /** Get the TID of the current thread */
   HSHM_CROSS_FUN
-  ThreadId GetTid() override {
+  ThreadId GetTid() {
 #ifdef HSHM_IS_HOST
     ABT_thread thread;
     ABT_thread_id tid;
@@ -110,4 +109,4 @@ class Argobots : public ThreadModel {
 
 }  // namespace hshm::thread
 
-#endif  // HERMES_SHM_INCLUDE_HERMES_SHM_THREAD_THALLIUM_H_
+#endif  // HSHM_SHM_INCLUDE_HSHM_SHM_THREAD_THALLIUM_H_

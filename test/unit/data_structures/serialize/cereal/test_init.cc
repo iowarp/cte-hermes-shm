@@ -20,11 +20,12 @@
 void MainPretest() {
   std::string shm_url = "test_serializers";
   AllocatorId alloc_id(0, 1);
-  auto mem_mngr = HERMES_MEMORY_MANAGER;
+  auto mem_mngr = HSHM_MEMORY_MANAGER;
   mem_mngr->UnregisterAllocator(alloc_id);
   mem_mngr->DestroyBackend(hipc::MemoryBackendId::Get(0));
   mem_mngr->CreateBackend<PosixShmMmap>(hipc::MemoryBackendId::Get(0),
-                                        MEGABYTES(100), shm_url);
+                                        hshm::Unit<size_t>::Megabytes(100),
+                                        shm_url);
   mem_mngr->CreateAllocator<hipc::ScalablePageAllocator>(
       hipc::MemoryBackendId::Get(0), alloc_id, 0);
 }

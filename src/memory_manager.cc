@@ -10,9 +10,11 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+#define HSHM_COMPILING_DLL
+#define __HSHM_IS_COMPILING__
+
 #include "hermes_shm/memory/memory_manager.h"
 
-#include "hermes_shm/data_structures/ipc/unordered_map.h"
 #include "hermes_shm/introspect/system_info.h"
 #include "hermes_shm/memory/allocator/allocator_factory.h"
 #include "hermes_shm/memory/backend/memory_backend_factory.h"
@@ -22,10 +24,6 @@
 
 namespace hshm::ipc {
 
-#ifdef HERMES_ENABLE_CUDA
-__global__ void Init() {}
-#endif
-
 /** Create the root allocator */
 HSHM_CROSS_FUN
 MemoryManager::MemoryManager() { Init(); }
@@ -34,7 +32,7 @@ MemoryManager::MemoryManager() { Init(); }
 HSHM_CROSS_FUN
 void MemoryManager::Init() {
   // System info
-  HERMES_SYSTEM_INFO->RefreshInfo();
+  HSHM_SYSTEM_INFO->RefreshInfo();
 
   // Initialize tables
   memset(backends_, 0, sizeof(backends_));
@@ -66,9 +64,10 @@ void MemoryManager::Init() {
 HSHM_CROSS_FUN
 size_t MemoryManager::GetDefaultBackendSize() {
 #ifdef HSHM_IS_HOST
-  return HERMES_SYSTEM_INFO->ram_size_;
+  return HSHM_SYSTEM_INFO->ram_size_;
 #else
   // TODO(llogan)
+  return 0;
 #endif
 }
 
@@ -84,6 +83,8 @@ MemoryBackend *MemoryManager::AttachBackend(MemoryBackendType type,
   ScanBackends();
   backend->Disown();
   return backend;
+#else
+  return nullptr;
 #endif
 }
 
@@ -98,22 +99,24 @@ HSHM_CROSS_FUN void MemoryManager::DestroyBackend(
   }
   FullPtr<MemoryBackend> ptr(backend);
   backend->Own();
-  auto alloc = HERMES_MEMORY_MANAGER->GetAllocator<HSHM_ROOT_ALLOC_T>(
-      ptr.shm_.alloc_id_);
-  alloc->template DelObjLocal(HSHM_DEFAULT_MEM_CTX, ptr);
+  auto alloc =
+      HSHM_MEMORY_MANAGER->GetAllocator<HSHM_ROOT_ALLOC_T>(ptr.shm_.alloc_id_);
+  alloc->DelObjLocal(HSHM_DEFAULT_MEM_CTX, ptr);
 }
 
-#ifdef HERMES_ENABLE_CUDA
+#if defined(HSHM_ENABLE_CUDA) || defined(HSHM_ENABLE_ROCM)
 template <typename BackendT>
-__global__ void AttachBackendKernel(BackendT *pack, BackendT *cpy) {
-  HERMES_MEMORY_MANAGER;
-  HERMES_THREAD_MODEL;
-  HERMES_SYSTEM_INFO;
+HSHM_GPU_KERNEL void AttachBackendKernel(BackendT *pack, BackendT *cpy) {
+  HSHM_MEMORY_MANAGER;
+  HSHM_THREAD_MODEL;
+  HSHM_SYSTEM_INFO;
   new (cpy) BackendT(*pack);
-  HERMES_MEMORY_MANAGER->RegisterBackend(cpy);
-  HERMES_MEMORY_MANAGER->ScanBackends();
+  HSHM_MEMORY_MANAGER->RegisterBackend(cpy);
+  HSHM_MEMORY_MANAGER->ScanBackends();
 }
+#endif
 
+#ifdef HSHM_ENABLE_CUDA
 /** Check if a backend is cuda-compatible */
 void AllocateCudaBackend(int dev, MemoryBackend *other) {
   cudaSetDevice(dev);
@@ -147,14 +150,51 @@ void AllocateCudaBackend(int dev, MemoryBackend *other) {
 }
 #endif
 
+#ifdef HSHM_ENABLE_ROCM
+/** Check if a backend is cuda-compatible */
+void AllocateRocmBackend(int dev, MemoryBackend *other) {
+  HIP_ERROR_CHECK(hipSetDevice(dev));
+  switch (other->header_->type_) {
+    case MemoryBackendType::kRocmMalloc: {
+      RocmMalloc *pack, *cpy;
+      HIP_ERROR_CHECK(hipMallocManaged(&pack, sizeof(RocmMalloc)));
+      HIP_ERROR_CHECK(hipMallocManaged(&cpy, sizeof(RocmMalloc)));
+      memcpy((char *)pack, (char *)other, sizeof(RocmMalloc));
+      pack->UnsetScanned();
+      pack->Disown();
+      AttachBackendKernel<<<1, 1>>>(pack, cpy);
+      HIP_ERROR_CHECK(hipDeviceSynchronize());
+      HIP_ERROR_CHECK(hipFree(pack));
+    }
+    case MemoryBackendType::kRocmShmMmap: {
+      RocmShmMmap *pack, *cpy;
+      HIP_ERROR_CHECK(hipMallocManaged(&pack, sizeof(RocmShmMmap)));
+      HIP_ERROR_CHECK(hipMallocManaged(&cpy, sizeof(RocmShmMmap)));
+      memcpy((char *)pack, (char *)other, sizeof(RocmShmMmap));
+      pack->UnsetScanned();
+      pack->Disown();
+      AttachBackendKernel<<<1, 1>>>(pack, cpy);
+      HIP_ERROR_CHECK(hipDeviceSynchronize());
+      HIP_ERROR_CHECK(hipFree(pack));
+    }
+    default: {
+      break;
+    }
+  }
+}
+#endif
+
 /**
  * Scans all attached backends for new memory allocators.
  * */
 HSHM_CROSS_FUN
 void MemoryManager::ScanBackends(bool find_allocs) {
-#if defined(HERMES_ENABLE_CUDA) && defined(HSHM_IS_HOST)
   int num_gpus = 0;
+#if defined(HSHM_ENABLE_CUDA) && defined(HSHM_IS_HOST)
   cudaGetDeviceCount(&num_gpus);
+#endif
+#if defined(HSHM_ENABLE_ROCM) && defined(HSHM_IS_HOST)
+  HIP_ERROR_CHECK(hipGetDeviceCount(&num_gpus));
 #endif
   for (int i = 0; i < MAX_BACKENDS; ++i) {
     MemoryBackend *backend = backends_[i];
@@ -169,9 +209,14 @@ void MemoryManager::ScanBackends(bool find_allocs) {
       }
       RegisterAllocator(alloc, false);
     }
-#if defined(HERMES_ENABLE_CUDA) && defined(HSHM_IS_HOST)
+#if defined(HSHM_ENABLE_CUDA) && defined(HSHM_IS_HOST)
     for (int dev = 0; dev < num_gpus; ++dev) {
       AllocateCudaBackend(dev, backend);
+    }
+#endif
+#if defined(HSHM_ENABLE_ROCM) && defined(HSHM_IS_HOST)
+    for (int dev = 0; dev < num_gpus; ++dev) {
+      AllocateRocmBackend(dev, backend);
     }
 #endif
   }
@@ -195,7 +240,7 @@ Allocator *MemoryManager::RegisterAllocator(Allocator *alloc, bool do_scan) {
   uint32_t idx = alloc->GetId().ToIndex();
   if (idx > MAX_ALLOCATORS) {
     HILOG(kError, "Allocator index out of range: {}", idx);
-    HERMES_THROW_ERROR(TOO_MANY_ALLOCATORS);
+    HSHM_THROW_ERROR(TOO_MANY_ALLOCATORS);
   }
   allocators_[idx] = alloc;
   if (do_scan) {
@@ -205,3 +250,8 @@ Allocator *MemoryManager::RegisterAllocator(Allocator *alloc, bool do_scan) {
 }
 
 }  // namespace hshm::ipc
+
+// TODO(llogan): Fix. A hack for HIP compiler to function
+// I would love to spend more time figuring out why ROCm
+// Fails to compile without this, but whatever.
+#include "hermes_shm/introspect/system_info.cc"

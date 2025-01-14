@@ -10,12 +10,12 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_INCLUDE_HERMES_TYPES_BITFIELD_H_
-#define HERMES_INCLUDE_HERMES_TYPES_BITFIELD_H_
-
-#include <hermes_shm/constants/macros.h>
+#ifndef HSHM_INCLUDE_HSHM_TYPES_BITFIELD_H_
+#define HSHM_INCLUDE_HSHM_TYPES_BITFIELD_H_
 
 #include <cstdint>
+
+#include "hermes_shm/constants/macros.h"
 
 namespace hshm {
 
@@ -155,8 +155,8 @@ struct big_bitfield {
   HSHM_INLINE_CROSS_FUN void Clear() {
     memset((void *)bits_, 0, sizeof(bitfield32_t) * LEN::value);
   }
-} __attribute__((packed));
+};
 
 }  // namespace hshm
 
-#endif  // HERMES_INCLUDE_HERMES_TYPES_BITFIELD_H_
+#endif  // HSHM_INCLUDE_HSHM_TYPES_BITFIELD_H_

@@ -10,8 +10,8 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_THREAD_MUTEX_H_
-#define HERMES_THREAD_MUTEX_H_
+#ifndef HSHM_THREAD_MUTEX_H_
+#define HSHM_THREAD_MUTEX_H_
 
 #include "hermes_shm/thread/thread_model_manager.h"
 #include "hermes_shm/types/atomic.h"
@@ -21,7 +21,7 @@ namespace hshm {
 
 struct Mutex {
   ipc::atomic<u32> lock_;
-#ifdef HERMES_DEBUG_LOCK
+#ifdef HSHM_DEBUG_LOCK
   u32 owner_;
 #endif
 
@@ -46,7 +46,7 @@ struct Mutex {
           return;
         }
       }
-      HERMES_THREAD_MODEL->Yield();
+      HSHM_THREAD_MODEL->Yield();
     } while (true);
   }
 
@@ -61,7 +61,7 @@ struct Mutex {
       lock_.fetch_sub(1);
       return false;
     }
-#ifdef HERMES_DEBUG_LOCK
+#ifdef HSHM_DEBUG_LOCK
     owner_ = owner;
 #endif
     return true;
@@ -70,7 +70,7 @@ struct Mutex {
   /** Unlock */
   HSHM_INLINE_CROSS_FUN
   void Unlock() {
-#ifdef HERMES_DEBUG_LOCK
+#ifdef HSHM_DEBUG_LOCK
     owner_ = 0;
 #endif
     lock_.fetch_sub(1);
@@ -131,4 +131,4 @@ using hshm::ScopedMutex;
 #undef Mutex
 #undef ScopedMutex
 
-#endif  // HERMES_THREAD_MUTEX_H_
+#endif  // HSHM_THREAD_MUTEX_H_

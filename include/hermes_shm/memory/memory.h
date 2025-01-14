@@ -10,17 +10,17 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_MEMORY_MEMORY_H_
-#define HERMES_MEMORY_MEMORY_H_
-
-#include <hermes_shm/constants/macros.h>
-#include <hermes_shm/data_structures/ipc/hash.h>
-#include <hermes_shm/introspect/system_info.h>
-#include <hermes_shm/types/atomic.h>
-#include <hermes_shm/types/bitfield.h>
-#include <hermes_shm/types/real_number.h>
+#ifndef HSHM_MEMORY_MEMORY_H_
+#define HSHM_MEMORY_MEMORY_H_
 
 #include <cstdio>
+
+#include "hermes_shm/constants/macros.h"
+#include "hermes_shm/data_structures/ipc/hash.h"
+#include "hermes_shm/introspect/system_info.h"
+#include "hermes_shm/types/atomic.h"
+#include "hermes_shm/types/bitfield.h"
+#include "hermes_shm/types/real_number.h"
 
 namespace hshm::ipc {
 
@@ -100,7 +100,7 @@ class ShmPointer {};
  * */
 template <bool ATOMIC = false>
 struct OffsetPointerBase : public ShmPointer {
-  hipc::opt_atomic<size_t, ATOMIC>
+  hipc::opt_atomic<hshm::size_t, ATOMIC>
       off_; /**< Offset within the allocator's slot */
 
   /** Default constructor */
@@ -111,7 +111,7 @@ struct OffsetPointerBase : public ShmPointer {
 
   /** Full constructor */
   HSHM_INLINE_CROSS_FUN explicit OffsetPointerBase(
-      hipc::opt_atomic<size_t, ATOMIC> off)
+      hipc::opt_atomic<hshm::size_t, ATOMIC> off)
       : off_(off.load()) {}
 
   /** Pointer constructor */
@@ -341,9 +341,7 @@ struct PointerBase : public ShmPointer {
 
   /** Get the null pointer */
   HSHM_INLINE_CROSS_FUN static PointerBase GetNull() {
-    static const PointerBase p(AllocatorId::GetNull(),
-                               OffsetPointer::GetNull());
-    return p;
+    return PointerBase{AllocatorId::GetNull(), OffsetPointer::GetNull()};
   }
 
   /** Copy assignment operator */
@@ -669,7 +667,7 @@ class MemoryAlignment {
    * @return the new size  (e.g., 8192)
    * */
   static size_t AlignTo(size_t alignment, size_t size) {
-    auto page_size = HERMES_SYSTEM_INFO->page_size_;
+    auto page_size = HSHM_SYSTEM_INFO->page_size_;
     size_t new_size = size;
     size_t page_off = size % alignment;
     if (page_off) {
@@ -683,7 +681,7 @@ class MemoryAlignment {
    * @param size the size to align to the PAGE_SIZE
    * */
   static size_t AlignToPageSize(size_t size) {
-    auto page_size = HERMES_SYSTEM_INFO->page_size_;
+    auto page_size = HSHM_SYSTEM_INFO->page_size_;
     size_t new_size = AlignTo(page_size, size);
     return new_size;
   }
@@ -706,4 +704,4 @@ struct hash<hshm::ipc::AllocatorId> {
 
 #define IS_SHM_POINTER(T) std::is_base_of_v<hipc::ShmPointer, T>
 
-#endif  // HERMES_MEMORY_MEMORY_H_
+#endif  // HSHM_MEMORY_MEMORY_H_

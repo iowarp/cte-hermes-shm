@@ -10,12 +10,8 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_SHM_INCLUDE_HERMES_SHM_UTIL_LOGGING_H_
-#define HERMES_SHM_INCLUDE_HERMES_SHM_UTIL_LOGGING_H_
-
-#include <sys/syscall.h>
-#include <sys/types.h>
-#include <unistd.h>
+#ifndef HSHM_SHM_INCLUDE_HSHM_SHM_UTIL_LOGGING_H_
+#define HSHM_SHM_INCLUDE_HSHM_SHM_UTIL_LOGGING_H_
 
 #include <climits>
 #include <filesystem>
@@ -25,6 +21,7 @@
 #include <vector>
 
 #include "formatter.h"
+#include "hermes_shm/introspect/system_info.h"
 #include "singleton.h"
 #include "timer.h"
 
@@ -33,10 +30,10 @@ namespace hshm {
 /** Prints log verbosity at compile time */
 #define XSTR(s) STR(s)
 #define STR(s) #s
-// #pragma message XSTR(HERMES_LOG_EXCLUDE)
+// #pragma message XSTR(HSHM_LOG_EXCLUDE)
 
 /** Simplify access to Logger singleton */
-#define HERMES_LOG hshm::EasySingleton<hshm::Logger>::GetInstance()
+#define HSHM_LOG hshm::Singleton<hshm::Logger>::GetInstance()
 
 /** Max number of log codes */
 #define HSHM_MAX_LOGGING_CODES 256
@@ -65,17 +62,17 @@ namespace hshm {
 /**
  * Hermes Print. Like printf, except types are inferred
  * */
-#define HIPRINT(...) HERMES_LOG->Print(__VA_ARGS__)
+#define HIPRINT(...) HSHM_LOG->Print(__VA_ARGS__)
 
 /**
  * Hermes SHM Log
  * */
-#define HLOG(LOG_CODE, SUB_CODE, ...)                                   \
-  do {                                                                  \
-    if constexpr (LOG_CODE >= 0 && SUB_CODE >= 0) {                     \
-      HERMES_LOG->Log<LOG_CODE, SUB_CODE>(__FILE__, __func__, __LINE__, \
-                                          __VA_ARGS__);                 \
-    }                                                                   \
+#define HLOG(LOG_CODE, SUB_CODE, ...)                                 \
+  do {                                                                \
+    if constexpr (LOG_CODE >= 0 && SUB_CODE >= 0) {                   \
+      HSHM_LOG->Log<LOG_CODE, SUB_CODE>(__FILE__, __func__, __LINE__, \
+                                        __VA_ARGS__);                 \
+    }                                                                 \
   } while (false)
 
 /** Hermes info log */
@@ -101,8 +98,9 @@ class Logger {
 #ifdef HSHM_IS_HOST
     memset(disabled_, 0, sizeof(disabled_));
     // exe_name_ = std::filesystem::path(exe_path_).filename().string();
-    auto verbosity_env = getenv("HERMES_LOG_EXCLUDE");
-    if (verbosity_env && strlen(verbosity_env)) {
+    std::string verbosity_env = hshm::SystemInfo::Getenv(
+        "HSHM_LOG_EXCLUDE", hshm::Unit<size_t>::Megabytes(1));
+    if (!verbosity_env.empty()) {
       std::vector<int> verbosity_levels;
       std::string verbosity_str(verbosity_env);
       std::stringstream ss(verbosity_str);
@@ -113,11 +111,12 @@ class Logger {
       }
     }
 
-    auto env = getenv("HERMES_LOG_OUT");
-    if (env == nullptr) {
+    std::string env = hshm::SystemInfo::Getenv(
+        "HSHM_LOG_OUT", hshm::Unit<size_t>::Megabytes(1));
+    if (env.empty()) {
       fout_ = nullptr;
     } else {
-      fout_ = fopen(env, "w");
+      fout_ = fopen(env.c_str(), "w");
     }
 #endif
   }
@@ -134,7 +133,7 @@ class Logger {
 #ifdef HSHM_IS_HOST
 
     std::string msg = hshm::Formatter::format(fmt, std::forward<Args>(args)...);
-    int tid = GetTid();
+    int tid = SystemInfo::GetTid();
     std::string out = hshm::Formatter::format("{}\n", msg);
     std::cout << out;
     if (fout_) {
@@ -175,7 +174,7 @@ class Logger {
     }
 
     std::string msg = hshm::Formatter::format(fmt, std::forward<Args>(args)...);
-    int tid = GetTid();
+    int tid = SystemInfo::GetTid();
     std::string out = hshm::Formatter::format("{}:{} {} {} {} {}\n", path, line,
                                               level, tid, func, msg);
     if (LOG_CODE == kInfo) {
@@ -193,26 +192,8 @@ class Logger {
     }
 #endif
   }
-
-  int GetTid() {
-#ifdef SYS_gettid
-    return (pid_t)syscall(SYS_gettid);
-#else
-#warning "GetTid is not defined"
-    return GetPid();
-#endif
-  }
-
-  int GetPid() {
-#ifdef SYS_getpid
-    return (pid_t)syscall(SYS_getpid);
-#else
-#warning "GetPid is not defined"
-    return 0;
-#endif
-  }
 };
 
 }  // namespace hshm
 
-#endif  // HERMES_SHM_INCLUDE_HERMES_SHM_UTIL_LOGGING_H_
+#endif  // HSHM_SHM_INCLUDE_HSHM_SHM_UTIL_LOGGING_H_

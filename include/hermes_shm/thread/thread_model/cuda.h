@@ -10,13 +10,10 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_SHM_INCLUDE_HERMES_SHM_THREAD_CUDA_H__
-#define HERMES_SHM_INCLUDE_HERMES_SHM_THREAD_CUDA_H__
+#ifndef HSHM_SHM_INCLUDE_HSHM_SHM_THREAD_CUDA_H__
+#define HSHM_SHM_INCLUDE_HSHM_SHM_THREAD_CUDA_H__
 
 #include <errno.h>
-#include <omp.h>
-
-#include <thallium.hpp>
 
 #include "hermes_shm/introspect/system_info.h"
 #include "hermes_shm/util/errors.h"
@@ -30,17 +27,17 @@ class Cuda : public ThreadModel {
   HSHM_INLINE_CROSS_FUN
   Cuda() : ThreadModel(ThreadType::kCuda) {}
 
-  /** Virtual destructor */
+  /** Destructor */
   HSHM_CROSS_FUN
-  virtual ~Cuda() = default;
+  ~Cuda() = default;
 
   /** Yield the current thread for a period of time */
   HSHM_CROSS_FUN
-  void SleepForUs(size_t us) override {}
+  void SleepForUs(size_t us) {}
 
   /** Yield thread time slice */
   HSHM_CROSS_FUN
-  void Yield() override {}
+  void Yield() {}
 
   /** Create thread-local storage */
   template <typename TLS>
@@ -62,9 +59,9 @@ class Cuda : public ThreadModel {
 
   /** Get the TID of the current thread */
   HSHM_CROSS_FUN
-  ThreadId GetTid() override { return ThreadId::GetNull(); }
+  ThreadId GetTid() { return ThreadId::GetNull(); }
 };
 
 }  // namespace hshm::thread
 
-#endif  // HERMES_SHM_INCLUDE_HERMES_SHM_THREAD_CUDA_H__
+#endif  // HSHM_SHM_INCLUDE_HSHM_SHM_THREAD_CUDA_H__

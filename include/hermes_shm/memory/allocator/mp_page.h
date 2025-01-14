@@ -10,8 +10,8 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_INCLUDE_HERMES_MEMORY_ALLOCATOR_MP_PAGE_H_
-#define HERMES_INCLUDE_HERMES_MEMORY_ALLOCATOR_MP_PAGE_H_
+#ifndef HSHM_INCLUDE_HSHM_MEMORY_ALLOCATOR_MP_PAGE_H_
+#define HSHM_INCLUDE_HSHM_MEMORY_ALLOCATOR_MP_PAGE_H_
 
 #include "hermes_shm/data_structures/ipc/lifo_list_queue.h"
 #include "hermes_shm/data_structures/ipc/mpsc_lifo_list_queue.h"
@@ -34,4 +34,4 @@ struct MpPage : public atomic_list_queue_entry {
 
 }  // namespace hshm::ipc
 
-#endif  // HERMES_INCLUDE_HERMES_MEMORY_ALLOCATOR_MP_PAGE_H_
+#endif  // HSHM_INCLUDE_HSHM_MEMORY_ALLOCATOR_MP_PAGE_H_

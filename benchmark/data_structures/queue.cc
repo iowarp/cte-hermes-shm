@@ -19,12 +19,11 @@
 #include <string>
 
 // hermes
-#include <hermes_shm/data_structures/ipc/ring_queue.h>
-#include <hermes_shm/data_structures/ipc/ticket_queue.h>
-
 #include "hermes_shm/data_structures/ipc/ring_ptr_queue.h"
+#include "hermes_shm/data_structures/ipc/ring_queue.h"
 #include "hermes_shm/data_structures/ipc/split_ticket_queue.h"
 #include "hermes_shm/data_structures/ipc/string.h"
+#include "hermes_shm/data_structures/ipc/ticket_queue.h"
 
 /**
  * A series of performance tests for vectors

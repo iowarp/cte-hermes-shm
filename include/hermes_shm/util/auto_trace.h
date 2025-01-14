@@ -10,8 +10,8 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_INCLUDE_HERMES_UTIL_AUTO_TRACE_H_
-#define HERMES_INCLUDE_HERMES_UTIL_AUTO_TRACE_H_
+#ifndef HSHM_INCLUDE_HSHM_UTIL_AUTO_TRACE_H_
+#define HSHM_INCLUDE_HSHM_UTIL_AUTO_TRACE_H_
 
 #include <iostream>
 
@@ -82,4 +82,4 @@ class AutoTrace {
 
 }  // namespace hshm
 
-#endif  // HERMES_INCLUDE_HERMES_UTIL_AUTO_TRACE_H_
+#endif  // HSHM_INCLUDE_HSHM_UTIL_AUTO_TRACE_H_

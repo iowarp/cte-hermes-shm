@@ -17,7 +17,7 @@
 void PretestRankN() {
   std::string shm_url = "test_allocators";
   AllocatorId alloc_id(0, 1);
-  auto mem_mngr = HERMES_MEMORY_MANAGER;
+  auto mem_mngr = HSHM_MEMORY_MANAGER;
   mem_mngr->UnregisterAllocator(alloc_id);
   mem_mngr->DestroyBackend(hipc::MemoryBackendId::Get(0));
   mem_mngr->AttachBackend(MemoryBackendType::kPosixShmMmap, shm_url);

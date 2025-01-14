@@ -10,13 +10,18 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_SHM_TEST_UNIT_DATA_STRUCTURES_CONTAINERS_QUEUE_H_
-#define HERMES_SHM_TEST_UNIT_DATA_STRUCTURES_CONTAINERS_QUEUE_H_
+#ifndef HSHM_SHM_TEST_UNIT_DATA_STRUCTURES_CONTAINERS_QUEUE_H_
+#define HSHM_SHM_TEST_UNIT_DATA_STRUCTURES_CONTAINERS_QUEUE_H_
 
+#include "basic_test.h"
 #include "hermes_shm/data_structures/all.h"
+#include "hermes_shm/types/numbers.h"
 #include "hermes_shm/util/logging.h"
-#include "omp.h"
 #include "test_init.h"
+
+#ifdef HSHM_ENABLE_OPENMP
+#include <omp.h>
+#endif
 
 struct IntEntry : public hipc::list_queue_entry {
   int value;
@@ -32,7 +37,7 @@ template <typename NewT>
 class VariableMaker {
  public:
   std::vector<NewT> vars_;
-  hipc::atomic<size_t> count_;
+  hipc::atomic<hshm::size_t> count_;
 
  public:
   VariableMaker(size_t total_vars) : vars_(total_vars) { count_ = 0; }
@@ -222,4 +227,4 @@ void ProduceAndConsume(size_t nproducers, size_t nconsumers,
   }
 }
 
-#endif  // HERMES_SHM_TEST_UNIT_DATA_STRUCTURES_CONTAINERS_QUEUE_H_
+#endif  // HSHM_SHM_TEST_UNIT_DATA_STRUCTURES_CONTAINERS_QUEUE_H_

@@ -10,8 +10,11 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-
 #include "test_init.h"
+
+#ifdef HSHM_ENABLE_OPENMP
+#include <omp.h>
+#endif
 
 template <typename AllocT>
 void MultiThreadedPageAllocationTest(AllocT *alloc) {
@@ -33,21 +36,21 @@ void MultiThreadedPageAllocationTest(AllocT *alloc) {
 }
 
 TEST_CASE("StackAllocatorMultithreaded") {
-  HERMES_ERROR_HANDLE_START()
+  HSHM_ERROR_HANDLE_START()
   auto alloc = Pretest<hipc::PosixShmMmap, hipc::StackAllocator>();
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
   MultiThreadedPageAllocationTest(alloc);
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
   Posttest();
-  HERMES_ERROR_HANDLE_END()
+  HSHM_ERROR_HANDLE_END()
 }
 
 TEST_CASE("ScalablePageAllocatorMultithreaded") {
-  HERMES_ERROR_HANDLE_START()
+  HSHM_ERROR_HANDLE_START()
   auto alloc = Pretest<hipc::PosixShmMmap, hipc::ScalablePageAllocator>();
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
   MultiThreadedPageAllocationTest(alloc);
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
   Posttest();
-  HERMES_ERROR_HANDLE_END()
+  HSHM_ERROR_HANDLE_END()
 }

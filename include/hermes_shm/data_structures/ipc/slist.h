@@ -10,8 +10,8 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_DATA_STRUCTURES__Sslist_H
-#define HERMES_DATA_STRUCTURES__Sslist_H
+#ifndef HSHM_DATA_STRUCTURES__Sslist_H
+#define HSHM_DATA_STRUCTURES__Sslist_H
 
 #include "hermes_shm/data_structures/internal/shm_internal.h"
 #include "hermes_shm/data_structures/ipc/functional.h"
@@ -232,7 +232,7 @@ class slist : public ShmContainer {
   /** Constructor. Default. */
   HSHM_CROSS_FUN
   explicit slist() {
-    init_shm_container(HERMES_MEMORY_MANAGER->GetDefaultAllocator<AllocT>());
+    init_shm_container(HSHM_MEMORY_MANAGER->GetDefaultAllocator<AllocT>());
     SetNull();
   }
 
@@ -590,4 +590,4 @@ using slist = hipc::slist<T, HSHM_CLASS_TEMPL_ARGS>;
 #undef CLASS_NAME
 #undef CLASS_NEW_ARGS
 
-#endif  // HERMES_DATA_STRUCTURES__Sslist_H
+#endif  // HSHM_DATA_STRUCTURES__Sslist_H

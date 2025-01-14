@@ -10,8 +10,11 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_MEMORY_ALLOCATOR_MALLOC_ALLOCATOR_H_
-#define HERMES_MEMORY_ALLOCATOR_MALLOC_ALLOCATOR_H_
+#ifndef HSHM_MEMORY_ALLOCATOR_MALLOC_ALLOCATOR_H_
+#define HSHM_MEMORY_ALLOCATOR_MALLOC_ALLOCATOR_H_
+
+#include <cstdint>
+#include <cstdlib>
 
 #include "allocator.h"
 #include "hermes_shm/thread/lock.h"
@@ -72,7 +75,7 @@ class _MallocAllocator : public Allocator {
    * */
   HSHM_CROSS_FUN
   void shm_deserialize(char *buffer, size_t buffer_size) {
-    HERMES_THROW_ERROR(NOT_IMPLEMENTED, "_MallocAllocator::shm_deserialize");
+    HSHM_THROW_ERROR(NOT_IMPLEMENTED, "_MallocAllocator::shm_deserialize");
   }
 
   /**
@@ -97,7 +100,7 @@ class _MallocAllocator : public Allocator {
                                       size_t alignment) {
 #ifdef HSHM_IS_HOST
     auto page = reinterpret_cast<MallocPage *>(
-        aligned_alloc(alignment, sizeof(MallocPage) + size));
+        SystemInfo::AlignedAlloc(alignment, sizeof(MallocPage) + size));
     page->page_size_ = size;
     header_->AddSize(size);
     return OffsetPointer(size_t(page + 1));
@@ -149,7 +152,7 @@ class _MallocAllocator : public Allocator {
    * */
   HSHM_CROSS_FUN
   size_t GetCurrentlyAllocatedSize() {
-    return header_->GetCurrentlyAllocatedSize();
+    return (size_t)header_->GetCurrentlyAllocatedSize();
   }
 
   /**
@@ -167,4 +170,4 @@ class _MallocAllocator : public Allocator {
 
 }  // namespace hshm::ipc
 
-#endif  // HERMES_MEMORY_ALLOCATOR_MALLOC_ALLOCATOR_H_
+#endif  // HSHM_MEMORY_ALLOCATOR_MALLOC_ALLOCATOR_H_

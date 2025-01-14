@@ -107,12 +107,16 @@ class AllocatorTestSuite {
     std::mt19937 rng(23522523);
     std::vector<size_t> sizes_;
 
-    seq(sizes_, 64, MEGABYTES(1) / 64);
-    seq(sizes_, 190, MEGABYTES(1) / 190);
-    seq(sizes_, KILOBYTES(1), MEGABYTES(1) / KILOBYTES(1));
-    seq(sizes_, KILOBYTES(4), MEGABYTES(8) / KILOBYTES(4));
-    seq(sizes_, KILOBYTES(32), MEGABYTES(4) / KILOBYTES(4));
-    seq(sizes_, MEGABYTES(1), MEGABYTES(64) / MEGABYTES(1));
+    seq(sizes_, 64, hshm::Unit<size_t>::Megabytes(1) / 64);
+    seq(sizes_, 190, hshm::Unit<size_t>::Megabytes(1) / 190);
+    seq(sizes_, hshm::Unit<size_t>::Kilobytes(1),
+        hshm::Unit<size_t>::Megabytes(1) / hshm::Unit<size_t>::Kilobytes(1));
+    seq(sizes_, hshm::Unit<size_t>::Kilobytes(4),
+        hshm::Unit<size_t>::Megabytes(8) / hshm::Unit<size_t>::Kilobytes(4));
+    seq(sizes_, hshm::Unit<size_t>::Kilobytes(32),
+        hshm::Unit<size_t>::Megabytes(4) / hshm::Unit<size_t>::Kilobytes(4));
+    seq(sizes_, hshm::Unit<size_t>::Megabytes(1),
+        hshm::Unit<size_t>::Megabytes(64) / hshm::Unit<size_t>::Megabytes(1));
     std::shuffle(std::begin(sizes_), std::end(sizes_), rng);
     std::vector<Pointer> window(sizes_.size());
     size_t num_windows = 500;
@@ -181,7 +185,7 @@ template <typename BackendT, typename AllocT, typename... Args>
 AllocT *Pretest(MemoryBackendType backend_type, Args &&...args) {
   int rank = omp_get_thread_num();
   AllocatorId alloc_id(0, minor);
-  auto mem_mngr = HERMES_MEMORY_MANAGER;
+  auto mem_mngr = HSHM_MEMORY_MANAGER;
 
   if (rank == 0) {
     // Create the allocator + backend
@@ -208,8 +212,8 @@ void Posttest() {
 #pragma omp barrier
   if (rank == 0) {
     AllocatorId alloc_id(0, minor);
-    HERMES_MEMORY_MANAGER->UnregisterAllocator(alloc_id);
-    HERMES_MEMORY_MANAGER->UnregisterBackend(hipc::MemoryBackendId::Get(0));
+    HSHM_MEMORY_MANAGER->UnregisterAllocator(alloc_id);
+    HSHM_MEMORY_MANAGER->UnregisterBackend(hipc::MemoryBackendId::Get(0));
     minor += 1;
   }
 #pragma omp barrier
@@ -230,10 +234,10 @@ void AllocatorTest(AllocatorType alloc_type, MemoryBackendType backend_type,
     // Allocate many and then free many
     //  AllocatorTestSuite<AllocT>((alloc_type,
     //  *scoped_tls).AllocateThenFreeFixedSize(
-    //    count, KILOBYTES(1));
+    //    count, hshm::Unit<size_t>::Kilobytes(1));
     // Allocate and free immediately
     AllocatorTestSuite<AllocT>(alloc_type, *scoped_tls)
-        .AllocateAndFreeFixedSize(count, KILOBYTES(1));
+        .AllocateAndFreeFixedSize(count, hshm::Unit<size_t>::Kilobytes(1));
     // Allocate and free randomly
     // AllocatorTestSuite<AllocT>(alloc_type, *scoped_tls)
     //     .AllocateAndFreeRandomWindow(count);
@@ -279,12 +283,12 @@ void FullAllocatorTestThreaded(int nthreads) {
 }
 
 TEST_CASE("AllocatorBenchmark") {
-  HERMES_ERROR_HANDLE_START();
+  HSHM_ERROR_HANDLE_START();
   AllocatorTestSuite<hipc::NullAllocator>::PrintTestHeader();
   FullAllocatorTestThreaded(1);
   // FullAllocatorTestThreaded(2);
   // FullAllocatorTestThreaded(4);
   // FullAllocatorTestThreaded(8);
   // FullAllocatorTestThreaded(16);
-  HERMES_ERROR_HANDLE_END();
+  HSHM_ERROR_HANDLE_END();
 }

@@ -10,13 +10,12 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_MEMORY_ALLOCATOR_STACK_ALLOCATOR_H_
-#define HERMES_MEMORY_ALLOCATOR_STACK_ALLOCATOR_H_
-
-#include <hermes_shm/memory/allocator/mp_page.h>
+#ifndef HSHM_MEMORY_ALLOCATOR_STACK_ALLOCATOR_H_
+#define HSHM_MEMORY_ALLOCATOR_STACK_ALLOCATOR_H_
 
 #include "allocator.h"
 #include "heap.h"
+#include "hermes_shm/memory/allocator/mp_page.h"
 #include "hermes_shm/thread/lock.h"
 
 namespace hshm::ipc {
@@ -26,7 +25,7 @@ typedef BaseAllocator<_StackAllocator> StackAllocator;
 
 struct _StackAllocatorHeader : public AllocatorHeader {
   HeapAllocator<true> heap_;
-  hipc::atomic<hshm::min_u64> total_alloc_;
+  hipc::atomic<hshm::size_t> total_alloc_;
 
   HSHM_CROSS_FUN
   _StackAllocatorHeader() = default;
@@ -102,9 +101,9 @@ class _StackAllocator : public Allocator {
   /** Align the memory to the next page boundary */
   HSHM_CROSS_FUN
   void Align() {
-    size_t off = heap_->heap_off_.load();
-    size_t page_size = 4096;
-    size_t new_off = (off + page_size - 1) & ~(page_size - 1);
+    hshm::size_t off = heap_->heap_off_.load();
+    hshm::size_t page_size = 4096;
+    hshm::size_t new_off = (off + page_size - 1) & ~(page_size - 1);
     heap_->heap_off_.store(new_off);
   }
 
@@ -131,7 +130,8 @@ class _StackAllocator : public Allocator {
   HSHM_CROSS_FUN
   OffsetPointer AlignedAllocateOffset(const hipc::MemContext &ctx, size_t size,
                                       size_t alignment) {
-    HERMES_THROW_ERROR(NOT_IMPLEMENTED, "AlignedAllocateOffset");
+    HSHM_THROW_ERROR(NOT_IMPLEMENTED, "AlignedAllocateOffset");
+    return OffsetPointer::GetNull();
   }
 
   /**
@@ -160,7 +160,7 @@ class _StackAllocator : public Allocator {
   void FreeOffsetNoNullCheck(const hipc::MemContext &ctx, OffsetPointer p) {
     auto hdr = Convert<MpPage>(p - sizeof(MpPage));
     if (!hdr->IsAllocated()) {
-      HERMES_THROW_ERROR(DOUBLE_FREE);
+      HSHM_THROW_ERROR(DOUBLE_FREE);
     }
     hdr->UnsetAllocated();
     header_->SubSize(hdr->page_size_);
@@ -172,7 +172,7 @@ class _StackAllocator : public Allocator {
    * */
   HSHM_CROSS_FUN
   size_t GetCurrentlyAllocatedSize() {
-    return header_->GetCurrentlyAllocatedSize();
+    return (size_t)header_->GetCurrentlyAllocatedSize();
   }
 
   /**
@@ -190,4 +190,4 @@ class _StackAllocator : public Allocator {
 
 }  // namespace hshm::ipc
 
-#endif  // HERMES_MEMORY_ALLOCATOR_STACK_ALLOCATOR_H_
+#endif  // HSHM_MEMORY_ALLOCATOR_STACK_ALLOCATOR_H_

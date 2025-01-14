@@ -10,8 +10,8 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_DATA_STRUCTURES__MPMC_LIST_lifo_list_queue_H
-#define HERMES_DATA_STRUCTURES__MPMC_LIST_lifo_list_queue_H
+#ifndef HSHM_DATA_STRUCTURES__MPMC_LIST_lifo_list_queue_H
+#define HSHM_DATA_STRUCTURES__MPMC_LIST_lifo_list_queue_H
 
 #include "hermes_shm/memory/memory.h"
 #include "hermes_shm/util/logging.h"
@@ -38,7 +38,7 @@ class mpsc_lifo_list_queue : public ShmContainer {
  public:
   HIPC_CONTAINER_TEMPLATE((CLASS_NAME), (CLASS_NEW_ARGS))
   AtomicOffsetPointer tail_shm_;
-  hipc::atomic<size_t> count_;
+  hipc::atomic<hshm::size_t> count_;
 
  public:
   /**====================================
@@ -48,13 +48,13 @@ class mpsc_lifo_list_queue : public ShmContainer {
   /** Constructor. Default. */
   HSHM_CROSS_FUN
   mpsc_lifo_list_queue() {
-    shm_init(HERMES_MEMORY_MANAGER->GetDefaultAllocator<AllocT>());
+    shm_init(HSHM_MEMORY_MANAGER->GetDefaultAllocator<AllocT>());
   }
 
   /** Constructor. Int */
   HSHM_CROSS_FUN
   explicit mpsc_lifo_list_queue(size_t depth) {
-    shm_init(HERMES_MEMORY_MANAGER->GetDefaultAllocator<AllocT>());
+    shm_init(HSHM_MEMORY_MANAGER->GetDefaultAllocator<AllocT>());
   }
 
   /** SHM constructor. Default. */
@@ -84,7 +84,7 @@ class mpsc_lifo_list_queue : public ShmContainer {
   /** Copy constructor */
   HSHM_CROSS_FUN
   explicit mpsc_lifo_list_queue(const mpsc_lifo_list_queue &other) {
-    init_shm_container(HERMES_MEMORY_MANAGER->GetDefaultAllocator<AllocT>());
+    init_shm_container(HSHM_MEMORY_MANAGER->GetDefaultAllocator<AllocT>());
     shm_strong_copy_op(other);
   }
 
@@ -227,7 +227,7 @@ class mpsc_lifo_list_queue : public ShmContainer {
       val.shm_.off_ = tail_shm.load();
       val.shm_.alloc_id_ = alloc->GetId();
       val.ptr_ = alloc->template Convert<T>(tail_shm);
-      size_t next_tail = val->next_shm_.load();
+      hshm::size_t next_tail = val->next_shm_.load();
       ret = tail_shm_.compare_exchange_weak(tail_shm.off_.ref(), next_tail);
     } while (!ret);
     --count_;
@@ -301,4 +301,4 @@ using mpsc_lifo_list_queue =
 #undef CLASS_NAME
 #undef CLASS_NEW_ARGS
 
-#endif  // HERMES_DATA_STRUCTURES__MPMC_LIST_lifo_list_queue_H
+#endif  // HSHM_DATA_STRUCTURES__MPMC_LIST_lifo_list_queue_H

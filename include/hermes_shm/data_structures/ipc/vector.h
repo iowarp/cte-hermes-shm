@@ -10,8 +10,8 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_DATA_STRUCTURES_LOCKLESS_VECTOR_H_
-#define HERMES_DATA_STRUCTURES_LOCKLESS_VECTOR_H_
+#ifndef HSHM_DATA_STRUCTURES_LOCKLESS_VECTOR_H_
+#define HSHM_DATA_STRUCTURES_LOCKLESS_VECTOR_H_
 
 #include <vector>
 
@@ -31,7 +31,7 @@ template <typename T, bool FORWARD_ITER, HSHM_CLASS_TEMPL>
 struct vector_iterator_templ {
  public:
   vector<T, HSHM_CLASS_TEMPL_ARGS> *vec_;
-  off64_t i_;
+  i64 i_;
 
   /** Default constructor */
   HSHM_INLINE_CROSS_FUN vector_iterator_templ() = default;
@@ -40,11 +40,11 @@ struct vector_iterator_templ {
   template <typename SizeT>
   HSHM_INLINE_CROSS_FUN explicit vector_iterator_templ(
       vector<T, HSHM_CLASS_TEMPL_ARGS> *vec, SizeT i)
-      : vec_(vec), i_(static_cast<off64_t>(i)) {}
+      : vec_(vec), i_(static_cast<i64>(i)) {}
 
   /** Construct an iterator (called from iterator) */
   HSHM_INLINE_CROSS_FUN explicit vector_iterator_templ(
-      vector<T, HSHM_CLASS_TEMPL_ARGS> *vec, off64_t i)
+      vector<T, HSHM_CLASS_TEMPL_ARGS> *vec, i64 i)
       : vec_(vec), i_(i) {}
 
   /** Copy constructor */
@@ -192,14 +192,14 @@ struct vector_iterator_templ {
     if constexpr (FORWARD_ITER) {
       return (i_ == 0);
     } else {
-      return (i_ == vec_->template size<off64_t>() - 1);
+      return (i_ == vec_->template size<i64>() - 1);
     }
   }
 
   /** Determine whether this iterator is the end iterator */
   HSHM_INLINE_CROSS_FUN bool is_end() const {
     if constexpr (FORWARD_ITER) {
-      return i_ >= vec_->template size<off64_t>();
+      return i_ >= vec_->template size<i64>();
     } else {
       return i_ == -1;
     }
@@ -250,7 +250,7 @@ class vector : public ShmContainer {
   /** SHM constructor. Default. */
   HSHM_CROSS_FUN
   explicit vector() {
-    init_shm_container(HERMES_MEMORY_MANAGER->GetDefaultAllocator<AllocT>());
+    init_shm_container(HSHM_MEMORY_MANAGER->GetDefaultAllocator<AllocT>());
     SetNull();
   }
 
@@ -264,7 +264,7 @@ class vector : public ShmContainer {
   /** Constructor. Resize + construct. */
   template <typename... Args>
   HSHM_CROSS_FUN explicit vector(size_t length, Args &&...args) {
-    shm_init(HERMES_MEMORY_MANAGER->GetDefaultAllocator<AllocT>(), length,
+    shm_init(HSHM_MEMORY_MANAGER->GetDefaultAllocator<AllocT>(), length,
              std::forward<Args>(args)...);
   }
 
@@ -361,7 +361,7 @@ class vector : public ShmContainer {
   /** Move constructor. */
   HSHM_CROSS_FUN
   vector(vector &&other) {
-    shm_move_op<false>(HERMES_MEMORY_MANAGER->GetDefaultAllocator<AllocT>(),
+    shm_move_op<false>(HSHM_MEMORY_MANAGER->GetDefaultAllocator<AllocT>(),
                        std::move(other));
   }
 
@@ -429,7 +429,7 @@ class vector : public ShmContainer {
   /**
    * Convert to std::vector
    * */
-  HSHM_INLINE_HOST
+  HSHM_INLINE_HOST_FUN
   std::vector<T> vec() {
     std::vector<T> v;
     v.reserve(size());
@@ -495,6 +495,14 @@ class vector : public ShmContainer {
   HSHM_INLINE_CROSS_FUN
   const T &back() const { return (*this)[size() - 1]; }
 
+  /** Pop element at back of vector  */
+  HSHM_INLINE_CROSS_FUN
+  void pop_back() {
+    if (length_ == 0) return;
+    hipc::Allocator::DestructObj(back());
+    --length_;
+  }
+
   /** Construct an element at the back of the vector */
   template <typename... Args>
   HSHM_CROSS_FUN void emplace_back(Args &&...args) {
@@ -535,7 +543,7 @@ class vector : public ShmContainer {
       return;
     }
     delay_ar<T> *vec = data_ar();
-    hipc::Allocator::DestructObj((*this)[pos.i_]);
+    hipc::Allocator::DestructObj((*this)[(size_t)pos.i_]);
     HSHM_MAKE_AR(vec[pos.i_], GetCtxAllocator(), std::forward<Args>(args)...)
   }
 
@@ -550,14 +558,14 @@ class vector : public ShmContainer {
   /** Delete elements between first and last  */
   HSHM_INLINE_CROSS_FUN
   void erase(iterator_t first, iterator_t last) {
-    size_t last_i;
+    i64 last_i;
     if (first.is_end()) return;
     if (last.is_end()) {
       last_i = size();
     } else {
       last_i = last.i_;
     }
-    size_t count = last_i - first.i_;
+    size_t count = (size_t)(last_i - first.i_);
     if (count == 0) return;
     shift_left(first, count);
     length_ -= count;
@@ -647,8 +655,8 @@ class vector : public ShmContainer {
       vec_ptr_ = new_p;
     }
     if (new_vec == nullptr) {
-      HERMES_THROW_ERROR(OUT_OF_MEMORY, max_length * sizeof(delay_ar<T>),
-                         alloc->GetCurrentlyAllocatedSize());
+      HSHM_THROW_ERROR(OUT_OF_MEMORY, max_length * sizeof(delay_ar<T>),
+                       alloc->GetCurrentlyAllocatedSize());
     }
     if (resize) {
       for (size_t i = length_; i < max_length; ++i) {
@@ -695,7 +703,7 @@ class vector : public ShmContainer {
                                          size_t count = 1) {
     auto src = data_ar() + size() - 1;
     auto dst = src + count;
-    auto sz = static_cast<off64_t>(size());
+    auto sz = static_cast<i64>(size());
     for (auto i = sz - 1; i >= pos.i_; --i) {
       memcpy((void *)dst, (void *)src, sizeof(delay_ar<T>));
       dst -= 1;
@@ -720,27 +728,27 @@ class vector : public ShmContainer {
 
   /** End of the forward iterator */
   HSHM_INLINE_CROSS_FUN citerator_t cend() const {
-    return citerator_t(const_cast<vector *>(this), size<off64_t>());
+    return citerator_t(const_cast<vector *>(this), size<i64>());
   }
 
   /** Beginning of the reverse iterator */
   HSHM_INLINE_CROSS_FUN riterator_t rbegin() {
-    return riterator_t(this, size<off64_t>() - 1);
+    return riterator_t(this, size<i64>() - 1);
   }
 
   /** End of the reverse iterator */
   HSHM_INLINE_CROSS_FUN riterator_t rend() {
-    return citerator_t(this, (off64_t)-1);
+    return citerator_t(this, (i64)-1);
   }
 
   /** Beginning of the constant reverse iterator */
   HSHM_INLINE_CROSS_FUN criterator_t crbegin() const {
-    return criterator_t(const_cast<vector *>(this), size<off64_t>() - 1);
+    return criterator_t(const_cast<vector *>(this), size<i64>() - 1);
   }
 
   /** End of the constant reverse iterator */
   HSHM_INLINE_CROSS_FUN criterator_t crend() const {
-    return criterator_t(const_cast<vector *>(this), (off64_t)-1);
+    return criterator_t(const_cast<vector *>(this), (i64)-1);
   }
 
   /** Lets Thallium know how to serialize an hipc::vector. */
@@ -768,4 +776,4 @@ using vector = hipc::vector<T, HSHM_CLASS_TEMPL_ARGS>;
 #undef CLASS_NAME
 #undef CLASS_NEW_ARGS
 
-#endif  // HERMES_DATA_STRUCTURES_LOCKLESS_VECTOR_H_
+#endif  // HSHM_DATA_STRUCTURES_LOCKLESS_VECTOR_H_

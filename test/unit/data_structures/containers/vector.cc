@@ -10,18 +10,19 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include "basic_test.h"
-#include "test_init.h"
 #include "hermes_shm/data_structures/ipc/vector.h"
+
+#include "basic_test.h"
 #include "hermes_shm/data_structures/ipc/list.h"
 #include "hermes_shm/data_structures/ipc/string.h"
+#include "test_init.h"
 #include "vector.h"
 
-using hshm::ipc::vector;
 using hshm::ipc::list;
 using hshm::ipc::string;
+using hshm::ipc::vector;
 
-template<typename T>
+template <typename T>
 void VectorTestRunner(VectorTestSuite<T, vector<T>> &test) {
   test.EmplaceTest(15);
   test.IndexTest();
@@ -37,7 +38,7 @@ void VectorTestRunner(VectorTestSuite<T, vector<T>> &test) {
   test.EraseTest();
 }
 
-template<typename T, bool ptr>
+template <typename T, bool ptr>
 void VectorTest() {
   auto *alloc = HSHM_DEFAULT_ALLOC;
   auto vec = vector<T>(alloc);
@@ -92,9 +93,9 @@ TEST_CASE("VectorOfInt") {
     VectorTest<int, false>();
     VectorTest<int, true>();
     REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
-  } catch (std::exception &e) {
-    FAIL(e.what());
   } catch (hshm::Error &e) {
+    FAIL(e.what());
+  } catch (std::exception &e) {
     FAIL(e.what());
   }
 }

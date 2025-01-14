@@ -10,9 +10,44 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include "basic_test.h"
 #include "queue.h"
+
+#include "basic_test.h"
 #include "test_init.h"
+
+/**
+ * TEST TICKET QUEUE
+ * */
+
+TEST_CASE("TestTicketQueueInt") {
+  auto *alloc = HSHM_DEFAULT_ALLOC;
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+  ProduceThenConsume<hipc::ticket_queue<int>, int>(1, 1, 32, 32);
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+}
+
+TEST_CASE("TestTicketQueueIntMultiThreaded") {
+  auto *alloc = HSHM_DEFAULT_ALLOC;
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+  ProduceAndConsume<hipc::ticket_queue<int>, int>(8, 1, 8192, 64);
+  ProduceAndConsume<hipc::ticket_queue<int>, int>(8, 8, 8192, 64);
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+}
+
+TEST_CASE("TestSplitTicketQueueInt") {
+  auto *alloc = HSHM_DEFAULT_ALLOC;
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+  ProduceThenConsume<hipc::split_ticket_queue<int>, int>(1, 1, 32, 32);
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+}
+
+TEST_CASE("TestSplitTicketQueueIntMultiThreaded") {
+  auto *alloc = HSHM_DEFAULT_ALLOC;
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+  ProduceAndConsume<hipc::split_ticket_queue<int>, int>(8, 1, 8192, 64);
+  ProduceAndConsume<hipc::split_ticket_queue<int>, int>(8, 8, 8192, 64);
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+}
 
 /**
  * TEST DYNAMIC QUEUE
@@ -64,7 +99,7 @@ TEST_CASE("TestSpscListQueueInt") {
  * TEST MPSC LIFO LIST QUEUE
  * */
 
-TEST_CASE("TestMpmcLifoListQueueInt") {
+TEST_CASE("TestMpscLifoListQueueInt") {
   auto *alloc = HSHM_DEFAULT_ALLOC;
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
   ProduceThenConsume<hipc::mpsc_lifo_list_queue<IntEntry>, IntEntry *>(1, 1, 32,
@@ -72,9 +107,11 @@ TEST_CASE("TestMpmcLifoListQueueInt") {
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
 }
 
-TEST_CASE("TestMpmcLifoListQueueIntMultithreaded") {
+TEST_CASE("TestMpscLifoListQueueIntMultithreaded") {
   auto *alloc = HSHM_DEFAULT_ALLOC;
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+  ProduceAndConsume<hipc::mpsc_lifo_list_queue<IntEntry>, IntEntry *>(
+      8, 1, 48000, 32);
   ProduceAndConsume<hipc::mpsc_lifo_list_queue<IntEntry>, IntEntry *>(
       8, 1, 48000, 32);
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);

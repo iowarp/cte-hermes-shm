@@ -1,7 +1,6 @@
-cmake_minimum_required(VERSION 3.10)
 project(hermes_shm)
 
-set(CMAKE_CXX_STANDARD 17)
+
 
 #------------------------------------------------------------------------------
 # External libraries
@@ -15,4 +14,4 @@ message(STATUS "found hermes_shm at ${HermesShm_DIR}")
 #------------------------------------------------------------------------------
 
 add_executable(test test.cc)
-target_link_libraries(test ${HermesShm_LIBRARIES})
+target_link_libraries(test hshm::cxx)

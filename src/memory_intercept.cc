@@ -35,8 +35,8 @@ void* calloc(size_t nmemb, size_t size) {
  * block SIZE bytes long.
  * */
 void* realloc(void* ptr, size_t size) {
-  Pointer p = HERMES_MEMORY_MANAGER->Convert(ptr);
-  auto alloc = HERMES_MEMORY_MANAGER->GetAllocator(p.alloc_id_);
+  Pointer p = HSHM_MEMORY_MANAGER->Convert(ptr);
+  auto alloc = HSHM_MEMORY_MANAGER->GetAllocator(p.alloc_id_);
   return alloc->AllocatePtr<void>(HSHM_DEFAULT_MEM_CTX, size);
 }
 
@@ -50,8 +50,8 @@ void* reallocarray(void* ptr, size_t nmemb, size_t size) {
 
 /** Free a block allocated by `malloc', `realloc' or `calloc'. */
 void free(void* ptr) {
-  Pointer p = HERMES_MEMORY_MANAGER->Convert(ptr);
-  auto alloc = HERMES_MEMORY_MANAGER->GetAllocator(p.alloc_id_);
+  Pointer p = HSHM_MEMORY_MANAGER->Convert(ptr);
+  auto alloc = HSHM_MEMORY_MANAGER->GetAllocator(p.alloc_id_);
   alloc->Free(p);
 }
 
@@ -63,7 +63,7 @@ void* memalign(size_t alignment, size_t size) {
 
 /** Allocate SIZE bytes on a page boundary. */
 void* valloc(size_t size) {
-  return memalign(HERMES_SYSTEM_INFO->page_size_, size);
+  return memalign(HSHM_SYSTEM_INFO->page_size_, size);
 }
 
 /**

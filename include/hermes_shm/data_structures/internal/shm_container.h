@@ -10,8 +10,8 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_SHM_CONTAINER_H_
-#define HERMES_SHM_CONTAINER_H_
+#ifndef HSHM_SHM_CONTAINER_H_
+#define HSHM_SHM_CONTAINER_H_
 
 #include "hermes_shm/constants/macros.h"
 #include "hermes_shm/memory/memory_manager_.h"
@@ -195,7 +195,7 @@ HSHM_INLINE_CROSS_FUN static T *typed_nullptr() {
   HSHM_INLINE_CROSS_FUN                                                        \
   AllocT *GetAllocator() const {                                               \
     if constexpr (!(HSHM_FLAGS & hipc::ShmFlag::kIsPrivate)) {                 \
-      return HERMES_MEMORY_MANAGER->GetAllocator<AllocT>(alloc_info_);         \
+      return HSHM_MEMORY_MANAGER->GetAllocator<AllocT>(alloc_info_);           \
     } else {                                                                   \
       return alloc_info_.alloc_;                                               \
     }                                                                          \
@@ -247,4 +247,4 @@ HSHM_INLINE_CROSS_FUN static T *typed_nullptr() {
                                (__TU(CLASS_NAME)), (__TU(CLASS_NAME)))
 }  // namespace hshm::ipc
 
-#endif  // HERMES_SHM_CONTAINER_H_
+#endif  // HSHM_SHM_CONTAINER_H_

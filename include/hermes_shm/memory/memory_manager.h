@@ -10,8 +10,8 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_MEMORY_MEMORY_MANAGER_H_
-#define HERMES_MEMORY_MEMORY_MANAGER_H_
+#ifndef HSHM_MEMORY_MEMORY_MANAGER_H_
+#define HSHM_MEMORY_MEMORY_MANAGER_H_
 
 #include "hermes_shm/constants/macros.h"
 #include "hermes_shm/memory/allocator/allocator_factory.h"
@@ -67,33 +67,36 @@ HSHM_CROSS_FUN void MemoryManager::DestroyAllocator(
     return;
   }
   FullPtr<AllocT> ptr((AllocT *)dead_alloc);
-  auto alloc = HERMES_MEMORY_MANAGER->GetAllocator<HSHM_ROOT_ALLOC_T>(
-      ptr.shm_.alloc_id_);
+  auto alloc =
+      HSHM_MEMORY_MANAGER->GetAllocator<HSHM_ROOT_ALLOC_T>(ptr.shm_.alloc_id_);
   alloc->template DelObjLocal(HSHM_DEFAULT_MEM_CTX, ptr);
 }
 
 template <typename T, typename PointerT>
-LPointer<T, PointerT>::LPointer(const PointerT &shm) : shm_(shm) {
-  ptr_ = HERMES_MEMORY_MANAGER->Convert<T, PointerT>(shm);
+HSHM_INLINE_CROSS_FUN LPointer<T, PointerT>::LPointer(const PointerT &shm)
+    : shm_(shm) {
+  ptr_ = HSHM_MEMORY_MANAGER->Convert<T, PointerT>(shm);
 }
 
 template <typename T, typename PointerT>
-LPointer<T, PointerT>::LPointer(T *ptr) : ptr_(ptr) {
-  shm_ = HERMES_MEMORY_MANAGER->Convert<T, PointerT>(ptr);
+HSHM_INLINE_CROSS_FUN LPointer<T, PointerT>::LPointer(T *ptr) : ptr_(ptr) {
+  shm_ = HSHM_MEMORY_MANAGER->Convert<T, PointerT>(ptr);
 }
 
 template <typename T, typename PointerT>
-LPointer<T, PointerT>::LPointer(hipc::Allocator *alloc, T *ptr) : ptr_(ptr) {
+HSHM_INLINE_CROSS_FUN LPointer<T, PointerT>::LPointer(hipc::Allocator *alloc,
+                                                      T *ptr)
+    : ptr_(ptr) {
   shm_ = alloc->Convert<T, PointerT>(ptr);
 }
 
 template <typename T, typename PointerT>
-LPointer<T, PointerT>::LPointer(hipc::Allocator *alloc,
-                                const OffsetPointer &shm) {
+HSHM_INLINE_CROSS_FUN LPointer<T, PointerT>::LPointer(
+    hipc::Allocator *alloc, const OffsetPointer &shm) {
   ptr_ = alloc->Convert<T, OffsetPointer>(shm);
   shm_ = PointerT(alloc->GetId(), shm);
 }
 
 }  // namespace hshm::ipc
 
-#endif  // HERMES_MEMORY_MEMORY_MANAGER_H_
+#endif  // HSHM_MEMORY_MEMORY_MANAGER_H_

@@ -10,15 +10,16 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_SHM_INCLUDE_HERMES_SHM_UTIL_ENCRYPT_BLOWFISH_H
-#define HERMES_SHM_INCLUDE_HERMES_SHM_UTIL_ENCRYPT_BLOWFISH_H
+#ifndef HSHM_SHM_INCLUDE_HSHM_SHM_UTIL_ENCRYPT_BLOWFISH_H
+#define HSHM_SHM_INCLUDE_HSHM_SHM_UTIL_ENCRYPT_BLOWFISH_H
 
-#include <openssl/evp.h>
 #include <openssl/aes.h>
+#include <openssl/evp.h>
 #include <openssl/rand.h>
 
 #include <string>
-#include <hermes_shm/data_structures/all.h>
+
+#include "hermes_shm/data_structures/all.h"
 
 namespace hshm {
 
@@ -32,7 +33,7 @@ class Blowfish {
   void CreateInitialVector(const std::string &salt = "") {
     salt_ = salt;
     iv_ = std::string(EVP_CIPHER_iv_length(EVP_bf_cbc()), 0);
-    RAND_bytes((unsigned char*)iv_.c_str(),
+    RAND_bytes((unsigned char *)iv_.c_str(),
                EVP_CIPHER_iv_length(EVP_bf_cbc()));
   }
 
@@ -40,81 +41,65 @@ class Blowfish {
     const EVP_CIPHER *cipher = EVP_bf_cbc();
     const EVP_MD *digest = EVP_sha256();
     key_ = std::string(32, 0);
-    int ret = EVP_BytesToKey(cipher, digest,
-                             (unsigned char*)salt_.c_str(),
-                             (unsigned char*)password.c_str(),
-                             password.size(), 1,
-                             (unsigned char*)key_.c_str(),
-                             (unsigned char*)iv_.c_str());
+    int ret = EVP_BytesToKey(cipher, digest, (unsigned char *)salt_.c_str(),
+                             (unsigned char *)password.c_str(), password.size(),
+                             1, (unsigned char *)key_.c_str(),
+                             (unsigned char *)iv_.c_str());
     if (!ret) {
       HELOG(kError, "Failed to generate key");
     }
   }
 
-  bool Encrypt(char *output, size_t &output_size,
-               char *input, size_t input_size) {
+  bool Encrypt(char *output, size_t &output_size, char *input,
+               size_t input_size) {
     EVP_CIPHER_CTX *ctx;
     int ret;
 
-    if (!(ctx = EVP_CIPHER_CTX_new()))
-      return false;
+    if (!(ctx = EVP_CIPHER_CTX_new())) return false;
 
     ret = EVP_EncryptInit_ex(ctx, EVP_bf_cbc(), NULL,
-                             (unsigned char*)key_.c_str(),
-                             (unsigned char*)iv_.c_str());
-    if (1 != ret)
-      return false;
+                             (unsigned char *)key_.c_str(),
+                             (unsigned char *)iv_.c_str());
+    if (1 != ret) return false;
 
     int output_len_int = input_size;
-    ret =  EVP_EncryptUpdate(ctx,
-                             (unsigned char*)output,
-                             (int*)&output_len_int,
-                             (unsigned char*)input,
-                             input_size);
-    if (1 != ret)
-      return false;
+    ret =
+        EVP_EncryptUpdate(ctx, (unsigned char *)output, (int *)&output_len_int,
+                          (unsigned char *)input, input_size);
+    if (1 != ret) return false;
 
     int ciphertext_len;
-    ret = EVP_EncryptFinal_ex(ctx,
-                              (unsigned char*)output + input_size,
+    ret = EVP_EncryptFinal_ex(ctx, (unsigned char *)output + input_size,
                               &ciphertext_len);
     output_size = input_size + ciphertext_len;
-    if (1 != ret)
-      return false;
+    if (1 != ret) return false;
 
     EVP_CIPHER_CTX_free(ctx);
     return true;
   }
 
-  bool Decrypt(char *output, size_t &output_size,
-               char *input, size_t input_size) {
+  bool Decrypt(char *output, size_t &output_size, char *input,
+               size_t input_size) {
     EVP_CIPHER_CTX *ctx;
     int ret;
 
-    if (!(ctx = EVP_CIPHER_CTX_new()))
-      return false;
+    if (!(ctx = EVP_CIPHER_CTX_new())) return false;
 
     ret = EVP_DecryptInit_ex(ctx, EVP_bf_cbc(), NULL,
-                             (unsigned char*)key_.c_str(),
-                             (unsigned char*)iv_.c_str());
-    if (1 != ret)
-      return false;
+                             (unsigned char *)key_.c_str(),
+                             (unsigned char *)iv_.c_str());
+    if (1 != ret) return false;
 
     int output_size_int;
-    ret = EVP_DecryptUpdate(
-        ctx,
-        (unsigned char*)output, &output_size_int,
-        (unsigned char*)input, input_size);
-    if (1 != ret)
-      return false;
+    ret = EVP_DecryptUpdate(ctx, (unsigned char *)output, &output_size_int,
+                            (unsigned char *)input, input_size);
+    if (1 != ret) return false;
     output_size = output_size_int;
 
-
     int plaintext_len;
-    ret = EVP_DecryptFinal_ex(
-        ctx, (unsigned char*)output + output_size_int, &plaintext_len);
-    if (1 != ret)
-      return false;
+    ret = EVP_DecryptFinal_ex(ctx, (unsigned char *)output + output_size_int,
+                              &plaintext_len);
+    if (1 != ret) return false;
 
     EVP_CIPHER_CTX_free(ctx);
     return true;
@@ -123,4 +108,4 @@ class Blowfish {
 
 }  // namespace hshm
 
-#endif  // HERMES_SHM_INCLUDE_HERMES_SHM_UTIL_ENCRYPT_BLOWFISH_H
+#endif  // HSHM_SHM_INCLUDE_HSHM_SHM_UTIL_ENCRYPT_BLOWFISH_H

@@ -10,12 +10,13 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_TEST_UNIT_DATA_STRUCTURES_CONTAINERS_VECTOR_H_
-#define HERMES_TEST_UNIT_DATA_STRUCTURES_CONTAINERS_VECTOR_H_
+#ifndef HSHM_TEST_UNIT_DATA_STRUCTURES_CONTAINERS_VECTOR_H_
+#define HSHM_TEST_UNIT_DATA_STRUCTURES_CONTAINERS_VECTOR_H_
 
 #include "list.h"
 
-template<typename T, typename Container, typename AllocT = HSHM_DEFAULT_ALLOC_T>
+template <typename T, typename Container,
+          typename AllocT = HSHM_DEFAULT_ALLOC_T>
 class VectorTestSuite : public ListTestSuite<T, Container> {
  public:
   using ListTestSuite<T, Container, AllocT>::obj_;
@@ -23,7 +24,7 @@ class VectorTestSuite : public ListTestSuite<T, Container> {
  public:
   /// Constructor
   VectorTestSuite(Container &obj, AllocT *alloc)
-  : ListTestSuite<T, Container>(obj, alloc) {}
+      : ListTestSuite<T, Container>(obj, alloc) {}
 
   /// Test vector index operator
   void IndexTest() {
@@ -34,4 +35,4 @@ class VectorTestSuite : public ListTestSuite<T, Container> {
   }
 };
 
-#endif  // HERMES_TEST_UNIT_DATA_STRUCTURES_CONTAINERS_VECTOR_H_
+#endif  // HSHM_TEST_UNIT_DATA_STRUCTURES_CONTAINERS_VECTOR_H_

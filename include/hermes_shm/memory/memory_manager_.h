@@ -2,18 +2,19 @@
 // Created by llogan on 10/11/24.
 //
 
-#ifndef HERMES_SHM_INCLUDE_HERMES_SHM_MEMORY_MEMORY_MANAGER__H_
-#define HERMES_SHM_INCLUDE_HERMES_SHM_MEMORY_MEMORY_MANAGER__H_
+#ifndef HSHM_SHM_INCLUDE_HSHM_SHM_MEMORY_MEMORY_MANAGER__H_
+#define HSHM_SHM_INCLUDE_HSHM_SHM_MEMORY_MEMORY_MANAGER__H_
 
 #include "allocator/allocator_factory_.h"
 #include "hermes_shm/memory/allocator/allocator.h"
 #include "hermes_shm/memory/backend/posix_mmap.h"
-#include "hermes_shm/util/singleton/_global_singleton.h"
+#include "hermes_shm/types/numbers.h"
+#include "hermes_shm/util/singleton.h"
 
 /** Singleton declaration */
-#define HERMES_MEMORY_MANAGER \
+#define HSHM_MEMORY_MANAGER \
   hshm::GlobalSingleton<hshm::ipc::MemoryManager>::GetInstance()
-#define HERMES_MEMORY_MANAGER_T hshm::ipc::MemoryManager *
+#define HSHM_MEMORY_MANAGER_T hshm::ipc::MemoryManager *
 
 namespace hshm::ipc {
 
@@ -34,12 +35,12 @@ class MemoryManager {
   Allocator *default_allocator_;
   char root_backend_space_[64];
   char root_alloc_space_[64];
-  char root_alloc_data_[KILOBYTES(64)];
+  char root_alloc_data_[hshm::Unit<size_t>::Kilobytes(64)];
 
  public:
   /** Create the root allocator */
   HSHM_CROSS_FUN
-  MemoryManager();
+  HSHM_DLL MemoryManager();
 
   /**
    * Initialize memory manager
@@ -47,11 +48,11 @@ class MemoryManager {
    * Must be called explicitly if on GPU.
    * */
   HSHM_CROSS_FUN
-  void Init();
+  HSHM_DLL void Init();
 
   /** Default backend size */
   HSHM_CROSS_FUN
-  static size_t GetDefaultBackendSize();
+  HSHM_DLL static size_t GetDefaultBackendSize();
 
   /**
    * Create a memory backend. Memory backends are divided into slots.
@@ -90,7 +91,7 @@ class MemoryManager {
   HSHM_CROSS_FUN
   MemoryBackend *RegisterBackend(MemoryBackend *backend) {
     if (GetBackend(backend->GetId())) {
-      HERMES_THROW_ERROR(MEMORY_BACKEND_REPEATED);
+      HSHM_THROW_ERROR(MEMORY_BACKEND_REPEATED);
     }
     backends_[backend->GetId().id_] = backend;
     return backend;
@@ -100,8 +101,8 @@ class MemoryManager {
    * Attaches to an existing memory backend located at \a url url.
    * */
   HSHM_CROSS_FUN
-  MemoryBackend *AttachBackend(MemoryBackendType type,
-                               const hshm::chararr &url);
+  HSHM_DLL MemoryBackend *AttachBackend(MemoryBackendType type,
+                                        const hshm::chararr &url);
 
   /**
    * Returns a pointer to a backend that has already been attached.
@@ -122,13 +123,14 @@ class MemoryManager {
   }
 
   /** Free the backend */
-  HSHM_CROSS_FUN void DestroyBackend(const MemoryBackendId &backend_id);
+  HSHM_CROSS_FUN HSHM_DLL void DestroyBackend(
+      const MemoryBackendId &backend_id);
 
   /**
    * Scans all attached backends for new memory allocators.
    * */
   HSHM_CROSS_FUN
-  void ScanBackends(bool find_allocs = true);
+  HSHM_DLL void ScanBackends(bool find_allocs = true);
 
   /**
    * Create and register a memory allocator for a particular backend.
@@ -143,7 +145,7 @@ class MemoryManager {
    * also be used externally.
    * */
   HSHM_CROSS_FUN
-  Allocator *RegisterAllocator(Allocator *alloc, bool do_scan = true);
+  HSHM_DLL Allocator *RegisterAllocator(Allocator *alloc, bool do_scan = true);
 
   /**
    * Registers an internal allocator.
@@ -235,7 +237,7 @@ class MemoryManager {
    * */
   template <typename T, typename POINTER_T = Pointer>
   HSHM_INLINE_CROSS_FUN POINTER_T Convert(T *ptr) {
-    for (auto &alloc : HERMES_MEMORY_MANAGER->allocators_) {
+    for (auto &alloc : HSHM_MEMORY_MANAGER->allocators_) {
       if (alloc && alloc->ContainsPtr(ptr)) {
         return alloc->template Convert<T, POINTER_T>(ptr);
       }
@@ -246,4 +248,4 @@ class MemoryManager {
 
 }  // namespace hshm::ipc
 
-#endif  // HERMES_SHM_INCLUDE_HERMES_SHM_MEMORY_MEMORY_MANAGER__H_
+#endif  // HSHM_SHM_INCLUDE_HSHM_SHM_MEMORY_MEMORY_MANAGER__H_

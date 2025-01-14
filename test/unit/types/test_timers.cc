@@ -10,19 +10,25 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include <hermes_shm/util/logging.h>
-#include <hermes_shm/util/timer.h>
-#include <hermes_shm/util/timer_mpi.h>
-#include <hermes_shm/util/timer_thread.h>
-#include <unistd.h>
-
 #include "basic_test.h"
+#include "hermes_shm/util/logging.h"
+#include "hermes_shm/util/timer.h"
+#include "hermes_shm/util/timer_mpi.h"
+#include "hermes_shm/util/timer_thread.h"
+
+#ifdef HSHM_ENABLE_MPI
+#include <mpi.h>
+#endif
+
+#ifdef HSHM_ENABLE_OPENMP
+#include <omp.h>
+#endif
 
 TEST_CASE("TestPeriodic") {
-  HILOG_PERIODIC(0, 0, SECONDS(1), "Print periodic 1");
+  HILOG_PERIODIC(0, 0, hshm::Unit<size_t>::Seconds(1), "Print periodic 1");
   sleep(1);
-  HILOG_PERIODIC(0, 0, SECONDS(1), "Print periodic 2");
-  HILOG_PERIODIC(0, 0, SECONDS(1), "Print periodic 3");
+  HILOG_PERIODIC(0, 0, hshm::Unit<size_t>::Seconds(1), "Print periodic 2");
+  HILOG_PERIODIC(0, 0, hshm::Unit<size_t>::Seconds(1), "Print periodic 3");
 }
 
 TEST_CASE("TestTimepoint") {
@@ -40,6 +46,7 @@ TEST_CASE("TestTimer") {
   HILOG(kInfo, "Print timer: {}", timer.GetSec());
 }
 
+#ifdef HSHM_ENABLE_MPI
 TEST_CASE("TestMpiTimer") {
   hshm::MpiTimer mpi_timer(MPI_COMM_WORLD);
   mpi_timer.Resume();
@@ -48,7 +55,9 @@ TEST_CASE("TestMpiTimer") {
   mpi_timer.Collect();
   HILOG(kInfo, "Print timer: {}", mpi_timer.GetSec());
 }
+#endif
 
+#ifdef HSHM_ENABLE_OPENMP
 TEST_CASE("TestOmpTimer") {
   hshm::ThreadTimer omp_timer(4);
 #pragma omp parallel shared(omp_timer) num_threads(4)
@@ -62,3 +71,4 @@ TEST_CASE("TestOmpTimer") {
   omp_timer.Collect();
   HILOG(kInfo, "Print timer: {}", omp_timer.GetSec());
 }
+#endif

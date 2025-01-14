@@ -10,11 +10,10 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_SHM_INCLUDE_HERMES_SHM_UTIL_TIMER_THREAD_H_
-#define HERMES_SHM_INCLUDE_HERMES_SHM_UTIL_TIMER_THREAD_H_
+#ifndef HSHM_SHM_INCLUDE_HSHM_SHM_UTIL_TIMER_THREAD_H_
+#define HSHM_SHM_INCLUDE_HSHM_SHM_UTIL_TIMER_THREAD_H_
 
 #include "timer.h"
-#include "omp.h"
 
 namespace hshm {
 
@@ -30,21 +29,13 @@ class ThreadTimer : public NsecTimer {
     timers_.resize(nprocs_);
   }
 
-  void SetRank(int rank) {
-    rank_ = rank;
-  }
+  void SetRank(int rank) { rank_ = rank; }
 
-  void Resume() {
-    timers_[rank_].Resume();
-  }
+  void Resume() { timers_[rank_].Resume(); }
 
-  void Pause() {
-    timers_[rank_].Pause();
-  }
+  void Pause() { timers_[rank_].Pause(); }
 
-  void Reset() {
-    timers_[rank_].Reset();
-  }
+  void Reset() { timers_[rank_].Reset(); }
 
   void Collect() {
     std::vector<double> rank_times;
@@ -56,7 +47,6 @@ class ThreadTimer : public NsecTimer {
   }
 };
 
-
 }  // namespace hshm
 
-#endif  // HERMES_SHM_INCLUDE_HERMES_SHM_UTIL_TIMER_THREAD_H_
+#endif  // HSHM_SHM_INCLUDE_HSHM_SHM_UTIL_TIMER_THREAD_H_

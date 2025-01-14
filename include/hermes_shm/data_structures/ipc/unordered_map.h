@@ -10,8 +10,8 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_DATA_STRUCTURES_UNORDERED_MAP_H_
-#define HERMES_DATA_STRUCTURES_UNORDERED_MAP_H_
+#ifndef HSHM_DATA_STRUCTURES_UNORDERED_MAP_H_
+#define HSHM_DATA_STRUCTURES_UNORDERED_MAP_H_
 
 #include "hermes_shm/data_structures/internal/shm_internal.h"
 #include "hermes_shm/data_structures/ipc/slist.h"
@@ -175,7 +175,7 @@ class unordered_map : public ShmContainer {
   delay_ar<BUCKET_VEC_T> buckets_;
   RealNumber max_capacity_;
   RealNumber growth_;
-  hipc::atomic<hshm::min_u64> length_;
+  hipc::atomic<hshm::size_t> length_;
 
  public:
   /**====================================
@@ -194,7 +194,7 @@ class unordered_map : public ShmContainer {
   explicit unordered_map(int num_buckets = 20,
                          RealNumber max_capacity = RealNumber(4, 5),
                          RealNumber growth = RealNumber(5, 4)) {
-    shm_init(HERMES_MEMORY_MANAGER->GetDefaultAllocator<AllocT>(), num_buckets,
+    shm_init(HSHM_MEMORY_MANAGER->GetDefaultAllocator<AllocT>(), num_buckets,
              max_capacity, growth);
   }
 
@@ -234,7 +234,7 @@ class unordered_map : public ShmContainer {
   /** Copy constructor */
   HSHM_CROSS_FUN
   explicit unordered_map(const unordered_map &other) {
-    init_shm_container(HERMES_MEMORY_MANAGER->GetDefaultAllocator<AllocT>());
+    init_shm_container(HSHM_MEMORY_MANAGER->GetDefaultAllocator<AllocT>());
     shm_strong_copy_construct(other);
   }
 
@@ -474,7 +474,7 @@ class unordered_map : public ShmContainer {
     if (!iter.is_end()) {
       return (*iter).second_.get_ref();
     }
-    HERMES_THROW_ERROR(UNORDERED_MAP_CANT_FIND);
+    HSHM_THROW_ERROR(UNORDERED_MAP_CANT_FIND);
   }
 
   /** Find an object in the unordered_map */
@@ -515,7 +515,7 @@ class unordered_map : public ShmContainer {
    * ===================================*/
 
   /** The number of entries in the map */
-  HSHM_INLINE_CROSS_FUN size_t size() const { return length_.load(); }
+  HSHM_INLINE_CROSS_FUN size_t size() const { return (size_t)length_.load(); }
 
   /** The number of buckets in the map */
   HSHM_INLINE_CROSS_FUN size_t get_num_buckets() const {
@@ -572,4 +572,4 @@ using unordered_map = hipc::unordered_map<Key, T, Hash, HSHM_CLASS_TEMPL_ARGS>;
 #undef CLASS_NAME
 #undef CLASS_NEW_ARGS
 
-#endif  // HERMES_DATA_STRUCTURES_UNORDERED_MAP_H_
+#endif  // HSHM_DATA_STRUCTURES_UNORDERED_MAP_H_

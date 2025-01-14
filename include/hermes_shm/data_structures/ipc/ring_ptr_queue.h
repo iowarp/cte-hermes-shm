@@ -2,8 +2,8 @@
 // Created by llogan on 28/10/24.
 //
 
-#ifndef HERMES_SHM_INCLUDE_HERMES_SHM_DATA_STRUCTURES_IPC_ring_ptr_queue_base_H_
-#define HERMES_SHM_INCLUDE_HERMES_SHM_DATA_STRUCTURES_IPC_ring_ptr_queue_base_H_
+#ifndef HSHM_SHM_INCLUDE_HSHM_SHM_DATA_STRUCTURES_IPC_ring_ptr_queue_base_H_
+#define HSHM_SHM_INCLUDE_HSHM_SHM_DATA_STRUCTURES_IPC_ring_ptr_queue_base_H_
 
 #include "hermes_shm/data_structures/internal/shm_internal.h"
 #include "hermes_shm/thread/lock.h"
@@ -55,7 +55,7 @@ class ring_ptr_queue_base : public ShmContainer {
   /** Constructor. Default. */
   HSHM_CROSS_FUN
   ring_ptr_queue_base(size_t depth = 1024) {
-    shm_init(HERMES_MEMORY_MANAGER->GetDefaultAllocator<AllocT>(), depth);
+    shm_init(HSHM_MEMORY_MANAGER->GetDefaultAllocator<AllocT>(), depth);
   }
 
   /** SHM constructor. Default. */
@@ -211,7 +211,7 @@ class ring_ptr_queue_base : public ShmContainer {
             if (size <= GetDepth()) {
               break;
             }
-            HERMES_THREAD_MODEL->Yield();
+            HSHM_THREAD_MODEL->Yield();
           }
         }
       }
@@ -251,7 +251,7 @@ class ring_ptr_queue_base : public ShmContainer {
 
     // Pop the element, but only if it's marked valid
     qtok_id idx = head % (*queue_).size();
-    T &entry = (*queue_)[idx];
+    T &entry = (*queue_)[(size_t)idx];
 
     // Check if bit is marked
     bool is_marked = IsMarked(entry);
@@ -400,12 +400,8 @@ using fixed_spsc_ptr_queue =
     ring_ptr_queue_base<T, false, false, true, HSHM_CLASS_TEMPL_ARGS>;
 
 template <typename T, HSHM_CLASS_TEMPL_WITH_DEFAULTS>
-using fixed_mpmc_ptr_queue =
+using fixed_mpsc_ptr_queue =
     ring_ptr_queue_base<T, true, true, true, HSHM_CLASS_TEMPL_ARGS>;
-
-template <typename T, HSHM_CLASS_TEMPL_WITH_DEFAULTS>
-using fixed_mpsc_ptr_queue = fixed_mpmc_ptr_queue<T, HSHM_CLASS_TEMPL_ARGS>;
-
 }  // namespace hshm::ipc
 
 namespace hshm {
@@ -423,15 +419,12 @@ using fixed_spsc_ptr_queue =
     hipc::ring_ptr_queue_base<T, false, false, true, HSHM_CLASS_TEMPL_ARGS>;
 
 template <typename T, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
-using fixed_mpmc_ptr_queue =
+using fixed_mpsc_ptr_queue =
     hipc::ring_ptr_queue_base<T, true, true, true, HSHM_CLASS_TEMPL_ARGS>;
-
-template <typename T, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
-using fixed_mpsc_ptr_queue = fixed_mpmc_ptr_queue<T, HSHM_CLASS_TEMPL_ARGS>;
 
 }  // namespace hshm
 
 #undef CLASS_NAME
 #undef CLASS_NEW_ARGS
 
-#endif  // HERMES_SHM_INCLUDE_HERMES_SHM_DATA_STRUCTURES_IPC_ring_ptr_queue_base_H_
+#endif  // HSHM_SHM_INCLUDE_HSHM_SHM_DATA_STRUCTURES_IPC_ring_ptr_queue_base_H_

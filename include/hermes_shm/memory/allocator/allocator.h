@@ -10,17 +10,16 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_MEMORY_ALLOCATOR_ALLOCATOR_H_
-#define HERMES_MEMORY_ALLOCATOR_ALLOCATOR_H_
-
-#include <hermes_shm/memory/memory.h>
-#include <hermes_shm/util/errors.h>
+#ifndef HSHM_MEMORY_ALLOCATOR_ALLOCATOR_H_
+#define HSHM_MEMORY_ALLOCATOR_ALLOCATOR_H_
 
 #include <cstdint>
 
 #include "hermes_shm/constants/macros.h"
+#include "hermes_shm/memory/memory.h"
 #include "hermes_shm/thread/thread_model/thread_model.h"
 #include "hermes_shm/types/numbers.h"
+#include "hermes_shm/util/errors.h"
 
 namespace hshm::ipc {
 
@@ -45,7 +44,7 @@ struct AllocatorHeader {
   AllocatorType allocator_type_;
   AllocatorId alloc_id_;
   size_t custom_header_size_;
-  hipc::atomic<hshm::min_u64> total_alloc_;
+  hipc::atomic<hshm::size_t> total_alloc_;
 
   HSHM_CROSS_FUN
   AllocatorHeader() = default;
@@ -60,21 +59,21 @@ struct AllocatorHeader {
   }
 
   HSHM_INLINE_CROSS_FUN
-  void AddSize(hshm::min_u64 size) {
+  void AddSize(hshm::size_t size) {
 #ifdef HSHM_ALLOC_TRACK_SIZE
     total_alloc_ += size;
 #endif
   }
 
   HSHM_INLINE_CROSS_FUN
-  void SubSize(hshm::min_u64 size) {
+  void SubSize(hshm::size_t size) {
 #ifdef HSHM_ALLOC_TRACK_SIZE
     total_alloc_ -= size;
 #endif
   }
 
   HSHM_INLINE_CROSS_FUN
-  hshm::min_u64 GetCurrentlyAllocatedSize() { return total_alloc_.load(); }
+  hshm::size_t GetCurrentlyAllocatedSize() { return total_alloc_.load(); }
 };
 
 /** Memory context */
@@ -93,7 +92,7 @@ class MemContext {
 };
 
 /** The allocator information struct */
-struct Allocator {
+class Allocator {
  public:
   AllocatorType type_;
   AllocatorId id_;
@@ -258,7 +257,7 @@ class BaseAllocator : public CoreAllocT {
    * allocator must have "id" as its first argument.
    * */
   template <typename... Args>
-  void shm_init(AllocatorId id, Args... args) {
+  HSHM_CROSS_FUN void shm_init(AllocatorId id, Args... args) {
     CoreAllocT::shm_init(id, std::forward<Args>(args)...);
   }
 
@@ -406,7 +405,7 @@ class BaseAllocator : public CoreAllocT {
   template <typename PointerT = Pointer>
   HSHM_INLINE_CROSS_FUN void Free(const MemContext &ctx, PointerT &p) {
     if (p.IsNull()) {
-      HERMES_THROW_ERROR(INVALID_FREE);
+      HSHM_THROW_ERROR(INVALID_FREE);
     }
     FreeOffsetNoNullCheck(ctx, OffsetPointer(p.off_.load()));
   }
@@ -516,7 +515,7 @@ class BaseAllocator : public CoreAllocT {
   template <typename T = void>
   HSHM_INLINE_CROSS_FUN void FreePtr(const MemContext &ctx, T *ptr) {
     if (ptr == nullptr) {
-      HERMES_THROW_ERROR(INVALID_FREE);
+      HSHM_THROW_ERROR(INVALID_FREE);
     }
     FreeOffsetNoNullCheck(ctx, Convert<T, OffsetPointer>(ptr));
   }
@@ -571,7 +570,7 @@ class BaseAllocator : public CoreAllocT {
   HSHM_INLINE_CROSS_FUN void FreeLocalPtr(const MemContext &ctx,
                                           FullPtr<T, PointerT> &ptr) {
     if (ptr.ptr_ == nullptr) {
-      HERMES_THROW_ERROR(INVALID_FREE);
+      HSHM_THROW_ERROR(INVALID_FREE);
     }
     FreeOffsetNoNullCheck(ctx, ptr.shm_.ToOffsetPointer());
   }
@@ -629,7 +628,7 @@ class BaseAllocator : public CoreAllocT {
   HSHM_INLINE_CROSS_FUN void FreeArray(const MemContext &ctx,
                                        Array<PointerT> &ptr) {
     if (ptr.shm_.IsNull()) {
-      HERMES_THROW_ERROR(INVALID_FREE);
+      HSHM_THROW_ERROR(INVALID_FREE);
     }
     FreeOffsetNoNullCheck(ctx, ptr.shm_.ToOffsetPointer());
   }
@@ -687,7 +686,7 @@ class BaseAllocator : public CoreAllocT {
   HSHM_INLINE_CROSS_FUN void FreeLocalArray(const MemContext &ctx,
                                             LArray<T, PointerT> &ptr) {
     if (ptr.ptr_ == nullptr) {
-      HERMES_THROW_ERROR(INVALID_FREE);
+      HSHM_THROW_ERROR(INVALID_FREE);
     }
     FreeOffsetNoNullCheck(ctx, ptr.shm_.ToOffsetPointer());
   }
@@ -996,7 +995,7 @@ class BaseAllocator : public CoreAllocT {
    * */
   template <typename T, typename... Args>
   HSHM_INLINE_CROSS_FUN static void ConstructObj(T &obj, Args &&...args) {
-    CoreAllocT::template ConstructObj(obj, std::forward<Args>(args)...);
+    CoreAllocT::template ConstructObj<T>(obj, std::forward<Args>(args)...);
   }
 
   /**
@@ -1008,7 +1007,7 @@ class BaseAllocator : public CoreAllocT {
    * */
   template <typename T>
   HSHM_INLINE_CROSS_FUN static void DestructObjs(T *ptr, size_t count) {
-    CoreAllocT::template DestructObjs(ptr, count);
+    CoreAllocT::template DestructObjs<T>(ptr, count);
   }
 
   /**
@@ -1020,7 +1019,7 @@ class BaseAllocator : public CoreAllocT {
    * */
   template <typename T>
   HSHM_INLINE_CROSS_FUN static void DestructObj(T &obj) {
-    CoreAllocT::template DestructObj(obj);
+    CoreAllocT::template DestructObj<T>(obj);
   }
 
   /**====================================
@@ -1288,4 +1287,4 @@ class TlsAllocatorInfo : public thread::ThreadLocalData {
 
 }  // namespace hshm::ipc
 
-#endif  // HERMES_MEMORY_ALLOCATOR_ALLOCATOR_H_
+#endif  // HSHM_MEMORY_ALLOCATOR_ALLOCATOR_H_

@@ -10,8 +10,8 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_TIMER_H
-#define HERMES_TIMER_H
+#ifndef HSHM_TIMER_H
+#define HSHM_TIMER_H
 
 #include <chrono>
 #include <functional>
@@ -47,7 +47,8 @@ class TimepointBase {
   HSHM_INLINE_CROSS_FUN double GetNsecFromStart() const {
     std::chrono::time_point<T> end_ = T::now();
     double elapsed =
-        std::chrono::duration_cast<std::chrono::nanoseconds>(end_ - start_)
+        (double)std::chrono::duration_cast<std::chrono::nanoseconds>(end_ -
+                                                                     start_)
             .count();
     return elapsed;
   }
@@ -126,8 +127,8 @@ class PeriodicRun {
 };
 
 #define HSHM_PERIODIC(IDX) \
-  hshm::EasySingleton<hshm::PeriodicRun<IDX>>::GetInstance()
+  hshm::Singleton<hshm::PeriodicRun<IDX>>::GetInstance()
 
 }  // namespace hshm
 
-#endif  // HERMES_TIMER_H
+#endif  // HSHM_TIMER_H

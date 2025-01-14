@@ -10,10 +10,11 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_SHM_INCLUDE_HERMES_SHM_TYPES_NUMBERS_H_
-#define HERMES_SHM_INCLUDE_HERMES_SHM_TYPES_NUMBERS_H_
+#ifndef HSHM_SHM_INCLUDE_HSHM_SHM_TYPES_NUMBERS_H_
+#define HSHM_SHM_INCLUDE_HSHM_SHM_TYPES_NUMBERS_H_
 
 #include <cstdint>
+#include <iostream>
 
 #include "hermes_shm/constants/macros.h"
 
@@ -74,16 +75,22 @@ struct ThreadId {
 
   HSHM_INLINE_CROSS_FUN
   bool operator>=(const ThreadId &other) const { return tid_ >= other.tid_; }
+
+  HSHM_INLINE_CROSS_FUN
+  friend std::ostream &operator<<(std::ostream &os, const ThreadId &tid) {
+    os << tid.tid_;
+    return os;
+  }
 };
 
-#ifndef HERMES_ENABLE_CUDA
+#ifndef HSHM_ENABLE_CUDA
 typedef i16 min_i16;
 typedef i32 min_i32;
 typedef i64 min_i64;
 
 typedef u16 min_u16;
 typedef u32 min_u32;
-typedef u64 min_u64;
+typedef u64 size_t;
 #else
 typedef reg_int min_i16;
 typedef reg_int min_i32;
@@ -91,9 +98,113 @@ typedef big_uint min_i64;
 
 typedef reg_uint min_u16;
 typedef reg_uint min_u32;
-typedef big_uint min_u64;
+typedef big_uint size_t;
 #endif
+
+/** A custom definition of size_t compatible with cuda */
+typedef std::conditional<sizeof(size_t) == 8, size_t, min_u32>::type size_t;
+
+template <typename T>
+class Unit {
+ public:
+  template <typename U>
+  CLS_CONST T Bytes(U n) {
+    return (T)(T(n) * (((T)1) << 0));
+  }
+  template <typename U>
+  CLS_CONST T Kilobytes(U n) {
+    return (T)(T(n) * (((T)1) << 10));
+  }
+  template <typename U>
+  CLS_CONST T Megabytes(U n) {
+    return (T)(T(n) * (((T)1) << 20));
+  }
+  template <typename U>
+  CLS_CONST T Gigabytes(U n) {
+    return (T)(T(n) * (((T)1) << 30));
+  }
+  template <typename U>
+  CLS_CONST T Terabytes(U n) {
+    return (T)(T(n) * (((T)1) << 40));
+  }
+  template <typename U>
+  CLS_CONST T Petabytes(U n) {
+    return (T)(T(n) * (((T)1) << 50));
+  }
+  template <typename U>
+  CLS_CONST T Seconds(U n) {
+    return (T)(T(n) * 1000000000);
+  }
+  template <typename U>
+  CLS_CONST T Milliseconds(U n) {
+    return (T)(T(n) * 1000000);
+  }
+  template <typename U>
+  CLS_CONST T Microseconds(U n) {
+    return (T)(T(n) * 1000);
+  }
+  template <typename U>
+  CLS_CONST T Nanoseconds(U n) {
+    return (T)(T(n));
+  }
+};
+
+/** DWORD type for windows compatability */
+typedef u32 DWORD;
+
+/** HANDLE type for windows compatability */
+typedef void *HANDLE;
 
 }  // namespace hshm
 
-#endif  // HERMES_SHM_INCLUDE_HERMES_SHM_TYPES_NUMBERS_H_
+/** Bytes -> Bytes */
+#ifndef BYTES
+#define BYTES(n) (hshm::u64)((n) * (((hshm::u64)1) << 0))
+#endif
+
+/** KILOBYTES -> Bytes */
+#ifndef KILOBYTES
+#define KILOBYTES(n) (hshm::u64)((n) * (((hshm::u64)1) << 10))
+#endif
+
+/** MEGABYTES -> Bytes */
+#ifndef MEGABYTES
+#define MEGABYTES(n) (hshm::u64)((n) * (((hshm::u64)1) << 20))
+#endif
+
+/** GIGABYTES -> Bytes */
+#ifndef GIGABYTES
+#define GIGABYTES(n) (hshm::u64)((n) * (((hshm::u64)1) << 30))
+#endif
+
+/** TERABYTES -> Bytes */
+#ifndef TERABYTES
+#define TERABYTES(n) (hshm::u64)((n) * (((hshm::u64)1) << 40))
+#endif
+
+/** PETABYTES -> Bytes */
+#ifndef PETABYTES
+#define PETABYTES(n) (hshm::u64)((n) * (((hshm::u64)1) << 50))
+#endif
+
+/** Seconds to nanoseconds */
+#ifndef SECONDS
+#define SECONDS(n) (hshm::u64)((n) * 1000000000)
+#endif
+
+/** Milliseconds to nanoseconds */
+#ifndef MILLISECONDS
+#define MILLISECONDS(n) (hshm::u64)((n) * 1000000)
+#endif
+
+/** Microseconds to nanoseconds */
+#ifndef MICROSECONDS
+#define MICROSECONDS(n) (hshm::u64)((n) * 1000)
+#endif
+
+/** Nanoseconds to nanoseconds */
+#ifndef NANOSECONDS
+#define NANOSECONDS(n) (hshm::u64)(n)
+#endif
+
+#endif  // HSHM_SHM_INCLUDE_HSHM_SHM_TYPES_NUMBERS_H_

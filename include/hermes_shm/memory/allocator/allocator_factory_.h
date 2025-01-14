@@ -10,8 +10,8 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_MEMORY_ALLOCATOR_ALLOCATOR_FACTORY__H_
-#define HERMES_MEMORY_ALLOCATOR_ALLOCATOR_FACTORY__H_
+#ifndef HSHM_MEMORY_ALLOCATOR_ALLOCATOR_FACTORY__H_
+#define HSHM_MEMORY_ALLOCATOR_ALLOCATOR_FACTORY__H_
 
 #include "allocator.h"
 
@@ -37,4 +37,4 @@ typedef BaseAllocator<_TestAllocator> TestAllocator;
 
 }  // namespace hshm::ipc
 
-#endif  // HERMES_MEMORY_ALLOCATOR_ALLOCATOR_FACTORY__H_
+#endif  // HSHM_MEMORY_ALLOCATOR_ALLOCATOR_FACTORY__H_

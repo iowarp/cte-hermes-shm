@@ -29,20 +29,21 @@ struct SimpleHeader {
 TEST_CASE("MemoryManager") {
   int rank;
   char nonce = 8;
-  size_t page_size = KILOBYTES(4);
+  size_t page_size = hshm::Unit<size_t>::Kilobytes(4);
   std::string shm_url = "test_mem_backend";
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   AllocatorId alloc_id(0, 1);
 
-  HERMES_ERROR_HANDLE_START()
-  auto mem_mngr = HERMES_MEMORY_MANAGER;
+  HSHM_ERROR_HANDLE_START()
+  auto mem_mngr = HSHM_MEMORY_MANAGER;
 
   if (rank == 0) {
     std::cout << "Creating SHMEM (rank 0): " << shm_url << std::endl;
     mem_mngr->UnregisterAllocator(alloc_id);
     mem_mngr->DestroyBackend(hipc::MemoryBackendId::Get(0));
-    mem_mngr->CreateBackend<hipc::PosixShmMmap>(hipc::MemoryBackendId::Get(0),
-                                                MEGABYTES(100), shm_url);
+    mem_mngr->CreateBackend<hipc::PosixShmMmap>(
+        hipc::MemoryBackendId::Get(0), hshm::Unit<size_t>::Megabytes(100),
+        shm_url);
     mem_mngr->CreateAllocator<hipc::StackAllocator>(
         hipc::MemoryBackendId::Get(0), alloc_id, 0);
     mem_mngr->ScanBackends();
@@ -77,5 +78,5 @@ TEST_CASE("MemoryManager") {
   }
   MPI_Barrier(MPI_COMM_WORLD);
 
-  HERMES_ERROR_HANDLE_END()
+  HSHM_ERROR_HANDLE_END()
 }

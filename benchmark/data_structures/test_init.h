@@ -10,35 +10,33 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_BENCHMARK_DATA_STRUCTURE_TEST_INIT_H_
-#define HERMES_BENCHMARK_DATA_STRUCTURE_TEST_INIT_H_
+#ifndef HSHM_BENCHMARK_DATA_STRUCTURE_TEST_INIT_H_
+#define HSHM_BENCHMARK_DATA_STRUCTURE_TEST_INIT_H_
 
+#include <omp.h>
+
+#include <boost/container/scoped_allocator.hpp>
 #include <boost/interprocess/allocators/allocator.hpp>
 #include <boost/interprocess/containers/string.hpp>
 #include <boost/interprocess/containers/vector.hpp>
 #include <boost/interprocess/managed_shared_memory.hpp>
-#include <boost/interprocess/allocators/allocator.hpp>
-
-#include <boost/container/scoped_allocator.hpp>
 
 #include "hermes_shm/data_structures/all.h"
-#include <hermes_shm/util/timer.h>
-#include <hermes_shm/util/type_switch.h>
+#include "hermes_shm/util/timer.h"
+#include "hermes_shm/util/type_switch.h"
 
-#include <omp.h>
-
-using hshm::ipc::MemoryBackendType;
-using hshm::ipc::MemoryBackend;
+using hshm::ipc::Allocator;
 using hshm::ipc::AllocatorId;
 using hshm::ipc::AllocatorType;
-using hshm::ipc::Allocator;
+using hshm::ipc::MemoryBackend;
+using hshm::ipc::MemoryBackendType;
 using hshm::ipc::Pointer;
 
-using hshm::ipc::MemoryBackendType;
-using hshm::ipc::MemoryBackend;
+using hshm::ipc::Allocator;
 using hshm::ipc::AllocatorId;
 using hshm::ipc::AllocatorType;
-using hshm::ipc::Allocator;
+using hshm::ipc::MemoryBackend;
+using hshm::ipc::MemoryBackendType;
 using hshm::ipc::MemoryManager;
 using hshm::ipc::Pointer;
 
@@ -54,28 +52,28 @@ struct BoostSegment {
   BoostSegment() {
     bipc::shared_memory_object::remove("HermesBoostBench");
     segment_ = std::make_unique<bipc::managed_shared_memory>(
-      bipc::create_only, "HermesBoostBench", GIGABYTES(4));
+        bipc::create_only, "HermesBoostBench",
+        hshm::Unit<size_t>::Gigabytes(4));
   }
 };
 #define BOOST_SEGMENT \
-  hshm::EasySingleton<BoostSegment>::GetInstance()->segment_.get()
+  hshm::Singleton<BoostSegment>::GetInstance()->segment_.get()
 
 /** Create boost allocator singleton */
-template<typename T>
+template <typename T>
 struct BoostAllocator {
   typedef bipc::allocator<T, segment_manager_t> alloc_t;
   alloc_t alloc_;
 
-  BoostAllocator()
-  : alloc_(BOOST_SEGMENT->get_segment_manager()) {}
+  BoostAllocator() : alloc_(BOOST_SEGMENT->get_segment_manager()) {}
 };
 #define BOOST_ALLOCATOR(T) \
-  hshm::EasySingleton<BoostAllocator<TYPE_UNWRAP(T)>>::GetInstance()->alloc_
+  hshm::Singleton<BoostAllocator<TYPE_UNWRAP(T)>>::GetInstance()->alloc_
 
 /** A generic string using allocator */
 typedef boost::interprocess::basic_string<
-  char, std::char_traits<char>,
-  typename BoostAllocator<char>::alloc_t> bipc_string;
+    char, std::char_traits<char>, typename BoostAllocator<char>::alloc_t>
+    bipc_string;
 
 /** Instance of the segment */
 extern std::unique_ptr<bipc::managed_shared_memory> segment_g;
@@ -83,46 +81,44 @@ extern std::unique_ptr<bipc::managed_shared_memory> segment_g;
 /**
  * Converts an arbitrary type to std::string or int
  * */
-template<typename T>
+template <typename T>
 struct StringOrInt {
-  typedef typename hshm::type_switch<T, size_t,
-                                     size_t, size_t,
-                                     std::string, std::string,
-                                     hipc::string, hipc::string,
-                                     bipc_string, bipc_string*>::type
-    internal_t;
+  typedef
+      typename hshm::type_switch<T, size_t, size_t, size_t, std::string,
+                                 std::string, hipc::string, hipc::string,
+                                 bipc_string, bipc_string*>::type internal_t;
   internal_t internal_;
 
   /** Convert from int to internal_t */
   StringOrInt(size_t num) {
-    if constexpr(std::is_same_v<T, size_t>) {
+    if constexpr (std::is_same_v<T, size_t>) {
       internal_ = num;
-    } else if constexpr(std::is_same_v<T, std::string>) {
+    } else if constexpr (std::is_same_v<T, std::string>) {
       internal_ = std::to_string(num);
-    } else if constexpr(std::is_same_v<T, hipc::string>) {
+    } else if constexpr (std::is_same_v<T, hipc::string>) {
       internal_ = hipc::string(std::to_string(num));
-    } else if constexpr(std::is_same_v<T, bipc_string>) {
+    } else if constexpr (std::is_same_v<T, bipc_string>) {
       internal_ = BOOST_SEGMENT->find_or_construct<bipc_string>("MyString")(
-        BOOST_ALLOCATOR(bipc_string));
+          BOOST_ALLOCATOR(bipc_string));
     }
   }
 
   /** Get the internal type */
   T& Get() {
-    if constexpr(std::is_same_v<T, size_t>) {
+    if constexpr (std::is_same_v<T, size_t>) {
       return internal_;
-    } else if constexpr(std::is_same_v<T, std::string>) {
+    } else if constexpr (std::is_same_v<T, std::string>) {
       return internal_;
-    } else if constexpr(std::is_same_v<T, hipc::string>) {
+    } else if constexpr (std::is_same_v<T, hipc::string>) {
       return internal_;
-    } else if constexpr(std::is_same_v<T, bipc_string>) {
+    } else if constexpr (std::is_same_v<T, bipc_string>) {
       return *internal_;
     }
   }
 
   /** Convert internal_t to int */
   size_t ToInt() {
-    if constexpr(std::is_same_v<T, size_t>) {
+    if constexpr (std::is_same_v<T, size_t>) {
       return internal_;
     } else {
       size_t num;
@@ -133,23 +129,23 @@ struct StringOrInt {
 
   /** Convert internal_t to std::string */
   std::string ToString() {
-    if constexpr(std::is_same_v<T, size_t>) {
+    if constexpr (std::is_same_v<T, size_t>) {
       return std::to_string(internal_);
-    } else if constexpr(std::is_same_v<T, std::string>) {
+    } else if constexpr (std::is_same_v<T, std::string>) {
       return internal_;
-    } else if constexpr(std::is_same_v<T, hipc::string>) {
+    } else if constexpr (std::is_same_v<T, hipc::string>) {
       return internal_.str();
-    } else if constexpr(std::is_same_v<T, bipc_string>) {
+    } else if constexpr (std::is_same_v<T, bipc_string>) {
       return std::string(internal_->c_str(), internal_->length());
     }
   }
 
   /** Destructor */
   ~StringOrInt() {
-    if constexpr(std::is_same_v<T, size_t>) {
-    } else if constexpr(std::is_same_v<T, std::string>) {
-    } else if constexpr(std::is_same_v<T, hipc::string>) {
-    } else if constexpr(std::is_same_v<T, bipc_string>) {
+    if constexpr (std::is_same_v<T, size_t>) {
+    } else if constexpr (std::is_same_v<T, std::string>) {
+    } else if constexpr (std::is_same_v<T, hipc::string>) {
+    } else if constexpr (std::is_same_v<T, bipc_string>) {
       BOOST_SEGMENT->destroy<bipc_string>("MyString");
     }
   }
@@ -158,21 +154,20 @@ struct StringOrInt {
 /**
  * Gets the semantic name of a type
  * */
-template<typename T>
+template <typename T>
 struct InternalTypeName {
   static std::string Get() {
-    if constexpr(std::is_same_v<T, hipc::string>) {
+    if constexpr (std::is_same_v<T, hipc::string>) {
       return "hipc::string";
-    } else if constexpr(std::is_same_v<T, std::string>) {
+    } else if constexpr (std::is_same_v<T, std::string>) {
       return "std::string";
-    } else if constexpr(std::is_same_v<T, bipc_string>) {
+    } else if constexpr (std::is_same_v<T, bipc_string>) {
       return "bipc::string";
-    } else if constexpr(std::is_same_v<T, size_t>) {
+    } else if constexpr (std::is_same_v<T, size_t>) {
       return "int";
     }
   }
 };
-
 
 /** Timer */
 using Timer = hshm::HighResMonotonicTimer;
@@ -180,4 +175,4 @@ using Timer = hshm::HighResMonotonicTimer;
 /** Avoid compiler warning */
 #define USE(var) ptr_ = (void*)&(var);
 
-#endif  // HERMES_BENCHMARK_DATA_STRUCTURE_TEST_INIT_H_
+#endif  // HSHM_BENCHMARK_DATA_STRUCTURE_TEST_INIT_H_

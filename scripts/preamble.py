@@ -2,7 +2,7 @@
 Prepends the preabmle to all files in the repo
 
 USAGE:
-    python3 scripts/preamble.py ${HERMES_ROOT}
+    python3 scripts/preamble.py ${HSHM_ROOT}
 """
 
 import sys,os,re

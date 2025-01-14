@@ -3,21 +3,20 @@
 //
 
 #include <cuda_runtime.h>
-#include <hermes_shm/data_structures/ipc/ring_queue.h>
-#include <hermes_shm/data_structures/ipc/unordered_map.h>
 #include <stdio.h>
 
 #include <cassert>
 
 #include "hermes_shm/constants/macros.h"
-#include "hermes_shm/data_structures/ipc/string.h"
-#include "hermes_shm/memory/backend/cuda_shm_mmap.h"
-#include "hermes_shm/memory/memory_manager.h"
-#include "hermes_shm/thread/lock/mutex.h"
+#include "hermes_shm/data_structures/all.h"
 #include "hermes_shm/types/argpack.h"
 #include "hermes_shm/types/atomic.h"
-#include "hermes_shm/util/singleton/_easy_singleton.h"
-#include "hermes_shm/util/singleton/_global_singleton.h"
+#include "hermes_shm/util/singleton.h"
+
+#define HSHM_DEFAULT_GPU_ALLOC_T hipc::ThreadLocalAllocator
+
+HSHM_DATA_STRUCTURES_TEMPLATE_BASE(gpu::ipc, hshm::ipc,
+                                   HSHM_DEFAULT_GPU_ALLOC_T)
 
 struct MyStruct {
   int x;
@@ -32,19 +31,19 @@ struct MyStruct {
   }
 };
 
-__global__ void backend_kernel(MyStruct *ptr) {
+HSHM_GPU_KERNEL void backend_kernel(MyStruct *ptr) {
   // int idx = blockIdx.x * blockDim.x + threadIdx.x;
   MyStruct quest;
   ptr->x = quest.DoSomething();
   ptr->y =
       hshm::PassArgPack::Call(hshm::make_argpack(0, 1, 2),
                               [](int x, int y, int z) { return x + y + z; });
-  *hshm::EasyLockfreeSingleton<int>::GetInstance() = 25;
-  ptr->x = *hshm::EasyLockfreeSingleton<int>::GetInstance();
+  *hshm::LockfreeSingleton<int>::GetInstance() = 25;
+  ptr->x = *hshm::LockfreeSingleton<int>::GetInstance();
 }
 
 void backend_test() {
-  auto mem_mngr = HERMES_MEMORY_MANAGER;
+  auto mem_mngr = HSHM_MEMORY_MANAGER;
   // Allocate memory on the host and device using UM
   size_t size = sizeof(MyStruct);
 
@@ -73,8 +72,8 @@ void backend_test() {
   shm.shm_destroy();
 }
 
-__global__ void mpsc_kernel(hipc::mpsc_queue<int> *queue) {
-  hipc::ScopedTlsAllocator<HSHM_DEFAULT_ALLOC_T> ctx_alloc(
+HSHM_GPU_KERNEL void mpsc_kernel(gpu::ipc::mpsc_queue<int> *queue) {
+  hipc::ScopedTlsAllocator<HSHM_DEFAULT_GPU_ALLOC_T> ctx_alloc(
       queue->GetCtxAllocator());
   queue->GetThreadLocal(ctx_alloc);
   queue->emplace(10);
@@ -83,19 +82,21 @@ __global__ void mpsc_kernel(hipc::mpsc_queue<int> *queue) {
 void mpsc_test() {
   hshm::chararr shm_url = "test_serializers";
   hipc::AllocatorId alloc_id(0, 1);
-  auto mem_mngr = HERMES_MEMORY_MANAGER;
+  auto mem_mngr = HSHM_MEMORY_MANAGER;
   mem_mngr->UnregisterAllocator(alloc_id);
   mem_mngr->DestroyBackend(hipc::MemoryBackendId::Get(0));
   mem_mngr->CreateBackend<hipc::CudaShmMmap>(hipc::MemoryBackendId::Get(0),
-                                             MEGABYTES(100), shm_url, 0);
-  auto *alloc = mem_mngr->CreateAllocator<hipc::ScalablePageAllocator>(
+                                             hshm::Unit<size_t>::Megabytes(100),
+                                             shm_url, 0);
+  auto *alloc = mem_mngr->CreateAllocator<HSHM_DEFAULT_GPU_ALLOC_T>(
       hipc::MemoryBackendId::Get(0), alloc_id, 0);
-
-  auto queue = hipc::mpsc_queue<int>(alloc, 256 * 256);
-  printf("GetSize: %lu\n", queue->GetSize());
-  mpsc_kernel<<<16, 16>>>(queue.get());
+  hipc::CtxAllocator<HSHM_DEFAULT_GPU_ALLOC_T> ctx_alloc(alloc);
+  auto *queue =
+      ctx_alloc->NewObj<gpu::ipc::mpsc_queue<int>>(ctx_alloc.ctx_, 256 * 256);
+  printf("GetSize: %lu\n", (long unsigned)queue->GetSize());
+  mpsc_kernel<<<16, 16>>>(queue);
   cudaDeviceSynchronize();
-  printf("GetSize: %lu\n", queue->GetSize());
+  printf("GetSize: %lu\n", (long unsigned)queue->GetSize());
   int val, sum = 0;
   while (!queue->pop(val).IsNull()) {
     sum += val;
@@ -103,15 +104,15 @@ void mpsc_test() {
   printf("SUM: %d\n", sum);
 }
 
-__global__ void atomic_kernel(hipc::atomic<hshm::min_u64> *x) {
+HSHM_GPU_KERNEL void atomic_kernel(hipc::atomic<hshm::size_t> *x) {
   x->fetch_add(1);
 }
 
 void atomic_test() {
-  hipc::atomic<hshm::min_u64> *x;
+  hipc::atomic<hshm::size_t> *x;
   cudaDeviceSynchronize();
   cudaSetDevice(0);
-  size_t size = sizeof(hipc::atomic<hshm::min_u64>);
+  size_t size = sizeof(hipc::atomic<hshm::size_t>);
   cudaHostAlloc(&x, size, cudaHostAllocMapped);
   atomic_kernel<<<64, 64>>>(x);
   cudaDeviceSynchronize();

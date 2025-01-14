@@ -2,8 +2,8 @@
 // Created by llogan on 26/10/24.
 //
 
-#ifndef HERMES_SHM_INCLUDE_HERMES_SHM_THREAD_LOCK_SPIN_LOCK_H_
-#define HERMES_SHM_INCLUDE_HERMES_SHM_THREAD_LOCK_SPIN_LOCK_H_
+#ifndef HSHM_SHM_INCLUDE_HSHM_SHM_THREAD_LOCK_SPIN_LOCK_H_
+#define HSHM_SHM_INCLUDE_HSHM_SHM_THREAD_LOCK_SPIN_LOCK_H_
 
 #include "hermes_shm/types/atomic.h"
 #include "hermes_shm/types/numbers.h"
@@ -12,7 +12,7 @@ namespace hshm {
 
 struct SpinLock {
   ipc::atomic<u32> lock_;
-#ifdef HERMES_DEBUG_LOCK
+#ifdef HSHM_DEBUG_LOCK
   u32 owner_;
 #endif
 
@@ -37,8 +37,8 @@ struct SpinLock {
           return;
         }
       }
-#ifdef HERMES_MAKE_MUTEX
-      HERMES_THREAD_MODEL->Yield();
+#ifdef HSHM_MAKE_MUTEX
+      HSHM_THREAD_MODEL->Yield();
 #endif
     } while (true);
   }
@@ -54,7 +54,7 @@ struct SpinLock {
       lock_.fetch_sub(1);
       return false;
     }
-#ifdef HERMES_DEBUG_LOCK
+#ifdef HSHM_DEBUG_LOCK
     owner_ = owner;
 #endif
     return true;
@@ -63,7 +63,7 @@ struct SpinLock {
   /** Unlock */
   HSHM_INLINE_CROSS_FUN
   void Unlock() {
-#ifdef HERMES_DEBUG_LOCK
+#ifdef HSHM_DEBUG_LOCK
     owner_ = 0;
 #endif
     lock_.fetch_sub(1);
@@ -121,4 +121,4 @@ using hshm::SpinLock;
 
 }  // namespace hshm::ipc
 
-#endif  // HERMES_SHM_INCLUDE_HERMES_SHM_THREAD_LOCK_SPIN_LOCK_H_
+#endif  // HSHM_SHM_INCLUDE_HSHM_SHM_THREAD_LOCK_SPIN_LOCK_H_

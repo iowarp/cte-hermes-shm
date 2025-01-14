@@ -10,8 +10,8 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_MEMORY_ALLOCATOR_ALLOCATOR_FACTORY_H_
-#define HERMES_MEMORY_ALLOCATOR_ALLOCATOR_FACTORY_H_
+#ifndef HSHM_MEMORY_ALLOCATOR_ALLOCATOR_FACTORY_H_
+#define HSHM_MEMORY_ALLOCATOR_ALLOCATOR_FACTORY_H_
 
 #include "allocator.h"
 #include "allocator_factory_.h"
@@ -101,4 +101,4 @@ class AllocatorFactory {
 
 #define HSHM_ALLOCATOR_FACTORY_DONE
 
-#endif  // HERMES_MEMORY_ALLOCATOR_ALLOCATOR_FACTORY_H_
+#endif  // HSHM_MEMORY_ALLOCATOR_ALLOCATOR_FACTORY_H_

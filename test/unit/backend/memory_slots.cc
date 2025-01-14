@@ -10,10 +10,11 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include "basic_test.h"
-
 #include <mpi.h>
+
 #include <iostream>
+
+#include "basic_test.h"
 #include "hermes_shm/memory/backend/posix_shm_mmap.h"
 
 using hshm::ipc::PosixShmMmap;
@@ -24,16 +25,17 @@ TEST_CASE("MemorySlot") {
   std::string shm_url = "test_mem_backend";
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-  HERMES_ERROR_HANDLE_START()
+  HSHM_ERROR_HANDLE_START()
 
   PosixShmMmap backend;
   if (rank == 0) {
     {
       std::cout << "Creating SHMEM (rank 0)" << std::endl;
-      if (!backend.shm_init(hipc::MemoryBackendId::Get(0), MEGABYTES(1), shm_url)) {
+      if (!backend.shm_init(hipc::MemoryBackendId::Get(0),
+                            hshm::Unit<size_t>::Megabytes(1), shm_url)) {
         throw std::runtime_error("Couldn't create backend");
       }
-      std::cout << "Backend data: " << (void*)backend.data_ << std::endl;
+      std::cout << "Backend data: " << (void *)backend.data_ << std::endl;
       std::cout << "Backend sz: " << backend.data_size_ << std::endl;
       memset(backend.data_, nonce, backend.data_size_);
       std::cout << "Wrote backend data" << std::endl;
@@ -56,5 +58,5 @@ TEST_CASE("MemorySlot") {
     }
   }
 
-  HERMES_ERROR_HANDLE_END()
+  HSHM_ERROR_HANDLE_END()
 }
