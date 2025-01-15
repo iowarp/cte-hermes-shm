@@ -127,7 +127,7 @@ class PeriodicRun {
 };
 
 #define HSHM_PERIODIC(IDX) \
-  hshm::Singleton<hshm::PeriodicRun<IDX>>::GetInstance()
+  hshm::CrossSingleton<hshm::PeriodicRun<IDX>>::GetInstance()
 
 }  // namespace hshm
 

@@ -33,7 +33,7 @@ namespace hshm {
 // #pragma message XSTR(HSHM_LOG_EXCLUDE)
 
 /** Simplify access to Logger singleton */
-#define HSHM_LOG hshm::Singleton<hshm::Logger>::GetInstance()
+#define HSHM_LOG hshm::CrossSingleton<hshm::Logger>::GetInstance()
 
 /** Max number of log codes */
 #define HSHM_MAX_LOGGING_CODES 256

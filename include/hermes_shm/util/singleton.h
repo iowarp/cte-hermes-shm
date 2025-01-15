@@ -27,6 +27,51 @@ namespace hshm {
 template <typename T, bool WithLock>
 class SingletonBase {
  public:
+  static T *GetInstance() {
+    if (GetObject() == nullptr) {
+      if constexpr (WithLock) {
+        hshm::ScopedSpinLock lock(GetSpinLock(), 0);
+        new ((T *)GetData()) T();
+        GetObject() = (T *)GetData();
+      } else {
+        new ((T *)GetData()) T();
+        GetObject() = (T *)GetData();
+      }
+    }
+    return GetObject();
+  }
+
+  static hshm::SpinLock &GetSpinLock() {
+    static char spinlock_data_[sizeof(hshm::SpinLock)] = {0};
+    return *(hshm::SpinLock *)spinlock_data_;
+  }
+
+  static T *GetData() {
+    static char data_[sizeof(T)] = {0};
+    return (T *)data_;
+  }
+
+  static T *&GetObject() {
+    static T *obj_ = nullptr;
+    return obj_;
+  }
+};
+
+/** Singleton default case declaration */
+template <typename T>
+using Singleton = SingletonBase<T, true>;
+
+/** Singleton without lock declaration */
+template <typename T>
+using LockfreeSingleton = SingletonBase<T, false>;
+
+/**
+ * A class to represent singleton pattern
+ * Does not require specific initialization of the static variable
+ * */
+template <typename T, bool WithLock>
+class CrossSingletonBase {
+ public:
   HSHM_INLINE_CROSS_FUN
   static T *GetInstance() {
     if (GetObject() == nullptr) {
@@ -63,17 +108,16 @@ class SingletonBase {
 
 /** Singleton default case declaration */
 template <typename T>
-using Singleton = SingletonBase<T, true>;
+using CrossSingleton = CrossSingletonBase<T, true>;
 
 /** Singleton without lock declaration */
 template <typename T>
-using LockfreeSingleton = SingletonBase<T, false>;
+using LockfreeCrossSingleton = CrossSingletonBase<T, false>;
 
 /**
  * Makes a singleton. Constructs during initialization of program.
  * Does not require specific initialization of the static variable.
  * */
-#ifdef HSHM_IS_HOST
 template <typename T>
 class GlobalSingleton {
  private:
@@ -86,9 +130,27 @@ class GlobalSingleton {
 };
 template <typename T>
 T GlobalSingleton<T>::obj_;
+
+/**
+ * Makes a singleton. Constructs during initialization of program.
+ * Does not require specific initialization of the static variable.
+ * */
+#ifdef HSHM_IS_HOST
+template <typename T>
+class GlobalCrossSingleton {
+ private:
+  static T obj_;
+
+ public:
+  GlobalCrossSingleton() = default;
+
+  static T *GetInstance() { return &obj_; }
+};
+template <typename T>
+T GlobalCrossSingleton<T>::obj_;
 #else
 template <typename T>
-using GlobalSingleton = LockfreeSingleton<T>;
+using GlobalCrossSingleton = LockfreeCrossSingleton<T>;
 #endif
 
 }  // namespace hshm

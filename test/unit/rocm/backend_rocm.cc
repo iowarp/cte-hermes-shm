@@ -72,11 +72,11 @@ void backend_test() {
 }
 
 HSHM_GPU_KERNEL void singleton_kernel_p1() {
-  *hshm::LockfreeSingleton<int>::GetInstance() = 25;
+  *hshm::LockfreeCrossSingleton<int>::GetInstance() = 25;
 }
 
 HSHM_GPU_KERNEL void singleton_kernel(MyStruct *ptr) {
-  ptr->x = *hshm::LockfreeSingleton<int>::GetInstance();
+  ptr->x = *hshm::LockfreeCrossSingleton<int>::GetInstance();
   ptr->y = 3;
 }
 

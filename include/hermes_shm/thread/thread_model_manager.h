@@ -37,11 +37,11 @@
 
 #if defined(HSHM_IS_HOST)
 #define HSHM_THREAD_MODEL \
-  hshm::Singleton<HSHM_DEFAULT_THREAD_MODEL>::GetInstance()
+  hshm::CrossSingleton<HSHM_DEFAULT_THREAD_MODEL>::GetInstance()
 #define HSHM_THREAD_MODEL_T hshm::HSHM_DEFAULT_THREAD_MODEL*
 #elif defined(HSHM_IS_GPU)
 #define HSHM_THREAD_MODEL \
-  hshm::Singleton<HSHM_DEFAULT_THREAD_MODEL_GPU>::GetInstance()
+  hshm::CrossSingleton<HSHM_DEFAULT_THREAD_MODEL_GPU>::GetInstance()
 #define HSHM_THREAD_MODEL_T hshm::HSHM_DEFAULT_THREAD_MODEL_GPU*
 #endif
 

@@ -13,7 +13,7 @@
 
 /** Singleton declaration */
 #define HSHM_MEMORY_MANAGER \
-  hshm::GlobalSingleton<hshm::ipc::MemoryManager>::GetInstance()
+  hshm::GlobalCrossSingleton<hshm::ipc::MemoryManager>::GetInstance()
 #define HSHM_MEMORY_MANAGER_T hshm::ipc::MemoryManager *
 
 namespace hshm::ipc {
