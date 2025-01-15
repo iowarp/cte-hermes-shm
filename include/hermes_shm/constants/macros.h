@@ -158,10 +158,14 @@ namespace hshm::ipc {}
 namespace hipc = hshm::ipc;
 
 /** The name of the current device */
+#define HSHM_DEV_TYPE_CPU 0
+#define HSHM_DEV_TYPE_GPU 1
 #ifdef HSHM_IS_HOST
 #define kCurrentDevice "cpu"
+#define kCurrentDeviceType HSHM_DEV_TYPE_CPU
 #else
 #define kCurrentDevice "gpu"
+#define kCurrentDeviceType HSHM_DEV_TYPE_GPU
 #endif
 
 /***************************************************
