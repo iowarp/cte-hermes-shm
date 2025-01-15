@@ -316,7 +316,7 @@ class vector : public ShmContainer {
   }
 
   /** Copy constructor. From std::vector */
-  HSHM_CROSS_FUN
+  HSHM_HOST_FUN
   explicit vector(const std::vector<T> &other) {
     init_shm_container(other.GetCtxAllocator());
     SetNull();
@@ -324,7 +324,7 @@ class vector : public ShmContainer {
   }
 
   /** SHM copy constructor. From std::vector */
-  HSHM_CROSS_FUN
+  HSHM_HOST_FUN
   explicit vector(const hipc::CtxAllocator<AllocT> &alloc,
                   const std::vector<T> &other) {
     init_shm_container(alloc);
@@ -333,7 +333,7 @@ class vector : public ShmContainer {
   }
 
   /** SHM copy assignment operator. From std::vector */
-  HSHM_CROSS_FUN
+  HSHM_HOST_FUN
   vector &operator=(const std::vector<T> &other) {
     shm_destroy();
     shm_strong_copy_main<std::vector<T>>(other);
