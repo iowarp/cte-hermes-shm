@@ -140,6 +140,10 @@
 #define HSHM_INLINE_GPU_FUN ROCM_DEVICE HSHM_INLINE
 #define HSHM_INLINE_HOST_FUN ROCM_HOST HSHM_INLINE
 
+/** Test cross functions */
+#define HSHM_NO_INLINE_CROSS_FUN
+#define HSHM_NO_CROSS_FUN
+
 /** Bitfield macros */
 #define MARK_FIRST_BIT_MASK(T) ((T)1 << (sizeof(T) * 8 - 1))
 #define MARK_FIRST_BIT(T, X) ((X) | MARK_FIRST_BIT_MASK(T))

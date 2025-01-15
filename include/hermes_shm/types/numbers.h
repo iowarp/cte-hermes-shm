@@ -83,15 +83,7 @@ struct ThreadId {
   }
 };
 
-#ifndef HSHM_ENABLE_CUDA
-typedef i16 min_i16;
-typedef i32 min_i32;
-typedef i64 min_i64;
-
-typedef u16 min_u16;
-typedef u32 min_u32;
-typedef u64 min_u64;
-#else
+#if defined(HSHM_ENABLE_CUDA) or defined(HSHM_ENABLE_ROCM)
 typedef reg_int min_i16;
 typedef reg_int min_i32;
 typedef big_uint min_i64;
@@ -99,6 +91,14 @@ typedef big_uint min_i64;
 typedef reg_uint min_u16;
 typedef reg_uint min_u32;
 typedef big_uint min_u64;
+#else
+typedef i16 min_i16;
+typedef i32 min_i32;
+typedef i64 min_i64;
+
+typedef u16 min_u16;
+typedef u32 min_u32;
+typedef u64 min_u64;
 #endif
 
 /** A custom definition of size_t compatible with cuda */
