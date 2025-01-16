@@ -38,8 +38,8 @@ HSHM_GPU_KERNEL void backend_kernel(MyStruct *ptr) {
   ptr->y =
       hshm::PassArgPack::Call(hshm::make_argpack(0, 1, 2),
                               [](int x, int y, int z) { return x + y + z; });
-  *hshm::LockfreeSingleton<int>::GetInstance() = 25;
-  ptr->x = *hshm::LockfreeSingleton<int>::GetInstance();
+  *hshm::LockfreeCrossSingleton<int>::GetInstance() = 25;
+  ptr->x = *hshm::LockfreeCrossSingleton<int>::GetInstance();
 }
 
 void backend_test() {

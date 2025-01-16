@@ -145,7 +145,7 @@ macro(hshm_enable_cuda CXX_STANDARD)
     if (NOT CMAKE_CUDA_ARCHITECTURES)
         set(CMAKE_CUDA_ARCHITECTURES native)
     endif()
-    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --forward-unknown-to-host-compiler")
+    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --forward-unknown-to-host-compiler -diag-suppress=177,20014,20011")
     enable_language(CUDA)
 endmacro()
 
@@ -202,13 +202,16 @@ function(set_cuda_sources DO_COPY SRC_FILES CUDA_SOURCE_FILES_VAR)
 endfunction()
 
 # Function for adding a ROCm library
-function(add_rocm_gpu_library LIB_NAME DO_COPY)
+function(add_rocm_gpu_library LIB_NAME SHARED DO_COPY)
     set(SRC_FILES ${ARGN})
     set(ROCM_SOURCE_FILES "")
     set_rocm_sources(gpu "${DO_COPY}" "${SRC_FILES}" ROCM_SOURCE_FILES)
-    add_library(${LIB_NAME} STATIC ${ROCM_SOURCE_FILES})
+    add_library(${LIB_NAME} ${SHARED} ${ROCM_SOURCE_FILES})
+    # if (SHARED)
+    #     set_target_properties(${LIB_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
+    # endif()
     target_link_libraries(${LIB_NAME} PUBLIC hshm::rocm_gpu_lib_deps)
-    set_target_properties(${LIB_NAME} PROPERTIES POSITION_INDEPENDENT_CODE OFF)
+    set_target_properties(${LIB_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
 endfunction()
 
 # Function for adding a ROCm host-only library
@@ -239,11 +242,11 @@ function(add_rocm_gpu_executable EXE_NAME DO_COPY)
 endfunction()
 
 # Function for adding a CUDA library
-function(add_cuda_library LIB_NAME DO_COPY)
+function(add_cuda_library LIB_NAME SHARED DO_COPY)
     set(SRC_FILES ${ARGN})
     set(CUDA_SOURCE_FILES "")
     set_cuda_sources("${DO_COPY}" "${SRC_FILES}" CUDA_SOURCE_FILES)
-    add_library(${LIB_NAME} STATIC ${CUDA_SOURCE_FILES})
+    add_library(${LIB_NAME} ${SHARED} ${CUDA_SOURCE_FILES})
     target_link_libraries(${LIB_NAME} PUBLIC hshm::cuda_gpu_lib_deps)
     set_target_properties(${LIB_NAME} PROPERTIES
             CUDA_SEPARABLE_COMPILATION ON

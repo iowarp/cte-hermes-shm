@@ -31,6 +31,22 @@ namespace hshm::ipc {
 
 class CudaShmMmap : public PosixShmMmap {
  public:
+  /** Constructor */
+  HSHM_CROSS_FUN
+  CudaShmMmap() {}
+
+  /** Destructor */
+  HSHM_CROSS_FUN
+  ~CudaShmMmap() {
+#ifdef HSHM_IS_HOST
+    if (IsOwned()) {
+      _Destroy();
+    } else {
+      _Detach();
+    }
+#endif
+  }
+
   /** Initialize shared memory */
   bool shm_init(const MemoryBackendId& backend_id, size_t size,
                 const hshm::chararr& url, int device) {
@@ -40,22 +56,18 @@ class CudaShmMmap : public PosixShmMmap {
     if (!ret) {
       return false;
     }
+    cudaHostRegister(header_, HSHM_SYSTEM_INFO->page_size_,
+                     cudaHostRegisterPortable);
+    cudaHostRegister(data_, size, cudaHostRegisterPortable);
     header_->type_ = MemoryBackendType::kCudaShmMmap;
     return true;
   }
 
-  /** Map shared memory */
-  char* _Map(size_t size, i64 off) override {
-    char* ptr = _ShmMap(size, off);
-    cudaHostRegister(ptr, size, cudaHostRegisterPortable);
-    return ptr;
-  }
-
   /** Detach shared memory */
-  void _Detach() override {
+  void _Detach() {
     cudaHostUnregister(header_);
     cudaHostUnregister(data_);
-    _ShmDetach();
+    PosixShmMmap::_Detach();
   }
 };
 

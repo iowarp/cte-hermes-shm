@@ -99,8 +99,7 @@ HSHM_CROSS_FUN void MemoryManager::DestroyBackend(
   }
   FullPtr<MemoryBackend> ptr(backend);
   backend->Own();
-  auto alloc =
-      HSHM_MEMORY_MANAGER->GetAllocator<HSHM_ROOT_ALLOC_T>(ptr.shm_.alloc_id_);
+  auto alloc = GetAllocator<HSHM_ROOT_ALLOC_T>(ptr.shm_.alloc_id_);
   alloc->DelObjLocal(HSHM_DEFAULT_MEM_CTX, ptr);
 }
 
@@ -110,7 +109,7 @@ HSHM_GPU_KERNEL void AttachBackendKernel(BackendT *pack, BackendT *cpy) {
   HSHM_MEMORY_MANAGER;
   HSHM_THREAD_MODEL;
   HSHM_SYSTEM_INFO;
-  new (cpy) BackendT(*pack);
+  memcpy((char *)cpy, (char *)pack, sizeof(BackendT));
   HSHM_MEMORY_MANAGER->RegisterBackend(cpy);
   HSHM_MEMORY_MANAGER->ScanBackends();
 }

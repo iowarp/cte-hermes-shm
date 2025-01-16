@@ -140,6 +140,19 @@
 #define HSHM_INLINE_GPU_FUN ROCM_DEVICE HSHM_INLINE
 #define HSHM_INLINE_HOST_FUN ROCM_HOST HSHM_INLINE
 
+/** Macro for selective cross function */
+#ifdef HSHM_IS_HOST
+#define HSHM_CROSS_FUN_SEL HSHM_HOST_FUN
+#define HSHM_INLINE_CROSS_FUN_SEL HSHM_INLINE_HOST_FUN
+#else
+#define HSHM_CROSS_FUN_SEL HSHM_GPU_FUN
+#define HSHM_INLINE_CROSS_FUN_SEL HSHM_INLINE_GPU_FUN
+#endif
+
+/** Test cross functions */
+#define HSHM_NO_INLINE_CROSS_FUN
+#define HSHM_NO_CROSS_FUN
+
 /** Bitfield macros */
 #define MARK_FIRST_BIT_MASK(T) ((T)1 << (sizeof(T) * 8 - 1))
 #define MARK_FIRST_BIT(T, X) ((X) | MARK_FIRST_BIT_MASK(T))
@@ -158,10 +171,16 @@ namespace hshm::ipc {}
 namespace hipc = hshm::ipc;
 
 /** The name of the current device */
+#define HSHM_DEV_TYPE_CPU 0
+#define HSHM_DEV_TYPE_GPU 1
 #ifdef HSHM_IS_HOST
 #define kCurrentDevice "cpu"
+#define kCurrentDeviceType HSHM_DEV_TYPE_CPU
+#define HSHM_GPU_OR_HOST host
 #else
 #define kCurrentDevice "gpu"
+#define kCurrentDeviceType HSHM_DEV_TYPE_GPU
+#define HSHM_GPU_OR_HOST gpu
 #endif
 
 /***************************************************
@@ -201,8 +220,7 @@ namespace hipc = hshm::ipc;
 #endif
 
 /** Default memory context object */
-#define HSHM_DEFAULT_MEM_CTX \
-  {}
+#define HSHM_DEFAULT_MEM_CTX (hipc::MemContext{})
 
 /** Compatability hack for static_assert */
 template <bool TRUTH, typename T = int>

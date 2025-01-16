@@ -32,12 +32,31 @@ namespace hshm::ipc {
 
 class RocmShmMmap : public PosixShmMmap {
  public:
+  /** Constructor */
+  HSHM_CROSS_FUN
+  RocmShmMmap() {}
+
+  /** Destructor */
+  HSHM_CROSS_FUN
+  ~RocmShmMmap() {
+#ifdef HSHM_IS_HOST
+    if (IsOwned()) {
+      _Destroy();
+    } else {
+      _Detach();
+    }
+#endif
+  }
+
   /** Initialize shared memory */
   bool shm_init(const MemoryBackendId& backend_id, size_t size,
                 const hshm::chararr& url, int device) {
     HIP_ERROR_CHECK(hipDeviceSynchronize());
     HIP_ERROR_CHECK(hipSetDevice(device));
     bool ret = PosixShmMmap::shm_init(backend_id, size, url);
+    HIP_ERROR_CHECK(hipHostRegister(header_, HSHM_SYSTEM_INFO->page_size_,
+                                    hipHostRegisterPortable));
+    HIP_ERROR_CHECK(hipHostRegister(data_, size, hipHostRegisterPortable));
     if (!ret) {
       return false;
     }
@@ -46,17 +65,17 @@ class RocmShmMmap : public PosixShmMmap {
   }
 
   /** Map shared memory */
-  char* _Map(size_t size, i64 off) override {
+  char* _Map(size_t size, i64 off) {
     char* ptr = _ShmMap(size, off);
     HIP_ERROR_CHECK(hipHostRegister(ptr, size, hipHostRegisterPortable));
     return ptr;
   }
 
   /** Detach shared memory */
-  void _Detach() override {
+  void _Detach() {
     HIP_ERROR_CHECK(hipHostUnregister(header_));
     HIP_ERROR_CHECK(hipHostUnregister(data_));
-    _ShmDetach();
+    PosixShmMmap::_Detach();
   }
 };
 
