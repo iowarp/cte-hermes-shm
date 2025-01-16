@@ -131,10 +131,10 @@ void mpsc_test() {
   hipc::CtxAllocator<HSHM_DEFAULT_GPU_ALLOC_T> ctx_alloc(alloc);
   auto *queue =
       ctx_alloc->NewObj<gpu::ipc::mpsc_queue<int>>(ctx_alloc.ctx_, 256 * 256);
-  printf("GetSize: %lu\n", queue->GetSize());
+  printf("GetSize: %lu\n", (long unsigned)queue->GetSize());
   mpsc_kernel<<<16, 16>>>(queue);
   HIP_ERROR_CHECK(hipDeviceSynchronize());
-  printf("GetSize: %lu\n", queue->GetSize());
+  printf("GetSize: %lu\n", (long unsigned)queue->GetSize());
   int val, sum = 0;
   while (!queue->pop(val).IsNull()) {
     sum += val;
