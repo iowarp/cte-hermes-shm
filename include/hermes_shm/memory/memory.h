@@ -694,13 +694,25 @@ namespace std {
 /** Allocator ID hash */
 template <>
 struct hash<hshm::ipc::AllocatorId> {
+  std::size_t operator()(const hshm::ipc::AllocatorId &key) const {
+    return hshm::hash<uint64_t>{}(key.int_);
+  }
+};
+
+}  // namespace std
+
+namespace hshm {
+
+/** Allocator ID hash */
+template <>
+struct hash<hshm::ipc::AllocatorId> {
   HSHM_INLINE_CROSS_FUN std::size_t operator()(
       const hshm::ipc::AllocatorId &key) const {
     return hshm::hash<uint64_t>{}(key.int_);
   }
 };
 
-}  // namespace std
+}  // namespace hshm
 
 #define IS_SHM_POINTER(T) std::is_base_of_v<hipc::ShmPointer, T>
 

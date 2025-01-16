@@ -216,8 +216,7 @@ using hshm::ipc::chararr;
 namespace std {
 template <int LENGTH, bool WithNull>
 struct hash<hshm::chararr_templ<LENGTH, WithNull>> {
-  HSHM_CROSS_FUN size_t
-  operator()(const hshm::chararr_templ<LENGTH, WithNull> &text) const {
+  size_t operator()(const hshm::chararr_templ<LENGTH, WithNull> &text) const {
     return text.Hash();
   }
 };
