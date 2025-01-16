@@ -540,7 +540,7 @@ using charwrap = ipc::string_templ<HSHM_STRING_SSO, hipc::StringFlags::kWrap>;
 namespace std {
 template <size_t SSO, hshm::u32 FLAGS, HSHM_CLASS_TEMPL>
 struct hash<hshm::ipc::string_templ<SSO, FLAGS, HSHM_CLASS_TEMPL_ARGS>> {
-  HSHM_CROSS_FUN size_t operator()(
+  size_t operator()(
       const hshm::ipc::string_templ<SSO, FLAGS, HSHM_CLASS_TEMPL_ARGS> &text)
       const {
     return text.Hash();
