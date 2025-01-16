@@ -27,14 +27,14 @@ set(HSHM_USE_ELF @HSHM_USE_ELF@)
 set(HSHM_ENABLE_CUDA @HSHM_ENABLE_CUDA@)
 set(HSHM_ENABLE_ROCM @HSHM_ENABLE_ROCM@)
 set(HSHM_NO_COMPILE @HSHM_NO_COMPILE@)
-
+if (NOT CMAKE_CUDA_ARCHITECTURES)
+    set(CMAKE_CUDA_ARCHITECTURES @CMAKE_CUDA_ARCHITECTURES@)
+endif()
 set(REAL_TIME_FLAGS @REAL_TIME_FLAGS@)
 
 # Find the HermesShm Package
-find_package(HermesShmCore REQUIRED)
-
-# Find the HermesShm dependencies
-find_package(HermesShmCommon REQUIRED)
+include(@CMAKE_INSTALL_PREFIX@/cmake/HermesShmCoreConfig.cmake)
+include(@CMAKE_INSTALL_PREFIX@/cmake/HermesShmCommonConfig.cmake)
 
 # Add my library to RPATH
 list(APPEND CMAKE_INSTALL_RPATH "@HSHM_INSTALL_LIB_DIR@")
