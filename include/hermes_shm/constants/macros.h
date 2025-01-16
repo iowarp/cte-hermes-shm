@@ -140,6 +140,15 @@
 #define HSHM_INLINE_GPU_FUN ROCM_DEVICE HSHM_INLINE
 #define HSHM_INLINE_HOST_FUN ROCM_HOST HSHM_INLINE
 
+/** Macro for selective cross function */
+#ifdef HSHM_IS_HOST
+#define HSHM_CROSS_FUN_SEL HSHM_HOST_FUN
+#define HSHM_INLINE_CROSS_FUN_SEL HSHM_INLINE_HOST_FUN
+#else
+#define HSHM_CROSS_FUN_SEL HSHM_GPU_FUN
+#define HSHM_INLINE_CROSS_FUN_SEL HSHM_INLINE_GPU_FUN
+#endif
+
 /** Test cross functions */
 #define HSHM_NO_INLINE_CROSS_FUN
 #define HSHM_NO_CROSS_FUN
@@ -167,9 +176,11 @@ namespace hipc = hshm::ipc;
 #ifdef HSHM_IS_HOST
 #define kCurrentDevice "cpu"
 #define kCurrentDeviceType HSHM_DEV_TYPE_CPU
+#define HSHM_GPU_OR_HOST host
 #else
 #define kCurrentDevice "gpu"
 #define kCurrentDeviceType HSHM_DEV_TYPE_GPU
+#define HSHM_GPU_OR_HOST gpu
 #endif
 
 /***************************************************
