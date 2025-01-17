@@ -88,7 +88,6 @@ union AllocatorId {
   }
 };
 
-typedef AllocatorId alloc_id_t;
 class Allocator;
 
 /** Pointer type base */
