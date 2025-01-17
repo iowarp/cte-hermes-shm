@@ -106,9 +106,12 @@ HSHM_CROSS_FUN void MemoryManager::DestroyBackend(
 #if defined(HSHM_ENABLE_CUDA) || defined(HSHM_ENABLE_ROCM)
 template <typename BackendT>
 HSHM_GPU_KERNEL void AttachBackendKernel(BackendT *pack, BackendT *cpy) {
+  printf("HELLO KERNEL\n");
   HSHM_MEMORY_MANAGER;
   HSHM_THREAD_MODEL;
   HSHM_SYSTEM_INFO;
+  printf("%p %p %p\n", HSHM_MEMORY_MANAGER, HSHM_THREAD_MODEL,
+         HSHM_SYSTEM_INFO);
   memcpy((char *)cpy, (char *)pack, sizeof(BackendT));
   HSHM_MEMORY_MANAGER->RegisterBackend(cpy);
   HSHM_MEMORY_MANAGER->ScanBackends();

@@ -56,11 +56,24 @@ class CudaShmMmap : public PosixShmMmap {
     if (!ret) {
       return false;
     }
-    cudaHostRegister(header_, HSHM_SYSTEM_INFO->page_size_,
-                     cudaHostRegisterPortable);
-    cudaHostRegister(data_, size, cudaHostRegisterPortable);
+    Register(header_, HSHM_SYSTEM_INFO->page_size_);
+    Register(data_, size);
     header_->type_ = MemoryBackendType::kCudaShmMmap;
     return true;
+  }
+
+  /** SHM deserialize */
+  bool shm_deserialize(const hshm::chararr& url) {
+    bool ret = PosixShmMmap::shm_deserialize(url);
+    Register(header_, HSHM_SYSTEM_INFO->page_size_);
+    Register(data_, data_size_);
+    return ret;
+  }
+
+  /** Map shared memory */
+  template <typename T>
+  void Register(T* ptr, size_t size) {
+    cudaHostRegister((void*)ptr, size, cudaHostRegisterPortable);
   }
 
   /** Detach shared memory */
