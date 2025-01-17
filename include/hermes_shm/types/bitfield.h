@@ -16,6 +16,7 @@
 #include <cstdint>
 
 #include "hermes_shm/constants/macros.h"
+#include "hermes_shm/types/atomic.h"
 
 namespace hshm {
 
@@ -25,9 +26,9 @@ namespace hshm {
 /**
  * A generic bitfield template
  * */
-template <typename T = uint32_t>
+template <typename T = u32, bool ATOMIC = false>
 struct bitfield {
-  T bits_;
+  hipc::opt_atomic<T, ATOMIC> bits_;
 
   HSHM_INLINE_CROSS_FUN bitfield() : bits_(0) {}
 
@@ -56,9 +57,13 @@ struct bitfield {
     ar & bits_;
   }
 };
-typedef bitfield<uint8_t> bitfield8_t;
-typedef bitfield<uint16_t> bitfield16_t;
-typedef bitfield<uint32_t> bitfield32_t;
+typedef bitfield<u8> bitfield8_t;
+typedef bitfield<u16> bitfield16_t;
+typedef bitfield<u32> bitfield32_t;
+
+typedef bitfield<u8, true> abitfield8_t;
+typedef bitfield<u16, true> abitfield16_t;
+typedef bitfield<u32, true> abitfield32_t;
 
 /**
  * A helper type needed for std::conditional
