@@ -54,9 +54,7 @@ struct HeapAllocator {
     // if (size % 64 != 0) {
     //   size = (size + 63) & ~63;
     // }
-    printf("HEAP AllocOffset: H1\n");
     hshm::size_t off = heap_off_.fetch_add((hshm::size_t)size);
-    printf("HEAP AllocOffset: H2\n");
     if (off + size > heap_size_) {
       // HSHM_THROW_ERROR(OUT_OF_MEMORY, size, heap_size_);
       return OffsetPointer::GetNull();
