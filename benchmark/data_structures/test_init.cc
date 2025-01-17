@@ -15,7 +15,7 @@
 #include "hermes_shm/data_structures/ipc/vector.h"
 #include "hermes_shm/memory/allocator/stack_allocator.h"
 
-GLOBAL_CONST AllocatorId alloc_id_g(0, 1);
+GLOBAL_CONST AllocatorId alloc_id_g(1, 0);
 
 void MainPretest() {
   // hermes shared memory

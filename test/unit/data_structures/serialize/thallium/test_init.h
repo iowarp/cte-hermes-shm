@@ -63,7 +63,7 @@ using thallium::request;
 template <typename AllocT>
 void ServerPretest() {
   std::string shm_url = "test_serializers";
-  AllocatorId alloc_id(0, 1);
+  AllocatorId alloc_id(1, 0);
   auto mem_mngr = HSHM_MEMORY_MANAGER;
   mem_mngr->UnregisterAllocator(alloc_id);
   mem_mngr->DestroyBackend(hipc::MemoryBackendId::GetRoot());
@@ -76,7 +76,7 @@ void ServerPretest() {
 template <typename AllocT>
 void ClientPretest() {
   std::string shm_url = "test_serializers";
-  AllocatorId alloc_id(0, 1);
+  AllocatorId alloc_id(1, 0);
   auto mem_mngr = HSHM_MEMORY_MANAGER;
   mem_mngr->AttachBackend(MemoryBackendType::kPosixShmMmap, shm_url);
 }

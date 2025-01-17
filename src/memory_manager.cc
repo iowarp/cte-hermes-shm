@@ -47,8 +47,8 @@ void MemoryManager::Init() {
   root_backend_ = root_backend;
 
   // Root allocator
-  root_alloc_id_.bits_.major_ = 3;
-  root_alloc_id_.bits_.minor_ = 3;
+  root_alloc_id_.bits_.major_ = 0;
+  root_alloc_id_.bits_.minor_ = 0;
   StackAllocator *root_alloc = (StackAllocator *)root_alloc_space_;
   Allocator::ConstructObj(*root_alloc);
   root_alloc->shm_init(root_alloc_id_, 0, root_backend_->data_,

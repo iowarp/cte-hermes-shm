@@ -32,7 +32,7 @@ TEST_CASE("MemoryManager") {
   size_t page_size = hshm::Unit<size_t>::Kilobytes(4);
   std::string shm_url = "test_mem_backend";
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  AllocatorId alloc_id(0, 1);
+  AllocatorId alloc_id(1, 0);
 
   HSHM_ERROR_HANDLE_START()
   auto mem_mngr = HSHM_MEMORY_MANAGER;

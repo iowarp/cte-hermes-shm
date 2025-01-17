@@ -33,7 +33,7 @@ struct SimpleAllocatorHeader {
 template <typename BackendT, typename AllocT>
 AllocT *Pretest() {
   std::string shm_url = "test_allocators";
-  AllocatorId alloc_id(0, 1);
+  AllocatorId alloc_id(1, 0);
   auto mem_mngr = HSHM_MEMORY_MANAGER;
   mem_mngr->UnregisterAllocator(alloc_id);
   mem_mngr->DestroyBackend(hipc::MemoryBackendId::Get(0));

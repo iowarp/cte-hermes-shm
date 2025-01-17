@@ -1,11 +1,13 @@
 message("Importing packages for hermes_shm")
-#------------------------------------------------------------------------------
+
+# ------------------------------------------------------------------------------
 # External libraries
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # Pkg-Config
 find_package(PkgConfig REQUIRED)
+
 if(PkgConfig)
-  message(STATUS "found pkg config")
+    message(STATUS "found pkg config")
 endif()
 
 # Catch2
@@ -24,7 +26,7 @@ if(HSHM_ENABLE_MPI)
 endif()
 
 # ROCm
-if (HSHM_ENABLE_ROCM)
+if(HSHM_ENABLE_ROCM)
     find_package(HIP REQUIRED)
 endif()
 
@@ -38,9 +40,11 @@ endif()
 # thallium
 if(HSHM_RPC_THALLIUM)
     find_package(thallium CONFIG REQUIRED)
+
     if(thallium_FOUND)
         message(STATUS "found thallium at ${thallium_DIR}")
     endif()
+
     set(SERIALIZATION_LIBS thallium ${SERIALIZATION_LIBS})
     set(HSHM_ENABLE_CEREAL ON)
 endif()
@@ -48,9 +52,11 @@ endif()
 # Cereal
 if(HSHM_ENABLE_CEREAL)
     find_package(cereal CONFIG REQUIRED)
+
     if(cereal_FOUND)
         message(STATUS "found cereal at ${cereal_DIR}")
     endif()
+
     set(SERIALIZATION_LIBS cereal::cereal ${SERIALIZATION_LIBS})
 endif()
 
@@ -90,37 +96,37 @@ if(HSHM_ENABLE_COMPRESS)
     message(STATUS "found blosc2.h at ${blosc2_INCLUDE_DIRS}")
 
     set(COMPRESS_LIBS
-            bz2
-            ${lzo2_LIBRARIES}
-            ${libzstd_LIBRARIES}
-            ${liblz4_LIBRARIES}
-            ${zlib_LIBRARIES}
-            ${liblzma_LIBRARIES}
-            ${libbrotlicommon_LIBRARIES}
-            ${snappy_LIBRARIES}
-            ${blosc2_LIBRARIES}
+        bz2
+        ${lzo2_LIBRARIES}
+        ${libzstd_LIBRARIES}
+        ${liblz4_LIBRARIES}
+        ${zlib_LIBRARIES}
+        ${liblzma_LIBRARIES}
+        ${libbrotlicommon_LIBRARIES}
+        ${snappy_LIBRARIES}
+        ${blosc2_LIBRARIES}
     )
-    set(COMPRESS_INCLUDES 
-            ${bzip2_INCLUDE_DIRS}
-            ${lzo2_INCLUDE_DIRS} ${lzo2_dir}
-            ${libzstd_INCLUDE_DIRS}
-            ${liblz4_INCLUDE_DIRS}
-            ${zlib_INCLUDE_DIRS}
-            ${liblzma_INCLUDE_DIRS}
-            ${libbrotlicommon_INCLUDE_DIRS}
-            ${snappy_INCLUDE_DIRS}
-            ${blosc2_INCLUDE_DIRS}
+    set(COMPRESS_INCLUDES
+        ${bzip2_INCLUDE_DIRS}
+        ${lzo2_INCLUDE_DIRS} ${lzo2_dir}
+        ${libzstd_INCLUDE_DIRS}
+        ${liblz4_INCLUDE_DIRS}
+        ${zlib_INCLUDE_DIRS}
+        ${liblzma_INCLUDE_DIRS}
+        ${libbrotlicommon_INCLUDE_DIRS}
+        ${snappy_INCLUDE_DIRS}
+        ${blosc2_INCLUDE_DIRS}
     )
     set(COMPRESS_LIB_DIRS
-            ${bzip2_LIBRARY_DIRS}
-            ${lzo2_LIBRARY_DIRS}
-            ${libzstd_LIBRARY_DIRS}
-            ${liblz4_LIBRARY_DIRS}
-            ${zlib_LIBRARY_DIRS}
-            ${liblzma_LIBRARY_DIRS}
-            ${libbrotlicommon_LIBRARY_DIRS}
-            ${snappy_LIBRARY_DIRS}
-            ${blosc2_LIBRARY_DIRS}
+        ${bzip2_LIBRARY_DIRS}
+        ${lzo2_LIBRARY_DIRS}
+        ${libzstd_LIBRARY_DIRS}
+        ${liblz4_LIBRARY_DIRS}
+        ${zlib_LIBRARY_DIRS}
+        ${liblzma_LIBRARY_DIRS}
+        ${libbrotlicommon_LIBRARY_DIRS}
+        ${snappy_LIBRARY_DIRS}
+        ${blosc2_LIBRARY_DIRS}
     )
 endif()
 
@@ -134,18 +140,20 @@ if(HSHM_ENABLE_ENCRYPT)
     set(ENCRYPT_LIB_DIRS ${libcrypto_LIBRARY_DIRS})
 endif()
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # GPU Support Functions
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 
 # Enable cuda boilerplate
 macro(hshm_enable_cuda CXX_STANDARD)
     set(CMAKE_CUDA_STANDARD ${CXX_STANDARD})
     set(CMAKE_CUDA_STANDARD_REQUIRED ON)
-    if (NOT CMAKE_CUDA_ARCHITECTURES)
+
+    if(NOT CMAKE_CUDA_ARCHITECTURES)
         set(CMAKE_CUDA_ARCHITECTURES native)
     endif()
-    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --forward-unknown-to-host-compiler -diag-suppress=177,20014,20011")
+
+    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --forward-unknown-to-host-compiler -diag-suppress=177,20014,20011,200012")
     enable_language(CUDA)
 endmacro()
 
@@ -158,46 +166,54 @@ macro(hshm_enable_rocm GPU_RUNTIME CXX_STANDARD)
     set(CMAKE_${GPU_RUNTIME}_STANDARD_REQUIRED ON)
     set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --forward-unknown-to-host-compiler")
     set(ROCM_ROOT
-            "/opt/rocm"
-            CACHE PATH
-            "Root directory of the ROCm installation"
+        "/opt/rocm"
+        CACHE PATH
+        "Root directory of the ROCm installation"
     )
+
     if(GPU_RUNTIME STREQUAL "CUDA")
         list(APPEND include_dirs "${ROCM_ROOT}/include")
     endif()
+
     find_package(HIP REQUIRED)
 endmacro()
 
 # Function for setting source files for rocm
-function(set_rocm_sources MODE DO_COPY SRC_FILES ROCM_SOURCE_FILES_VAR) 
+function(set_rocm_sources MODE DO_COPY SRC_FILES ROCM_SOURCE_FILES_VAR)
     set(ROCM_SOURCE_FILES ${${ROCM_SOURCE_FILES_VAR}} PARENT_SCOPE)
     set(GPU_RUNTIME ${GPU_RUNTIME} PARENT_SCOPE)
+
     foreach(SOURCE IN LISTS SRC_FILES)
-        if (${DO_COPY})
+        if(${DO_COPY})
             set(ROCM_SOURCE ${CMAKE_CURRENT_BINARY_DIR}/rocm_${MODE}/${SOURCE})
             configure_file(${SOURCE} ${ROCM_SOURCE} COPYONLY)
         else()
             set(ROCM_SOURCE ${SOURCE})
         endif()
+
         list(APPEND ROCM_SOURCE_FILES ${ROCM_SOURCE})
         set_source_files_properties(${ROCM_SOURCE} PROPERTIES LANGUAGE ${GPU_RUNTIME})
     endforeach()
+
     set(${ROCM_SOURCE_FILES_VAR} ${ROCM_SOURCE_FILES} PARENT_SCOPE)
 endfunction()
 
 # Function for setting source files for cuda
 function(set_cuda_sources DO_COPY SRC_FILES CUDA_SOURCE_FILES_VAR)
     set(CUDA_SOURCE_FILES ${${CUDA_SOURCE_FILES_VAR}} PARENT_SCOPE)
+
     foreach(SOURCE IN LISTS SRC_FILES)
-        if (${DO_COPY})
+        if(${DO_COPY})
             set(CUDA_SOURCE ${CMAKE_CURRENT_BINARY_DIR}/cuda/${SOURCE})
             configure_file(${SOURCE} ${CUDA_SOURCE} COPYONLY)
         else()
             set(CUDA_SOURCE ${SOURCE})
         endif()
+
         list(APPEND CUDA_SOURCE_FILES ${CUDA_SOURCE})
         set_source_files_properties(${CUDA_SOURCE} PROPERTIES LANGUAGE CUDA)
     endforeach()
+
     set(${CUDA_SOURCE_FILES_VAR} ${CUDA_SOURCE_FILES} PARENT_SCOPE)
 endfunction()
 
@@ -207,8 +223,9 @@ function(add_rocm_gpu_library LIB_NAME SHARED DO_COPY)
     set(ROCM_SOURCE_FILES "")
     set_rocm_sources(gpu "${DO_COPY}" "${SRC_FILES}" ROCM_SOURCE_FILES)
     add_library(${LIB_NAME} ${SHARED} ${ROCM_SOURCE_FILES})
+
     # if (SHARED)
-    #     set_target_properties(${LIB_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
+    # set_target_properties(${LIB_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
     # endif()
     target_link_libraries(${LIB_NAME} PUBLIC hshm::rocm_gpu_lib_deps)
     set_target_properties(${LIB_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
@@ -249,11 +266,12 @@ function(add_cuda_library LIB_NAME SHARED DO_COPY)
     add_library(${LIB_NAME} ${SHARED} ${CUDA_SOURCE_FILES})
     target_link_libraries(${LIB_NAME} PUBLIC hshm::cuda_gpu_lib_deps)
     set_target_properties(${LIB_NAME} PROPERTIES
-            CUDA_SEPARABLE_COMPILATION ON
+        CUDA_SEPARABLE_COMPILATION ON
     )
-    if (BUILD_SHARED_LIBS)
+
+    if(BUILD_SHARED_LIBS)
         set_target_properties(${LIB_NAME} PROPERTIES
-                POSITION_INDEPENDENT_CODE ON
+            POSITION_INDEPENDENT_CODE ON
         )
     endif()
 endfunction()
@@ -266,11 +284,12 @@ function(add_cuda_executable EXE_NAME DO_COPY)
     add_executable(${EXE_NAME} ${CUDA_SOURCE_FILES})
     target_link_libraries(${EXE_NAME} PUBLIC hshm::cuda_gpu_exec_deps)
     set_target_properties(${EXE_NAME} PROPERTIES
-            CUDA_SEPARABLE_COMPILATION ON
+        CUDA_SEPARABLE_COMPILATION ON
     )
-    if (BUILD_SHARED_LIBS)
+
+    if(BUILD_SHARED_LIBS)
         set_target_properties(${EXE_NAME} PROPERTIES
-                POSITION_INDEPENDENT_CODE ON
+            POSITION_INDEPENDENT_CODE ON
         )
     endif()
 endfunction()

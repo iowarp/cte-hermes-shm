@@ -19,7 +19,7 @@
 
 void MainPretest() {
   std::string shm_url = "test_serializers";
-  AllocatorId alloc_id(0, 1);
+  AllocatorId alloc_id(1, 0);
   auto mem_mngr = HSHM_MEMORY_MANAGER;
   mem_mngr->UnregisterAllocator(alloc_id);
   mem_mngr->DestroyBackend(hipc::MemoryBackendId::Get(0));

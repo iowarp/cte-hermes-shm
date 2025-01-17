@@ -31,7 +31,7 @@ using hshm::ipc::MemoryBackendType;
 using hshm::ipc::MemoryManager;
 using hshm::ipc::Pointer;
 
-GLOBAL_CONST AllocatorId MAIN_ALLOC_ID(0, 1);
+GLOBAL_CONST AllocatorId MAIN_alloc_id(1, 0);
 
 template <typename AllocT>
 void Pretest() {
