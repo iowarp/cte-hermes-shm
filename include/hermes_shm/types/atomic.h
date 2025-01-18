@@ -402,6 +402,12 @@ struct rocm_atomic {
     atomicXor(&x, other);
     return *this;
   }
+
+  /** Serialization */
+  template <typename Ar>
+  void serialize(Ar &ar) {
+    ar(x);
+  }
 };
 #endif
 
