@@ -45,7 +45,7 @@ class ring_queue_base : public ShmContainer {
   /**====================================
    * Typedefs
    * ===================================*/
-  typedef pair<bitfield32_t, T, HSHM_CLASS_TEMPL_ARGS> pair_t;
+  typedef pair<ibitfield, T, HSHM_CLASS_TEMPL_ARGS> pair_t;
   typedef vector<pair_t, HSHM_CLASS_TEMPL_ARGS> vector_t;
 
  public:
@@ -55,7 +55,7 @@ class ring_queue_base : public ShmContainer {
   delay_ar<vector_t> queue_;
   hipc::opt_atomic<qtok_id, IsPushAtomic> tail_;
   hipc::opt_atomic<qtok_id, IsPopAtomic> head_;
-  bitfield32_t flags_;
+  ibitfield flags_;
 
  public:
   /**====================================

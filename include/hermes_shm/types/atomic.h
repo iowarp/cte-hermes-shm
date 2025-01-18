@@ -369,17 +369,20 @@ struct rocm_atomic {
 
   /** Bitwise and */
   HSHM_INLINE_CROSS_FUN rocm_atomic operator&(T other) const {
-    return atomicAnd(&x, other);
+    T *addr = const_cast<T *>(&x);
+    return atomicAnd(addr, other);
   }
 
   /** Bitwise or */
   HSHM_INLINE_CROSS_FUN rocm_atomic operator|(T other) const {
-    return atomicOr(&x, other);
+    T *addr = const_cast<T *>(&x);
+    return atomicOr(addr, other);
   }
 
   /** Bitwise xor */
   HSHM_INLINE_CROSS_FUN rocm_atomic operator^(T other) const {
-    return atomicXor(&x, other);
+    T *addr = const_cast<T *>(&x);
+    return atomicXor(addr, other);
   }
 
   /** Bitwise and assign */

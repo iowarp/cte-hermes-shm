@@ -31,9 +31,9 @@ class ShmContainer {};
  * */
 typedef u32 ShmFlagField;
 struct ShmFlag {
-  CLS_CONST u32 kIsPrivate = BIT_OPT(u32, 0);
-  CLS_CONST u32 kIsUndestructable = BIT_OPT(u32, 1);
-  CLS_CONST u32 kIsThreadLocal = kIsPrivate | kIsUndestructable;
+  CLS_CONST ShmFlagField kIsPrivate = BIT_OPT(ShmFlagField, 0);
+  CLS_CONST ShmFlagField kIsUndestructable = BIT_OPT(ShmFlagField, 1);
+  CLS_CONST ShmFlagField kIsThreadLocal = kIsPrivate | kIsUndestructable;
 };
 
 /**
