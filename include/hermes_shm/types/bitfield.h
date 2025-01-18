@@ -38,7 +38,7 @@ struct bitfield {
 
   HSHM_INLINE_CROSS_FUN void UnsetBits(T mask) { bits_ &= ~mask; }
 
-  HSHM_INLINE_CROSS_FUN T Any(T mask) const { return bits_ & mask; }
+  HSHM_INLINE_CROSS_FUN T Any(T mask) const { return (bits_ & mask).load(); }
 
   HSHM_INLINE_CROSS_FUN T All(T mask) const { return Any(mask) == mask; }
 
