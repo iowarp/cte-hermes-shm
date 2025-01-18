@@ -38,6 +38,9 @@ struct nonatomic {
     ar(x);
   }
 
+  /** Integer convertion */
+  HSHM_INLINE_CROSS_FUN operator T() const { return x; }
+
   /** Constructor */
   HSHM_INLINE_CROSS_FUN nonatomic() = default;
 
@@ -226,6 +229,9 @@ template <typename T>
 struct rocm_atomic {
   T x;
 
+  /** Integer convertion */
+  HSHM_INLINE_CROSS_FUN operator T() const { return x; }
+
   /** Constructor */
   HSHM_INLINE_CROSS_FUN rocm_atomic() = default;
 
@@ -406,6 +412,9 @@ struct std_atomic {
   void serialize(Ar &ar) {
     ar(x);
   }
+
+  /** Integer convertion */
+  HSHM_INLINE_CROSS_FUN operator T() const { return x; }
 
   /** Constructor */
   HSHM_INLINE std_atomic() = default;

@@ -30,28 +30,69 @@ template <typename T = u32, bool ATOMIC = false>
 struct bitfield {
   hipc::opt_atomic<T, ATOMIC> bits_;
 
+  /** Default constructor */
   HSHM_INLINE_CROSS_FUN bitfield() : bits_(0) {}
 
+  /** Emplace constructor */
   HSHM_INLINE_CROSS_FUN explicit bitfield(T mask) : bits_(mask) {}
 
+  /** Copy constructor */
+  HSHM_INLINE_CROSS_FUN bitfield(const bitfield &other) : bits_(other.bits_) {}
+
+  /** Copy assignment */
+  HSHM_INLINE_CROSS_FUN bitfield &operator=(const bitfield &other) {
+    bits_ = other.bits_;
+    return *this;
+  }
+
+  /** Move constructor */
+  HSHM_INLINE_CROSS_FUN bitfield(bitfield &&other) noexcept
+      : bits_(other.bits_) {}
+
+  /** Move assignment */
+  HSHM_INLINE_CROSS_FUN bitfield &operator=(bitfield &&other) noexcept {
+    bits_ = other.bits_;
+    return *this;
+  }
+
+  /** Copy from any bitfield */
+  template <bool ATOMIC2>
+  HSHM_INLINE_CROSS_FUN bitfield(const bitfield<T, ATOMIC2> &other)
+      : bits_(other.bits_) {}
+
+  /** Copy assignment from any bitfield */
+  template <bool ATOMIC2>
+  HSHM_INLINE_CROSS_FUN bitfield &operator=(const bitfield<T, ATOMIC2> &other) {
+    bits_ = other.bits_;
+    return *this;
+  }
+
+  /** Set bits using mask */
   HSHM_INLINE_CROSS_FUN void SetBits(T mask) { bits_ |= mask; }
 
+  /** Unset bits in mask */
   HSHM_INLINE_CROSS_FUN void UnsetBits(T mask) { bits_ &= ~mask; }
 
+  /** Check if any bits are set */
   HSHM_INLINE_CROSS_FUN T Any(T mask) const { return (bits_ & mask).load(); }
 
+  /** Check if all bits are set */
   HSHM_INLINE_CROSS_FUN T All(T mask) const { return Any(mask) == mask; }
 
+  /** Copy bits from another bitfield */
   HSHM_INLINE_CROSS_FUN void CopyBits(bitfield field, T mask) {
     bits_ &= (field.bits_ & mask);
   }
 
+  /** Clear all bits */
   HSHM_INLINE_CROSS_FUN void Clear() { bits_ = 0; }
 
+  /** Make a mask */
   HSHM_INLINE_CROSS_FUN static T MakeMask(int start, int length) {
     return ((((T)1) << length) - 1) << start;
   }
 
+  /** Serialization */
   template <typename Ar>
   void serialize(Ar &ar) {
     ar & bits_;
@@ -60,10 +101,14 @@ struct bitfield {
 typedef bitfield<u8> bitfield8_t;
 typedef bitfield<u16> bitfield16_t;
 typedef bitfield<u32> bitfield32_t;
+typedef bitfield<int> ibitfield;
 
-typedef bitfield<u8, true> abitfield8_t;
-typedef bitfield<u16, true> abitfield16_t;
-typedef bitfield<u32, true> abitfield32_t;
+template <typename T>
+using abitfield = bitfield<T, true>;
+typedef abitfield<u8> abitfield8_t;
+typedef abitfield<u16> abitfield16_t;
+typedef abitfield<u32> abitfield32_t;
+typedef abitfield<int> aibitfield;
 
 /**
  * A helper type needed for std::conditional
