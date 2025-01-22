@@ -154,7 +154,6 @@ class _ThreadLocalAllocator : public Allocator {
   hshm::ThreadId GetOrCreateTid(const hipc::MemContext &ctx) {
     hshm::ThreadId tid = ctx.tid_;
     if (tid.IsNull()) {
-#ifdef HSHM_IS_HOST
       TLS *tls = HSHM_THREAD_MODEL->GetTls<TLS>(tls_key_);
       if (!tls) {
         tid = header_->CreateTid();
@@ -165,9 +164,6 @@ class _ThreadLocalAllocator : public Allocator {
       } else {
         tid = tls->tid_;
       }
-#else
-      tid = header_->CreateTid();
-#endif
     }
     return tid;
   }
@@ -185,9 +181,6 @@ class _ThreadLocalAllocator : public Allocator {
     ThreadId tid = GetOrCreateTid(ctx);
     PageAllocator &page_alloc = (*header_->tls_)[(size_t)tid.tid_];
     page = page_alloc.Allocate(page_id);
-
-    auto *tls_again = HSHM_THREAD_MODEL->GetTls<TLS>(tls_key_);
-    tls_again->tid_ = tid;
 
     // Case 2: Can we allocate of thread's heap?
     if (page == nullptr) {

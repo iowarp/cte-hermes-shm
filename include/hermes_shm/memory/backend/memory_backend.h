@@ -106,7 +106,7 @@ class MemoryBackend {
   MemoryBackendHeader *header_;
   char *data_;
   size_t data_size_;
-  bitfield32_t flags_;
+  ibitfield flags_;
 
  public:
   HSHM_CROSS_FUN

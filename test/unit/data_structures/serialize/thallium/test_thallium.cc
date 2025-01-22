@@ -11,14 +11,14 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include "basic_test.h"
-#include "test_init.h"
 #include "hermes_shm/data_structures/ipc/string.h"
+#include "test_init.h"
 
 TEST_CASE("SerializeString") {
   tl::endpoint server = client_->lookup(tcnst::kServerName);
   tl::remote_procedure string0_proc = client_->define(tcnst::kStringTest0);
-  tl::remote_procedure string_large_proc = client_->define(
-    tcnst::kStringTestLarge);
+  tl::remote_procedure string_large_proc =
+      client_->define(tcnst::kStringTestLarge);
 
   auto empty_str = hipc::string("");
   auto large_str = hipc::string(tcnst::kTestString);
@@ -29,10 +29,9 @@ TEST_CASE("SerializeString") {
 
 TEST_CASE("SerializeCharBuf") {
   tl::endpoint server = client_->lookup(tcnst::kServerName);
-  tl::remote_procedure string0_proc = client_->define(
-    tcnst::kCharbufTest0);
-  tl::remote_procedure string_large_proc = client_->define(
-    tcnst::kCharbufTestLarge);
+  tl::remote_procedure string0_proc = client_->define(tcnst::kCharbufTest0);
+  tl::remote_procedure string_large_proc =
+      client_->define(tcnst::kCharbufTestLarge);
 
   hshm::charwrap empty_str("");
   hshm::charwrap large_str(tcnst::kTestString);
@@ -43,10 +42,9 @@ TEST_CASE("SerializeCharBuf") {
 
 TEST_CASE("SerializeVectorOfInt") {
   tl::endpoint server = client_->lookup(tcnst::kServerName);
-  tl::remote_procedure vec_int0_proc = client_->define(
-    tcnst::kVecOfInt0Test);
-  tl::remote_procedure vec_int_proc = client_->define(
-    tcnst::kVecOfIntLargeTest);
+  tl::remote_procedure vec_int0_proc = client_->define(tcnst::kVecOfInt0Test);
+  tl::remote_procedure vec_int_proc =
+      client_->define(tcnst::kVecOfIntLargeTest);
 
   // Send empty vector
   auto vec_int = hipc::vector<int>();
@@ -61,10 +59,10 @@ TEST_CASE("SerializeVectorOfInt") {
 
 TEST_CASE("SerializeVectorOfString") {
   tl::endpoint server = client_->lookup(tcnst::kServerName);
-  tl::remote_procedure vec_string0_proc = client_->define(
-    tcnst::kVecOfString0Test);
-  tl::remote_procedure vec_string_proc = client_->define(
-    tcnst::kVecOfStringLargeTest);
+  tl::remote_procedure vec_string0_proc =
+      client_->define(tcnst::kVecOfString0Test);
+  tl::remote_procedure vec_string_proc =
+      client_->define(tcnst::kVecOfStringLargeTest);
 
   // Send empty vector
   auto vec_string = hipc::vector<hipc::string>();
@@ -78,22 +76,18 @@ TEST_CASE("SerializeVectorOfString") {
 }
 
 TEST_CASE("SerializeBitfield") {
-  tl::endpoint server = client_->lookup(
-    tcnst::kServerName);
-  tl::remote_procedure bitfield_proc = client_->define(
-    tcnst::kBitfieldTest);
+  tl::endpoint server = client_->lookup(tcnst::kServerName);
+  tl::remote_procedure bitfield_proc = client_->define(tcnst::kBitfieldTest);
 
   // Send bitfield
-  hshm::bitfield32_t field;
+  hshm::ibitfield field;
   field.SetBits(0x8);
   REQUIRE(bitfield_proc.on(server)(field));
 }
 
 TEST_CASE("SerializeShmArchive") {
-  tl::endpoint server = client_->lookup(
-      tcnst::kServerName);
-  tl::remote_procedure shm_ar_proc = client_->define(
-      tcnst::kShmArTest);
+  tl::endpoint server = client_->lookup(tcnst::kServerName);
+  tl::remote_procedure shm_ar_proc = client_->define(tcnst::kShmArTest);
 
   // Send ShmArchive
   hipc::ShmArchive<hipc::vector<int>> vec;

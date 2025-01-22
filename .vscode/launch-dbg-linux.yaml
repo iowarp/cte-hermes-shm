@@ -15,7 +15,7 @@ macros:
     setupCommands:
       - description: Enable pretty-printing for gdb
         text: -enable-pretty-printing
-        ignoreFailures: true
+        ignoreFailures: true 
   rdebug:
     name: $(launch-name)
     type: cppdbg
@@ -66,4 +66,8 @@ configurations:
   - macro: debug
     launch-name: bench-data-structures
     program: benchmark_data_structures_exec
+    args: [""]
+  - macro: mpi_debug
+    launch-name: test-rocm-queue
+    program: test_rocm_backend_mpi_exec
     args: [""]

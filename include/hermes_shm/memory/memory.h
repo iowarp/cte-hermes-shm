@@ -29,10 +29,10 @@ namespace hshm::ipc {
  * */
 union AllocatorId {
   struct {
-    uint32_t major_;  // Typically some sort of process id
-    uint32_t minor_;  // Typically a process-local id
+    i32 major_;  // Typically some sort of process id
+    i32 minor_;  // Typically a process-local id
   } bits_;
-  uint64_t int_;
+  u64 int_;
 
   HSHM_INLINE_CROSS_FUN AllocatorId() = default;
 
@@ -52,7 +52,7 @@ union AllocatorId {
   /**
    * Check if this is the null allocator
    * */
-  HSHM_INLINE_CROSS_FUN bool IsNull() const { return int_ == 0; }
+  HSHM_INLINE_CROSS_FUN bool IsNull() const { return (*this) == GetNull(); }
 
   /** Equality check */
   HSHM_INLINE_CROSS_FUN bool operator==(const AllocatorId &other) const {
@@ -66,12 +66,12 @@ union AllocatorId {
 
   /** Get the null allocator */
   HSHM_INLINE_CROSS_FUN static AllocatorId GetNull() {
-    return AllocatorId(0, 0);
+    return AllocatorId(-1, -1);
   }
 
   /** To index */
   HSHM_INLINE_CROSS_FUN uint32_t ToIndex() const {
-    return bits_.major_ * 4 + bits_.minor_;
+    return bits_.major_ * 2 + bits_.minor_;
   }
 
   /** Serialize an hipc::allocator_id */
@@ -88,7 +88,6 @@ union AllocatorId {
   }
 };
 
-typedef AllocatorId alloc_id_t;
 class Allocator;
 
 /** Pointer type base */

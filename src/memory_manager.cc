@@ -47,8 +47,8 @@ void MemoryManager::Init() {
   root_backend_ = root_backend;
 
   // Root allocator
-  root_alloc_id_.bits_.major_ = 3;
-  root_alloc_id_.bits_.minor_ = 3;
+  root_alloc_id_.bits_.major_ = 0;
+  root_alloc_id_.bits_.minor_ = 0;
   StackAllocator *root_alloc = (StackAllocator *)root_alloc_space_;
   Allocator::ConstructObj(*root_alloc);
   root_alloc->shm_init(root_alloc_id_, 0, root_backend_->data_,
@@ -105,12 +105,11 @@ HSHM_CROSS_FUN void MemoryManager::DestroyBackend(
 
 #if defined(HSHM_ENABLE_CUDA) || defined(HSHM_ENABLE_ROCM)
 template <typename BackendT>
-HSHM_GPU_KERNEL void AttachBackendKernel(BackendT *pack, BackendT *cpy) {
+HSHM_GPU_KERNEL void AttachBackendKernel(BackendT *pack) {
   HSHM_MEMORY_MANAGER;
   HSHM_THREAD_MODEL;
   HSHM_SYSTEM_INFO;
-  memcpy((char *)cpy, (char *)pack, sizeof(BackendT));
-  HSHM_MEMORY_MANAGER->RegisterBackend(cpy);
+  HSHM_MEMORY_MANAGER->RegisterBackend(pack);
   HSHM_MEMORY_MANAGER->ScanBackends();
 }
 #endif
@@ -123,22 +122,20 @@ void AllocateCudaBackend(int dev, MemoryBackend *other) {
     case MemoryBackendType::kCudaMalloc: {
       CudaMalloc *pack, *cpy;
       cudaMallocManaged(&pack, sizeof(CudaMalloc));
-      cudaMallocManaged(&cpy, sizeof(CudaMalloc));
       memcpy((char *)pack, (char *)other, sizeof(CudaMalloc));
       pack->UnsetScanned();
       pack->Disown();
-      AttachBackendKernel<<<1, 1>>>(pack, cpy);
+      AttachBackendKernel<<<1, 1>>>(pack);
       cudaDeviceSynchronize();
       cudaFree(pack);
     }
     case MemoryBackendType::kCudaShmMmap: {
       CudaShmMmap *pack, *cpy;
       cudaMallocManaged(&pack, sizeof(CudaShmMmap));
-      cudaMallocManaged(&cpy, sizeof(CudaShmMmap));
       memcpy((char *)pack, (char *)other, sizeof(CudaShmMmap));
       pack->UnsetScanned();
       pack->Disown();
-      AttachBackendKernel<<<1, 1>>>(pack, cpy);
+      AttachBackendKernel<<<1, 1>>>(pack);
       cudaDeviceSynchronize();
       cudaFree(pack);
     }
@@ -157,24 +154,20 @@ void AllocateRocmBackend(int dev, MemoryBackend *other) {
     case MemoryBackendType::kRocmMalloc: {
       RocmMalloc *pack, *cpy;
       HIP_ERROR_CHECK(hipMallocManaged(&pack, sizeof(RocmMalloc)));
-      HIP_ERROR_CHECK(hipMallocManaged(&cpy, sizeof(RocmMalloc)));
       memcpy((char *)pack, (char *)other, sizeof(RocmMalloc));
       pack->UnsetScanned();
       pack->Disown();
-      AttachBackendKernel<<<1, 1>>>(pack, cpy);
+      AttachBackendKernel<<<1, 1>>>(pack);
       HIP_ERROR_CHECK(hipDeviceSynchronize());
-      HIP_ERROR_CHECK(hipFree(pack));
     }
     case MemoryBackendType::kRocmShmMmap: {
       RocmShmMmap *pack, *cpy;
       HIP_ERROR_CHECK(hipMallocManaged(&pack, sizeof(RocmShmMmap)));
-      HIP_ERROR_CHECK(hipMallocManaged(&cpy, sizeof(RocmShmMmap)));
       memcpy((char *)pack, (char *)other, sizeof(RocmShmMmap));
       pack->UnsetScanned();
       pack->Disown();
-      AttachBackendKernel<<<1, 1>>>(pack, cpy);
+      AttachBackendKernel<<<1, 1>>>(pack);
       HIP_ERROR_CHECK(hipDeviceSynchronize());
-      HIP_ERROR_CHECK(hipFree(pack));
     }
     default: {
       break;

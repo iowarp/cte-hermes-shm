@@ -54,9 +54,8 @@ class RocmShmMmap : public PosixShmMmap {
     HIP_ERROR_CHECK(hipDeviceSynchronize());
     HIP_ERROR_CHECK(hipSetDevice(device));
     bool ret = PosixShmMmap::shm_init(backend_id, size, url);
-    HIP_ERROR_CHECK(hipHostRegister(header_, HSHM_SYSTEM_INFO->page_size_,
-                                    hipHostRegisterPortable));
-    HIP_ERROR_CHECK(hipHostRegister(data_, size, hipHostRegisterPortable));
+    Register(header_, HSHM_SYSTEM_INFO->page_size_);
+    Register(data_, size);
     if (!ret) {
       return false;
     }
@@ -64,11 +63,18 @@ class RocmShmMmap : public PosixShmMmap {
     return true;
   }
 
+  /** SHM deserialize */
+  bool shm_deserialize(const hshm::chararr& url) {
+    bool ret = PosixShmMmap::shm_deserialize(url);
+    Register(header_, HSHM_SYSTEM_INFO->page_size_);
+    Register(data_, data_size_);
+    return ret;
+  }
+
   /** Map shared memory */
-  char* _Map(size_t size, i64 off) {
-    char* ptr = _ShmMap(size, off);
-    HIP_ERROR_CHECK(hipHostRegister(ptr, size, hipHostRegisterPortable));
-    return ptr;
+  template <typename T>
+  void Register(T* ptr, size_t size) {
+    HIP_ERROR_CHECK(hipHostRegister((void*)ptr, size, hipHostRegisterPortable));
   }
 
   /** Detach shared memory */

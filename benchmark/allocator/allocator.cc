@@ -177,14 +177,14 @@ class AllocatorTestSuite {
 };
 
 /** The minor number to use for allocators */
-static int minor = 1;
+static int minor = 0;
 const std::string shm_url = "test_allocators";
 
 /** Create the allocator + backend for the test */
 template <typename BackendT, typename AllocT, typename... Args>
 AllocT *Pretest(MemoryBackendType backend_type, Args &&...args) {
   int rank = omp_get_thread_num();
-  AllocatorId alloc_id(0, minor);
+  AllocatorId alloc_id(1, minor);
   auto mem_mngr = HSHM_MEMORY_MANAGER;
 
   if (rank == 0) {
@@ -211,7 +211,7 @@ void Posttest() {
   int rank = omp_get_thread_num();
 #pragma omp barrier
   if (rank == 0) {
-    AllocatorId alloc_id(0, minor);
+    AllocatorId alloc_id(1, minor);
     HSHM_MEMORY_MANAGER->UnregisterAllocator(alloc_id);
     HSHM_MEMORY_MANAGER->UnregisterBackend(hipc::MemoryBackendId::Get(0));
     minor += 1;

@@ -103,7 +103,7 @@ int main() {
   server_->define(tcnst::kVecOfStringLargeTest, vec_of_string_large_test);
 
   // Test transfer of bitfield
-  auto bitfield_test = [](const request &req, hshm::bitfield32_t &field) {
+  auto bitfield_test = [](const request &req, hshm::ibitfield &field) {
     bool ret = field.Any(0x8);
     req.respond(ret);
   };

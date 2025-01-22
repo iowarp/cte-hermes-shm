@@ -38,6 +38,9 @@ struct nonatomic {
     ar(x);
   }
 
+  /** Integer convertion */
+  HSHM_INLINE_CROSS_FUN operator T() const { return x; }
+
   /** Constructor */
   HSHM_INLINE_CROSS_FUN nonatomic() = default;
 
@@ -185,6 +188,39 @@ struct nonatomic {
   HSHM_INLINE_CROSS_FUN bool operator!=(const nonatomic &other) const {
     return (other.x != x);
   }
+
+  /** Bitwise and */
+  HSHM_INLINE_CROSS_FUN nonatomic operator&(T other) const {
+    return nonatomic(x & other);
+  }
+
+  /** Bitwise or */
+  HSHM_INLINE_CROSS_FUN nonatomic operator|(T other) const {
+    return nonatomic(x | other);
+  }
+
+  /** Bitwise xor */
+  HSHM_INLINE_CROSS_FUN nonatomic operator^(T other) const {
+    return nonatomic(x ^ other);
+  }
+
+  /** Bitwise and assign */
+  HSHM_INLINE_CROSS_FUN nonatomic &operator&=(T other) {
+    x &= other;
+    return *this;
+  }
+
+  /** Bitwise or assign */
+  HSHM_INLINE_CROSS_FUN nonatomic &operator|=(T other) {
+    x |= other;
+    return *this;
+  }
+
+  /** Bitwise xor assign */
+  HSHM_INLINE_CROSS_FUN nonatomic &operator^=(T other) {
+    x ^= other;
+    return *this;
+  }
 };
 
 /** A wrapper for CUDA atomic operations */
@@ -192,6 +228,9 @@ struct nonatomic {
 template <typename T>
 struct rocm_atomic {
   T x;
+
+  /** Integer convertion */
+  HSHM_INLINE_CROSS_FUN operator T() const { return x; }
 
   /** Constructor */
   HSHM_INLINE_CROSS_FUN rocm_atomic() = default;
@@ -327,6 +366,48 @@ struct rocm_atomic {
   HSHM_INLINE_CROSS_FUN bool operator!=(const rocm_atomic &other) const {
     return !atomicCAS(&x, other.x, other.x);
   }
+
+  /** Bitwise and */
+  HSHM_INLINE_CROSS_FUN rocm_atomic operator&(T other) const {
+    T *addr = const_cast<T *>(&x);
+    return atomicAnd(addr, other);
+  }
+
+  /** Bitwise or */
+  HSHM_INLINE_CROSS_FUN rocm_atomic operator|(T other) const {
+    T *addr = const_cast<T *>(&x);
+    return atomicOr(addr, other);
+  }
+
+  /** Bitwise xor */
+  HSHM_INLINE_CROSS_FUN rocm_atomic operator^(T other) const {
+    T *addr = const_cast<T *>(&x);
+    return atomicXor(addr, other);
+  }
+
+  /** Bitwise and assign */
+  HSHM_INLINE_CROSS_FUN rocm_atomic &operator&=(T other) {
+    atomicAnd(&x, other);
+    return *this;
+  }
+
+  /** Bitwise or assign */
+  HSHM_INLINE_CROSS_FUN rocm_atomic &operator|=(T other) {
+    atomicOr(&x, other);
+    return *this;
+  }
+
+  /** Bitwise xor assign */
+  HSHM_INLINE_CROSS_FUN rocm_atomic &operator^=(T other) {
+    atomicXor(&x, other);
+    return *this;
+  }
+
+  /** Serialization */
+  template <typename Ar>
+  void serialize(Ar &ar) {
+    ar(x);
+  }
 };
 #endif
 
@@ -340,6 +421,9 @@ struct std_atomic {
   void serialize(Ar &ar) {
     ar(x);
   }
+
+  /** Integer convertion */
+  HSHM_INLINE_CROSS_FUN operator T() const { return x; }
 
   /** Constructor */
   HSHM_INLINE std_atomic() = default;
@@ -465,6 +549,33 @@ struct std_atomic {
   /** Inequality check */
   HSHM_INLINE bool operator!=(const std_atomic &other) const {
     return (other.x != x);
+  }
+
+  /** Bitwise and */
+  HSHM_INLINE std_atomic operator&(T other) const { return x & other; }
+
+  /** Bitwise or */
+  HSHM_INLINE std_atomic operator|(T other) const { return x | other; }
+
+  /** Bitwise xor */
+  HSHM_INLINE std_atomic operator^(T other) const { return x ^ other; }
+
+  /** Bitwise and assign */
+  HSHM_INLINE std_atomic &operator&=(T other) {
+    x &= other;
+    return *this;
+  }
+
+  /** Bitwise or assign */
+  HSHM_INLINE std_atomic &operator|=(T other) {
+    x |= other;
+    return *this;
+  }
+
+  /** Bitwise xor assign */
+  HSHM_INLINE std_atomic &operator^=(T other) {
+    x ^= other;
+    return *this;
   }
 };
 

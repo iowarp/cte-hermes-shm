@@ -19,7 +19,7 @@
 namespace hshm::ipc {
 
 struct MpPage : public atomic_list_queue_entry {
-  bitfield32_t flags_; /**< Flags of the page (e.g., free/alloc) */
+  ibitfield flags_; /**< Flags of the page (e.g., free/alloc) */
   /** Offset from the start of the page to the beginning of this header */
   u32 off_;
   ThreadId tid_;     /**< The thread ID that allocated the page */

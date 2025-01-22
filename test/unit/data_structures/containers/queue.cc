@@ -160,7 +160,7 @@ TEST_CASE("TestMpscQueuePeek") {
   int *val;
   q->peek(val, 0);
   REQUIRE(*val == 1);
-  hipc::pair<hshm::bitfield32_t, int> *val_pair;
+  hipc::pair<hshm::ibitfield, int> *val_pair;
   q->peek(val_pair, 0);
   REQUIRE(val_pair->GetSecond() == 1);
   alloc->DelObj(HSHM_DEFAULT_MEM_CTX, q);
