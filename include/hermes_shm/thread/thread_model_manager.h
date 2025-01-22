@@ -10,67 +10,39 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+#ifndef HSHM_THREAD_THREAD_MANAGER_H_
+#define HSHM_THREAD_THREAD_MANAGER_H_
 
-#ifndef HERMES_THREAD_THREAD_MANAGER_H_
-#define HERMES_THREAD_THREAD_MANAGER_H_
-
+#include "hermes_shm/constants/macros.h"
+#include "hermes_shm/introspect/system_info.h"
 #include "hermes_shm/thread/thread_model/thread_model.h"
-#include "hermes_shm/thread/thread_model/thread_model_factory.h"
-#include <hermes_shm/introspect/system_info.h>
-#include <mutex>
 
-#include "hermes_shm/util/singleton/_global_singleton.h"
-#define HERMES_THREAD_MODEL \
-  hshm::GlobalSingleton<hshm::ThreadModelManager>::GetInstance()
-#define HERMES_THREAD_MODEL_T \
-  hshm::ThreadModelManager*
+#ifdef HSHM_ENABLE_PTHREADS
+#include "thread_model/pthread.h"
+#endif
+#ifdef HSHM_RPC_THALLIUM
+#include "thread_model/argobots.h"
+#endif
+#ifdef HSHM_ENABLE_CUDA
+#include "thread_model/cuda.h"
+#endif
+#ifdef HSHM_ENABLE_ROCM
+#include "thread_model/rocm.h"
+#endif
+#ifdef HSHM_ENABLE_WINDOWS_THREADS
+#include "thread_model/windows.h"
+#endif
 
-namespace hshm {
+#include "hermes_shm/util/singleton.h"
 
-class ThreadModelManager {
- public:
-  ThreadType type_; /**< The type of threads used in this program */
-  std::unique_ptr<thread_model::ThreadModel>
-    thread_static_; /**< Functions static to all threads */
+#if defined(HSHM_IS_HOST)
+#define HSHM_THREAD_MODEL \
+  hshm::CrossSingleton<HSHM_DEFAULT_THREAD_MODEL>::GetInstance()
+#define HSHM_THREAD_MODEL_T hshm::HSHM_DEFAULT_THREAD_MODEL*
+#elif defined(HSHM_IS_GPU)
+#define HSHM_THREAD_MODEL \
+  hshm::CrossSingleton<HSHM_DEFAULT_THREAD_MODEL_GPU>::GetInstance()
+#define HSHM_THREAD_MODEL_T hshm::HSHM_DEFAULT_THREAD_MODEL_GPU*
+#endif
 
-  /** Default constructor */
-  ThreadModelManager() {
-    SetThreadModel(ThreadType::kPthread);
-  }
-
-  /** Set the threading model of this application */
-  void SetThreadModel(ThreadType type);
-
-  /** Sleep for a period of time (microseconds) */
-  void SleepForUs(size_t us);
-
-  /** Call Yield */
-  void Yield();
-
-  /** Call GetTid */
-  tid_t GetTid();
-};
-
-/** A unique identifier of this thread across processes */
-union NodeThreadId {
-  struct {
-    uint32_t tid_;
-    uint32_t pid_;
-  } bits_;
-  uint64_t as_int_;
-
-  /** Default constructor */
-  NodeThreadId() {
-    bits_.tid_ = HERMES_THREAD_MODEL->GetTid();
-    bits_.pid_ = HERMES_SYSTEM_INFO->pid_;
-  }
-
-  /** Hash function */
-  uint32_t hash() {
-    return as_int_;
-  }
-};
-
-}  // namespace hshm
-
-#endif  // HERMES_THREAD_THREAD_MANAGER_H_
+#endif  // HSHM_THREAD_THREAD_MANAGER_H_

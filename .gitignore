@@ -10,5 +10,11 @@ cmake*
 *.o
 *.o.cmd
 *.o.d
+.cache
 build
 Testing
+*.env
+CMakePresets.json
+vcpkg_installed
+
+.vscode/launch.json

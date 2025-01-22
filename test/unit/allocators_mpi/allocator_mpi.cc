@@ -10,9 +10,10 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+#include <mpi.h>
 
-#include "test_init.h"
 #include "basic_test.h"
+#include "test_init.h"
 
 struct Record {
   char *data;
@@ -20,10 +21,11 @@ struct Record {
   Pointer ptr;
 };
 
-void MpiPageAllocationTest(Allocator *alloc, size_t count) {
+template <typename AllocT>
+void MpiPageAllocationTest(AllocT *alloc, size_t count) {
   size_t window_length = 32;
   size_t min_page = 64;
-  size_t max_page = MEGABYTES(1);
+  size_t max_page = hshm::Unit<size_t>::Megabytes(1);
   std::mt19937 rng(23522523);
   std::uniform_int_distribution<size_t> uni(min_page, max_page);
 
@@ -33,20 +35,20 @@ void MpiPageAllocationTest(Allocator *alloc, size_t count) {
   for (size_t w = 0; w < num_windows; ++w) {
     for (size_t i = 0; i < window_length; ++i) {
       window[i].size = uni(rng);
-      window[i].data = alloc->AllocatePtr<char>(window[i].size,
-                                                window[i].ptr);
+      window[i].data = alloc->template AllocatePtr<char>(
+          HSHM_DEFAULT_MEM_CTX, window[i].size, window[i].ptr);
       memset(window[i].data, (char)i, window[i].size);
     }
     for (size_t i = 0; i < window_length; ++i) {
       VerifyBuffer(window[i].data, window[i].size, (char)i);
-      alloc->Free(window[i].ptr);
+      alloc->Free(HSHM_DEFAULT_MEM_CTX, window[i].ptr);
     }
   }
   MPI_Barrier(MPI_COMM_WORLD);
 }
 
-template<typename AllocT>
-Allocator* TestAllocatorMpi() {
+template <typename AllocT>
+AllocT *TestAllocatorMpi() {
   int rank;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   if (rank == 0) {
@@ -56,8 +58,7 @@ Allocator* TestAllocatorMpi() {
   if (rank != 0) {
     PretestRankN();
   }
-  HILOG(kInfo, "Allocator: {}", (size_t)alloc_g);
-  return alloc_g;
+  return HSHM_MEMORY_MANAGER->GetAllocator<AllocT>(alloc_id);
 }
 
 TEST_CASE("StackAllocatorMpi") {

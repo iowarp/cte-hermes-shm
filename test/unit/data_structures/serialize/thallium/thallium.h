@@ -10,16 +10,14 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+#ifndef HSHM_DATA_STRUCTURES_SERIALIZATION_THALLIUM_H_
+#define HSHM_DATA_STRUCTURES_SERIALIZATION_THALLIUM_H_
 
-#ifndef HERMES_DATA_STRUCTURES_SERIALIZATION_THALLIUM_H_
-#define HERMES_DATA_STRUCTURES_SERIALIZATION_THALLIUM_H_
-
-#include "thallium.hpp"
-#include "hermes_shm/data_structures/ipc/string.h"
-#include "hermes_shm/data_structures/data_structure.h"
-#include "hermes_shm/data_structures/ipc/vector.h"
+#include "hermes_shm/data_structures/all.h"
 #include "hermes_shm/data_structures/ipc/list.h"
-#include "hermes_shm/data_structures/containers/charbuf.h"
 #include "hermes_shm/data_structures/ipc/slist.h"
+#include "hermes_shm/data_structures/ipc/string.h"
+#include "hermes_shm/data_structures/ipc/vector.h"
+#include "thallium.hpp"
 
-#endif  // HERMES_DATA_STRUCTURES_SERIALIZATION_THALLIUM_H_
+#endif  // HSHM_DATA_STRUCTURES_SERIALIZATION_THALLIUM_H_

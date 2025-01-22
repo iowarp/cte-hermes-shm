@@ -10,91 +10,164 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+#ifndef HSHM_MEMORY_ALLOCATOR_MALLOC_ALLOCATOR_H_
+#define HSHM_MEMORY_ALLOCATOR_MALLOC_ALLOCATOR_H_
 
-#ifndef HERMES_MEMORY_ALLOCATOR_MALLOC_ALLOCATOR_H_
-#define HERMES_MEMORY_ALLOCATOR_MALLOC_ALLOCATOR_H_
+#include <cstdint>
+#include <cstdlib>
 
 #include "allocator.h"
 #include "hermes_shm/thread/lock.h"
 
 namespace hshm::ipc {
 
-struct MallocAllocatorHeader : public AllocatorHeader {
-  std::atomic<size_t> total_alloc_size_;
+class _MallocAllocator;
+typedef BaseAllocator<_MallocAllocator> MallocAllocator;
 
-  MallocAllocatorHeader() = default;
+struct MallocPage {
+  size_t page_size_;
+};
 
-  void Configure(allocator_id_t alloc_id,
-                 size_t custom_header_size) {
+struct _MallocAllocatorHeader : public AllocatorHeader {
+  HSHM_CROSS_FUN
+  _MallocAllocatorHeader() = default;
+
+  HSHM_CROSS_FUN
+  void Configure(AllocatorId alloc_id, size_t custom_header_size) {
     AllocatorHeader::Configure(alloc_id, AllocatorType::kStackAllocator,
                                custom_header_size);
-    total_alloc_size_ = 0;
   }
 };
 
-class MallocAllocator : public Allocator {
+class _MallocAllocator : public Allocator {
+ public:
+  HSHM_ALLOCATOR(_MallocAllocator);
+
  private:
-  MallocAllocatorHeader *header_;
+  _MallocAllocatorHeader *header_;
 
  public:
   /**
    * Allocator constructor
    * */
-  MallocAllocator()
-  : header_(nullptr) {}
-
-  /**
-   * Get the ID of this allocator from shared memory
-   * */
-  allocator_id_t &GetId() override {
-    return header_->allocator_id_;
-  }
+  HSHM_CROSS_FUN
+  _MallocAllocator() : header_(nullptr) {}
 
   /**
    * Initialize the allocator in shared memory
    * */
-  void shm_init(allocator_id_t id,
-                size_t custom_header_size,
-                size_t buffer_size);
+  HSHM_CROSS_FUN
+  void shm_init(AllocatorId id, size_t custom_header_size, char *buffer,
+                size_t buffer_size) {
+    (void)buffer;
+    type_ = AllocatorType::kMallocAllocator;
+    id_ = id;
+    buffer_ = nullptr;
+    buffer_size_ = buffer_size;
+    header_ = reinterpret_cast<_MallocAllocatorHeader *>(
+        malloc(sizeof(_MallocAllocatorHeader) + custom_header_size));
+    custom_header_ = reinterpret_cast<char *>(header_ + 1);
+    header_->Configure(id, custom_header_size);
+  }
 
   /**
    * Attach an existing allocator from shared memory
    * */
-  void shm_deserialize(char *buffer,
-                       size_t buffer_size) override;
+  HSHM_CROSS_FUN
+  void shm_deserialize(char *buffer, size_t buffer_size) {
+    HSHM_THROW_ERROR(NOT_IMPLEMENTED, "_MallocAllocator::shm_deserialize");
+  }
 
   /**
    * Allocate a memory of \a size size. The page allocator cannot allocate
    * memory larger than the page size.
    * */
-  OffsetPointer AllocateOffset(size_t size) override;
+  HSHM_CROSS_FUN
+  OffsetPointer AllocateOffset(const hipc::MemContext &ctx, size_t size) {
+    auto page =
+        reinterpret_cast<MallocPage *>(malloc(sizeof(MallocPage) + size));
+    page->page_size_ = size;
+    header_->AddSize(size);
+    return OffsetPointer((size_t)(page + 1));
+  }
 
   /**
    * Allocate a memory of \a size size, which is aligned to \a
    * alignment.
    * */
-  OffsetPointer AlignedAllocateOffset(size_t size, size_t alignment) override;
+  HSHM_CROSS_FUN
+  OffsetPointer AlignedAllocateOffset(const hipc::MemContext &ctx, size_t size,
+                                      size_t alignment) {
+#ifdef HSHM_IS_HOST
+    auto page = reinterpret_cast<MallocPage *>(
+        SystemInfo::AlignedAlloc(alignment, sizeof(MallocPage) + size));
+    page->page_size_ = size;
+    header_->AddSize(size);
+    return OffsetPointer(size_t(page + 1));
+#else
+    return OffsetPointer(0);
+#endif
+  }
 
   /**
    * Reallocate \a p pointer to \a new_size new size.
    *
    * @return whether or not the pointer p was changed
    * */
-  OffsetPointer ReallocateOffsetNoNullCheck(OffsetPointer p,
-                                            size_t new_size) override;
+  HSHM_CROSS_FUN
+  OffsetPointer ReallocateOffsetNoNullCheck(const hipc::MemContext &ctx,
+                                            OffsetPointer p, size_t new_size) {
+#ifdef HSHM_IS_HOST
+    // Get the input page
+    auto page =
+        reinterpret_cast<MallocPage *>(p.off_.load() - sizeof(MallocPage));
+    header_->AddSize(new_size - page->page_size_);
+
+    // Reallocate the input page
+    auto new_page = reinterpret_cast<MallocPage *>(
+        realloc(page, sizeof(MallocPage) + new_size));
+    new_page->page_size_ = new_size;
+
+    // Create the pointer
+    return OffsetPointer(size_t(new_page + 1));
+#else
+    return OffsetPointer(0);
+#endif
+  }
 
   /**
    * Free \a ptr pointer. Null check is performed elsewhere.
    * */
-  void FreeOffsetNoNullCheck(OffsetPointer p) override;
+  HSHM_CROSS_FUN
+  void FreeOffsetNoNullCheck(const hipc::MemContext &ctx, OffsetPointer p) {
+    auto page =
+        reinterpret_cast<MallocPage *>(p.off_.load() - sizeof(MallocPage));
+    header_->SubSize(page->page_size_);
+    free(page);
+  }
 
   /**
    * Get the current amount of data allocated. Can be used for leak
    * checking.
    * */
-  size_t GetCurrentlyAllocatedSize() override;
+  HSHM_CROSS_FUN
+  size_t GetCurrentlyAllocatedSize() {
+    return (size_t)header_->GetCurrentlyAllocatedSize();
+  }
+
+  /**
+   * Create a globally-unique thread ID
+   * */
+  HSHM_CROSS_FUN
+  void CreateTls(MemContext &ctx) {}
+
+  /**
+   * Free a thread-local memory storage
+   * */
+  HSHM_CROSS_FUN
+  void FreeTls(const hipc::MemContext &ctx) {}
 };
 
 }  // namespace hshm::ipc
 
-#endif  // HERMES_MEMORY_ALLOCATOR_MALLOC_ALLOCATOR_H_
+#endif  // HSHM_MEMORY_ALLOCATOR_MALLOC_ALLOCATOR_H_

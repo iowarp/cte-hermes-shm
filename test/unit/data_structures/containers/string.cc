@@ -17,60 +17,79 @@
 using hshm::ipc::string;
 
 void TestString() {
-  Allocator *alloc = alloc_g;
+  auto *alloc = HSHM_DEFAULT_ALLOC;
 
   PAGE_DIVIDE("Test construction from const char*") {
-    auto text = hipc::make_uptr<hipc::string>(alloc, "hello1");
-    REQUIRE(*text == "hello1");
-    REQUIRE(*text != "h");
-    REQUIRE(*text != "asdfklaf");
+    hipc::string text(alloc, "hello1");
+    REQUIRE(text == "hello1");
+    REQUIRE(text != "h");
+    REQUIRE(text != "asdfklaf");
+  }
+
+  PAGE_DIVIDE("Test assignment operator") {
+    hipc::string text = hipc::string("hello1");
+    REQUIRE(text == "hello1");
+    REQUIRE(text != "h");
+    REQUIRE(text != "asdfklaf");
   }
 
   PAGE_DIVIDE("Test construction from std::string") {
-    auto text = hipc::make_uptr<hipc::string>(alloc, std::string("hello1"));
-    REQUIRE(*text == "hello1");
-    REQUIRE(*text != "h");
-    REQUIRE(*text != "asdfklaf");
+    hipc::string text(alloc, std::string("hello1"));
+    REQUIRE(text == "hello1");
+    REQUIRE(text != "h");
+    REQUIRE(text != "asdfklaf");
   }
 
   PAGE_DIVIDE("Test the mutability of the string") {
-    auto text = hipc::make_uptr<hipc::string>(alloc, 6);
-    memcpy(text->data(), "hello4", strlen("hello4"));
-    REQUIRE(*text == "hello4");
+    hipc::string text(alloc, 6);
+    memcpy(text.data(), "hello4", strlen("hello4"));
+    REQUIRE(text == "hello4");
   }
 
   PAGE_DIVIDE("Test copy assign from hipc::string") {
-    auto text1 = hipc::make_uptr<hipc::string>(alloc, "hello");
-    auto text2 = hipc::make_uptr<hipc::string>(alloc);
-    (*text2) = (*text1);
-    REQUIRE(*text1 == "hello");
+    hipc::string text1(alloc, "hello");
+    hipc::string text2(alloc);
+    text2 = text1;
+    REQUIRE(text1 == "hello");
   }
 
   PAGE_DIVIDE("Test copy assign from std::string") {
-    auto text1 = hipc::make_uptr<hipc::string>(alloc, "hello");
-    (*text1) = std::string("hello2");
-    REQUIRE(*text1 == "hello2");
+    hipc::string text1(alloc, "hello");
+    text1 = std::string("hello2");
+    REQUIRE(text1 == "hello2");
   }
 
   PAGE_DIVIDE("Test move assign from hipc::string") {
-    auto text1 = hipc::make_uptr<hipc::string>(alloc, "hello");
-    auto text2 = hipc::make_uptr<hipc::string>(alloc);
-    (*text2) = std::move(*text1);
-    REQUIRE(*text2 == "hello");
+    hipc::string text1(alloc, "hello");
+    hipc::string text2(alloc);
+    text2 = std::move(text1);
+    REQUIRE(text2 == "hello");
   }
 
   PAGE_DIVIDE("Move from a string. Re-assign moved string.") {
-    auto text1 = hipc::make_uptr<hipc::string>(alloc, "hello");
-    auto text2 = hipc::make_uptr<hipc::string>(alloc);
-    (*text2) = std::move(*text1);
-    (*text1) = "hello2";
-    REQUIRE(*text2 == "hello");
-    REQUIRE(*text1 == "hello2");
+    hipc::string text1(alloc, "hello");
+    hipc::string text2(alloc);
+    text2 = std::move(text1);
+    text1 = "hello2";
+    REQUIRE(text2 == "hello");
+    REQUIRE(text1 == "hello2");
   }
 }
 
+TEST_CASE("StringConv") {
+  auto *alloc = HSHM_DEFAULT_ALLOC;
+  REQUIRE(IS_SHM_ARCHIVEABLE(string));
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+  {
+    hipc::string text("hello");
+    hshm::string x(text);
+    REQUIRE(text == x);
+  }
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+}
+
 TEST_CASE("String") {
-  Allocator *alloc = alloc_g;
+  auto *alloc = HSHM_DEFAULT_ALLOC;
   REQUIRE(IS_SHM_ARCHIVEABLE(string));
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
   TestString();

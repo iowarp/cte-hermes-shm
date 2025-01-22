@@ -10,27 +10,33 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_CONFIG_PARSE_PARSER_H
-#define HERMES_CONFIG_PARSE_PARSER_H
+#ifndef HSHM_CONFIG_PARSE_PARSER_H
+#define HSHM_CONFIG_PARSE_PARSER_H
 
-#include <cstdlib>
-#include <string>
-#include <regex>
-#include <list>
-#include "formatter.h"
-#include "logging.h"
-#include "hermes_shm/constants/macros.h"
-
-#include <iomanip>
 #include <float.h>
 #include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <cstdlib>
+#include <iomanip>
+#include <list>
+#include <regex>
+#include <string>
+
+#include "formatter.h"
+#include "hermes_shm/constants/macros.h"
+#include "logging.h"
+#include "yaml-cpp/yaml.h"
+
 namespace hshm {
 
 class ConfigParse {
  public:
+  static void rm_char(std::string &str, char ch) {
+    str.erase(std::remove(str.begin(), str.end(), ch), str.end());
+  }
+
   /**
    * parse a hostfile string
    * [] represents a range to generate
@@ -41,10 +47,10 @@ class ConfigParse {
   static void ParseHostNameString(std::string hostname_set_str,
                                   std::vector<std::string> &list) {
     // Remove all whitespace characters from host name
-    std::remove(hostname_set_str.begin(), hostname_set_str.end(), ' ');
-    std::remove(hostname_set_str.begin(), hostname_set_str.end(), '\n');
-    std::remove(hostname_set_str.begin(), hostname_set_str.end(), '\r');
-    std::remove(hostname_set_str.begin(), hostname_set_str.end(), '\t');
+    rm_char(hostname_set_str, ' ');
+    rm_char(hostname_set_str, '\n');
+    rm_char(hostname_set_str, '\r');
+    rm_char(hostname_set_str, '\t');
     if (hostname_set_str.size() == 0) {
       return;
     }
@@ -83,7 +89,7 @@ class ConfigParse {
         // Parse ',' and remove spaces
         std::string range_str;
         std::getline(ss_ranges, range_str, ',');
-        std::remove(range_str.begin(), range_str.end(), ' ');
+        rm_char(range_str, ' ');
 
         // Divide the range by '-'
         auto dash = range_str.find_first_of('-');
@@ -146,11 +152,12 @@ class ConfigParse {
       }
       break;
     }
-    return std::string(num_text.begin() + i, num_text.end());;
+    return std::string(num_text.begin() + i, num_text.end());
+    ;
   }
 
   /** parse the number of \a num_text NUMBER text */
-  template<typename T>
+  template <typename T>
   static T ParseNumber(const std::string &num_text) {
     T size;
     if (num_text == "inf") {
@@ -161,51 +168,51 @@ class ConfigParse {
   }
 
   /** Converts \a size_text SIZE text into a size_t */
-  static size_t ParseSize(const std::string &size_text) {
-    auto size = ParseNumber<float>(size_text);
+  static hshm::u64 ParseSize(const std::string &size_text) {
+    auto size = ParseNumber<double>(size_text);
     if (size_text == "inf") {
-      return std::numeric_limits<size_t>::max();
+      return std::numeric_limits<hshm::u64>::max();
     }
     std::string suffix = ParseNumberSuffix(size_text);
     if (suffix.empty()) {
-      return BYTES(size);
+      return Unit<hshm::u64>::Bytes(size);
     } else if (suffix[0] == 'k' || suffix[0] == 'K') {
-      return KILOBYTES(size);
+      return hshm::Unit<hshm::u64>::Kilobytes(size);
     } else if (suffix[0] == 'm' || suffix[0] == 'M') {
-      return MEGABYTES(size);
+      return hshm::Unit<hshm::u64>::Megabytes(size);
     } else if (suffix[0] == 'g' || suffix[0] == 'G') {
-      return GIGABYTES(size);
+      return hshm::Unit<hshm::u64>::Terabytes(size);
     } else if (suffix[0] == 't' || suffix[0] == 'T') {
-      return TERABYTES(size);
+      return hshm::Unit<hshm::u64>::Terabytes(size);
     } else if (suffix[0] == 'p' || suffix[0] == 'P') {
-      return PETABYTES(size);
+      return hshm::Unit<hshm::u64>::Terabytes(size);
     } else {
-      HELOG(kFatal, "Could not parse the size: {}", size_text)
+      HELOG(kFatal, "Could not parse the size: {}", size_text);
       exit(1);
     }
   }
 
   /** Returns bandwidth (bytes / second) */
-  static size_t ParseBandwidth(const std::string &size_text) {
+  static hshm::u64 ParseBandwidth(const std::string &size_text) {
     return ParseSize(size_text);
   }
 
   /** Returns latency (nanoseconds) */
-  static size_t ParseLatency(const std::string &latency_text) {
-    auto size = ParseNumber<float>(latency_text);
+  static hshm::u64 ParseLatency(const std::string &latency_text) {
+    auto size = ParseNumber<double>(latency_text);
     std::string suffix = ParseNumberSuffix(latency_text);
     if (suffix.empty()) {
-      return BYTES(size);
+      return Unit<hshm::u64>::Bytes(size);
     } else if (suffix[0] == 'n' || suffix[0] == 'N') {
-      return BYTES(size);
+      return Unit<hshm::u64>::Bytes(size);
     } else if (suffix[0] == 'u' || suffix[0] == 'U') {
-      return KILOBYTES(size);
+      return hshm::Unit<hshm::u64>::Kilobytes(size);
     } else if (suffix[0] == 'm' || suffix[0] == 'M') {
-      return MEGABYTES(size);
+      return hshm::Unit<hshm::u64>::Megabytes(size);
     } else if (suffix[0] == 's' || suffix[0] == 'S') {
-      return GIGABYTES(size);
+      return hshm::Unit<hshm::u64>::Terabytes(size);
     }
-    HELOG(kFatal, "Could not parse the latency: {}", latency_text)
+    HELOG(kFatal, "Could not parse the latency: {}", latency_text);
     return 0;
   }
 
@@ -219,16 +226,8 @@ class ConfigParse {
     for (auto &env_name_re : env_names) {
       std::string to_replace = std::string(env_name_re);
       std::string env_name = to_replace.substr(2, to_replace.size() - 3);
-      std::string env_val = env_name;
-      try {
-        char *ret = getenv(env_name.c_str());
-        if (ret) {
-          env_val = ret;
-        } else {
-          continue;
-        }
-      } catch(...) {
-      }
+      std::string env_val = hshm::SystemInfo::Getenv(
+          env_name.c_str(), hshm::Unit<size_t>::Megabytes(1));
       std::regex replace_expr("\\$\\{" + env_name + "\\}");
       path = std::regex_replace(path, replace_expr, env_val);
     }
@@ -246,12 +245,71 @@ class ConfigParse {
       }
       file.close();
     } else {
-      HELOG(kError, "Could not open the hostfile: {}", path)
+      HELOG(kError, "Could not open the hostfile: {}", path);
     }
     return hosts;
   }
 };
 
+/**
+ * Base class for configuration files
+ * */
+class BaseConfig {
+ public:
+  /** load configuration from a string */
+  void LoadText(const std::string &config_string, bool with_default = true) {
+    if (with_default) {
+      LoadDefault();
+    }
+    if (config_string.size() == 0) {
+      return;
+    }
+    YAML::Node yaml_conf = YAML::Load(config_string);
+    ParseYAML(yaml_conf);
+  }
+
+  /** load configuration from file */
+  void LoadFromFile(const std::string &path, bool with_default = true) {
+    if (with_default) {
+      LoadDefault();
+    }
+    if (path.size() == 0) {
+      return;
+    }
+    auto real_path = hshm::ConfigParse::ExpandPath(path);
+    try {
+      YAML::Node yaml_conf = YAML::LoadFile(real_path);
+      ParseYAML(yaml_conf);
+    } catch (std::exception &e) {
+      HELOG(kFatal, e.what());
+    }
+  }
+
+  /** load the default configuration */
+  virtual void LoadDefault() = 0;
+
+ public:
+  /** parse \a list_node vector from configuration file in YAML */
+  template <typename T, typename VEC_TYPE = std::vector<T>>
+  static void ParseVector(YAML::Node list_node, VEC_TYPE &list) {
+    for (auto val_node : list_node) {
+      list.emplace_back(val_node.as<T>());
+    }
+  }
+
+  /** clear + parse \a list_node vector from configuration file in YAML */
+  template <typename T, typename VEC_TYPE = std::vector<T>>
+  static void ClearParseVector(YAML::Node list_node, VEC_TYPE &list) {
+    list.clear();
+    for (auto val_node : list_node) {
+      list.emplace_back(val_node.as<T>());
+    }
+  }
+
+ private:
+  virtual void ParseYAML(YAML::Node &yaml_conf) = 0;
+};
+
 }  // namespace hshm
 
-#endif  // HERMES_CONFIG_PARSE_PARSER_H
+#endif  // HSHM_CONFIG_PARSE_PARSER_H

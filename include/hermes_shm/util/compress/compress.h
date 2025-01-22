@@ -10,10 +10,10 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_SHM_INCLUDE_HERMES_SHM_COMPRESS_COMPRESS_H_
-#define HERMES_SHM_INCLUDE_HERMES_SHM_COMPRESS_COMPRESS_H_
+#ifndef HSHM_SHM_INCLUDE_HSHM_SHM_COMPRESS_COMPRESS_H_
+#define HSHM_SHM_INCLUDE_HSHM_SHM_COMPRESS_COMPRESS_H_
 
-#include "hermes_shm/data_structures/data_structure.h"
+#include "hermes_shm/data_structures/all.h"
 
 namespace hshm {
 
@@ -25,16 +25,16 @@ class Compressor {
   /**
    * Compress the input buffer into the output buffer
    * */
-  virtual bool Compress(void *output, size_t &output_size,
-                        void *input, size_t input_size) = 0;
+  virtual bool Compress(void *output, size_t &output_size, void *input,
+                        size_t input_size) = 0;
 
   /**
    * Decompress the input buffer into the output buffer.
    * */
-  virtual bool Decompress(void *output, size_t &output_size,
-                          void *input, size_t input_size) = 0;
+  virtual bool Decompress(void *output, size_t &output_size, void *input,
+                          size_t input_size) = 0;
 };
 
 }  // namespace hshm
 
-#endif  // HERMES_SHM_INCLUDE_HERMES_SHM_COMPRESS_COMPRESS_H_
+#endif  // HSHM_SHM_INCLUDE_HSHM_SHM_COMPRESS_COMPRESS_H_

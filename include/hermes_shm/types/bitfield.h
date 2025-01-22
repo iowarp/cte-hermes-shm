@@ -10,11 +10,13 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_INCLUDE_HERMES_TYPES_BITFIELD_H_
-#define HERMES_INCLUDE_HERMES_TYPES_BITFIELD_H_
+#ifndef HSHM_INCLUDE_HSHM_TYPES_BITFIELD_H_
+#define HSHM_INCLUDE_HSHM_TYPES_BITFIELD_H_
 
 #include <cstdint>
-#include <hermes_shm/constants/macros.h>
+
+#include "hermes_shm/constants/macros.h"
+#include "hermes_shm/types/atomic.h"
 
 namespace hshm {
 
@@ -24,55 +26,94 @@ namespace hshm {
 /**
  * A generic bitfield template
  * */
-template<typename T = uint32_t>
+template <typename T = u32, bool ATOMIC = false>
 struct bitfield {
-  T bits_;
+  hipc::opt_atomic<T, ATOMIC> bits_;
 
-  HSHM_ALWAYS_INLINE bitfield() : bits_(0) {}
+  /** Default constructor */
+  HSHM_INLINE_CROSS_FUN bitfield() : bits_(0) {}
 
-  HSHM_ALWAYS_INLINE explicit bitfield(T mask) : bits_(mask) {}
+  /** Emplace constructor */
+  HSHM_INLINE_CROSS_FUN explicit bitfield(T mask) : bits_(mask) {}
 
-  HSHM_ALWAYS_INLINE void SetBits(T mask) {
-    bits_ |= mask;
+  /** Copy constructor */
+  HSHM_INLINE_CROSS_FUN bitfield(const bitfield &other) : bits_(other.bits_) {}
+
+  /** Copy assignment */
+  HSHM_INLINE_CROSS_FUN bitfield &operator=(const bitfield &other) {
+    bits_ = other.bits_;
+    return *this;
   }
 
-  HSHM_ALWAYS_INLINE void UnsetBits(T mask) {
-    bits_ &= ~mask;
+  /** Move constructor */
+  HSHM_INLINE_CROSS_FUN bitfield(bitfield &&other) noexcept
+      : bits_(other.bits_) {}
+
+  /** Move assignment */
+  HSHM_INLINE_CROSS_FUN bitfield &operator=(bitfield &&other) noexcept {
+    bits_ = other.bits_;
+    return *this;
   }
 
-  HSHM_ALWAYS_INLINE T Any(T mask) const {
-    return bits_ & mask;
+  /** Copy from any bitfield */
+  template <bool ATOMIC2>
+  HSHM_INLINE_CROSS_FUN bitfield(const bitfield<T, ATOMIC2> &other)
+      : bits_(other.bits_) {}
+
+  /** Copy assignment from any bitfield */
+  template <bool ATOMIC2>
+  HSHM_INLINE_CROSS_FUN bitfield &operator=(const bitfield<T, ATOMIC2> &other) {
+    bits_ = other.bits_;
+    return *this;
   }
 
-  HSHM_ALWAYS_INLINE T All(T mask) const {
-    return Any(mask) == mask;
-  }
+  /** Set bits using mask */
+  HSHM_INLINE_CROSS_FUN void SetBits(T mask) { bits_ |= mask; }
 
-  HSHM_ALWAYS_INLINE void CopyBits(bitfield field, T mask) {
+  /** Unset bits in mask */
+  HSHM_INLINE_CROSS_FUN void UnsetBits(T mask) { bits_ &= ~mask; }
+
+  /** Check if any bits are set */
+  HSHM_INLINE_CROSS_FUN T Any(T mask) const { return (bits_ & mask).load(); }
+
+  /** Check if all bits are set */
+  HSHM_INLINE_CROSS_FUN T All(T mask) const { return Any(mask) == mask; }
+
+  /** Copy bits from another bitfield */
+  HSHM_INLINE_CROSS_FUN void CopyBits(bitfield field, T mask) {
     bits_ &= (field.bits_ & mask);
   }
 
-  HSHM_ALWAYS_INLINE void Clear() {
-    bits_ = 0;
-  }
+  /** Clear all bits */
+  HSHM_INLINE_CROSS_FUN void Clear() { bits_ = 0; }
 
-  HSHM_ALWAYS_INLINE static T MakeMask(int start, int length) {
+  /** Make a mask */
+  HSHM_INLINE_CROSS_FUN static T MakeMask(int start, int length) {
     return ((((T)1) << length) - 1) << start;
   }
 
-  template<typename Ar>
+  /** Serialization */
+  template <typename Ar>
   void serialize(Ar &ar) {
     ar & bits_;
   }
 };
-typedef bitfield<uint8_t> bitfield8_t;
-typedef bitfield<uint16_t> bitfield16_t;
-typedef bitfield<uint32_t> bitfield32_t;
+typedef bitfield<u8> bitfield8_t;
+typedef bitfield<u16> bitfield16_t;
+typedef bitfield<u32> bitfield32_t;
+typedef bitfield<int> ibitfield;
+
+template <typename T>
+using abitfield = bitfield<T, true>;
+typedef abitfield<u8> abitfield8_t;
+typedef abitfield<u16> abitfield16_t;
+typedef abitfield<u32> abitfield32_t;
+typedef abitfield<int> aibitfield;
 
 /**
  * A helper type needed for std::conditional
  * */
-template<size_t LEN>
+template <size_t LEN>
 struct len_bits {
   static constexpr size_t value = LEN;
 };
@@ -80,21 +121,18 @@ struct len_bits {
 /**
  * A generic bitfield template
  * */
-template<size_t NUM_BITS,
-  typename LEN = typename std::conditional<
-    ((NUM_BITS % 32 == 0) && (NUM_BITS > 0)),
-    len_bits<(NUM_BITS / 32)>,
-    len_bits<(NUM_BITS / 32) + 1>>::type>
+template <size_t NUM_BITS,
+          typename LEN = typename std::conditional<
+              ((NUM_BITS % 32 == 0) && (NUM_BITS > 0)),
+              len_bits<(NUM_BITS / 32)>, len_bits<(NUM_BITS / 32) + 1>>::type>
 struct big_bitfield {
   bitfield32_t bits_[LEN::value];
 
-  HSHM_ALWAYS_INLINE big_bitfield() : bits_() {}
+  HSHM_INLINE_CROSS_FUN big_bitfield() : bits_() {}
 
-  HSHM_ALWAYS_INLINE size_t size() const {
-    return LEN::value;
-  }
+  HSHM_INLINE_CROSS_FUN size_t size() const { return LEN::value; }
 
-  HSHM_ALWAYS_INLINE void SetBits(int start, int length) {
+  HSHM_INLINE_CROSS_FUN void SetBits(int start, int length) {
     int bf_idx = start / 32;
     int bf_idx_count = 32 - bf_idx;
     int rem = length;
@@ -110,7 +148,7 @@ struct big_bitfield {
     }
   }
 
-  HSHM_ALWAYS_INLINE void UnsetBits(int start, int length) {
+  HSHM_INLINE_CROSS_FUN void UnsetBits(int start, int length) {
     int bf_idx = start / 32;
     int bf_idx_count = 32 - bf_idx;
     int rem = length;
@@ -126,7 +164,7 @@ struct big_bitfield {
     }
   }
 
-  HSHM_ALWAYS_INLINE bool Any(int start, int length) const {
+  HSHM_INLINE_CROSS_FUN bool Any(int start, int length) const {
     int bf_idx = start / 32;
     int bf_idx_count = 32 - bf_idx;
     int rem = length;
@@ -145,7 +183,7 @@ struct big_bitfield {
     return false;
   }
 
-  HSHM_ALWAYS_INLINE bool All(int start, int length) const {
+  HSHM_INLINE_CROSS_FUN bool All(int start, int length) const {
     int bf_idx = start / 32;
     int bf_idx_count = 32 - bf_idx;
     int rem = length;
@@ -164,11 +202,11 @@ struct big_bitfield {
     return true;
   }
 
-  HSHM_ALWAYS_INLINE void Clear() {
-    memset((void*)bits_, 0, sizeof(bitfield32_t) * LEN::value);
+  HSHM_INLINE_CROSS_FUN void Clear() {
+    memset((void *)bits_, 0, sizeof(bitfield32_t) * LEN::value);
   }
-} __attribute__((packed));
+};
 
 }  // namespace hshm
 
-#endif  // HERMES_INCLUDE_HERMES_TYPES_BITFIELD_H_
+#endif  // HSHM_INCLUDE_HSHM_TYPES_BITFIELD_H_

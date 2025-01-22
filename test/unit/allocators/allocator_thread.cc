@@ -10,19 +10,23 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-
 #include "test_init.h"
 
-void MultiThreadedPageAllocationTest(Allocator *alloc) {
+#ifdef HSHM_ENABLE_OPENMP
+#include <omp.h>
+#endif
+
+template <typename AllocT>
+void MultiThreadedPageAllocationTest(AllocT *alloc) {
   size_t nthreads = 8;
   omp_set_dynamic(0);
 #pragma omp parallel shared(alloc) num_threads(nthreads)
   {
 #pragma omp barrier
-    PageAllocationTest(alloc);
+    Workloads<AllocT>::PageAllocationTest(alloc);
 #pragma omp barrier
     try {
-      MultiPageAllocationTest(alloc);
+      Workloads<AllocT>::MultiPageAllocationTest(alloc);
     } catch (std::shared_ptr<hshm::Error> &err) {
       err->print();
       exit(1);
@@ -32,17 +36,21 @@ void MultiThreadedPageAllocationTest(Allocator *alloc) {
 }
 
 TEST_CASE("StackAllocatorMultithreaded") {
+  HSHM_ERROR_HANDLE_START()
   auto alloc = Pretest<hipc::PosixShmMmap, hipc::StackAllocator>();
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
   MultiThreadedPageAllocationTest(alloc);
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
   Posttest();
+  HSHM_ERROR_HANDLE_END()
 }
 
 TEST_CASE("ScalablePageAllocatorMultithreaded") {
+  HSHM_ERROR_HANDLE_START()
   auto alloc = Pretest<hipc::PosixShmMmap, hipc::ScalablePageAllocator>();
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
   MultiThreadedPageAllocationTest(alloc);
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
   Posttest();
+  HSHM_ERROR_HANDLE_END()
 }

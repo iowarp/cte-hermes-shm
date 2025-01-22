@@ -10,31 +10,23 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_INCLUDE_HERMES_UTIL_AUTO_TRACE_H_
-#define HERMES_INCLUDE_HERMES_UTIL_AUTO_TRACE_H_
+#ifndef HSHM_INCLUDE_HSHM_UTIL_AUTO_TRACE_H_
+#define HSHM_INCLUDE_HSHM_UTIL_AUTO_TRACE_H_
+
+#include <iostream>
 
 #include "formatter.h"
-#include "timer.h"
 #include "logging.h"
-#include <iostream>
+#include "timer.h"
 
 namespace hshm {
 
-#ifdef HERMES_ENABLE_PROFILING
-#define AUTO_TRACE(LOG_LEVEL) \
-  hshm::AutoTrace<LOG_LEVEL> hshm_tracer_(__func__);
-#define TIMER_START(NAME) \
-  hshm_tracer_.StartTimer(NAME);
-#define TIMER_END()  \
-  hshm_tracer_.EndTimer();
-#else
-#define AUTO_TRACE(LOG_LEVEL)
-#define TIMER_START(NAME)
-#define TIMER_END()
-#endif
+#define AUTO_TRACE(LOG_CODE) hshm::AutoTrace<LOG_CODE> _hshm_tracer_(__func__)
+#define TIMER_START(NAME) _hshm_tracer_.StartTimer(NAME)
+#define TIMER_END() _hshm_tracer_.EndTimer()
 
 /** Trace function execution times */
-template<int LOG_LEVEL>
+template <int LOG_CODE>
 class AutoTrace {
  private:
   HighResMonotonicTimer timer_;
@@ -43,52 +35,51 @@ class AutoTrace {
   std::string internal_name_;
 
  public:
-  template<typename ...Args>
-  explicit AutoTrace(const char *fname) : fname_(fname) {
-    _StartTimer(timer_);
+  HSHM_INLINE AutoTrace(const char *fname) {
+    if constexpr (LOG_CODE >= 0) {
+      fname_ = fname;
+      _StartTimer(timer_);
+    }
   }
 
+  HSHM_INLINE
   ~AutoTrace() {
-    _EndTimer(timer_);
+    if constexpr (LOG_CODE >= 0) {
+      _EndTimer(timer_);
+    }
   }
 
+  HSHM_INLINE
   void StartTimer(const char *internal_name) {
-    internal_name_ = "/" + std::string(internal_name);
-    _StartTimer(timer2_);
+    if constexpr (LOG_CODE >= 0) {
+      internal_name_ = "/" + std::string(internal_name);
+      _StartTimer(timer2_);
+    }
   }
 
+  HSHM_INLINE
   void EndTimer() {
-    _EndTimer(timer2_);
+    if constexpr (LOG_CODE >= 0) {
+      _EndTimer(timer2_);
+    }
   }
 
  private:
-  template<typename ...Args>
-  void _StartTimer(HighResMonotonicTimer &timer) {
-#ifdef HERMES_ENABLE_PROFILING
-    if constexpr(LOG_LEVEL <= HERMES_LOG_VERBOSITY) {
-      timer.Resume();
-      HILOG(LOG_LEVEL, "{}{}",
-           fname_,
-           internal_name_)
-    }
-#endif
+  template <typename... Args>
+  HSHM_INLINE void _StartTimer(HighResMonotonicTimer &timer) {
+    timer.Resume();
+    HIPRINT("{}{}", fname_, internal_name_);
   }
 
+  HSHM_INLINE
   void _EndTimer(HighResMonotonicTimer &timer) {
-#ifdef HERMES_ENABLE_PROFILING
-    if constexpr(LOG_LEVEL <= HERMES_LOG_VERBOSITY) {
-      timer.Pause();
-      HILOG(LOG_LEVEL, "{}{} {}ns",
-           fname_,
-           internal_name_,
-           timer.GetNsec())
-      timer.Reset();
-      internal_name_.clear();
-    }
-#endif
+    timer.Pause();
+    HIPRINT("{}{} {}ns", fname_, internal_name_, timer.GetNsec());
+    timer.Reset();
+    internal_name_.clear();
   }
 };
 
 }  // namespace hshm
 
-#endif  // HERMES_INCLUDE_HERMES_UTIL_AUTO_TRACE_H_
+#endif  // HSHM_INCLUDE_HSHM_UTIL_AUTO_TRACE_H_

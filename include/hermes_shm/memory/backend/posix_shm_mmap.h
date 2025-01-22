@@ -10,130 +10,123 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_INCLUDE_MEMORY_BACKEND_POSIX_SHM_MMAP_H
-#define HERMES_INCLUDE_MEMORY_BACKEND_POSIX_SHM_MMAP_H
+#ifndef HSHM_INCLUDE_MEMORY_BACKEND_POSIX_SHM_MMAP_H
+#define HSHM_INCLUDE_MEMORY_BACKEND_POSIX_SHM_MMAP_H
 
-#include "memory_backend.h"
-#include "hermes_shm/util/logging.h"
-#include <string>
-
+#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <fcntl.h>
-#include <sys/shm.h>
-#include <sys/stat.h>
-#include <sys/mman.h>
-#include <unistd.h>
 
-#include <hermes_shm/util/errors.h>
-#include <hermes_shm/constants/macros.h>
-#include <hermes_shm/introspect/system_info.h>
+#include <string>
+
+#include "hermes_shm/constants/macros.h"
+#include "hermes_shm/introspect/system_info.h"
+#include "hermes_shm/util/errors.h"
+#include "hermes_shm/util/logging.h"
+#include "memory_backend.h"
 
 namespace hshm::ipc {
 
-class PosixShmMmap : public MemoryBackend {
- private:
-  std::string url_;
-  int fd_;
+class PosixShmMmap : public MemoryBackend, public UrlMemoryBackend {
+ protected:
+  File fd_;
+  hshm::chararr url_;
 
  public:
   /** Constructor */
-  PosixShmMmap() : fd_(-1) {}
+  HSHM_CROSS_FUN
+  PosixShmMmap() {}
 
   /** Destructor */
-  ~PosixShmMmap() override {
+  HSHM_CROSS_FUN
+  ~PosixShmMmap() {
+#ifdef HSHM_IS_HOST
     if (IsOwned()) {
       _Destroy();
     } else {
       _Detach();
     }
+#endif
   }
 
   /** Initialize backend */
-  bool shm_init(size_t size, std::string url) {
+  bool shm_init(const MemoryBackendId &backend_id, size_t size,
+                const hshm::chararr &url) {
     SetInitialized();
     Own();
-    url_ = std::move(url);
-    shm_unlink(url_.c_str());
-    fd_ = shm_open(url_.c_str(), O_CREAT | O_RDWR, 0666);
-    if (fd_ < 0) {
-      HILOG(kError, "shm_open failed: {}", strerror(errno));
+    SystemInfo::DestroySharedMemory(url.c_str());
+    if (!SystemInfo::CreateNewSharedMemory(
+            fd_, url.c_str(), size + HSHM_SYSTEM_INFO->page_size_)) {
+      char *err_buf = strerror(errno);
+      HILOG(kError, "shm_open failed: {}", err_buf);
       return false;
     }
-    _Reserve(size + HERMES_SYSTEM_INFO->page_size_);
-    header_ = _Map<MemoryBackendHeader>(HERMES_SYSTEM_INFO->page_size_, 0);
+    url_ = url;
+    header_ = (MemoryBackendHeader *)_ShmMap(HSHM_SYSTEM_INFO->page_size_, 0);
+    header_->type_ = MemoryBackendType::kPosixShmMmap;
+    header_->id_ = backend_id;
     header_->data_size_ = size;
     data_size_ = size;
-    data_ = _Map(size, HERMES_SYSTEM_INFO->page_size_);
+    data_ = _ShmMap(size, HSHM_SYSTEM_INFO->page_size_);
     return true;
   }
 
   /** Deserialize the backend */
-  bool shm_deserialize(std::string url) override {
+  bool shm_deserialize(const hshm::chararr &url) {
     SetInitialized();
     Disown();
-    url_ = std::move(url);
-    fd_ = shm_open(url_.c_str(), O_RDWR, 0666);
-    if (fd_ < 0) {
-      HILOG(kError, "shm_open failed: {}", strerror(errno));
+    if (!SystemInfo::OpenSharedMemory(fd_, url.c_str())) {
+      const char *err_buf = strerror(errno);
+      HILOG(kError, "shm_open failed: {}", err_buf);
       return false;
     }
-    header_ = _Map<MemoryBackendHeader>(HERMES_SYSTEM_INFO->page_size_, 0);
+    header_ = (MemoryBackendHeader *)_ShmMap(HSHM_SYSTEM_INFO->page_size_, 0);
     data_size_ = header_->data_size_;
-    data_ = _Map(data_size_, HERMES_SYSTEM_INFO->page_size_);
+    data_ = _ShmMap(data_size_, HSHM_SYSTEM_INFO->page_size_);
     return true;
   }
 
   /** Detach the mapped memory */
-  void shm_detach() override {
-    _Detach();
-  }
+  void shm_detach() { _Detach(); }
 
   /** Destroy the mapped memory */
-  void shm_destroy() override {
-    _Destroy();
-  }
+  void shm_destroy() { _Destroy(); }
 
  protected:
-  /** Reserve shared memory */
-  void _Reserve(size_t size) {
-    int ret = ftruncate64(fd_, static_cast<off64_t>(size));
-    if (ret < 0) {
-      throw SHMEM_RESERVE_FAILED.format();
-    }
-  }
-
   /** Map shared memory */
-  template<typename T = char>
-  T* _Map(size_t size, off64_t off) {
-    T *ptr = reinterpret_cast<T*>(
-      mmap64(nullptr, size, PROT_READ | PROT_WRITE,
-             MAP_SHARED, fd_, off));
-    if (ptr == MAP_FAILED) {
-      throw SHMEM_CREATE_FAILED.format();
+  char *_ShmMap(size_t size, i64 off) {
+    char *ptr =
+        reinterpret_cast<char *>(SystemInfo::MapSharedMemory(fd_, size, off));
+    if (!ptr) {
+      HSHM_THROW_ERROR(SHMEM_CREATE_FAILED);
     }
     return ptr;
   }
 
   /** Unmap shared memory */
   void _Detach() {
-    if (!IsInitialized()) { return; }
-    munmap(data_, data_size_);
-    munmap(header_, HERMES_SYSTEM_INFO->page_size_);
-    close(fd_);
+    if (!IsInitialized()) {
+      return;
+    }
+    SystemInfo::UnmapMemory(reinterpret_cast<void *>(header_),
+                            HSHM_SYSTEM_INFO->page_size_);
+    SystemInfo::UnmapMemory(data_, data_size_);
+    SystemInfo::CloseSharedMemory(fd_);
     UnsetInitialized();
   }
 
   /** Destroy shared memory */
   void _Destroy() {
-    if (!IsInitialized()) { return; }
+    if (!IsInitialized()) {
+      return;
+    }
     _Detach();
-    shm_unlink(url_.c_str());
+    SystemInfo::DestroySharedMemory(url_.c_str());
     UnsetInitialized();
   }
 };
 
 }  // namespace hshm::ipc
 
-#endif  // HERMES_INCLUDE_MEMORY_BACKEND_POSIX_SHM_MMAP_H
+#endif  // HSHM_INCLUDE_MEMORY_BACKEND_POSIX_SHM_MMAP_H

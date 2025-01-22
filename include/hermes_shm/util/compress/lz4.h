@@ -10,36 +10,35 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_SHM_INCLUDE_HERMES_SHM_COMPRESS_Lz4_H_
-#define HERMES_SHM_INCLUDE_HERMES_SHM_COMPRESS_Lz4_H_
+#ifndef HSHM_SHM_INCLUDE_HSHM_SHM_COMPRESS_Lz4_H_
+#define HSHM_SHM_INCLUDE_HSHM_SHM_COMPRESS_Lz4_H_
+
+#include <lz4.h>
 
 #include "compress.h"
-#include <lz4.h>
 
 namespace hshm {
 
 class Lz4 : public Compressor {
  public:
-  bool Compress(void *output, size_t &output_size,
-                void *input, size_t input_size) override {
+  bool Compress(void *output, size_t &output_size, void *input,
+                size_t input_size) override {
     if ((size_t)LZ4_compressBound(input_size) > output_size) {
-      HILOG(kInfo, "Lz4: output buffer is potentially too small")
+      HILOG(kInfo, "Lz4: output buffer is potentially too small");
     }
-    output_size = LZ4_compress_default(
-        (char*)input, (char*)output,
-        (int)input_size, (int)output_size);
+    output_size = LZ4_compress_default((char *)input, (char *)output,
+                                       (int)input_size, (int)output_size);
     return output_size != 0;
   }
 
-  bool Decompress(void *output, size_t &output_size,
-                  void *input, size_t input_size) override {
-    output_size = LZ4_decompress_safe(
-        (char*)input, (char*)output,
-        (int)input_size, (int)output_size);
+  bool Decompress(void *output, size_t &output_size, void *input,
+                  size_t input_size) override {
+    output_size = LZ4_decompress_safe((char *)input, (char *)output,
+                                      (int)input_size, (int)output_size);
     return output_size != 0;
   }
 };
 
 }  // namespace hshm
 
-#endif  // HERMES_SHM_INCLUDE_HERMES_SHM_COMPRESS_Lz4_H_
+#endif  // HSHM_SHM_INCLUDE_HSHM_SHM_COMPRESS_Lz4_H_

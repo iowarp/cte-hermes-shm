@@ -10,17 +10,17 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_SHM_INCLUDE_HERMES_SHM_UTIL_COMPRESS_COMPRESS_FACTORY_H_
-#define HERMES_SHM_INCLUDE_HERMES_SHM_UTIL_COMPRESS_COMPRESS_FACTORY_H_
+#ifndef HSHM_SHM_INCLUDE_HSHM_SHM_UTIL_COMPRESS_COMPRESS_FACTORY_H_
+#define HSHM_SHM_INCLUDE_HSHM_SHM_UTIL_COMPRESS_COMPRESS_FACTORY_H_
 
-#include "bzip2.h"
-#include "lzo.h"
-#include "zstd.h"
-#include "lz4.h"
-#include "zlib.h"
-#include "lzma.h"
-#include "brotli.h"
-#include "snappy.h"
 #include "blosc.h"
+#include "brotli.h"
+#include "bzip2.h"
+#include "lz4.h"
+#include "lzma.h"
+#include "lzo.h"
+#include "snappy.h"
+#include "zlib.h"
+#include "zstd.h"
 
-#endif  // HERMES_SHM_INCLUDE_HERMES_SHM_UTIL_COMPRESS_COMPRESS_FACTORY_H_
+#endif  // HSHM_SHM_INCLUDE_HSHM_SHM_UTIL_COMPRESS_COMPRESS_FACTORY_H_

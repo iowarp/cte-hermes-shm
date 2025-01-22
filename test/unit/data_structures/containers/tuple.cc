@@ -16,7 +16,7 @@
 
 template<typename FirstT, typename SecondT>
 void TupleTest() {
-  Allocator *alloc = alloc_g;
+  auto *alloc = HSHM_DEFAULT_ALLOC;
 
   // Construct test
   /*{
@@ -67,7 +67,7 @@ class Y {
 };
 
 TEST_CASE("TupleOfIntInt") {
-  Allocator *alloc = alloc_g;
+  auto *alloc = HSHM_DEFAULT_ALLOC;
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
 
   TupleTest<int, int>();
@@ -75,7 +75,7 @@ TEST_CASE("TupleOfIntInt") {
 }
 
 TEST_CASE("TupleOfIntString") {
-  Allocator *alloc = alloc_g;
+  auto *alloc = HSHM_DEFAULT_ALLOC;
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
   // TupleTest<int, hipc::string>();
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);

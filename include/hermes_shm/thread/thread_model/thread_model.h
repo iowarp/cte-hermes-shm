@@ -10,43 +10,98 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_THREAD_THREAD_H_
-#define HERMES_THREAD_THREAD_H_
+#ifndef HSHM_THREAD_THREAD_H_
+#define HSHM_THREAD_THREAD_H_
 
-#include <vector>
+#include <atomic>
 #include <cstdint>
 #include <memory>
-#include <atomic>
+#include <vector>
+
 #include "hermes_shm/types/bitfield.h"
+#include "hermes_shm/types/numbers.h"
+
+#ifdef HSHM_ENABLE_PTHREADS
+#include <pthread.h>
+#endif
+#ifdef HSHM_RPC_THALLIUM
+#include <thallium.hpp>
+#endif
+#ifdef HSHM_ENABLE_CUDA
+#include <cuda_runtime.h>
+#endif
+#ifdef HSHM_ENABLE_ROCM
+#include <hip/hip_runtime.h>
+#endif
 
 namespace hshm {
 
 /** Available threads that are mapped */
-enum class ThreadType {
-  kNone,
-  kPthread,
-  kArgobots
-};
+enum class ThreadType { kNone, kPthread, kArgobots, kCuda, kRocm, kWindows };
 
-/** Used to represent tid */
-typedef uint64_t tid_t;
+/** Thread-local key */
+union ThreadLocalKey {
+#ifdef HSHM_ENABLE_PTHREADS
+  pthread_key_t pthread_key_;
+#endif
+#ifdef HSHM_RPC_THALLIUM
+  ABT_key argobots_key_;
+#endif
+#ifdef HSHM_ENABLE_WINDOWS_THREADS
+  DWORD windows_key_;
+#endif
+};
 
 }  // namespace hshm
 
-namespace hshm::thread_model {
+namespace hshm::thread {
+
+/** Thread-local key */
+using hshm::ThreadLocalKey;
+
+/** Thread-local storage */
+class ThreadLocalData {
+ public:
+  // HSHM_CROSS_FUN
+  // void destroy() = 0;
+
+  template <typename TLS>
+  HSHM_CROSS_FUN static void destroy_wrap(void *data) {
+    if (data) {
+      if constexpr (std::is_base_of_v<ThreadLocalData, TLS>) {
+        static_cast<TLS *>(data)->destroy();
+      }
+    }
+  }
+};
+
 /** Represents the generic operations of a thread */
 class ThreadModel {
  public:
-  /** Sleep thread for a period of time */
-  virtual void SleepForUs(size_t us) = 0;
+  ThreadType type_;
 
-  /** Yield thread time slice */
-  virtual void Yield() = 0;
+ public:
+  /** Initializer */
+  HSHM_INLINE_CROSS_FUN
+  ThreadModel(ThreadType type) : type_(type) {}
 
-  /** Get the TID of the current thread */
-  virtual tid_t GetTid() = 0;
+  // /** Sleep thread for a period of time */
+  // HSHM_CROSS_FUN
+  // void SleepForUs(size_t us) = 0;
+
+  // /** Yield thread time slice */
+  // HSHM_CROSS_FUN
+  // void Yield() = 0;
+
+  // /** Get the TID of the current thread */
+  // HSHM_CROSS_FUN
+  // ThreadId GetTid() = 0;
+
+  /** Get the thread model type */
+  HSHM_INLINE_CROSS_FUN
+  ThreadType GetType() { return type_; }
 };
 
-}  // namespace hshm::thread_model
+}  // namespace hshm::thread
 
-#endif  // HERMES_THREAD_THREAD_H_
+#endif  // HSHM_THREAD_THREAD_H_

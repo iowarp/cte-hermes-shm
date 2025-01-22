@@ -10,22 +10,12 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+#include "test_init.h"
 
 #include "basic_test.h"
-#include "test_init.h"
-#include <mpi.h>
 
-Allocator *alloc_g = nullptr;
+void Posttest() { std::string shm_url = "test_allocators"; }
 
-void Posttest() {
-  std::string shm_url = "test_allocators";
-  alloc_g = nullptr;
-}
+void MainPretest() { Pretest<HSHM_DEFAULT_ALLOC_T>(); }
 
-void MainPretest() {
-  Pretest<hipc::StackAllocator>();
-}
-
-void MainPosttest() {
-  Posttest();
-}
+void MainPosttest() { Posttest(); }

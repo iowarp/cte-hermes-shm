@@ -10,11 +10,12 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_SHM_INCLUDE_HERMES_SHM_COMPRESS_BZIP2_H_
-#define HERMES_SHM_INCLUDE_HERMES_SHM_COMPRESS_BZIP2_H_
+#ifndef HSHM_SHM_INCLUDE_HSHM_SHM_COMPRESS_BZIP2_H_
+#define HSHM_SHM_INCLUDE_HSHM_SHM_COMPRESS_BZIP2_H_
+
+#include <bzlib.h>
 
 #include "compress.h"
-#include <bzlib.h>
 
 namespace hshm {
 
@@ -28,25 +29,23 @@ class Bzip2 : public Compressor {
   Bzip2() : level_(9) {}
   explicit Bzip2(int level) : level_(level) {}
 
-  bool Compress(void *output, size_t &output_size,
-                void *input, size_t input_size) override {
+  bool Compress(void *output, size_t &output_size, void *input,
+                size_t input_size) override {
     unsigned int output_size_int = output_size;
-    int ret = BZ2_bzBuffToBuffCompress(
-        (char*)output, &output_size_int,
-        (char*)input, input_size,
-        level_, verbosity_, work_factor_);
+    int ret = BZ2_bzBuffToBuffCompress((char *)output, &output_size_int,
+                                       (char *)input, input_size, level_,
+                                       verbosity_, work_factor_);
     output_size = output_size_int;
     return ret == BZ_OK;
   }
 
-  bool Decompress(void *output, size_t &output_size,
-                  void *input, size_t input_size) override {
+  bool Decompress(void *output, size_t &output_size, void *input,
+                  size_t input_size) override {
     unsigned int output_size_int = output_size;
     int small = 0;
-    int ret = BZ2_bzBuffToBuffDecompress(
-        (char*)output, &output_size_int,
-        (char*)input, input_size,
-        small, verbosity_);
+    int ret = BZ2_bzBuffToBuffDecompress((char *)output, &output_size_int,
+                                         (char *)input, input_size, small,
+                                         verbosity_);
     output_size = output_size_int;
     return ret == BZ_OK;
   }
@@ -54,4 +53,4 @@ class Bzip2 : public Compressor {
 
 }  // namespace hshm
 
-#endif  // HERMES_SHM_INCLUDE_HERMES_SHM_COMPRESS_BZIP2_H_
+#endif  // HSHM_SHM_INCLUDE_HSHM_SHM_COMPRESS_BZIP2_H_
