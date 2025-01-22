@@ -10,19 +10,19 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include "basic_test.h"
-#include "test_init.h"
-#include "omp.h"
-
 #include <string>
+
+#include "basic_test.h"
 #include "hermes_shm/data_structures/ipc/string.h"
-#include "hermes_shm/util/config_parse.h"
+#include "omp.h"
+#include "test_init.h"
 
 /** Test cases for the allocator */
+template <typename AllocT>
 class AllocatorTestSuite {
  public:
   std::string alloc_type_;
-  Allocator *alloc_;
+  hipc::CtxAllocator<AllocT> alloc_;
   Timer timer_;
 
   /**====================================
@@ -30,8 +30,9 @@ class AllocatorTestSuite {
    * ===================================*/
 
   /** Constructor */
-  AllocatorTestSuite(AllocatorType alloc_type, Allocator *alloc)
-    : alloc_(alloc) {
+  AllocatorTestSuite(AllocatorType alloc_type,
+                     hipc::CtxAllocator<AllocT> &alloc)
+      : alloc_(alloc) {
     switch (alloc_type) {
       case AllocatorType::kStackAllocator: {
         alloc_type_ = "hipc::StackAllocator";
@@ -49,6 +50,14 @@ class AllocatorTestSuite {
         alloc_type_ = "hipc::ScalablePageAllocator";
         break;
       }
+      case AllocatorType::kThreadLocalAllocator: {
+        alloc_type_ = "hipc::ThreadLocalAllocator";
+        break;
+      }
+      case AllocatorType::kTestAllocator: {
+        alloc_type_ = "hipc::TestAllocator";
+        break;
+      }
       default: {
         HELOG(kFatal, "Could not find this allocator type");
         break;
@@ -64,8 +73,8 @@ class AllocatorTestSuite {
   void AllocateAndFreeFixedSize(size_t count, size_t size) {
     StartTimer();
     for (size_t i = 0; i < count; ++i) {
-      Pointer p = alloc_->Allocate(size);
-      alloc_->Free(p);
+      Pointer p = alloc_->Allocate(alloc_.ctx_, size);
+      alloc_->Free(alloc_.ctx_, p);
     }
     StopTimer();
 
@@ -77,10 +86,10 @@ class AllocatorTestSuite {
     StartTimer();
     std::vector<Pointer> cache(count);
     for (size_t i = 0; i < count; ++i) {
-      cache[i] = alloc_->Allocate(size);
+      cache[i] = alloc_->Allocate(alloc_.ctx_, size);
     }
     for (size_t i = 0; i < count; ++i) {
-      alloc_->Free(cache[i]);
+      alloc_->Free(alloc_.ctx_, cache[i]);
     }
     StopTimer();
 
@@ -98,12 +107,16 @@ class AllocatorTestSuite {
     std::mt19937 rng(23522523);
     std::vector<size_t> sizes_;
 
-    seq(sizes_, 64, MEGABYTES(1) / 64);
-    seq(sizes_, 190, MEGABYTES(1) / 190);
-    seq(sizes_, KILOBYTES(1), MEGABYTES(1) / KILOBYTES(1));
-    seq(sizes_, KILOBYTES(4), MEGABYTES(8) / KILOBYTES(4));
-    seq(sizes_, KILOBYTES(32), MEGABYTES(4) / KILOBYTES(4));
-    seq(sizes_, MEGABYTES(1), MEGABYTES(64) / MEGABYTES(1));
+    seq(sizes_, 64, hshm::Unit<size_t>::Megabytes(1) / 64);
+    seq(sizes_, 190, hshm::Unit<size_t>::Megabytes(1) / 190);
+    seq(sizes_, hshm::Unit<size_t>::Kilobytes(1),
+        hshm::Unit<size_t>::Megabytes(1) / hshm::Unit<size_t>::Kilobytes(1));
+    seq(sizes_, hshm::Unit<size_t>::Kilobytes(4),
+        hshm::Unit<size_t>::Megabytes(8) / hshm::Unit<size_t>::Kilobytes(4));
+    seq(sizes_, hshm::Unit<size_t>::Kilobytes(32),
+        hshm::Unit<size_t>::Megabytes(4) / hshm::Unit<size_t>::Kilobytes(4));
+    seq(sizes_, hshm::Unit<size_t>::Megabytes(1),
+        hshm::Unit<size_t>::Megabytes(64) / hshm::Unit<size_t>::Megabytes(1));
     std::shuffle(std::begin(sizes_), std::end(sizes_), rng);
     std::vector<Pointer> window(sizes_.size());
     size_t num_windows = 500;
@@ -112,14 +125,14 @@ class AllocatorTestSuite {
     for (size_t w = 0; w < num_windows; ++w) {
       for (size_t i = 0; i < sizes_.size(); ++i) {
         auto &size = sizes_[i];
-        window[i] = alloc_->Allocate(size);
+        window[i] = alloc_->Allocate(alloc_.ctx_, size);
       }
       for (size_t i = 0; i < sizes_.size(); ++i) {
-        alloc_->Free(window[i]);
+        alloc_->Free(alloc_.ctx_, window[i]);
       }
     }
     StopTimer();
-    
+
     TestOutput("AllocateAndFreeRandomWindow", 0, count, timer_);
   }
 
@@ -148,41 +161,47 @@ class AllocatorTestSuite {
   void TestOutput(const std::string &test_name, size_t obj_size,
                   size_t count_per_rank, Timer &t) {
     int rank = omp_get_thread_num();
-    if (rank != 0) { return; }
+    if (rank != 0) {
+      return;
+    }
     int nthreads = omp_get_num_threads();
-    double count = (double) count_per_rank * nthreads;
-    HILOG(kInfo, "Time: {} msec, {} KOps",
-          t.GetMsec(), count / t.GetMsec());
+    double count = (double)count_per_rank * nthreads;
+    HILOG(kInfo, "{},{},{},{},{},{} ms,{} KOps", test_name, alloc_type_,
+          obj_size, nthreads, count, t.GetMsec(), count / t.GetMsec());
+  }
+
+  /** Print the CSV output */
+  static void PrintTestHeader() {
+    HILOG(kInfo, "test_name,alloc_type,obj_size,msec,nthreads,count,KOps");
   }
 };
 
 /** The minor number to use for allocators */
-static int minor = 1;
+static int minor = 0;
 const std::string shm_url = "test_allocators";
 
 /** Create the allocator + backend for the test */
-template<typename BackendT, typename AllocT, typename ...Args>
-Allocator* Pretest(MemoryBackendType backend_type,
-                   Args&& ...args) {
+template <typename BackendT, typename AllocT, typename... Args>
+AllocT *Pretest(MemoryBackendType backend_type, Args &&...args) {
   int rank = omp_get_thread_num();
-  allocator_id_t alloc_id(0, minor);
-  Allocator *alloc;
-  auto mem_mngr = HERMES_MEMORY_MANAGER;
+  AllocatorId alloc_id(1, minor);
+  auto mem_mngr = HSHM_MEMORY_MANAGER;
 
   if (rank == 0) {
     // Create the allocator + backend
     mem_mngr->UnregisterAllocator(alloc_id);
-    mem_mngr->UnregisterBackend(shm_url);
-    mem_mngr->CreateBackend<BackendT>(
-      mem_mngr->GetDefaultBackendSize(), shm_url);
-    mem_mngr->CreateAllocator<AllocT>(
-      shm_url, alloc_id, 0, std::forward<Args>(args)...);
+    mem_mngr->UnregisterBackend(hipc::MemoryBackendId::Get(0));
+    mem_mngr->CreateBackendWithUrl<BackendT>(hipc::MemoryBackendId::Get(0),
+                                             mem_mngr->GetDefaultBackendSize(),
+                                             shm_url);
+    mem_mngr->CreateAllocator<AllocT>(hipc::MemoryBackendId::Get(0), alloc_id,
+                                      0, std::forward<Args>(args)...);
   }
 #pragma omp barrier
 
-  alloc = mem_mngr->GetAllocator(alloc_id);
+  auto *alloc = mem_mngr->GetAllocator<AllocT>(alloc_id);
   if (alloc == nullptr) {
-    HELOG(kFatal, "Failed to find the memory allocator?")
+    HELOG(kFatal, "Failed to find the memory allocator?");
   }
   return alloc;
 }
@@ -192,67 +211,84 @@ void Posttest() {
   int rank = omp_get_thread_num();
 #pragma omp barrier
   if (rank == 0) {
-    allocator_id_t alloc_id(0, minor);
-    HERMES_MEMORY_MANAGER->UnregisterAllocator(
-      alloc_id);
-    HERMES_MEMORY_MANAGER->DestroyBackend(shm_url);
+    AllocatorId alloc_id(1, minor);
+    HSHM_MEMORY_MANAGER->UnregisterAllocator(alloc_id);
+    HSHM_MEMORY_MANAGER->UnregisterBackend(hipc::MemoryBackendId::Get(0));
     minor += 1;
   }
-# pragma omp barrier
+#pragma omp barrier
 }
 
 /** A series of allocator benchmarks for a particular thread */
-template<typename BackendT, typename AllocT, typename ...Args>
-void AllocatorTest(AllocatorType alloc_type,
-                   MemoryBackendType backend_type,
-                   size_t ops,
-                   Args&& ...args) {
-  Allocator *alloc = Pretest<BackendT, AllocT>(
-    backend_type, std::forward<Args>(args)...);
-  // Allocate many and then free many
-  /*AllocatorTestSuite(alloc_type, alloc).AllocateThenFreeFixedSize(
-    ops, KILOBYTES(1));*/
-  // Allocate and free immediately
-  /*AllocatorTestSuite(alloc_type, alloc).AllocateAndFreeFixedSize(
-    ops, KILOBYTES(1));*/
-  if (alloc_type != AllocatorType::kStackAllocator) {
+template <typename BackendT, typename AllocT, typename... Args>
+void AllocatorTest(AllocatorType alloc_type, MemoryBackendType backend_type,
+                   Args &&...args) {
+  auto *alloc =
+      Pretest<BackendT, AllocT>(backend_type, std::forward<Args>(args)...);
+  PAGE_DIVIDE("Test") {
+    hipc::ScopedTlsAllocator<AllocT> scoped_tls(alloc);
+    //  if (alloc_type == AllocatorType::kScalablePageAllocator) {
+    //    printf("TID: %llu\n", (*scoped_tls).ctx_.tid_);
+    //  }
+    size_t count = (1 << 16);
+    // Allocate many and then free many
+    //  AllocatorTestSuite<AllocT>((alloc_type,
+    //  *scoped_tls).AllocateThenFreeFixedSize(
+    //    count, hshm::Unit<size_t>::Kilobytes(1));
+    // Allocate and free immediately
+    AllocatorTestSuite<AllocT>(alloc_type, *scoped_tls)
+        .AllocateAndFreeFixedSize(count, hshm::Unit<size_t>::Kilobytes(1));
     // Allocate and free randomly
-    AllocatorTestSuite(alloc_type, alloc).AllocateAndFreeRandomWindow(
-        ops);
+    // AllocatorTestSuite<AllocT>(alloc_type, *scoped_tls)
+    //     .AllocateAndFreeRandomWindow(count);
   }
   Posttest();
 }
 
-int main(int argc, char **argv) {
-  if (argc != 4) {
-    HELOG(kFatal, "Usage: allocator [nthreads] [alloc] [ops]");
-    return 1;
-  }
+/** Test different allocators on a particular thread */
+void FullAllocatorTestPerThread() {
+  // Malloc allocator
+  AllocatorTest<hipc::MallocBackend, hipc::MallocAllocator>(
+      AllocatorType::kMallocAllocator, MemoryBackendType::kMallocBackend);
+  // Scalable page allocator
+  AllocatorTest<hipc::PosixShmMmap, hipc::ScalablePageAllocator>(
+      AllocatorType::kScalablePageAllocator, MemoryBackendType::kMallocBackend);
+  // Thread-local allocator
+  AllocatorTest<hipc::PosixShmMmap, hipc::ThreadLocalAllocator>(
+      AllocatorType::kThreadLocalAllocator, MemoryBackendType::kMallocBackend);
+  // Test allocator
+  AllocatorTest<hipc::PosixShmMmap, hipc::TestAllocator>(
+      AllocatorType::kTestAllocator, MemoryBackendType::kMallocBackend);
+  // Stack allocator
+  //  AllocatorTest<hipc::PosixShmMmap, hipc::StackAllocator>(
+  //    AllocatorType::kStackAllocator,
+  //    MemoryBackendType::kPosixShmMmap);
+}
 
-  int nthreads = std::stoi(argv[1]);
-  std::string alloc = argv[2];
-  size_t ops = hshm::ConfigParse::ParseSize(argv[3]);
-
+/** Spawn multiple threads and run allocator tests */
+void FullAllocatorTestThreaded(int nthreads) {
   omp_set_dynamic(0);
 #pragma omp parallel num_threads(nthreads)
   {
 #pragma omp barrier
-  if (alloc == "scalable") {
-    AllocatorTest<hipc::PosixShmMmap, hipc::ScalablePageAllocator>(
-        AllocatorType::kScalablePageAllocator,
-        MemoryBackendType::kPosixShmMmap,
-        ops);
-  } else if (alloc == "malloc") {
-    AllocatorTest<hipc::NullBackend, hipc::MallocAllocator>(
-        AllocatorType::kMallocAllocator,
-        MemoryBackendType::kNullBackend,
-        ops);
-  } else if (alloc == "stack") {
-    AllocatorTest<hipc::PosixShmMmap, hipc::StackAllocator>(
-        AllocatorType::kStackAllocator,
-        MemoryBackendType::kPosixShmMmap,
-        ops);
-  }
+    try {
+      FullAllocatorTestPerThread();
+    } catch (const std::exception &e) {
+      HELOG(kFatal, "Exception: {}", e.what());
+    } catch (hshm::Error &e) {
+      HELOG(kFatal, "Error: {}", e.what());
+    }
 #pragma omp barrier
   }
+}
+
+TEST_CASE("AllocatorBenchmark") {
+  HSHM_ERROR_HANDLE_START();
+  AllocatorTestSuite<hipc::NullAllocator>::PrintTestHeader();
+  FullAllocatorTestThreaded(1);
+  // FullAllocatorTestThreaded(2);
+  // FullAllocatorTestThreaded(4);
+  // FullAllocatorTestThreaded(8);
+  // FullAllocatorTestThreaded(16);
+  HSHM_ERROR_HANDLE_END();
 }

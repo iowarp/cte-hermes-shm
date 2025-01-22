@@ -10,162 +10,153 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_SHM_INCLUDE_HERMES_SHM_UTIL_LOGGING_H_
-#define HERMES_SHM_INCLUDE_HERMES_SHM_UTIL_LOGGING_H_
+#ifndef HSHM_SHM_INCLUDE_HSHM_SHM_UTIL_LOGGING_H_
+#define HSHM_SHM_INCLUDE_HSHM_SHM_UTIL_LOGGING_H_
 
-#include <sys/types.h>
-#include <sys/syscall.h>
-
-#include <unistd.h>
 #include <climits>
-
-#include <vector>
-#include <iostream>
+#include <filesystem>
 #include <fstream>
 #include <iomanip>
-#include <filesystem>
+#include <iostream>
+#include <vector>
+
 #include "formatter.h"
+#include "hermes_shm/introspect/system_info.h"
 #include "singleton.h"
+#include "timer.h"
 
 namespace hshm {
-
-/**
- * A macro to indicate the verbosity of the logger.
- * Verbosity indicates how much data will be printed.
- * The higher the verbosity, the more data will be printed.
- * */
-#ifndef HERMES_LOG_VERBOSITY
-#define HERMES_LOG_VERBOSITY 10
-#endif
-#if HERMES_LOG_VERBOSITY < 0
-#error "HERMES_LOG_VERBOSITY cannot be less than 0"
-#endif
 
 /** Prints log verbosity at compile time */
 #define XSTR(s) STR(s)
 #define STR(s) #s
-// #pragma message XSTR(HERMES_LOG_VERBOSITY)
+// #pragma message XSTR(HSHM_LOG_EXCLUDE)
 
 /** Simplify access to Logger singleton */
-#define HERMES_LOG hshm::EasySingleton<hshm::Logger>::GetInstance()
+#define HSHM_LOG hshm::CrossSingleton<hshm::Logger>::GetInstance()
 
-/** Information Logging levels */
-#define kDebug 10  /**< Low-priority debugging information*/
-// ... may want to add more levels here
-#define kInfo 1    /**< Useful information the user should know */
+/** Max number of log codes */
+#define HSHM_MAX_LOGGING_CODES 256
 
-/** Error Logging Levels */
-#define kFatal 0   /**< A fatal error has occurred */
-#define kError 1   /**< A non-fatal error has occurred */
-#define kWarning 2   /**< Something might be wrong */
+/** Given Information Logging levels */
+#ifndef kInfo
+#define kInfo 251 /**< Useful information the user should know */
+#endif
+#ifndef kWarning
+#define kWarning 252 /**< Something might be wrong */
+#endif
+#ifndef kError
+#define kError 253 /**< A non-fatal error has occurred */
+#endif
+#ifndef kFatal
+#define kFatal 254 /**< A fatal error has occurred */
+#endif
+#ifndef kDebug /**< Low-priority debugging information*/
+#ifndef HSHM_DEBUG
+#define kDebug -1
+#else
+#define kDebug 255
+#endif
+#endif
 
 /**
  * Hermes Print. Like printf, except types are inferred
  * */
-#define HIPRINT(...) \
-  HERMES_LOG->Print(__VA_ARGS__);
+#define HIPRINT(...) HSHM_LOG->Print(__VA_ARGS__)
 
 /**
- * Hermes Info (HI) Log
- * LOG_LEVEL indicates the priority of the log.
- * LOG_LEVEL 0 is considered required
- * LOG_LEVEL 10 is considered debugging priority.
+ * Hermes SHM Log
  * */
-#define HILOG(LOG_LEVEL, ...) \
-  if constexpr(LOG_LEVEL <= HERMES_LOG_VERBOSITY) { \
-    HERMES_LOG->InfoLog(LOG_LEVEL, __FILE__,        \
-    __func__, __LINE__, __VA_ARGS__); \
-  }
+#define HLOG(LOG_CODE, SUB_CODE, ...)                                 \
+  do {                                                                \
+    if constexpr (LOG_CODE >= 0 && SUB_CODE >= 0) {                   \
+      HSHM_LOG->Log<LOG_CODE, SUB_CODE>(__FILE__, __func__, __LINE__, \
+                                        __VA_ARGS__);                 \
+    }                                                                 \
+  } while (false)
 
-/**
- * Hermes Error (HE) Log
- * LOG_LEVEL indicates the priority of the log.
- * LOG_LEVEL 0 is considered required
- * LOG_LEVEL 10 is considered debugging priority.
- * */
-#define HELOG(LOG_LEVEL, ...) \
-  if constexpr(LOG_LEVEL <= HERMES_LOG_VERBOSITY) { \
-    HERMES_LOG->ErrorLog(LOG_LEVEL, __FILE__,       \
-    __func__, __LINE__, __VA_ARGS__); \
-  }
+/** Hermes info log */
+#define HILOG(SUB_CODE, ...) HLOG(kInfo, SUB_CODE, __VA_ARGS__)
+
+/** Hermes error log */
+#define HELOG(LOG_CODE, ...) HLOG(LOG_CODE, LOG_CODE, __VA_ARGS__)
+
+/** Periodic info log */
+#define HILOG_PERIODIC(SUB_CODE, IDX, NSEC, ...)                            \
+  do {                                                                      \
+    HSHM_PERIODIC(IDX)->Run(NSEC, [&]() { HILOG(SUB_CODE, __VA_ARGS__); }); \
+  } while (false)
 
 class Logger {
  public:
-  int verbosity_;
   FILE *fout_;
+  bool disabled_[HSHM_MAX_LOGGING_CODES] = {0};
 
  public:
+  HSHM_CROSS_FUN
   Logger() {
+#ifdef HSHM_IS_HOST
+    memset(disabled_, 0, sizeof(disabled_));
     // exe_name_ = std::filesystem::path(exe_path_).filename().string();
-    int verbosity = kDebug;
-    auto verbosity_env = getenv("HERMES_LOG_VERBOSITY");
-    if (verbosity_env && strlen(verbosity_env)) {
-      try {
-        verbosity = std::stoi(verbosity_env);
-      } catch (...) {
-        verbosity = kDebug;
+    std::string verbosity_env = hshm::SystemInfo::Getenv(
+        "HSHM_LOG_EXCLUDE", hshm::Unit<size_t>::Megabytes(1));
+    if (!verbosity_env.empty()) {
+      std::vector<int> verbosity_levels;
+      std::string verbosity_str(verbosity_env);
+      std::stringstream ss(verbosity_str);
+      std::string item;
+      while (std::getline(ss, item, ',')) {
+        int code = std::stoi(item);
+        DisableCode(code);
       }
     }
-    SetVerbosity(verbosity);
 
-    auto env = getenv("HERMES_LOG_OUT");
-    if (env == nullptr) {
+    std::string env = hshm::SystemInfo::Getenv(
+        "HSHM_LOG_OUT", hshm::Unit<size_t>::Megabytes(1));
+    if (env.empty()) {
       fout_ = nullptr;
     } else {
-      fout_ = fopen(env, "w");
+      fout_ = fopen(env.c_str(), "w");
+    }
+#endif
+  }
+
+  HSHM_CROSS_FUN
+  void DisableCode(int code) {
+    if (code < HSHM_MAX_LOGGING_CODES) {
+      disabled_[code] = true;
     }
   }
 
-  void SetVerbosity(int LOG_LEVEL) {
-    verbosity_ = LOG_LEVEL;
-    if (verbosity_ < 0) {
-      verbosity_ = 0;
-    }
-  }
+  template <typename... Args>
+  HSHM_CROSS_FUN void Print(const char *fmt, Args &&...args) {
+#ifdef HSHM_IS_HOST
 
-  template<typename ...Args>
-  void Print(const char *fmt,
-             Args&& ...args) {
-    std::string out =
-      hshm::Formatter::format(fmt, std::forward<Args>(args)...);
+    std::string msg = hshm::Formatter::format(fmt, std::forward<Args>(args)...);
+    int tid = SystemInfo::GetTid();
+    std::string out = hshm::Formatter::format("{}\n", msg);
     std::cout << out;
     if (fout_) {
       fwrite(out.data(), 1, out.size(), fout_);
     }
+#endif
   }
 
-  template<typename ...Args>
-  void InfoLog(int LOG_LEVEL,
-               const char *path,
-               const char *func,
-               int line,
-               const char *fmt,
-               Args&& ...args) {
-    if (LOG_LEVEL > verbosity_) { return; }
-    std::string msg =
-      hshm::Formatter::format(fmt, std::forward<Args>(args)...);
-    int tid = GetTid();
-    std::string out = hshm::Formatter::format(
-      "{}:{} {} {} {}\n",
-      path, line, tid, func, msg);
-    std::cerr << out;
-    if (fout_) {
-      fwrite(out.data(), 1, out.size(), fout_);
+  template <int LOG_CODE, int SUB_CODE, typename... Args>
+  HSHM_CROSS_FUN void Log(const char *path, const char *func, int line,
+                          const char *fmt, Args &&...args) {
+#ifdef HSHM_IS_HOST
+    if (disabled_[LOG_CODE] || disabled_[SUB_CODE]) {
+      return;
     }
-  }
-
-  template<typename ...Args>
-  void ErrorLog(int LOG_LEVEL,
-                const char *path,
-                const char *func,
-                int line,
-                const char *fmt,
-                Args&& ...args) {
-    if (LOG_LEVEL > verbosity_) { return; }
     std::string level;
-    switch (LOG_LEVEL) {
+    switch (LOG_CODE) {
+      case kInfo: {
+        level = "INFO";
+        break;
+      }
       case kWarning: {
-        level = "Warning";
+        level = "WARNING";
         break;
       }
       case kError: {
@@ -182,40 +173,27 @@ class Logger {
       }
     }
 
-    std::string msg =
-      hshm::Formatter::format(fmt, std::forward<Args>(args)...);
-    int tid = GetTid();
-    std::string out = hshm::Formatter::format(
-      "{}:{} {} {} {} {}\n",
-      path, line, level, tid, func, msg);
-    std::cerr << out;
+    std::string msg = hshm::Formatter::format(fmt, std::forward<Args>(args)...);
+    int tid = SystemInfo::GetTid();
+    std::string out = hshm::Formatter::format("{}:{} {} {} {} {}\n", path, line,
+                                              level, tid, func, msg);
+    if (LOG_CODE == kInfo) {
+      std::cout << out;
+      fflush(stdout);
+    } else {
+      std::cerr << out;
+      fflush(stderr);
+    }
     if (fout_) {
       fwrite(out.data(), 1, out.size(), fout_);
     }
-    if (LOG_LEVEL == kFatal) {
+    if (LOG_CODE == kFatal) {
       exit(1);
     }
-  }
-
-  int GetTid() {
-#ifdef SYS_gettid
-    return (pid_t)syscall(SYS_gettid);
-#else
-    #warning "GetTid is not defined"
-    return GetPid();
-#endif
-  }
-
-  int GetPid() {
-#ifdef SYS_getpid
-    return (pid_t)syscall(SYS_getpid);
-#else
-    #warning "GetPid is not defined"
-    return 0;
 #endif
   }
 };
 
 }  // namespace hshm
 
-#endif  // HERMES_SHM_INCLUDE_HERMES_SHM_UTIL_LOGGING_H_
+#endif  // HSHM_SHM_INCLUDE_HSHM_SHM_UTIL_LOGGING_H_

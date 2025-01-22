@@ -10,43 +10,47 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+#ifndef HSHM_THREAD_RWLOCK_H_
+#define HSHM_THREAD_RWLOCK_H_
 
-#ifndef HERMES_THREAD_RWLOCK_H_
-#define HERMES_THREAD_RWLOCK_H_
-
-#include <atomic>
-#include <hermes_shm/constants/macros.h>
+#include "hermes_shm/constants/macros.h"
 #include "hermes_shm/thread/lock.h"
 #include "hermes_shm/thread/thread_model_manager.h"
+#include "hermes_shm/types/atomic.h"
+#include "hermes_shm/types/numbers.h"
 
 namespace hshm {
 
-enum class RwLockMode {
-  kNone,
-  kWrite,
-  kRead,
+class RwLockMode {
+ public:
+  typedef int Type;
+  CLS_CONST Type kNone = 0;
+  CLS_CONST Type kWrite = 1;
+  CLS_CONST Type kRead = 2;
 };
 
 /** A reader-writer lock implementation */
 struct RwLock {
-  std::atomic<uint32_t> readers_;
-  std::atomic<uint32_t> writers_;
-  std::atomic<uint64_t> ticket_;
-  std::atomic<RwLockMode> mode_;
-  std::atomic<uint32_t> cur_writer_;
-#ifdef HERMES_DEBUG_LOCK
+  ipc::atomic<RwLockMode::Type> mode_;
+  ipc::atomic<hshm::reg_uint> readers_;
+  ipc::atomic<hshm::reg_uint> writers_;
+  ipc::atomic<hshm::reg_uint> cur_writer_;
+  ipc::atomic<hshm::big_uint> ticket_;
+#ifdef HSHM_DEBUG_LOCK
   uint32_t owner_;
 #endif
 
   /** Default constructor */
+  HSHM_CROSS_FUN
   RwLock()
-  : readers_(0),
-    writers_(0),
-    ticket_(0),
-    mode_(RwLockMode::kNone),
-    cur_writer_(0) {}
+      : readers_(0),
+        writers_(0),
+        ticket_(0),
+        mode_(RwLockMode::kNone),
+        cur_writer_(0) {}
 
   /** Explicit constructor */
+  HSHM_CROSS_FUN
   void Init() {
     readers_ = 0;
     writers_ = 0;
@@ -56,18 +60,21 @@ struct RwLock {
   }
 
   /** Delete copy constructor */
+  HSHM_CROSS_FUN
   RwLock(const RwLock &other) = delete;
 
   /** Move constructor */
+  HSHM_CROSS_FUN
   RwLock(RwLock &&other) noexcept
-  : readers_(other.readers_.load()),
-    writers_(other.writers_.load()),
-    ticket_(other.ticket_.load()),
-    mode_(other.mode_.load()),
-    cur_writer_(other.cur_writer_.load()) {}
+      : readers_(other.readers_.load()),
+        writers_(other.writers_.load()),
+        ticket_(other.ticket_.load()),
+        mode_(other.mode_.load()),
+        cur_writer_(other.cur_writer_.load()) {}
 
   /** Move assignment operator */
-  RwLock& operator=(RwLock &&other) noexcept {
+  HSHM_CROSS_FUN
+  RwLock &operator=(RwLock &&other) noexcept {
     if (this != &other) {
       readers_ = other.readers_.load();
       writers_ = other.writers_.load();
@@ -79,8 +86,9 @@ struct RwLock {
   }
 
   /** Acquire read lock */
+  HSHM_CROSS_FUN
   void ReadLock(uint32_t owner) {
-    RwLockMode mode;
+    RwLockMode::Type mode;
 
     // Increment # readers. Check if in read mode.
     readers_.fetch_add(1);
@@ -94,25 +102,25 @@ struct RwLock {
       if (mode == RwLockMode::kNone) {
         bool ret = mode_.compare_exchange_weak(mode, RwLockMode::kRead);
         if (ret) {
-#ifdef HERMES_DEBUG_LOCK
+#ifdef HSHM_DEBUG_LOCK
           owner_ = owner;
-        HILOG(kDebug, "Acquired read lock for {}", owner);
+          HILOG(kDebug, "Acquired read lock for {}", owner);
 #endif
           return;
         }
       }
-      HERMES_THREAD_MODEL->Yield();
+      HSHM_THREAD_MODEL->Yield();
     } while (true);
   }
 
   /** Release read lock */
-  void ReadUnlock() {
-    readers_.fetch_sub(1);
-  }
+  HSHM_CROSS_FUN
+  void ReadUnlock() { readers_.fetch_sub(1); }
 
   /** Acquire write lock */
+  HSHM_CROSS_FUN
   void WriteLock(uint32_t owner) {
-    RwLockMode mode;
+    RwLockMode::Type mode;
     uint32_t cur_writer;
 
     // Increment # writers & get ticket
@@ -129,18 +137,19 @@ struct RwLock {
       if (mode == RwLockMode::kWrite) {
         cur_writer = cur_writer_.load();
         if (cur_writer == tkt) {
-#ifdef HERMES_DEBUG_LOCK
+#ifdef HSHM_DEBUG_LOCK
           owner_ = owner;
-        HILOG(kDebug, "Acquired write lock for {}", owner);
+          HILOG(kDebug, "Acquired write lock for {}", owner);
 #endif
           return;
         }
       }
-      HERMES_THREAD_MODEL->Yield();
+      HSHM_THREAD_MODEL->Yield();
     } while (true);
   }
 
   /** Release write lock */
+  HSHM_CROSS_FUN
   void WriteUnlock() {
     writers_.fetch_sub(1);
     cur_writer_.fetch_add(1);
@@ -148,7 +157,8 @@ struct RwLock {
 
  private:
   /** Update the mode of the lock */
-  HSHM_ALWAYS_INLINE void UpdateMode(RwLockMode &mode) {
+  HSHM_INLINE_CROSS_FUN
+  void UpdateMode(RwLockMode::Type &mode) {
     // When # readers is 0, there is a lag to when the mode is updated
     // When # writers is 0, there is a lag to when the mode is updated
     mode = mode_.load();
@@ -165,17 +175,18 @@ struct ScopedRwReadLock {
   bool is_locked_;
 
   /** Acquire the read lock */
+  HSHM_CROSS_FUN
   explicit ScopedRwReadLock(RwLock &lock, uint32_t owner)
-    : lock_(lock), is_locked_(false) {
+      : lock_(lock), is_locked_(false) {
     Lock(owner);
   }
 
   /** Release the read lock */
-  ~ScopedRwReadLock() {
-    Unlock();
-  }
+  HSHM_CROSS_FUN
+  ~ScopedRwReadLock() { Unlock(); }
 
   /** Explicitly acquire read lock */
+  HSHM_CROSS_FUN
   void Lock(uint32_t owner) {
     if (!is_locked_) {
       lock_.ReadLock(owner);
@@ -184,6 +195,7 @@ struct ScopedRwReadLock {
   }
 
   /** Explicitly release read lock */
+  HSHM_CROSS_FUN
   void Unlock() {
     if (is_locked_) {
       lock_.ReadUnlock();
@@ -198,17 +210,18 @@ struct ScopedRwWriteLock {
   bool is_locked_;
 
   /** Acquire the write lock */
+  HSHM_CROSS_FUN
   explicit ScopedRwWriteLock(RwLock &lock, uint32_t owner)
-  : lock_(lock), is_locked_(false) {
+      : lock_(lock), is_locked_(false) {
     Lock(owner);
   }
 
   /** Release the write lock */
-  ~ScopedRwWriteLock() {
-    Unlock();
-  }
+  HSHM_CROSS_FUN
+  ~ScopedRwWriteLock() { Unlock(); }
 
   /** Explicity acquire the write lock */
+  HSHM_CROSS_FUN
   void Lock(uint32_t owner) {
     if (!is_locked_) {
       lock_.WriteLock(owner);
@@ -217,6 +230,7 @@ struct ScopedRwWriteLock {
   }
 
   /** Explicitly release the write lock */
+  HSHM_CROSS_FUN
   void Unlock() {
     if (is_locked_) {
       lock_.WriteUnlock();
@@ -227,4 +241,12 @@ struct ScopedRwWriteLock {
 
 }  // namespace hshm
 
-#endif  // HERMES_THREAD_RWLOCK_H_
+namespace hshm::ipc {
+
+using hshm::RwLock;
+using hshm::ScopedRwReadLock;
+using hshm::ScopedRwWriteLock;
+
+}  // namespace hshm::ipc
+
+#endif  // HSHM_THREAD_RWLOCK_H_

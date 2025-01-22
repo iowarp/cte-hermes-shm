@@ -1,58 +1,70 @@
-cmake_minimum_required(VERSION 3.10)
 project(hermes_shm)
 
-set(CMAKE_CXX_STANDARD 17)
-
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Build HSHM
-#-----------------------------------------------------------------------------
-add_library(hermes_shm_data_structures
-        memory/malloc_allocator.cc
-        memory/stack_allocator.cc
-        memory/scalable_page_allocator.cc
-        memory/memory_registry.cc
-        memory/memory_manager.cc
-        thread_model_manager.cc
-        thread_factory.cc
-        data_structure_singleton.cc
-)
-target_link_libraries(hermes_shm_data_structures
-        pthread -lrt -ldl OpenMP::OpenMP_CXX
-        cereal::cereal
-        $<$<BOOL:${HERMES_RPC_THALLIUM}>:thallium>
-        ${COMPRESS_LIBS}
-        ${ENCRYPT_LIBS}
-)
+# -----------------------------------------------------------------------------
+set(HSHM_LIBS "")
 
-#-----------------------------------------------------------------------------
-# Add Target(s) to CMake Install
-#-----------------------------------------------------------------------------
-install(TARGETS
-        hermes_shm_data_structures
-        EXPORT
-        ${HERMES_EXPORTED_TARGETS}
-        LIBRARY DESTINATION ${HERMES_INSTALL_LIB_DIR}
-        ARCHIVE DESTINATION ${HERMES_INSTALL_LIB_DIR}
-        RUNTIME DESTINATION ${HERMES_INSTALL_BIN_DIR})
+# BUILD HSHM FOR HOST ONLY
+set(SRC_FILES
 
-#-----------------------------------------------------------------------------
-# Export all exported targets to the build tree for use by parent project
-#-----------------------------------------------------------------------------
-set(HERMES_EXPORTED_LIBS
-        hermes_shm_data_structures
-        ${HERMES_EXPORTED_LIBS})
-if(NOT HERMES_EXTERNALLY_CONFIGURED)
-    EXPORT (
-            TARGETS
-            ${HERMES_EXPORTED_LIBS}
-            FILE
-            ${HERMES_EXPORTED_TARGETS}.cmake
-    )
+    # system_info.cc   # NOTE(llogan): Commented out because ROCm is annoying and buggy
+    memory_manager.cc)
+add_library(hermes_shm_host ${SRC_FILES})
+target_link_libraries(hermes_shm_host PUBLIC host_deps)
+list(APPEND HSHM_LIBS hermes_shm_host)
+add_library(cxx INTERFACE)
+target_link_libraries(cxx INTERFACE hermes_shm_host)
+list(APPEND HSHM_LIBS cxx)
+
+# BUILD HSHM FOR CUDA ONLY
+if(HSHM_ENABLE_CUDA)
+    add_cuda_library(hermes_shm_cuda STATIC TRUE ${SRC_FILES})
+    target_link_libraries(hermes_shm_cuda PUBLIC cuda_gpu_lib_deps)
+    list(APPEND HSHM_LIBS hermes_shm_cuda)
+    add_library(cudacxx INTERFACE)
+    target_link_libraries(cudacxx INTERFACE hermes_shm_cuda)
+    list(APPEND HSHM_LIBS cudacxx)
 endif()
 
-#-----------------------------------------------------------------------------
+# BUILD HSHM FOR ROCM ONLY
+if(HSHM_ENABLE_ROCM)
+    add_rocm_gpu_library(hermes_shm_rocm_gpu STATIC TRUE ${SRC_FILES})
+    target_link_libraries(hermes_shm_rocm_gpu PUBLIC rocm_gpu_lib_deps)
+    list(APPEND HSHM_LIBS hermes_shm_rocm_gpu)
+    add_library(rocmcxx_gpu INTERFACE)
+    target_link_libraries(rocmcxx_gpu INTERFACE hermes_shm_rocm_gpu)
+    list(APPEND HSHM_LIBS rocmcxx_gpu)
+
+    add_rocm_host_library(hermes_shm_rocm_host TRUE ${SRC_FILES})
+    target_link_libraries(hermes_shm_rocm_host PUBLIC rocm_host_lib_deps)
+    list(APPEND HSHM_LIBS hermes_shm_rocm_host)
+    add_library(rocmcxx_host INTERFACE)
+    target_link_libraries(rocmcxx_host INTERFACE hermes_shm_rocm_host)
+    list(APPEND HSHM_LIBS rocmcxx_host)
+endif()
+
+# -----------------------------------------------------------------------------
+# Add Target(s) to CMake Install
+# -----------------------------------------------------------------------------
+install(TARGETS
+    ${HSHM_LIBS}
+    rocm_gpu_lib_deps
+    rocm_host_lib_deps
+    rocm_host_exec_deps
+    rocm_gpu_exec_deps
+    cuda_gpu_lib_deps
+    cuda_gpu_exec_deps
+    host_deps
+    EXPORT
+    ${HSHM_EXPORTED_TARGETS}
+    LIBRARY DESTINATION ${HSHM_INSTALL_LIB_DIR}
+    ARCHIVE DESTINATION ${HSHM_INSTALL_LIB_DIR}
+    RUNTIME DESTINATION ${HSHM_INSTALL_BIN_DIR})
+
+# -----------------------------------------------------------------------------
 # Coverage
-#-----------------------------------------------------------------------------
-if(HERMES_ENABLE_COVERAGE)
-    set_coverage_flags(hermes_shm_data_structures)
+# -----------------------------------------------------------------------------
+if(HSHM_ENABLE_COVERAGE)
+    set_coverage_flags(hermes_shm_host)
 endif()

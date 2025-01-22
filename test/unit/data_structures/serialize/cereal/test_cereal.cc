@@ -13,7 +13,7 @@
 #include "basic_test.h"
 #include "test_init.h"
 #include "hermes_shm/data_structures/ipc/string.h"
-#include "hermes_shm/data_structures/data_structure.h"
+#include "hermes_shm/data_structures/all.h"
 #include "cereal/types/vector.hpp"
 #include "cereal/types/string.hpp"
 #include <cereal/types/atomic.hpp>
@@ -52,56 +52,56 @@ TEST_CASE("SerializeVector") {
 TEST_CASE("SerializeHipcVec0") {
   std::stringstream ss;
   {
-    auto x = hipc::make_uptr<hipc::vector<int>>();
+    auto x = hipc::vector<int>();
     cereal::BinaryOutputArchive ar(ss);
     ar << x;
   }
   {
-    hipc::uptr<hipc::vector<int>> x;
+    hipc::vector<int> x;
     std::vector<int> y;
     cereal::BinaryInputArchive ar(ss);
     ar >> x;
-    REQUIRE(x->vec() == y);
+    REQUIRE(x.vec() == y);
   }
 }
 
 TEST_CASE("SerializeHipcVec") {
   std::stringstream ss;
   {
-    auto x = hipc::make_uptr<hipc::vector<int>>();
-    x->reserve(5);
+    auto x = hipc::vector<int>();
+    x.reserve(5);
     for (int i = 0; i < 5; ++i) {
-      x->emplace_back(i);
+      x.emplace_back(i);
     }
     cereal::BinaryOutputArchive ar(ss);
     ar << x;
   }
   {
-    hipc::uptr<hipc::vector<int>> x;
+    hipc::vector<int> x;
     std::vector<int> y{0, 1, 2, 3, 4};
     cereal::BinaryInputArchive ar(ss);
     ar >> x;
-    REQUIRE(x->vec() == y);
+    REQUIRE(x.vec() == y);
   }
 }
 
 TEST_CASE("SerializeHipcVecString") {
   std::stringstream ss;
   {
-    auto x = hipc::make_uptr<hipc::vector<std::string>>();
-    x->reserve(5);
+    auto x = hipc::vector<std::string>();
+    x.reserve(5);
     for (int i = 0; i < 5; ++i) {
-      x->emplace_back(std::to_string(i));
+      x.emplace_back(std::to_string(i));
     }
     cereal::BinaryOutputArchive ar(ss);
     ar << x;
   }
   {
-    hipc::uptr<hipc::vector<std::string>> x;
+    hipc::vector<std::string> x;
     std::vector<std::string> y{"0", "1", "2", "3", "4"};
     cereal::BinaryInputArchive ar(ss);
     ar >> x;
-    REQUIRE(x->vec() == y);
+    REQUIRE(x.vec() == y);
   }
 }
 
@@ -109,7 +109,7 @@ TEST_CASE("SerializeHipcShmArchive") {
   std::stringstream ss;
   {
     hipc::ShmArchive<hipc::vector<int>> x;
-    HSHM_MAKE_AR0(x, HERMES_MEMORY_MANAGER->GetDefaultAllocator());
+    HSHM_MAKE_AR0(x, HSHM_DEFAULT_ALLOC);
     x->reserve(5);
     for (int i = 0; i < 5; ++i) {
       x->emplace_back(i);
@@ -119,7 +119,7 @@ TEST_CASE("SerializeHipcShmArchive") {
   }
   {
     hipc::ShmArchive<hipc::vector<int>> x;
-    HSHM_MAKE_AR0(x, HERMES_MEMORY_MANAGER->GetDefaultAllocator());
+    HSHM_MAKE_AR0(x, HSHM_DEFAULT_ALLOC);
     std::vector<int> y{0, 1, 2, 3, 4};
     cereal::BinaryInputArchive ar(ss);
     ar >> x;
@@ -130,7 +130,7 @@ TEST_CASE("SerializeHipcShmArchive") {
 
 TEST_CASE("SerializePodArray") {
   std::stringstream ss;
-  Allocator *alloc = HERMES_MEMORY_MANAGER->GetDefaultAllocator();
+  hipc::CtxAllocator<HSHM_DEFAULT_ALLOC_T> alloc(HSHM_DEFAULT_ALLOC);
   {
     hipc::pod_array<int, 2> x;
     x.construct(alloc, 5);

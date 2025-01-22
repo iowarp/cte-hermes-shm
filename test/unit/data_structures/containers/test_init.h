@@ -10,43 +10,42 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+#ifndef HSHM_TEST_UNIT_DATA_STRUCTURES_TEST_INIT_H_
+#define HSHM_TEST_UNIT_DATA_STRUCTURES_TEST_INIT_H_
 
-#ifndef HERMES_TEST_UNIT_DATA_STRUCTURES_TEST_INIT_H_
-#define HERMES_TEST_UNIT_DATA_STRUCTURES_TEST_INIT_H_
+#include "hermes_shm/data_structures/all.h"
 
-#include "hermes_shm/data_structures/data_structure.h"
-
-using hshm::ipc::PosixShmMmap;
-using hshm::ipc::MemoryBackendType;
-using hshm::ipc::MemoryBackend;
-using hshm::ipc::allocator_id_t;
-using hshm::ipc::AllocatorType;
 using hshm::ipc::Allocator;
+using hshm::ipc::AllocatorId;
+using hshm::ipc::AllocatorType;
+using hshm::ipc::MemoryBackend;
+using hshm::ipc::MemoryBackendType;
 using hshm::ipc::Pointer;
+using hshm::ipc::PosixShmMmap;
 
-using hshm::ipc::MemoryBackendType;
-using hshm::ipc::MemoryBackend;
-using hshm::ipc::allocator_id_t;
-using hshm::ipc::AllocatorType;
 using hshm::ipc::Allocator;
+using hshm::ipc::AllocatorId;
+using hshm::ipc::AllocatorType;
+using hshm::ipc::MemoryBackend;
+using hshm::ipc::MemoryBackendType;
 using hshm::ipc::MemoryManager;
 using hshm::ipc::Pointer;
 
-extern Allocator *alloc_g;
+GLOBAL_CONST AllocatorId MAIN_ALLOC_ID(1, 0);
 
-template<typename AllocT>
+template <typename AllocT>
 void Pretest() {
   std::string shm_url = "test_allocators";
-  allocator_id_t alloc_id(0, 1);
-  auto mem_mngr = HERMES_MEMORY_MANAGER;
-  mem_mngr->UnregisterAllocator(alloc_id);
-  mem_mngr->UnregisterBackend(shm_url);
-  mem_mngr->CreateBackend<PosixShmMmap>(
-    MEGABYTES(100), shm_url);
-  mem_mngr->CreateAllocator<AllocT>(shm_url, alloc_id, 0);
-  alloc_g = mem_mngr->GetAllocator(alloc_id);
+  auto mem_mngr = HSHM_MEMORY_MANAGER;
+  mem_mngr->UnregisterAllocator(MAIN_ALLOC_ID);
+  mem_mngr->DestroyBackend(hipc::MemoryBackendId::GetRoot());
+  mem_mngr->CreateBackend<PosixShmMmap>(hipc::MemoryBackendId::Get(0),
+                                        hshm::Unit<size_t>::Megabytes(100),
+                                        shm_url);
+  mem_mngr->CreateAllocator<AllocT>(hipc::MemoryBackendId::Get(0),
+                                    MAIN_ALLOC_ID, 0);
 }
 
 void Posttest();
 
-#endif  // HERMES_TEST_UNIT_DATA_STRUCTURES_TEST_INIT_H_
+#endif  // HSHM_TEST_UNIT_DATA_STRUCTURES_TEST_INIT_H_

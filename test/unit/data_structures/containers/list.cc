@@ -13,13 +13,12 @@
 #include "basic_test.h"
 #include "test_init.h"
 #include "list.h"
+
 #include "hermes_shm/data_structures/ipc/list.h"
 #include "hermes_shm/data_structures/ipc/string.h"
 
-using hshm::ipc::list;
-
-template<typename T>
-void ListTestRunner(ListTestSuite<T, list<T>> &test) {
+template<typename T, typename ListT>
+void ListTestRunner(ListTestSuite<T, ListT> &test) {
   test.EmplaceTest(15);
   test.ForwardIteratorTest();
   test.ConstForwardIteratorTest();
@@ -33,31 +32,71 @@ void ListTestRunner(ListTestSuite<T, list<T>> &test) {
   test.EraseTest();
 }
 
+/**
+ * HIPC list tests
+ * */
+
 template<typename T>
-void ListTest() {
-  Allocator *alloc = alloc_g;
-  auto lp = hipc::make_uptr<list<T>>(alloc);
-  ListTestSuite<T, list<T>> test(*lp, alloc);
+void HipcListTest() {
+  auto *alloc = HSHM_DEFAULT_ALLOC;
+  hipc::list<T> lp(alloc);
+  ListTestSuite<T, hipc::list<T>> test(lp, alloc);
   ListTestRunner(test);
 }
 
-TEST_CASE("ListOfInt") {
-  Allocator *alloc = alloc_g;
+
+TEST_CASE("hipc::ListOfInt") {
+  auto *alloc = HSHM_DEFAULT_ALLOC;
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
-  ListTest<int>();
+  HipcListTest<int>();
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
 }
 
-TEST_CASE("ListOfString") {
-  Allocator *alloc = alloc_g;
+TEST_CASE("hipc::ListOfString") {
+  auto *alloc = HSHM_DEFAULT_ALLOC;
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
-  ListTest<hipc::string>();
+  HipcListTest<hipc::string>();
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
 }
 
-TEST_CASE("ListOfStdString") {
-  Allocator *alloc = alloc_g;
+TEST_CASE("hipc::ListOfStdString") {
+  auto *alloc = HSHM_DEFAULT_ALLOC;
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
-  ListTest<std::string>();
+  HipcListTest<std::string>();
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
 }
+
+/**
+ * HSHM list tests
+ * */
+//
+//#include "hermes_shm/data_structures/containers/list.h"
+//
+//template<typename T>
+//void HshmListTest() {
+//  auto *alloc = HSHM_DEFAULT_ALLOC;
+//  hshm::list<T> lp;
+//  ListTestSuite<T, hshm::list<T>> test(lp, alloc);
+//  ListTestRunner(test);
+//}
+//
+//TEST_CASE("hshm::ListOfInt") {
+//  auto *alloc = HSHM_DEFAULT_ALLOC;
+//  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+//  HshmListTest<int>();
+//  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+//}
+//
+//TEST_CASE("hshm::ListOfString") {
+//  auto *alloc = HSHM_DEFAULT_ALLOC;
+//  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+//  HshmListTest<hipc::string>();
+//  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+//}
+//
+//TEST_CASE("hshm::ListOfStdString") {
+//  auto *alloc = HSHM_DEFAULT_ALLOC;
+//  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+//  HshmListTest<std::string>();
+//  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+//}

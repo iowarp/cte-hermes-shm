@@ -10,22 +10,24 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include <iostream>
 #include "test_init.h"
-#include "hermes_shm/data_structures/ipc/string.h"
-#include "hermes_shm/data_structures/containers/charbuf.h"
+
+#include <iostream>
 #include <memory>
+
+#include "hermes_shm/data_structures/ipc/string.h"
 
 void MainPretest() {
   std::string shm_url = "test_serializers";
-  allocator_id_t alloc_id(0, 1);
-  auto mem_mngr = HERMES_MEMORY_MANAGER;
+  AllocatorId alloc_id(1, 0);
+  auto mem_mngr = HSHM_MEMORY_MANAGER;
   mem_mngr->UnregisterAllocator(alloc_id);
-  mem_mngr->UnregisterBackend(shm_url);
-  mem_mngr->CreateBackend<PosixShmMmap>(
-    MEGABYTES(100), shm_url);
-  mem_mngr->CreateAllocator<hipc::ScalablePageAllocator>(shm_url, alloc_id, 0);
+  mem_mngr->DestroyBackend(hipc::MemoryBackendId::Get(0));
+  mem_mngr->CreateBackend<PosixShmMmap>(hipc::MemoryBackendId::Get(0),
+                                        hshm::Unit<size_t>::Megabytes(100),
+                                        shm_url);
+  mem_mngr->CreateAllocator<hipc::ScalablePageAllocator>(
+      hipc::MemoryBackendId::Get(0), alloc_id, 0);
 }
 
-void MainPosttest() {
-}
+void MainPosttest() {}

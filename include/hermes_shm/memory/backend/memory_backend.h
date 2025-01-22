@@ -10,81 +10,168 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_MEMORY_H
-#define HERMES_MEMORY_H
+#ifndef HSHM_MEMORY_H
+#define HSHM_MEMORY_H
 
 #include <cstdint>
-#include <vector>
-#include <string>
-#include <hermes_shm/memory/memory.h>
-#include "hermes_shm/constants/macros.h"
 #include <limits>
+#include <string>
+#include <vector>
+
+#include "hermes_shm/constants/macros.h"
+#include "hermes_shm/data_structures/ipc/chararr.h"
+#include "hermes_shm/memory/memory.h"
 
 namespace hshm::ipc {
 
-struct MemoryBackendHeader {
-  size_t data_size_;
-};
-
 enum class MemoryBackendType {
   kPosixShmMmap,
-  kNullBackend,
+  kCudaShmMmap,
+  kCudaMalloc,
+  kMallocBackend,
   kArrayBackend,
   kPosixMmap,
+  kRocmMalloc,
+  kRocmShmMmap,
 };
 
-#define MEMORY_BACKEND_INITIALIZED 0x1
-#define MEMORY_BACKEND_OWNED 0x2
+/** ID for memory backend */
+class MemoryBackendId {
+ public:
+  u32 id_;
+
+  HSHM_CROSS_FUN
+  MemoryBackendId() = default;
+
+  HSHM_CROSS_FUN
+  MemoryBackendId(u32 id) : id_(id) {}
+
+  HSHM_CROSS_FUN
+  MemoryBackendId(const MemoryBackendId &other) : id_(other.id_) {}
+
+  HSHM_CROSS_FUN
+  MemoryBackendId(MemoryBackendId &&other) noexcept : id_(other.id_) {}
+
+  HSHM_CROSS_FUN
+  MemoryBackendId &operator=(const MemoryBackendId &other) {
+    id_ = other.id_;
+    return *this;
+  }
+
+  HSHM_CROSS_FUN
+  MemoryBackendId &operator=(MemoryBackendId &&other) noexcept {
+    id_ = other.id_;
+    return *this;
+  }
+
+  HSHM_CROSS_FUN
+  static MemoryBackendId GetRoot() { return {0}; }
+
+  HSHM_CROSS_FUN
+  static MemoryBackendId Get(u32 id) { return {id + 1}; }
+
+  HSHM_CROSS_FUN
+  bool operator==(const MemoryBackendId &other) const {
+    return id_ == other.id_;
+  }
+
+  HSHM_CROSS_FUN
+  bool operator!=(const MemoryBackendId &other) const {
+    return id_ != other.id_;
+  }
+};
+typedef MemoryBackendId memory_backend_id_t;
+
+struct MemoryBackendHeader {
+  MemoryBackendType type_;
+  MemoryBackendId id_;
+  size_t data_size_;
+
+  HSHM_CROSS_FUN
+  void Print() const {
+    printf("(%s) MemoryBackendHeader: type: %d, id: %d, data_size: %lu\n",
+           kCurrentDevice, static_cast<int>(type_), id_.id_,
+           (long unsigned)data_size_);
+  }
+};
+
+#define MEMORY_BACKEND_INITIALIZED BIT_OPT(u32, 0)
+#define MEMORY_BACKEND_OWNED BIT_OPT(u32, 1)
+#define MEMORY_BACKEND_SCANNED BIT_OPT(u32, 2)
+
+class UrlMemoryBackend {};
 
 class MemoryBackend {
  public:
   MemoryBackendHeader *header_;
   char *data_;
   size_t data_size_;
-  bitfield32_t flags_;
+  ibitfield flags_;
 
  public:
+  HSHM_CROSS_FUN
   MemoryBackend() : header_(nullptr), data_(nullptr) {}
 
-  virtual ~MemoryBackend() = default;
+  ~MemoryBackend() = default;
 
   /** Mark data as valid */
-  void SetInitialized() {
-    flags_.SetBits(MEMORY_BACKEND_INITIALIZED);
-  }
+  HSHM_CROSS_FUN
+  void SetInitialized() { flags_.SetBits(MEMORY_BACKEND_INITIALIZED); }
 
   /** Check if data is valid */
-  bool IsInitialized() {
-    return flags_.Any(MEMORY_BACKEND_INITIALIZED);
-  }
+  HSHM_CROSS_FUN
+  bool IsInitialized() { return flags_.Any(MEMORY_BACKEND_INITIALIZED); }
 
   /** Mark data as invalid */
-  void UnsetInitialized() {
-    flags_.UnsetBits(MEMORY_BACKEND_INITIALIZED);
-  }
+  HSHM_CROSS_FUN
+  void UnsetInitialized() { flags_.UnsetBits(MEMORY_BACKEND_INITIALIZED); }
+
+  /** Mark the backend as registered */
+  HSHM_CROSS_FUN
+  void SetScanned() { flags_.SetBits(MEMORY_BACKEND_SCANNED); }
+
+  /** Check if the backend is registered */
+  HSHM_CROSS_FUN
+  bool IsScanned() { return flags_.Any(MEMORY_BACKEND_SCANNED); }
+
+  /** Mark the backend as unregistered */
+  HSHM_CROSS_FUN
+  void UnsetScanned() { flags_.UnsetBits(MEMORY_BACKEND_SCANNED); }
 
   /** This is the process which destroys the backend */
-  void Own() {
-    flags_.SetBits(MEMORY_BACKEND_OWNED);
-  }
+  HSHM_CROSS_FUN
+  void Own() { flags_.SetBits(MEMORY_BACKEND_OWNED); }
 
   /** This is owned */
-  bool IsOwned() {
-    return flags_.Any(MEMORY_BACKEND_OWNED);
-  }
+  HSHM_CROSS_FUN
+  bool IsOwned() { return flags_.Any(MEMORY_BACKEND_OWNED); }
 
   /** This is not the process which destroys the backend */
-  void Disown() {
-    flags_.UnsetBits(MEMORY_BACKEND_OWNED);
+  HSHM_CROSS_FUN
+  void Disown() { flags_.UnsetBits(MEMORY_BACKEND_OWNED); }
+
+  /** Get the ID of this backend */
+  HSHM_CROSS_FUN
+  MemoryBackendId &GetId() { return header_->id_; }
+
+  /** Get the ID of this backend */
+  HSHM_CROSS_FUN
+  const MemoryBackendId &GetId() const { return header_->id_; }
+
+  HSHM_CROSS_FUN
+  void Print() const {
+    header_->Print();
+    printf("(%s) MemoryBackend: data: %p, data_size: %lu\n", kCurrentDevice,
+           data_, (long unsigned)data_size_);
   }
 
   /// Each allocator must define its own shm_init.
   // virtual bool shm_init(size_t size, ...) = 0;
-  virtual bool shm_deserialize(std::string url) = 0;
-  virtual void shm_detach() = 0;
-  virtual void shm_destroy() = 0;
+  // virtual bool shm_deserialize(const hshm::chararr &url) = 0;
+  // virtual void shm_detach() = 0;
+  // virtual void shm_destroy() = 0;
 };
 
 }  // namespace hshm::ipc
 
-#endif  // HERMES_MEMORY_H
+#endif  // HSHM_MEMORY_H

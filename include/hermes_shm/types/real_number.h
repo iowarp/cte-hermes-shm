@@ -10,11 +10,14 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_BASICS_H
-#define HERMES_BASICS_H
+#ifndef HSHM_BASICS_H
+#define HSHM_BASICS_H
 
-#include <cstdint>
 #include <cstddef>
+#include <cstdint>
+
+#include "hermes_shm/constants/macros.h"
+#include "hermes_shm/types/numbers.h"
 
 #ifdef __cplusplus
 
@@ -26,9 +29,10 @@ namespace hshm {
 struct RealNumber {
   uint64_t decimal_;
   uint32_t numerator_;
-  static const uint32_t precision = 65536;
+  CLS_CONST uint32_t precision = 65536;
 
-  RealNumber() =  default;
+  HSHM_INLINE_CROSS_FUN
+  RealNumber() = default;
 
   /**
    * Converts numerator / denomintor ->
@@ -37,16 +41,18 @@ struct RealNumber {
    * For example,
    * 4/5 = (4 * 65536 / 5) / 65536
    * */
+  HSHM_INLINE_CROSS_FUN
   explicit RealNumber(uint64_t numerator, uint64_t denominator) {
     decimal_ = numerator / denominator;
     uint64_t rem = numerator % denominator;
-    numerator_ = rem * precision / denominator;
+    numerator_ = (u32)(rem * precision / denominator);
   }
 
   /**
    * (d1 + n1/p) * d2 =
    * d1 * d2 + d2 * n1 / p
    * */
+  HSHM_INLINE_CROSS_FUN
   RealNumber operator*(size_t other) const {
     RealNumber res;
     res.decimal_ = other * decimal_;
@@ -61,38 +67,37 @@ struct RealNumber {
    * (d1 * d2) + (d1 * n2)/p + (d2 * n1) / p + (n1 * n2 / p) / p =
    * (d1 * d2) + [(d1 * n2) + (d2 * n1) + (n1 * n2)/p] / p
    * */
+  HSHM_INLINE_CROSS_FUN
   RealNumber operator*(const RealNumber &other) const {
     RealNumber res;
     // d1 * d2
     res.decimal_ = other.decimal_ * decimal_;
-    uint64_t frac =
-      (decimal_ * other.numerator_) +  // d1 * n2
-      (other.decimal_ * numerator_) +  // d2 * n1
-      (numerator_ * other.numerator_) / precision;  // n1 * n2 / p
+    uint64_t frac = (decimal_ * other.numerator_) +               // d1 * n2
+                    (other.decimal_ * numerator_) +               // d2 * n1
+                    (numerator_ * other.numerator_) / precision;  // n1 * n2 / p
     res.decimal_ += frac / precision;
     res.numerator_ = frac % precision;
     return res;
   }
 
+  HSHM_INLINE_CROSS_FUN
   RealNumber operator*=(size_t other) {
     (*this) = (*this) * other;
     return *this;
   }
 
+  HSHM_INLINE_CROSS_FUN
   RealNumber operator*=(const RealNumber &other) {
     (*this) = (*this) * other;
     return *this;
   }
 
-  size_t as_int() const {
-    return decimal_ + numerator_ / precision;
-  }
+  HSHM_INLINE_CROSS_FUN
+  size_t as_int() const { return (size_t)(decimal_ + numerator_ / precision); }
 };
 
 }  // namespace hshm
 
 #endif
 
-
-
-#endif  // HERMES_BASICS_H
+#endif  // HSHM_BASICS_H

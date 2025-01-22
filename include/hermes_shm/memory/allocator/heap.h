@@ -10,41 +10,68 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_SHM_INCLUDE_HERMES_SHM_MEMORY_ALLOCATOR_HEAP_H_
-#define HERMES_SHM_INCLUDE_HERMES_SHM_MEMORY_ALLOCATOR_HEAP_H_
+#ifndef HSHM_SHM_INCLUDE_HSHM_SHM_MEMORY_ALLOCATOR_HEAP_H_
+#define HSHM_SHM_INCLUDE_HSHM_SHM_MEMORY_ALLOCATOR_HEAP_H_
 
 #include "allocator.h"
 #include "hermes_shm/thread/lock.h"
 
 namespace hshm::ipc {
 
+template <bool ATOMIC>
 struct HeapAllocator {
-  std::atomic<size_t> heap_off_;
-  size_t heap_size_;
+  hshm::size_t region_off_;
+  hipc::opt_atomic<hshm::size_t, ATOMIC> heap_off_;
+  hshm::size_t heap_size_;
 
   /** Default constructor */
-  HeapAllocator() : heap_off_(0), heap_size_(0) {}
+  HSHM_CROSS_FUN
+  HeapAllocator() : region_off_(0), heap_off_(0), heap_size_(0) {}
 
   /** Emplace constructor */
-  explicit HeapAllocator(size_t heap_off, size_t heap_size)
-  : heap_off_(heap_off), heap_size_(heap_size) {}
+  HSHM_CROSS_FUN
+  explicit HeapAllocator(size_t region_off, size_t heap_size)
+      : region_off_(region_off), heap_off_(0), heap_size_(heap_size) {}
 
   /** Explicit initialization */
-  void shm_init(size_t heap_off, size_t heap_size) {
-    heap_off_ = heap_off;
+  HSHM_CROSS_FUN
+  void shm_init(size_t region_off, size_t heap_size) {
+    region_off_ = region_off;
+    heap_off_ = 0;
+    heap_size_ = heap_size;
+  }
+
+  /** Explicit initialization */
+  HSHM_CROSS_FUN
+  void shm_init(const OffsetPointer &region_off, size_t heap_size) {
+    region_off_ = region_off.off_.load();
+    heap_off_ = 0;
     heap_size_ = heap_size;
   }
 
   /** Allocate off heap */
-  HSHM_ALWAYS_INLINE OffsetPointer AllocateOffset(size_t size) {
-    size_t off = heap_off_.fetch_add(size);
+  HSHM_INLINE_CROSS_FUN OffsetPointer AllocateOffset(size_t size) {
+    // if (size % 64 != 0) {
+    //   size = (size + 63) & ~63;
+    // }
+    hshm::size_t off = heap_off_.fetch_add((hshm::size_t)size);
     if (off + size > heap_size_) {
-      throw OUT_OF_MEMORY.format(size, heap_size_);
+      // HSHM_THROW_ERROR(OUT_OF_MEMORY, size, heap_size_);
+      return OffsetPointer::GetNull();
     }
-    return OffsetPointer(off);
+    return OffsetPointer((size_t)(region_off_ + off));
+  }
+
+  /** Copy assignment operator */
+  HSHM_CROSS_FUN
+  HeapAllocator &operator=(const HeapAllocator &other) {
+    region_off_ = other.region_off_;
+    heap_off_ = other.heap_off_.load();
+    heap_size_ = other.heap_size_;
+    return *this;
   }
 };
 
 }  // namespace hshm::ipc
 
-#endif  // HERMES_SHM_INCLUDE_HERMES_SHM_MEMORY_ALLOCATOR_HEAP_H_
+#endif  // HSHM_SHM_INCLUDE_HSHM_SHM_MEMORY_ALLOCATOR_HEAP_H_

@@ -10,44 +10,40 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+#ifndef HSHM_TEST_UNIT_DATA_STRUCTURES_TEST_INIT_H_
+#define HSHM_TEST_UNIT_DATA_STRUCTURES_TEST_INIT_H_
 
-#ifndef HERMES_TEST_UNIT_DATA_STRUCTURES_TEST_INIT_H_
-#define HERMES_TEST_UNIT_DATA_STRUCTURES_TEST_INIT_H_
+#include "hermes_shm/data_structures/all.h"
 
-#include "hermes_shm/data_structures/data_structure.h"
-#include <mpi.h>
-
-using hshm::ipc::PosixShmMmap;
-using hshm::ipc::MemoryBackendType;
-using hshm::ipc::MemoryBackend;
-using hshm::ipc::allocator_id_t;
-using hshm::ipc::AllocatorType;
 using hshm::ipc::Allocator;
+using hshm::ipc::AllocatorId;
+using hshm::ipc::AllocatorType;
+using hshm::ipc::MemoryBackend;
+using hshm::ipc::MemoryBackendType;
 using hshm::ipc::Pointer;
+using hshm::ipc::PosixShmMmap;
 
-using hshm::ipc::MemoryBackendType;
-using hshm::ipc::MemoryBackend;
-using hshm::ipc::allocator_id_t;
-using hshm::ipc::AllocatorType;
 using hshm::ipc::Allocator;
+using hshm::ipc::AllocatorId;
+using hshm::ipc::AllocatorType;
+using hshm::ipc::MemoryBackend;
+using hshm::ipc::MemoryBackendType;
 using hshm::ipc::MemoryManager;
 using hshm::ipc::Pointer;
 
-extern Allocator *alloc_g;
+GLOBAL_CONST AllocatorId alloc_id(1, 0);
 
-template<typename AllocT>
+template <typename AllocT>
 void PretestRank0() {
   std::string shm_url = "test_allocators";
-  allocator_id_t alloc_id(0, 1);
-  auto mem_mngr = HERMES_MEMORY_MANAGER;
+  auto mem_mngr = HSHM_MEMORY_MANAGER;
   mem_mngr->UnregisterAllocator(alloc_id);
-  mem_mngr->UnregisterBackend(shm_url);
+  mem_mngr->DestroyBackend(hipc::MemoryBackendId::Get(0));
   mem_mngr->CreateBackend<PosixShmMmap>(
-    GIGABYTES(1), shm_url);
-  mem_mngr->CreateAllocator<AllocT>(shm_url, alloc_id, 0);
-  alloc_g = mem_mngr->GetAllocator(alloc_id);
+      hipc::MemoryBackendId::Get(0), hshm::Unit<size_t>::Gigabytes(1), shm_url);
+  mem_mngr->CreateAllocator<AllocT>(hipc::MemoryBackendId::Get(0), alloc_id, 0);
 }
 
 void PretestRankN();
 
-#endif  // HERMES_TEST_UNIT_DATA_STRUCTURES_TEST_INIT_H_
+#endif  // HSHM_TEST_UNIT_DATA_STRUCTURES_TEST_INIT_H_

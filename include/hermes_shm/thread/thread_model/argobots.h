@@ -10,51 +10,103 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_SHM_INCLUDE_HERMES_SHM_THREAD_THALLIUM_H_
-#define HERMES_SHM_INCLUDE_HERMES_SHM_THREAD_THALLIUM_H_
+#ifndef HSHM_SHM_INCLUDE_HSHM_SHM_THREAD_THALLIUM_H_
+#define HSHM_SHM_INCLUDE_HSHM_SHM_THREAD_THALLIUM_H_
 
-#include "thread_model.h"
-#include <thallium.hpp>
 #include <errno.h>
-#include "hermes_shm/util/errors.h"
-#include <omp.h>
-#include "hermes_shm/introspect/system_info.h"
 
-namespace hshm::thread_model {
+#include <thallium.hpp>
+
+#include "hermes_shm/introspect/system_info.h"
+#include "hermes_shm/util/errors.h"
+#include "thread_model.h"
+
+namespace hshm::thread {
 
 class Argobots : public ThreadModel {
  public:
   /** Default constructor */
-  Argobots() = default;
+  HSHM_INLINE_CROSS_FUN
+  Argobots() : ThreadModel(ThreadType::kArgobots) {}
 
-  /** Virtual destructor */
-  virtual ~Argobots() = default;
+  /** Destructor */
+  HSHM_CROSS_FUN
+  ~Argobots() = default;
 
   /** Yield the current thread for a period of time */
-  void SleepForUs(size_t us) override {
+  HSHM_CROSS_FUN
+  void SleepForUs(size_t us) {
     /**
      * TODO(llogan): make this API flexible enough to support argobots fully
-     * tl::thread::self().sleep(*HERMES->rpc_.server_engine_,
-                               HERMES->server_config_.borg_.blob_reorg_period_);
+     * tl::thread::self().sleep(*HSHM->rpc_.server_engine_,
+                               HSHM->server_config_.borg_.blob_reorg_period_);
      */
+#ifdef HSHM_IS_HOST
     usleep(us);
+#endif
   }
 
   /** Yield thread time slice */
-  void Yield() override {
+  HSHM_CROSS_FUN
+  void Yield() {
+#ifdef HSHM_IS_HOST
     ABT_thread_yield();
+#endif
+  }
+
+  /** Create thread-local storage */
+  template <typename TLS>
+  HSHM_CROSS_FUN bool CreateTls(ThreadLocalKey &key, TLS *data) {
+#ifdef HSHM_IS_HOST
+    int ret = ABT_key_create(ThreadLocalData::template destroy_wrap<TLS>,
+                             &key.argobots_key_);
+    if (ret != ABT_SUCCESS) {
+      return false;
+    }
+    return SetTls(key, data);
+#else
+    return false;
+#endif
+  }
+
+  /** Create thread-local storage */
+  template <typename TLS>
+  HSHM_CROSS_FUN bool SetTls(ThreadLocalKey &key, TLS *data) {
+#ifdef HSHM_IS_HOST
+    int ret = ABT_key_set(key.argobots_key_, data);
+    return ret == ABT_SUCCESS;
+#else
+    return false;
+#endif
+  }
+
+  /** Get thread-local storage */
+  template <typename TLS>
+  HSHM_CROSS_FUN TLS *GetTls(const ThreadLocalKey &key) {
+#ifdef HSHM_IS_HOST
+    TLS *data;
+    ABT_key_get(key.argobots_key_, (void **)&data);
+    return (TLS *)data;
+#else
+    return nullptr;
+#endif
   }
 
   /** Get the TID of the current thread */
-  tid_t GetTid() override {
+  HSHM_CROSS_FUN
+  ThreadId GetTid() {
+#ifdef HSHM_IS_HOST
     ABT_thread thread;
     ABT_thread_id tid;
     ABT_thread_self(&thread);
     ABT_thread_get_id(thread, &tid);
-    return (tid_t)tid;
+    return ThreadId{tid};
+#else
+    return ThreadId{0};
+#endif
   }
 };
 
-}  // namespace hshm::thread_model
+}  // namespace hshm::thread
 
-#endif  // HERMES_SHM_INCLUDE_HERMES_SHM_THREAD_THALLIUM_H_
+#endif  // HSHM_SHM_INCLUDE_HSHM_SHM_THREAD_THALLIUM_H_

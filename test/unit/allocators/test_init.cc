@@ -10,11 +10,9 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-
 #include "test_init.h"
 
-void Posttest() {
-}
+void Posttest() {}
 
 void MainPretest() {}
 

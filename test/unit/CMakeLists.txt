@@ -1,7 +1,6 @@
-cmake_minimum_required(VERSION 3.10)
 project(hermes_shm)
 
-set(CMAKE_CXX_STANDARD 17)
+
 
 set(TEST_MAIN ${CMAKE_CURRENT_SOURCE_DIR})
 
@@ -12,13 +11,20 @@ add_subdirectory(allocators_mpi)
 add_subdirectory(backend)
 add_subdirectory(types)
 add_subdirectory(thread)
+add_subdirectory(singleton)
 
-if (HERMES_ENABLE_COMPRESS)
-    message("HERMES ENABLE COMPRESS")
+if (HSHM_ENABLE_CUDA)
+    add_subdirectory(cuda)
+endif()
+
+if (HSHM_ENABLE_ROCM)
+    add_subdirectory(rocm)  
+endif()
+
+if (HSHM_ENABLE_COMPRESS)
     add_subdirectory(compress)
 endif()
 
-if (HERMES_ENABLE_ENCRYPT)
-    message("HERMES ENABLE ENCRYPT")
+if (HSHM_ENABLE_ENCRYPT)
     add_subdirectory(encrypt)
 endif()

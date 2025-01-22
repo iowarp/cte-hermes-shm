@@ -10,25 +10,25 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_SHM_TEST_UNIT_DATA_STRUCTURES_SERIALIZE_THALLIUM_TEST_INIT_H_
-#define HERMES_SHM_TEST_UNIT_DATA_STRUCTURES_SERIALIZE_THALLIUM_TEST_INIT_H_
+#ifndef HSHM_SHM_TEST_UNIT_DATA_STRUCTURES_SERIALIZE_THALLIUM_TEST_INIT_H_
+#define HSHM_SHM_TEST_UNIT_DATA_STRUCTURES_SERIALIZE_THALLIUM_TEST_INIT_H_
 
-#include "hermes_shm/data_structures/data_structure.h"
+#include "hermes_shm/data_structures/all.h"
 
-using hshm::ipc::PosixShmMmap;
-using hshm::ipc::MemoryBackendType;
-using hshm::ipc::MemoryBackend;
-using hshm::ipc::allocator_id_t;
-using hshm::ipc::AllocatorType;
 using hshm::ipc::Allocator;
+using hshm::ipc::AllocatorId;
+using hshm::ipc::AllocatorType;
+using hshm::ipc::MemoryBackend;
+using hshm::ipc::MemoryBackendType;
 using hshm::ipc::Pointer;
+using hshm::ipc::PosixShmMmap;
 
-using hshm::ipc::MemoryBackendType;
-using hshm::ipc::MemoryBackend;
-using hshm::ipc::allocator_id_t;
-using hshm::ipc::AllocatorType;
 using hshm::ipc::Allocator;
+using hshm::ipc::AllocatorId;
+using hshm::ipc::AllocatorType;
+using hshm::ipc::MemoryBackend;
+using hshm::ipc::MemoryBackendType;
 using hshm::ipc::MemoryManager;
 using hshm::ipc::Pointer;
 
-#endif  // HERMES_SHM_TEST_UNIT_DATA_STRUCTURES_SERIALIZE_THALLIUM_TEST_INIT_H_
+#endif  // HSHM_SHM_TEST_UNIT_DATA_STRUCTURES_SERIALIZE_THALLIUM_TEST_INIT_H_

@@ -10,22 +10,22 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_TEST_UNIT_DATA_STRUCTURES_CONTAINERS_LIST_H_
-#define HERMES_TEST_UNIT_DATA_STRUCTURES_CONTAINERS_LIST_H_
+#ifndef HSHM_TEST_UNIT_DATA_STRUCTURES_CONTAINERS_LIST_H_
+#define HSHM_TEST_UNIT_DATA_STRUCTURES_CONTAINERS_LIST_H_
 
 #include "basic_test.h"
-#include "test_init.h"
 #include "hermes_shm/data_structures/ipc/string.h"
+#include "test_init.h"
 
-template<typename T, typename Container>
+template <typename T, typename Container,
+          typename AllocT = HSHM_DEFAULT_ALLOC_T>
 class ListTestSuite {
  public:
   Container &obj_;
-  Allocator *alloc_;
+  AllocT *alloc_;
 
   /// Constructor
-  ListTestSuite(Container &obj, Allocator *alloc)
-  : obj_(obj), alloc_(alloc) {}
+  ListTestSuite(Container &obj, AllocT *alloc) : obj_(obj), alloc_(alloc) {}
 
   /// Emplace elements
   void EmplaceTest(size_t count = 30) {
@@ -51,7 +51,7 @@ class ListTestSuite {
     const Container &obj = obj_;
     size_t fcur = 0;
     for (auto iter = obj.cbegin(); iter != obj.cend(); ++iter) {
-      T& num = *iter;
+      T &num = *iter;
       CREATE_SET_VAR_TO_INT_OR_STRING(T, fcur_conv, fcur);
       REQUIRE(num == fcur_conv);
       ++fcur;
@@ -61,35 +61,35 @@ class ListTestSuite {
   /// Copy constructor
   void CopyConstructorTest() {
     size_t count = obj_.size();
-    auto cpy = hipc::make_uptr<Container>(obj_);
-    VerifyCopy(obj_, *cpy, count);
+    Container cpy(obj_);
+    VerifyCopy(obj_, cpy, count);
   }
 
   /// Copy assignment
   void CopyAssignmentTest() {
     size_t count = obj_.size();
-    auto cpy = hipc::make_uptr<Container>();
-    *cpy = obj_;
-    VerifyCopy(obj_, *cpy, count);
+    Container cpy;
+    cpy = obj_;
+    VerifyCopy(obj_, cpy, count);
   }
 
   /// Move constructor
   void MoveConstructorTest() {
     size_t count = obj_.size();
-    auto cpy = hipc::make_uptr<Container>(std::move(obj_));
-    VerifyMove(obj_, *cpy, count);
-    obj_ = std::move(*cpy);
-    VerifyMove(*cpy, obj_, count);
+    Container cpy(std::move(obj_));
+    VerifyMove(obj_, cpy, count);
+    obj_ = std::move(cpy);
+    VerifyMove(cpy, obj_, count);
   }
 
   /// Move assignment
   void MoveAssignmentTest() {
     size_t count = obj_.size();
-    auto cpy = hipc::make_uptr<Container>();
-    (*cpy) = std::move(obj_);
-    VerifyMove(obj_, *cpy, count);
-    obj_ = std::move(*cpy);
-    VerifyMove(*cpy, obj_, count);
+    Container cpy;
+    cpy = std::move(obj_);
+    VerifyMove(obj_, cpy, count);
+    obj_ = std::move(cpy);
+    VerifyMove(cpy, obj_, count);
   }
 
   /// Emplace and erase front
@@ -144,9 +144,7 @@ class ListTestSuite {
 
  private:
   /// Verify copy construct/assign worked
-  void VerifyCopy(Container &obj,
-                  Container &cpy,
-                  size_t count) {
+  void VerifyCopy(Container &obj, Container &cpy, size_t count) {
     REQUIRE(obj_.size() == count);
     REQUIRE(cpy.size() == count);
 
@@ -172,9 +170,7 @@ class ListTestSuite {
   }
 
   /// Verify move worked
-  void VerifyMove(Container &orig_obj,
-                  Container &new_obj,
-                  size_t count) {
+  void VerifyMove(Container &orig_obj, Container &new_obj, size_t count) {
     // Verify move into cpy worked
     {
       size_t fcur = 0;
@@ -189,4 +185,4 @@ class ListTestSuite {
   }
 };
 
-#endif  // HERMES_TEST_UNIT_DATA_STRUCTURES_CONTAINERS_LIST_H_
+#endif  // HSHM_TEST_UNIT_DATA_STRUCTURES_CONTAINERS_LIST_H_

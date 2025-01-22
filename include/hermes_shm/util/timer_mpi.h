@@ -10,11 +10,12 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HERMES_SHM_INCLUDE_HERMES_SHM_UTIL_TIMER_MPI_H_
-#define HERMES_SHM_INCLUDE_HERMES_SHM_UTIL_TIMER_MPI_H_
+#ifndef HSHM_SHM_INCLUDE_HSHM_SHM_UTIL_TIMER_MPI_H_
+#define HSHM_SHM_INCLUDE_HSHM_SHM_UTIL_TIMER_MPI_H_
+
+#include <mpi.h>
 
 #include "timer.h"
-#include <mpi.h>
 
 namespace hshm {
 
@@ -33,13 +34,10 @@ class MpiTimer : public Timer {
   void Collect() {
     MPI_Barrier(comm_);
     double my_nsec = GetNsec();
-    time_ns_ = 0;
-    MPI_Reduce(&my_nsec, &time_ns_, 1,
-               MPI_DOUBLE, MPI_MAX,
-               0, comm_);
+    MPI_Reduce(&my_nsec, &time_ns_, 1, MPI_DOUBLE, MPI_MAX, 0, comm_);
   }
 };
 
 }  // namespace hshm
 
-#endif  // HERMES_SHM_INCLUDE_HERMES_SHM_UTIL_TIMER_MPI_H_
+#endif  // HSHM_SHM_INCLUDE_HSHM_SHM_UTIL_TIMER_MPI_H_

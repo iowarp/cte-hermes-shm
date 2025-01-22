@@ -10,16 +10,16 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+#include "hermes_shm/memory/memory_manager.h"
+
+#include <mpi.h>
 
 #include "basic_test.h"
 
-#include <mpi.h>
-#include "hermes_shm/memory/memory_manager.h"
-
-using hshm::ipc::MemoryBackendType;
-using hshm::ipc::MemoryBackend;
-using hshm::ipc::allocator_id_t;
+using hshm::ipc::AllocatorId;
 using hshm::ipc::AllocatorType;
+using hshm::ipc::MemoryBackend;
+using hshm::ipc::MemoryBackendType;
 using hshm::ipc::MemoryManager;
 
 struct SimpleHeader {
@@ -29,22 +29,23 @@ struct SimpleHeader {
 TEST_CASE("MemoryManager") {
   int rank;
   char nonce = 8;
-  size_t page_size = KILOBYTES(4);
+  size_t page_size = hshm::Unit<size_t>::Kilobytes(4);
   std::string shm_url = "test_mem_backend";
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  allocator_id_t alloc_id(0, 1);
+  AllocatorId alloc_id(1, 0);
 
-  HERMES_ERROR_HANDLE_START()
-  auto mem_mngr = HERMES_MEMORY_MANAGER;
+  HSHM_ERROR_HANDLE_START()
+  auto mem_mngr = HSHM_MEMORY_MANAGER;
 
   if (rank == 0) {
     std::cout << "Creating SHMEM (rank 0): " << shm_url << std::endl;
     mem_mngr->UnregisterAllocator(alloc_id);
-    mem_mngr->UnregisterBackend(shm_url);
+    mem_mngr->DestroyBackend(hipc::MemoryBackendId::Get(0));
     mem_mngr->CreateBackend<hipc::PosixShmMmap>(
-       MEGABYTES(100), shm_url);
+        hipc::MemoryBackendId::Get(0), hshm::Unit<size_t>::Megabytes(100),
+        shm_url);
     mem_mngr->CreateAllocator<hipc::StackAllocator>(
-      shm_url, alloc_id, 0);
+        hipc::MemoryBackendId::Get(0), alloc_id, 0);
     mem_mngr->ScanBackends();
   }
   MPI_Barrier(MPI_COMM_WORLD);
@@ -56,8 +57,9 @@ TEST_CASE("MemoryManager") {
   MPI_Barrier(MPI_COMM_WORLD);
   if (rank == 0) {
     std::cout << "Allocating pages (rank 0)" << std::endl;
-    hipc::Allocator *alloc = mem_mngr->GetAllocator(alloc_id);
-    char *page = alloc->AllocatePtr<char>(page_size);
+    auto *alloc = mem_mngr->GetAllocator<HSHM_DEFAULT_ALLOC_T>(alloc_id);
+    char *page =
+        alloc->template AllocatePtr<char>(HSHM_DEFAULT_MEM_CTX, page_size);
     memset(page, nonce, page_size);
     auto header = alloc->GetCustomHeader<SimpleHeader>();
     hipc::Pointer p1 = mem_mngr->Convert<void>(alloc_id, page);
@@ -69,12 +71,12 @@ TEST_CASE("MemoryManager") {
   MPI_Barrier(MPI_COMM_WORLD);
   if (rank != 0) {
     std::cout << "Finding and checking pages (rank 1)" << std::endl;
-    hipc::Allocator *alloc = mem_mngr->GetAllocator(alloc_id);
-    SimpleHeader *header = alloc->GetCustomHeader<SimpleHeader>();
+    auto *alloc = mem_mngr->GetAllocator<HSHM_DEFAULT_ALLOC_T>(alloc_id);
+    SimpleHeader *header = alloc->template GetCustomHeader<SimpleHeader>();
     char *page = alloc->Convert<char>(header->p_);
     REQUIRE(VerifyBuffer(page, page_size, nonce));
   }
   MPI_Barrier(MPI_COMM_WORLD);
 
-  HERMES_ERROR_HANDLE_END()
+  HSHM_ERROR_HANDLE_END()
 }
