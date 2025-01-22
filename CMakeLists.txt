@@ -298,7 +298,7 @@ install(DIRECTORY include DESTINATION ${CMAKE_INSTALL_PREFIX})
 # Configure the hermes_shm options
 configure_file(
     ${CMAKE_CURRENT_SOURCE_DIR}/include/hermes_shm/constants/settings.h_templ
-    ${PROJECT_BINARY_DIR}/include/hermes_shm/constants/settings.h @ONLY
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/hermes_shm/constants/settings.h @ONLY
 )
 
 configure_file(

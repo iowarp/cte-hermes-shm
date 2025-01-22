@@ -18,3 +18,4 @@ CMakePresets.json
 vcpkg_installed
 
 .vscode/launch.json
+include/hermes_shm/constants/settings.h
