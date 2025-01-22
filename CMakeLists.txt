@@ -325,13 +325,6 @@ install(
     ${CMAKE_INSTALL_PREFIX}/cmake
 )
 
-install(
-    FILES
-    ${PROJECT_BINARY_DIR}/include/hermes_shm/constants/settings.h
-    DESTINATION
-    ${CMAKE_INSTALL_PREFIX}/include/hermes_shm/constants/
-)
-
 install(EXPORT ${HSHM_EXPORTED_TARGETS}
     FILE ${HSHM_EXPORTED_TARGETS}CoreConfig.cmake
     NAMESPACE hshm::
