@@ -1,0 +1,20 @@
+name: win
+
+on:
+  push:
+    branches: master
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: install
+        run: |
+          vcpkg install
+      - name: test
+        run: |
+          mkdir build
+          cd build
+          cmake -DCMAKE_TOOLCHAIN_FILE="C:/vcpkg/scripts/buildsystems/vcpkg.cmake" -DSITE:STRING="win" ..
+          ctest -D Experimental

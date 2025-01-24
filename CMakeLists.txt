@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.25)
 project(hermes_shm LANGUAGES C CXX)
+include(CTest)
 set(CMAKE_CXX_STANDARD 17)
 
 # ------------------------------------------------------------------------------
@@ -102,7 +103,7 @@ endif()
 # ------------------------------------------------------------------------------
 
 # set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "MinGW" OR CMAKE_CXX_COMPILER STREQUAL "Intel")
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "^(Apple)?Clang$" OR CMAKE_CXX_COMPILER_ID STREQUAL "MinGW" OR CMAKE_CXX_COMPILER STREQUAL "Intel")
     if(CMAKE_BUILD_TYPE STREQUAL "Debug")
         message("IN DEBUG MODE")
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O0")
