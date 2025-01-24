@@ -1,6 +1,18 @@
 message("Importing packages for hermes_shm")
 
 # ------------------------------------------------------------------------------
+# DOTENV
+# ------------------------------------------------------------------------------
+file(STRINGS ${CMAKE_HOME_DIRECTORY}/.env ENV_FILE)
+
+foreach(VAR ${ENV_FILE})
+    string(REGEX MATCH "^[^=]*" KEY ${VAR})
+    string(REGEX REPLACE "^[^=]*=" "" VALUE ${VAR})
+    set(ENV{${KEY}} ${VALUE})
+    message("Setting ${KEY}")
+endforeach()
+
+# ------------------------------------------------------------------------------
 # External libraries
 # ------------------------------------------------------------------------------
 # Pkg-Config
