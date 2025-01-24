@@ -3,6 +3,18 @@ project(hermes_shm LANGUAGES C CXX)
 set(CMAKE_CXX_STANDARD 17)
 
 # ------------------------------------------------------------------------------
+# DOTENV
+# ------------------------------------------------------------------------------
+file(STRINGS ${CMAKE_HOME_DIRECTORY}/.env ENV_FILE)
+
+foreach(VAR ${ENV_FILE})
+    string(REGEX MATCH "^[^=]*" KEY ${VAR})
+    string(REGEX REPLACE "^[^=]*=" "" VALUE ${VAR})
+    set(ENV{${KEY}} ${VALUE})
+    message("Setting ${KEY}")
+endforeach()
+
+# ------------------------------------------------------------------------------
 # Global variables
 # ------------------------------------------------------------------------------
 set(HSHM_SHM_VERSION_MAJOR 2)
