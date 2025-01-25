@@ -5,14 +5,9 @@ set(CMAKE_CXX_STANDARD 17)
 # ------------------------------------------------------------------------------
 # DOTENV
 # ------------------------------------------------------------------------------
-file(STRINGS ${CMAKE_HOME_DIRECTORY}/.env ENV_FILE)
-
-foreach(VAR ${ENV_FILE})
-    string(REGEX MATCH "^[^=]*" KEY ${VAR})
-    string(REGEX REPLACE "^[^=]*=" "" VALUE ${VAR})
-    set(ENV{${KEY}} ${VALUE})
-    message("Setting ${KEY}")
-endforeach()
+if(EXISTS ${CMAKE_SOURCE_DIR}/.env.cmake)
+    include(.env.cmake)
+endif()
 
 # ------------------------------------------------------------------------------
 # Global variables
