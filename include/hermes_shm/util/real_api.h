@@ -71,6 +71,8 @@ struct RealApi {
     dl_iterate_phdr(callback, (void *)&iter);
     if (iter.lib_path_) {
       real_lib_ = dlopen(iter.lib_path_, RTLD_GLOBAL | RTLD_NOW);
+    } else {
+      real_lib_ = RTLD_DEFAULT;
     }
     void *is_intercepted_ptr = (void *)dlsym(RTLD_DEFAULT, is_intercepted);
     is_intercepted_ = is_intercepted_ptr != nullptr;
