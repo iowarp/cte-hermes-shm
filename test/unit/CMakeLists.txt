@@ -10,7 +10,10 @@ add_subdirectory(backend)
 add_subdirectory(types)
 add_subdirectory(thread)
 add_subdirectory(singleton)
-add_subdirectory(interceptor)
+
+if(NOT HSHM_COMPILER_MSVC)
+    add_subdirectory(interceptor)
+endif()
 
 if(HSHM_ENABLE_CUDA)
     add_subdirectory(cuda)
