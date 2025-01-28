@@ -27,7 +27,7 @@
     HELOG(kFatal, "HERMES Adapter failed to map symbol: {}", #api_name); \
   }
 
-namespace hermes::adapter {
+namespace hshm {
 
 struct RealApiIter {
   const char *symbol_name_;
@@ -43,6 +43,7 @@ struct RealApiIter {
 struct RealApi {
   void *real_lib_;
   bool is_intercepted_;
+  bool is_loaded_ = false;
 
   static int callback(struct dl_phdr_info *info, size_t size, void *data) {
     auto iter = (RealApiIter *)data;
@@ -199,7 +200,7 @@ struct RealApi {
 //   }
 // };
 
-}  // namespace hermes::adapter
+}  // namespace hshm
 
 #undef DEPRECATED
 
