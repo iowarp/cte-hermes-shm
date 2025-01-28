@@ -153,7 +153,7 @@ macro(hshm_enable_cuda CXX_STANDARD)
         set(CMAKE_CUDA_ARCHITECTURES native)
     endif()
 
-    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --forward-unknown-to-host-compiler -diag-suppress=177,20014,20011,200012")
+    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --forward-unknown-to-host-compiler -diag-suppress=177,20014,20011,20012")
     enable_language(CUDA)
 endmacro()
 

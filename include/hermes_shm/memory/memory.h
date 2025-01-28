@@ -39,7 +39,7 @@ union AllocatorId {
   /**
    * Constructor which sets major & minor
    * */
-  HSHM_INLINE_CROSS_FUN explicit AllocatorId(uint32_t major, uint32_t minor) {
+  HSHM_INLINE_CROSS_FUN explicit AllocatorId(i32 major, i32 minor) {
     bits_.major_ = major;
     bits_.minor_ = minor;
   }

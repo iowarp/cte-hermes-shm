@@ -3,6 +3,13 @@ project(hermes_shm LANGUAGES C CXX)
 set(CMAKE_CXX_STANDARD 17)
 
 # ------------------------------------------------------------------------------
+# DOTENV
+# ------------------------------------------------------------------------------
+if(EXISTS ${CMAKE_SOURCE_DIR}/.env.cmake)
+    include(.env.cmake)
+endif()
+
+# ------------------------------------------------------------------------------
 # Global variables
 # ------------------------------------------------------------------------------
 set(HSHM_SHM_VERSION_MAJOR 2)
@@ -298,7 +305,7 @@ install(DIRECTORY include DESTINATION ${CMAKE_INSTALL_PREFIX})
 # Configure the hermes_shm options
 configure_file(
     ${CMAKE_CURRENT_SOURCE_DIR}/include/hermes_shm/constants/settings.h_templ
-    ${PROJECT_BINARY_DIR}/include/hermes_shm/constants/settings.h @ONLY
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/hermes_shm/constants/settings.h @ONLY
 )
 
 configure_file(
@@ -323,13 +330,6 @@ install(
     ${PROJECT_BINARY_DIR}/CMakeFiles/UseDoxygenDoc.cmake
     DESTINATION
     ${CMAKE_INSTALL_PREFIX}/cmake
-)
-
-install(
-    FILES
-    ${PROJECT_BINARY_DIR}/include/hermes_shm/constants/settings.h
-    DESTINATION
-    ${CMAKE_INSTALL_PREFIX}/include/hermes_shm/constants/
 )
 
 install(EXPORT ${HSHM_EXPORTED_TARGETS}
