@@ -45,7 +45,8 @@ struct RealApi {
   bool is_intercepted_;
   bool is_loaded_ = false;
 
-  static int callback(struct dl_phdr_info *info, size_t size, void *data) {
+  static int callback(struct dl_phdr_info *info, unsigned long size,
+                      void *data) {
     auto iter = (RealApiIter *)data;
     auto lib = dlopen(info->dlpi_name, RTLD_GLOBAL | RTLD_NOW);
     // auto lib = dlopen(info->dlpi_name, RTLD_NOLOAD | RTLD_NOW);

@@ -54,6 +54,7 @@ class CudaMalloc : public MemoryBackend {
   bool shm_deserialize(const hshm::chararr &url) {
     (void)url;
     HSHM_THROW_ERROR(SHMEM_NOT_SUPPORTED);
+    return false;
   }
 
   /** Detach the mapped memory */

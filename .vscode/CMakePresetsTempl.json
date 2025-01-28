@@ -1,4 +1,5 @@
 // scspkg build profile m=cmake path=.env.cmake
+// cp CMakePresetsTempl.json ../CMakePresets.json
 {
     "version": 3,
     "cmakeMinimumRequired": {
