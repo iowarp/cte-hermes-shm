@@ -153,8 +153,13 @@ macro(hshm_enable_cuda CXX_STANDARD)
         set(CMAKE_CUDA_ARCHITECTURES native)
     endif()
 
-    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --forward-unknown-to-host-compiler -diag-suppress=177,20014,20011,200012")
+    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --forward-unknown-to-host-compiler -diag-suppress=177,20014,20011,20012")
     enable_language(CUDA)
+
+    set(CMAKE_CUDA_USE_RESPONSE_FILE_FOR_INCLUDES 0)
+    set(CMAKE_CUDA_USE_RESPONSE_FILE_FOR_LIBRARIES 0)
+    set(CMAKE_CUDA_USE_RESPONSE_FILE_FOR_OBJECTS 0)
+
 endmacro()
 
 # Enable rocm boilerplate
