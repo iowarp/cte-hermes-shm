@@ -154,7 +154,7 @@ endif()
 # HOST DEPENDENCIES
 add_library(host_deps INTERFACE)
 target_link_libraries(host_deps INTERFACE
-    yaml-cpp
+    yaml-cpp::yaml-cpp
     ${REAL_TIME_FLAGS}
     ${SERIALIZATION_LIBS}
     ${COMPRESS_LIBS}
