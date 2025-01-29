@@ -27,6 +27,9 @@ set(HSHM_USE_ELF @HSHM_USE_ELF@)
 set(HSHM_ENABLE_CUDA @HSHM_ENABLE_CUDA@)
 set(HSHM_ENABLE_ROCM @HSHM_ENABLE_ROCM@)
 set(HSHM_NO_COMPILE @HSHM_NO_COMPILE@)
+set(HSHM_INSTALL_LIB_DIR @HSHM_INSTALL_LIB_DIR@)
+set(HSHM_INSTALL_INCLUDE_DIR @HSHM_INSTALL_INCLUDE_DIR@)
+set(HSHM_INSTALL_BIN_DIR @HSHM_INSTALL_BIN_DIR@)
 if (NOT CMAKE_CUDA_ARCHITECTURES)
     set(CMAKE_CUDA_ARCHITECTURES @CMAKE_CUDA_ARCHITECTURES@)
 endif()
@@ -35,19 +38,11 @@ set(REAL_TIME_FLAGS @REAL_TIME_FLAGS@)
 # Find the HermesShm Package
 include(@CMAKE_INSTALL_PREFIX@/cmake/HermesShmCoreConfig.cmake)
 include(@CMAKE_INSTALL_PREFIX@/cmake/HermesShmCommonConfig.cmake)
+include_directories(${HSHM_INSTALL_INCLUDE_DIR})
+link_directories(${HSHM_INSTALL_LIB_DIR})
 
 # Add my library to RPATH
 list(APPEND CMAKE_INSTALL_RPATH "@HSHM_INSTALL_LIB_DIR@")
-
-# Basic: Target link directories / includes
-target_include_directories(hshm::cxx INTERFACE "@HSHM_INSTALL_INCLUDE_DIR@")
-target_link_directories(hshm::cxx INTERFACE "@HSHM_INSTALL_LIB_DIR@")
-
-# CUDA: Target link directories / includes
-if (HSHM_ENABLE_CUDA)
-    target_include_directories(hshm::cudacxx INTERFACE "@HSHM_INSTALL_INCLUDE_DIR@")
-    target_link_directories(hshm::cudacxx INTERFACE "@HSHM_INSTALL_LIB_DIR@")
-endif()
 
 # ROCm: Target link directories / includes
 if (HSHM_ENABLE_ROCM)
@@ -58,12 +53,4 @@ if (HSHM_ENABLE_ROCM)
     # TODO(llogan): This is a hack to make vscode detect HIP headers and not show errors
     set(CMAKE_HIP_FLAGS "${CMAKE_HIP_FLAGS} -isystem ${rocm_path}/include -D__HIP_PLATFORM_AMD__")
     set(CMAKE_HIP_FLAGS "${CMAKE_HIP_FLAGS} -isystem @HSHM_INSTALL_INCLUDE_DIR@")
-
-    # GPU code
-    target_include_directories(hshm::rocmcxx_gpu INTERFACE "@HSHM_INSTALL_INCLUDE_DIR@")
-    target_link_directories(hshm::rocmcxx_gpu INTERFACE "@HSHM_INSTALL_LIB_DIR@")
-
-    # Host-only code
-    target_include_directories(hshm::rocmcxx_host INTERFACE "@HSHM_INSTALL_INCLUDE_DIR@")
-    target_link_directories(hshm::rocmcxx_host INTERFACE "@HSHM_INSTALL_LIB_DIR@")
 endif()

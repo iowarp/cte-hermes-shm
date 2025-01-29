@@ -8,7 +8,6 @@ add_dependencies(test_memory_cuda_exec
         hermes_shm_cuda)
 target_link_libraries(test_memory_cuda_exec PUBLIC
         hermes_shm_cuda)
-
 #------------------------------------------------------------------------------
 # Install Targets
 #------------------------------------------------------------------------------
