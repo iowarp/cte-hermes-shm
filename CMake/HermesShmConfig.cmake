@@ -38,6 +38,8 @@ set(REAL_TIME_FLAGS @REAL_TIME_FLAGS@)
 # Find the HermesShm Package
 include(@CMAKE_INSTALL_PREFIX@/cmake/HermesShmCoreConfig.cmake)
 include(@CMAKE_INSTALL_PREFIX@/cmake/HermesShmCommonConfig.cmake)
+include_directories(${HSHM_INSTALL_INCLUDE_DIR})
+link_directories(${HSHM_INSTALL_LIB_DIR})
 
 # Add my library to RPATH
 list(APPEND CMAKE_INSTALL_RPATH "@HSHM_INSTALL_LIB_DIR@")
