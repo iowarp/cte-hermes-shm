@@ -18,5 +18,5 @@ jobs:
           del vcpkg.json
           mkdir build
           cd build
-          cmake -DCMAKE_TOOLCHAIN_FILE="C:/vcpkg/scripts/buildsystems/vcpkg.cmake" -DSITE:STRING="win" ..
+          cmake -DCMAKE_TOOLCHAIN_FILE="C:/vcpkg/scripts/buildsystems/vcpkg.cmake" -DSITE:STRING="win" -DPKG_CONFIG_EXECUTABLE="c:/vcpkg/installed/x64-windows/tools/pkgconf/pkgconf.exe" ..
           ctest -D Experimental
