@@ -16,6 +16,13 @@
 #include <unistd.h>
 #elif defined(HSHM_ENABLE_WINDOWS_SYSINFO)
 #include <windows.h>
+#elif __APPLE__
+#include <fcntl.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <sys/syscall.h>
+#include <sys/types.h>
+#include <unistd.h>
 #else
 #error \
     "Must define either HSHM_ENABLE_PROCFS_SYSINFO or HSHM_ENABLE_WINDOWS_SYSINFO"
