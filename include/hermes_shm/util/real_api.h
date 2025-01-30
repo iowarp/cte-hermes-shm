@@ -13,12 +13,16 @@
 #ifndef HERMES_ADAPTER_API_H
 #define HERMES_ADAPTER_API_H
 
+#include <fcntl.h>
 #undef DEPRECATED
 
 #include <dlfcn.h>
 #include <link.h>
 // #include <libelf.h>
 #include <gelf.h>
+#include <unistd.h>
+
+#include "singleton.h"
 
 #define HERMES_DECL(F) F
 
@@ -29,32 +33,30 @@
 
 namespace hshm {
 
-struct RealApiIter {
-  const char *symbol_name_;
-  const char *is_intercepted_;
-  const char *lib_path_;
-
-  RealApiIter(const char *symbol_name, const char *is_intercepted)
-      : symbol_name_(symbol_name),
-        is_intercepted_(is_intercepted),
-        lib_path_(nullptr) {}
-};
-
 struct RealApi {
+  const char *symbol_name_;
+  const char *intercept_var_;
+  const char *real_lib_path_;
+  const char *intercepted_lib_path_;
   void *real_lib_;
-  bool is_intercepted_;
+  void *interceptor_lib_;
   bool is_loaded_ = false;
 
+  /** Locates the interceptor library and real library */
   static int callback(struct dl_phdr_info *info, unsigned long size,
                       void *data) {
-    auto iter = (RealApiIter *)data;
+    auto iter = (RealApi *)data;
     auto lib = dlopen(info->dlpi_name, RTLD_GLOBAL | RTLD_NOW);
     // auto lib = dlopen(info->dlpi_name, RTLD_NOLOAD | RTLD_NOW);
     if (lib) {
       auto exists = dlsym(lib, iter->symbol_name_);
-      void *is_intercepted = (void *)dlsym(lib, iter->is_intercepted_);
-      if (!is_intercepted && exists && !iter->lib_path_) {
-        iter->lib_path_ = info->dlpi_name;
+      void *is_intercepted = (void *)dlsym(lib, iter->intercept_var_);
+      if (exists) {
+        if (is_intercepted) {
+          iter->intercepted_lib_path_ = info->dlpi_name;
+        } else if (!iter->real_lib_path_) {
+          iter->real_lib_path_ = info->dlpi_name;
+        }
       }
     }
     return 0;
@@ -65,141 +67,142 @@ struct RealApi {
    *
    * @param symbol_name A function name or variable to look for in the shared
    * object
-   * @param is_intercepted The name of the variable indicating this is the
+   * @param intercept_var The name of the variable indicating this is the
    * interceptor object
    */
-  RealApi(const char *symbol_name, const char *is_intercepted) {
-    RealApiIter iter(symbol_name, is_intercepted);
-    dl_iterate_phdr(callback, (void *)&iter);
-    if (iter.lib_path_) {
-      real_lib_ = dlopen(iter.lib_path_, RTLD_GLOBAL | RTLD_NOW);
+  RealApi(const char *symbol_name, const char *intercept_var) {
+    symbol_name_ = symbol_name;
+    intercept_var_ = intercept_var;
+    dl_iterate_phdr(callback, (void *)this);
+    if (real_lib_path_) {
+      real_lib_ = dlopen(real_lib_path_, RTLD_GLOBAL | RTLD_NOW);
     } else {
       real_lib_ = RTLD_DEFAULT;
     }
-    void *is_intercepted_ptr = (void *)dlsym(RTLD_DEFAULT, is_intercepted);
-    is_intercepted_ = is_intercepted_ptr != nullptr;
-    /* if (is_intercepted_) {
-      real_lib_ = RTLD_NEXT;
+    if (intercepted_lib_path_) {
+      interceptor_lib_ = dlopen(intercepted_lib_path_, RTLD_GLOBAL | RTLD_NOW);
     } else {
-      real_lib_ = RTLD_DEFAULT;
-    }*/
+      interceptor_lib_ = nullptr;
+    }
   }
 };
 
-// template<typename PosixT>
-// struct InterceptorApi {
-//   PosixT *posix_;
-//   std::string lib_path_;
-//   bool is_loaded_;
-//   int lib_fd_ = -1;
-//   Elf *lib_elf_ = nullptr;
+template <typename PosixT>
+struct PreloadProgress {
+  PosixT *posix_;
+  bool is_loaded_;
+  int lib_fd_ = -1;
+  Elf *lib_elf_ = nullptr;
 
-//   static int callback(struct dl_phdr_info *info, size_t size, void *data) {
-//     auto iter = (RealApiIter*)data;
-//     auto lib = dlopen(info->dlpi_name, RTLD_GLOBAL | RTLD_NOW);
-//     // auto lib = dlopen(info->dlpi_name, RTLD_NOLOAD | RTLD_NOW);
-//     auto exists = dlsym(lib, iter->symbol_name_);
-//     void *is_intercepted =
-//         (void*)dlsym(lib, iter->is_intercepted_);
-//     if (is_intercepted && exists && !iter->lib_path_) {
-//       iter->lib_path_ = info->dlpi_name;
-//       if (iter->lib_path_ == nullptr || strlen(iter->lib_path_) == 0) {
-//         Dl_info dl_info;
-//         if (dladdr(is_intercepted, &dl_info) == 0) {
-//           iter->lib_path_ = "";
-//         } else {
-//           iter->lib_path_ = dl_info.dli_fname;
-//         }
-//       }
-//     }
-//     return 0;
-//   }
+  /** Load the interceptor lib */
+  bool LoadElf(const char *filename) {
+    // Check if filename is null
+    if (!filename) {
+      return false;
+    }
 
-//   bool IsLoaded(const char *filename) {
-//     // Open the ELF file
-//     lib_fd_ = posix_->open(filename, O_RDONLY);
-//     if (lib_fd_ < 0) {
-//       return false;
-//     }
+    // Open the ELF file
+    lib_fd_ = posix_->open(filename, O_RDONLY);
+    if (lib_fd_ < 0) {
+      return false;
+    }
 
-//     // Initialize libelf
-//     if (elf_version(EV_CURRENT) == EV_NONE) {
-//       return false;
-//     }
+    // Initialize libelf
+    if (elf_version(EV_CURRENT) == EV_NONE) {
+      return false;
+    }
 
-//     // Open ELF descriptor
-//     lib_elf_ = elf_begin(lib_fd_, ELF_C_READ, NULL);
-//     if (!lib_elf_) {
-//       return false;
-//     }
+    // Open ELF descriptor
+    lib_elf_ = elf_begin(lib_fd_, ELF_C_READ, NULL);
+    if (!lib_elf_) {
+      return false;
+    }
 
-//     // Get the ELF header
-//     GElf_Ehdr ehdr;
-//     if (!gelf_getehdr(lib_elf_, &ehdr)) {
-//       return false;
-//     }
+    // Get the ELF header
+    GElf_Ehdr ehdr;
+    if (!gelf_getehdr(lib_elf_, &ehdr)) {
+      return false;
+    }
 
-//     // Scan the dynamic table
-//     Elf_Scn *scn = NULL;
-//     while ((scn = elf_nextscn(lib_elf_, scn)) != NULL) {
-//       GElf_Shdr shdr = {};
-//       if (gelf_getshdr(scn, &shdr) != &shdr) {
-//         return false;
-//       }
+    return true;
+  }
 
-//       if (shdr.sh_type == SHT_DYNAMIC) {
-//         Elf_Data *data = NULL;
-//         data = elf_getdata(scn, data);
-//         if (data == NULL) {
-//           return false;
-//         }
+  /** Check if all needed libraries have been loaded */
+  bool AllDepsLoaded() {
+    // Scan the dynamic table
+    Elf_Scn *scn = NULL;
+    while ((scn = elf_nextscn(lib_elf_, scn)) != NULL) {
+      GElf_Shdr shdr = {};
+      if (gelf_getshdr(scn, &shdr) != &shdr) {
+        return false;
+      }
 
-//         size_t sh_entsize = gelf_fsize(lib_elf_, ELF_T_DYN, 1, EV_CURRENT);
+      if (shdr.sh_type == SHT_DYNAMIC) {
+        Elf_Data *data = NULL;
+        data = elf_getdata(scn, data);
+        if (data == NULL) {
+          return false;
+        }
 
-//         for (size_t i = 0; i < shdr.sh_size / sh_entsize; i++) {
-//           GElf_Dyn dyn = {};
-//           if (gelf_getdyn(data, i, &dyn) != &dyn) {
-//             return false;
-//           }
-//           const char *lib_name =
-//               elf_strptr(lib_elf_, shdr.sh_link, dyn.d_un.d_val);
-//           if (lib_name) {
-//             auto lib = dlopen(lib_name, RTLD_NOLOAD | RTLD_NOW);
-//             if (!lib) {
-//               return false;
-//             }
-//           }
-//         }
-//       }
-//     }
+        size_t sh_entsize = gelf_fsize(lib_elf_, ELF_T_DYN, 1, EV_CURRENT);
 
-//     // Clean up
-//     return true;
-//   }
+        for (size_t i = 0; i < shdr.sh_size / sh_entsize; i++) {
+          GElf_Dyn dyn = {};
+          if (gelf_getdyn(data, i, &dyn) != &dyn) {
+            return false;
+          }
+          const char *lib_name =
+              elf_strptr(lib_elf_, shdr.sh_link, dyn.d_un.d_val);
+          if (lib_name) {
+            if (dyn.d_tag == DT_NEEDED) {
+              void *lib = nullptr;
+              // Try direct path first
+              lib = dlopen(lib_name, RTLD_NOLOAD | RTLD_NOW);
+              if (!lib) {
+                // Try with default path resolution
+                lib = dlopen(lib_name, RTLD_NOLOAD | RTLD_NOW | RTLD_GLOBAL);
+              }
+              if (!lib) {
+                return false;
+              }
+            }
+          }
+        }
+      }
+    }
 
-//   void CloseElf() {
-//     if (lib_elf_) {
-//       elf_end(lib_elf_);
-//     }
-//     if (lib_fd_ > 0) {
-//       posix_->close(lib_fd_);
-//     }
-//   }
+    // Clean up
+    return true;
+  }
 
-//   InterceptorApi(const char *symbol_name,
-//                  const char *is_intercepted) : is_loaded_(false) {
-//     is_loaded_ = true;
-//     return;
-//     posix_ = hshm::Singleton<PosixT>::GetInstance();
-//     RealApiIter iter(symbol_name, is_intercepted);
-//     dl_iterate_phdr(callback, (void*)&iter);
-//     if (iter.lib_path_) {
-//       lib_path_ = iter.lib_path_;
-//       is_loaded_ = IsLoaded(iter.lib_path_);
-//     }
-//     CloseElf();
-//   }
-// };
+  /** Close the elf file */
+  void CloseElf() {
+    if (lib_elf_) {
+      elf_end(lib_elf_);
+    }
+    if (lib_fd_ > 0) {
+      posix_->close(lib_fd_);
+    }
+  }
+
+  PreloadProgress(RealApi &api) : is_loaded_(false) {
+    // char exe_path[1024];
+    // ssize_t len = readlink("/proc/self/exe", exe_path, sizeof(exe_path) - 1);
+    // if (len != -1) {
+    //   exe_path[len] = '\0';
+    // } else {
+    //   exe_path[0] = '\0';
+    // }
+
+    posix_ = hshm::Singleton<PosixT>::GetInstance();
+    if (!LoadElf(api.intercepted_lib_path_)) {
+      // if (!LoadElf(exe_path)) {
+      return;
+    }
+    is_loaded_ = AllDepsLoaded();
+    CloseElf();
+  }
+};
 
 }  // namespace hshm
 
