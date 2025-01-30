@@ -22,6 +22,7 @@
 #include "hermes_shm/util/errors.h"
 #include "hermes_shm/util/logging.h"
 
+/// \cond DO_NOT_DOCUMENT
 namespace hshm::ipc {
 
 /** Create the root allocator */
@@ -242,6 +243,7 @@ Allocator *MemoryManager::RegisterAllocator(Allocator *alloc, bool do_scan) {
 }
 
 }  // namespace hshm::ipc
+/// \endcond
 
 // TODO(llogan): Fix. A hack for HIP compiler to function
 // I would love to spend more time figuring out why ROCm
