@@ -17,8 +17,10 @@ jobs:
           vcpkg integrate install
           del vcpkg.json
           dir "c:/vcpkg/packages/pkgconf_x64-windows/"
+          dir "c:/vcpkg/packages/pkgconf_x64-windows/bin"
+          dir "c:/vcpkg/packages/pkgconf_x64-windows/tools"
           mkdir build
           cd build
-          cmake -DCMAKE_TOOLCHAIN_FILE="C:/vcpkg/scripts/buildsystems/vcpkg.cmake" -DSITE:STRING="win" -DPKG_CONFIG_EXECUTABLE="c:/vcpkg/packages/pkgconf_x64-windows/tools/pkgconf.exe" ..
+          cmake -G Ninja -DCMAKE_TOOLCHAIN_FILE="C:/vcpkg/scripts/buildsystems/vcpkg.cmake" -DSITE:STRING="win" -DPKG_CONFIG_EXECUTABLE="C:/vcpkg/packages/pkgconf_x64-windows/tools/pkgconf.exe" ..
           ctest -D Experimental
         shell: cmd
