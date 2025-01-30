@@ -18,9 +18,9 @@ jobs:
           del vcpkg.json
           dir "c:/vcpkg/packages/pkgconf_x64-windows/"
           dir "c:/vcpkg/packages/pkgconf_x64-windows/bin"
-          dir "c:/vcpkg/packages/pkgconf_x64-windows/tools/pkconf"
+          dir "c:/vcpkg/packages/pkgconf_x64-windows/tools/pkgconf"
           mkdir build
           cd build
-          cmake -DCMAKE_TOOLCHAIN_FILE="C:/vcpkg/scripts/buildsystems/vcpkg.cmake" -DSITE:STRING="win" -DPKG_CONFIG_EXECUTABLE="C:/vcpkg/packages/pkgconf_x64-windows/tools/pkgconf/pkgconf.exe" ..
+          cmake -DCMAKE_TOOLCHAIN_FILE="C:/vcpkg/scripts/buildsystems/vcpkg.cmake" -DSITE:STRING="win" -DPKG_CONFIG_EXECUTABLE="C:/vcpkg/packages/pkgconf_x64-windows/tools/pkgconf/pkgconf.exe" -DCatch2_DIR="C:/vcpkg/packages/catch2_x64-windows" -DCMAKE_PREFIX_PATH="C:/vcpkg/packages" ..
           ctest -D Experimental
         shell: cmd

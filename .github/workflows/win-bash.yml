@@ -1,0 +1,26 @@
+name: win bash
+
+on:
+  push:
+    branches: master
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: install
+        run: |
+          vcpkg install
+      - name: test
+        run: |
+          vcpkg integrate install
+          rm vcpkg.json
+          ls "c:/vcpkg/packages/pkgconf_x64-windows/"
+          ls "c:/vcpkg/packages/pkgconf_x64-windows/bin"
+          ls "c:/vcpkg/packages/pkgconf_x64-windows/tools/pkgconf"
+          mkdir build
+          cd build
+          cmake -DCMAKE_TOOLCHAIN_FILE="C:/vcpkg/scripts/buildsystems/vcpkg.cmake" -DSITE:STRING="win" -DPKG_CONFIG_EXECUTABLE="C:/vcpkg/packages/pkgconf_x64-windows/tools/pkgconf/pkgconf.exe" ..
+          ctest -D Experimental
+        shell: bash
