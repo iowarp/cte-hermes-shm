@@ -126,7 +126,11 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "^(Appl
     endif()
 
     set(HSHM_COMPILER_GNU "ON")
-    set(REAL_TIME_FLAGS "-lrt -ldl")
+    if(CMAKE_CXX_COMPILER_ID MATCHES "^(Apple)?Clang$")
+        set(REAL_TIME_FLAGS "-ldl")    
+    else()    
+        set(REAL_TIME_FLAGS "-lrt -ldl")
+    endif()
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     if(CMAKE_BUILD_TYPE STREQUAL "Debug")
         message("IN DEBUG MODE")
