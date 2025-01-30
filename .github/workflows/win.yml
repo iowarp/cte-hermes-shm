@@ -22,5 +22,5 @@ jobs:
           mkdir build
           cd build
           cmake -DCMAKE_TOOLCHAIN_FILE="C:/vcpkg/scripts/buildsystems/vcpkg.cmake" -DSITE:STRING="win" -DPKG_CONFIG_EXECUTABLE="C:/vcpkg/packages/pkgconf_x64-windows/tools/pkgconf/pkgconf.exe" -DCatch2_DIR="C:/vcpkg/packages/catch2_x64-windows" -DCMAKE_PREFIX_PATH="C:/vcpkg/packages" ..
-          ctest -D Experimental
+          ctest -C Release -D Experimental
         shell: cmd
