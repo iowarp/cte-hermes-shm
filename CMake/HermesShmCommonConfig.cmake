@@ -61,8 +61,8 @@ if(HSHM_ENABLE_CEREAL)
 endif()
 
 # Boost
-find_package(Boost REQUIRED)
-message(STATUS "found boost.h at ${Boost_INCLUDE_DIRS}")
+# find_package(Boost REQUIRED)
+# message(STATUS "found boost.h at ${Boost_INCLUDE_DIRS}")
 
 # Compression libraries
 if(HSHM_ENABLE_COMPRESS)
