@@ -56,7 +56,7 @@ add_test(NAME test_vector COMMAND
 
 # LIST TESTS
 add_test(NAME test_list COMMAND
-        ${CMAKE_BINARY_DIR}/bin/test_data_structure_exec "List*")
+        ${CMAKE_BINARY_DIR}/bin/test_data_structure_exec "*::List*")
 
 # SLIST TESTS
 add_test(NAME test_slist COMMAND
