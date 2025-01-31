@@ -11,18 +11,15 @@
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <sys/syscall.h>
+#if __APPLE__
+#include <sys/sysctl.h>
+#else
 #include <sys/sysinfo.h>
+#endif
 #include <sys/types.h>
 #include <unistd.h>
 #elif defined(HSHM_ENABLE_WINDOWS_SYSINFO)
 #include <windows.h>
-#elif __APPLE__
-#include <fcntl.h>
-#include <sys/mman.h>
-#include <sys/stat.h>
-#include <sys/syscall.h>
-#include <sys/types.h>
-#include <unistd.h>
 #else
 #error \
     "Must define either HSHM_ENABLE_PROCFS_SYSINFO or HSHM_ENABLE_WINDOWS_SYSINFO"
@@ -143,11 +140,25 @@ void SystemInfo::SetCpuMaxFreqKhz(int cpu, size_t cpu_freq_khz) {
 
 int SystemInfo::GetCpuCount() {
 #if defined(HSHM_ENABLE_PROCFS_SYSINFO)
+
+#if __APPLE__
+  int count;
+  using size_t = std::size_t;
+  size_t count_len = sizeof(count);
+  if (sysctlbyname("hw.physicalcpu", &count, &count_len, NULL, 0) == -1) {
+    perror("sysctlbyname");
+    return 1;
+  }
+  return count;
+#elif  
   return get_nprocs_conf();
+#endif
+  
 #elif defined(HSHM_ENABLE_WINDOWS_SYSINFO)
   SYSTEM_INFO sys_info;
   GetSystemInfo(&sys_info);
   return sys_info.dwNumberOfProcessors;
+
 #endif
 }
 
@@ -208,9 +219,28 @@ int SystemInfo::GetGid() {
 
 size_t SystemInfo::GetRamCapacity() {
 #if defined(HSHM_ENABLE_PROCFS_SYSINFO)
+#if __APPLE__
+  int mib[2];
+  uint64_t mem_total; // Use uint64_t for memory sizes
+
+  mib[0] = CTL_HW;
+  mib[1] = HW_MEMSIZE;  // This is what you're looking for
+  
+  using size_t = std::size_t;
+  size_t len = sizeof(mem_total);
+  
+  if (sysctl(mib, 2, &mem_total, &len, NULL, 0) == -1) {
+    perror("sysctl");
+    return 1;
+  }
+  else {
+    return mem_total;
+  }
+#else  
   struct sysinfo info;
   sysinfo(&info);
   return info.totalram;
+#endif  
 #elif defined(HSHM_ENABLE_WINDOWS_SYSINFO)
   MEMORYSTATUSEX mem_info;
   mem_info.dwLength = sizeof(mem_info);
@@ -308,8 +338,13 @@ void SystemInfo::DestroySharedMemory(const std::string &name) {
 
 void *SystemInfo::MapPrivateMemory(size_t size) {
 #if defined(HSHM_ENABLE_PROCFS_SYSINFO)
+#if __APPLE__
+  return mmap(nullptr, size, PROT_READ | PROT_WRITE,
+                MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);  
+#else  
   return mmap64(nullptr, size, PROT_READ | PROT_WRITE,
                 MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+#endif  
 #elif defined(HSHM_ENABLE_WINDOWS_SYSINFO)
   return VirtualAlloc(nullptr, size, MEM_COMMIT, PAGE_READWRITE);
 #endif
@@ -376,6 +411,8 @@ std::string SystemInfo::Getenv(const char *name, size_t max_size) {
   GetEnvironmentVariable(name, var.data(), var.size());
   return var;
 #endif
+  std::cout << "undefined" << std::endl;
+  return "";
 }
 
 void SystemInfo::Setenv(const char *name, const std::string &value,
