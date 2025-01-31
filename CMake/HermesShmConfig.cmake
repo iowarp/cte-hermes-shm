@@ -2,12 +2,12 @@
 #
 
 # This module defines the following uncached variables:
-#  HermesShm_FOUND, if false, do not try to use hermes_shm.
-#  HermesShm_LIBRARY_DIRS, the directory where the hermes_shm library is found.
+# HermesShm_FOUND, if false, do not try to use hermes_shm.
+# HermesShm_LIBRARY_DIRS, the directory where the hermes_shm library is found.
 
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Define constants
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 set(HSHM_SHM_VERSION_MAJOR @HSHM_SHM_VERSION_MAJOR@)
 set(HSHM_SHM_VERSION_MINOR @HSHM_SHM_VERSION_MINOR@)
 set(HSHM_SHM_VERSION_PATCH @HSHM_SHM_VERSION_PATCH@)
@@ -30,9 +30,11 @@ set(HSHM_NO_COMPILE @HSHM_NO_COMPILE@)
 set(HSHM_INSTALL_LIB_DIR @HSHM_INSTALL_LIB_DIR@)
 set(HSHM_INSTALL_INCLUDE_DIR @HSHM_INSTALL_INCLUDE_DIR@)
 set(HSHM_INSTALL_BIN_DIR @HSHM_INSTALL_BIN_DIR@)
-if (NOT CMAKE_CUDA_ARCHITECTURES)
+
+if(NOT CMAKE_CUDA_ARCHITECTURES)
     set(CMAKE_CUDA_ARCHITECTURES @CMAKE_CUDA_ARCHITECTURES@)
 endif()
+
 set(REAL_TIME_FLAGS @REAL_TIME_FLAGS@)
 
 # Find the HermesShm Package
@@ -45,7 +47,7 @@ link_directories(${HSHM_INSTALL_LIB_DIR})
 list(APPEND CMAKE_INSTALL_RPATH "@HSHM_INSTALL_LIB_DIR@")
 
 # ROCm: Target link directories / includes
-if (HSHM_ENABLE_ROCM)
+if(HSHM_ENABLE_ROCM)
     execute_process(COMMAND hipconfig --rocmpath
         OUTPUT_VARIABLE rocm_path)
     message(STATUS "ROCm SDK path: ${rocm_path}")
