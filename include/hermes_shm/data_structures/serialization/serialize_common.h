@@ -97,7 +97,7 @@ template <typename Ar, typename T>
 inline constexpr bool has_load_save_cls_v =
     has_load_cls_v<Ar, T> && has_save_cls_v<Ar, T>;
 
-// Detect if a class is serializeable
+// Detect if a class is serializable
 template <typename Ar, typename T>
 inline constexpr bool is_serializeable_v =
     has_serialize_fun_v<Ar, T> || has_load_save_fun_v<Ar, T> ||

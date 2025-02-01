@@ -14,7 +14,7 @@ if (HSHM_ENABLE_MPI)
     add_dependencies(test_allocator_mpi_exec hermes_shm_host)
     target_link_libraries(test_allocator_mpi_exec
             hermes_shm_host Catch2::Catch2 ${MPI_LIBS})
-endif()
+
 
 #------------------------------------------------------------------------------
 # Test Cases
@@ -28,6 +28,7 @@ foreach(ALLOCATOR ${MP_ALLOCATORS})
     add_test(NAME test_${ALLOCATOR}_mpi COMMAND
             mpirun -n 4 ${CMAKE_BINARY_DIR}/bin/test_allocator_mpi_exec "${ALLOCATOR}Mpi")
 endforeach()
+
 
 #------------------------------------------------------------------------------
 # Install Targets
@@ -45,4 +46,6 @@ endif()
 #-----------------------------------------------------------------------------
 if(HSHM_ENABLE_COVERAGE)
     set_coverage_flags(test_allocator_mpi_exec)
+endif()
+
 endif()

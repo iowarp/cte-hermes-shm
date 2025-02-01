@@ -18,10 +18,10 @@ cmake                                                      \
     -DCMAKE_BUILD_TYPE=${BUILD_TYPE}                       \
     -DBUILD_SHARED_LIBS=ON                                 \
     -DHSHM_ENABLE_DOXYGEN=ON                             \
-    -DHSHM_ENABLE_COVERAGE=ON                            \
+    -DHSHM_ENABLE_COVERAGE=OFF                            \
     ..
 make dox >& out.txt
 # cat out.txt | grep warning | grep -v "ignoring unsupported tag"
-rec="$( grep warning build/out.txt | grep -v "ignoring unsupported tag" |  wc -l )"
+rec="$( grep warning out.txt | grep -v "ignoring unsupported tag" |  wc -l )"
 echo "$rec"
 exit "$rec"

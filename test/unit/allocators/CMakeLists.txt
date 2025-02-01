@@ -40,6 +40,7 @@ foreach(ALLOCATOR ${ALLOCATORS})
             ${CMAKE_BINARY_DIR}/bin/test_allocator_exec "${ALLOCATOR}")
 endforeach()
 
+if (HSHM_ENABLE_OPENMP)
 # Multi-Thread ALLOCATOR tests
 set(MT_ALLOCATORS
         StackAllocator
@@ -48,6 +49,7 @@ foreach(ALLOCATOR ${MT_ALLOCATORS})
     add_test(NAME test_${ALLOCATOR}_4t COMMAND
             ${CMAKE_BINARY_DIR}/bin/test_allocator_exec "${ALLOCATOR}Multithreaded")
 endforeach()
+endif()
 
 #------------------------------------------------------------------------------
 # Install Targets

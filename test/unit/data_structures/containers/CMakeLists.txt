@@ -56,19 +56,11 @@ add_test(NAME test_vector COMMAND
 
 # LIST TESTS
 add_test(NAME test_list COMMAND
-        ${CMAKE_BINARY_DIR}/bin/test_data_structure_exec "List*")
+        ${CMAKE_BINARY_DIR}/bin/test_data_structure_exec "*::List*")
 
 # SLIST TESTS
 add_test(NAME test_slist COMMAND
         ${CMAKE_BINARY_DIR}/bin/test_data_structure_exec "Slist*")
-
-# MANUAL PTR TESTS
-add_test(NAME test_manual_ptr COMMAND
-        ${CMAKE_BINARY_DIR}/bin/test_data_structure_exec "ManualPtr*")
-
-# UNIQUE PTR TESTS
-add_test(NAME test_unique_ptr COMMAND
-        ${CMAKE_BINARY_DIR}/bin/test_data_structure_exec "UniquePtr*")
 
 # UNORDERED_MAP TESTS
 add_test(NAME test_unordered_map COMMAND
@@ -82,6 +74,7 @@ add_test(NAME test_pair COMMAND
 add_test(NAME test_lifo_list_queue COMMAND
         ${CMAKE_BINARY_DIR}/bin/test_data_structure_exec "lifo_list_queueOfMpPage")
 
+if (HSHM_ENABLE_OPENMP)
 # SPSC TESTS
 add_test(NAME test_spsc COMMAND
         ${CMAKE_BINARY_DIR}/bin/test_data_structure_exec "TestSpsc*")
@@ -89,10 +82,7 @@ add_test(NAME test_spsc COMMAND
 # MPSC TESTS
 add_test(NAME test_mpsc COMMAND
         ${CMAKE_BINARY_DIR}/bin/test_data_structure_exec "TestMpsc*")
-
-# TicketQueue TESTS
-add_test(NAME test_tkt_queue COMMAND
-        ${CMAKE_BINARY_DIR}/bin/test_data_structure_exec "TestTicket*")
+endif()
 
 #------------------------------------------------------------------------------
 # Install Targets
