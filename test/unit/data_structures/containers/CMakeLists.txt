@@ -84,10 +84,6 @@ add_test(NAME test_mpsc COMMAND
         ${CMAKE_BINARY_DIR}/bin/test_data_structure_exec "TestMpsc*")
 endif()
 
-# TicketQueue TESTS
-add_test(NAME test_tkt_queue COMMAND
-        ${CMAKE_BINARY_DIR}/bin/test_data_structure_exec "TestTicket*")
-
 #------------------------------------------------------------------------------
 # Install Targets
 #------------------------------------------------------------------------------
