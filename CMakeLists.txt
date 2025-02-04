@@ -122,7 +122,7 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "^(Appl
     endif()
 
     set(HSHM_COMPILER_GNU "ON")
-    if(CMAKE_CXX_COMPILER_ID MATCHES "^(Apple)?Clang$")
+    if(APPLE)
         set(REAL_TIME_FLAGS "-ldl")    
     else()    
         set(REAL_TIME_FLAGS "-lrt -ldl")
