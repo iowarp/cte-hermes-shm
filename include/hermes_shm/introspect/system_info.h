@@ -15,7 +15,7 @@
 
 #include "hermes_shm/constants/macros.h"
 #ifdef HSHM_ENABLE_PROCFS_SYSINFO
-#ifndef __APPLE__
+#ifdef __linux__
 #include <sys/sysinfo.h>
 #endif
 #include <unistd.h>

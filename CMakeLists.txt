@@ -123,7 +123,9 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "^(Appl
 
     set(HSHM_COMPILER_GNU "ON")
     if(APPLE)
-        set(REAL_TIME_FLAGS "-ldl")    
+        set(REAL_TIME_FLAGS "-ldl")
+    elseif(CMAKE_SYSTEM_NAME STREQUAL "OpenBSD")
+        set(REAL_TIME_FLAGS "")
     else()    
         set(REAL_TIME_FLAGS "-lrt -ldl")
     endif()

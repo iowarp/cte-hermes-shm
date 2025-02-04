@@ -11,10 +11,10 @@
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <sys/syscall.h>
-#if __APPLE__
-#include <sys/sysctl.h>
-#else
+#if __linux__
 #include <sys/sysinfo.h>
+#else
+#include <sys/sysctl.h>
 #endif
 #include <sys/types.h>
 #include <unistd.h>
@@ -141,17 +141,22 @@ void SystemInfo::SetCpuMaxFreqKhz(int cpu, size_t cpu_freq_khz) {
 int SystemInfo::GetCpuCount() {
 #if defined(HSHM_ENABLE_PROCFS_SYSINFO)
 
-#if __APPLE__
+#if __linux__
+  return get_nprocs_conf();  
+#else
   int count;
   using size_t = std::size_t;
   size_t count_len = sizeof(count);
+#if __APPLE__  
   if (sysctlbyname("hw.physicalcpu", &count, &count_len, NULL, 0) == -1) {
-    perror("sysctlbyname");
+#else
+  int mib[2];
+  if (sysctl(mib, 2, &count, &count_len, NULL, 0) == -1) {
+#endif    
+    perror("sysctl");
     return 1;
   }
-  return count;
-#elif  
-  return get_nprocs_conf();
+  return count;  
 #endif
   
 #elif defined(HSHM_ENABLE_WINDOWS_SYSINFO)
@@ -178,7 +183,11 @@ int SystemInfo::GetPageSize() {
 int SystemInfo::GetTid() {
 #if defined(HSHM_ENABLE_PROCFS_SYSINFO)
 #ifdef SYS_gettid
+#ifdef __linux__  
   return (pid_t)syscall(SYS_gettid);
+#else
+  return GetPid();
+#endif  
 #else
 #warning "GetTid is not defined"
   return GetPid();
@@ -191,7 +200,11 @@ int SystemInfo::GetTid() {
 int SystemInfo::GetPid() {
 #if defined(HSHM_ENABLE_PROCFS_SYSINFO)
 #ifdef SYS_getpid
+#ifdef __OpenBSD__
+  return (pid_t)getpid();
+#else  
   return (pid_t)syscall(SYS_getpid);
+#endif  
 #else
 #warning "GetPid is not defined"
   return 0;
@@ -219,13 +232,16 @@ int SystemInfo::GetGid() {
 
 size_t SystemInfo::GetRamCapacity() {
 #if defined(HSHM_ENABLE_PROCFS_SYSINFO)
-#if __APPLE__
+#if __APPLE__ || __OpenBSD__
   int mib[2];
   uint64_t mem_total; // Use uint64_t for memory sizes
 
   mib[0] = CTL_HW;
+#if __APPLE__  
   mib[1] = HW_MEMSIZE;  // This is what you're looking for
-  
+#else
+  mib[1] = HW_PHYSMEM;
+#endif  
   using size_t = std::size_t;
   size_t len = sizeof(mem_total);
   
@@ -338,7 +354,7 @@ void SystemInfo::DestroySharedMemory(const std::string &name) {
 
 void *SystemInfo::MapPrivateMemory(size_t size) {
 #if defined(HSHM_ENABLE_PROCFS_SYSINFO)
-#if __APPLE__
+#if __APPLE__ || __OpenBSD__
   return mmap(nullptr, size, PROT_READ | PROT_WRITE,
                 MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);  
 #else  
