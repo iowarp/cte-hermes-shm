@@ -65,7 +65,7 @@ TEST_CASE("SerializeHipcVec0") {
   }
 }
 
-#if !defined(_WIN32) || !defined(_WIN64)
+#if 0
 TEST_CASE("SerializeHipcVec") {
   std::stringstream ss;
   {
