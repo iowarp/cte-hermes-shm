@@ -21,13 +21,6 @@ jobs:
       - name: Setup python
         uses: actions/setup-python@v1
 
-      - name: Cache Spack packages
-        uses: actions/cache@v2
-        id: spack-cache
-        with:
-          path: ~/${{ env.LOCAL }}
-          key: ${{ runner.os }}-${{ hashFiles('scripts/ci/**') }}
-
       - name: Install APT Dependencies
         run: |
           sudo apt update
@@ -41,10 +34,8 @@ jobs:
           sudo apt-get install -y libsdl2-dev
           sudo apt-get install -y graphviz
           sudo apt-get install -y doxygen
-
-      - name: Build And Install Dependencies
-        if: steps.spack-cache.outputs.cache-hit != 'true'
-        run: bash scripts/ci/install_deps.sh
+          sudo apt-get install -y libcereal-dev libyaml-cpp-dev catch2
+          sudo apt-get install -y libboost-dev libboost-fiber-dev libboost-regex-dev libelf-dev
 
       - name: Build and Test
         run: bash scripts/ci/install_docs.sh

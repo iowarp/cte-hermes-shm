@@ -5,17 +5,18 @@
     "homepage": "https://github.com/lukemartinlogan/hermes_shm/wiki",
     "dependencies": [
         "catch2",
-        "yaml-cpp",
-        "boost-context",
-        "boost-fiber",
-        "boost-coroutine",
-        "boost-regex",
-        "boost-system",
-        "boost-filesystem",
-        "boost-serialization",
-        "boost-math",
         "cereal",
-        "pkgconf"
+        "boost-context",
+        "boost-coroutine",
+        "boost-fiber",
+        "boost-filesystem",	
+        "boost-headers",
+        "boost-math",	
+        "boost-regex",
+        "boost-serialization",	
+        "boost-system",
+        "pkgconf",
+        "yaml-cpp"	
     ],
     "features": {
         "cereal": {

@@ -14,6 +14,9 @@
 #define HSHM_THREAD_PTHREAD_H_
 
 #include <errno.h>
+#ifdef __APPLE__
+#include <unistd.h>
+#endif
 
 #include "hermes_shm/introspect/system_info.h"
 #include "hermes_shm/types/atomic.h"
