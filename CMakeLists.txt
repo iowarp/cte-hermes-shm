@@ -337,3 +337,5 @@ install(EXPORT ${HSHM_EXPORTED_TARGETS}
     NAMESPACE hshm::
     DESTINATION cmake
 )
+
+jarvis_register_repo("${CMAKE_SOURCE_DIR}/test/jarvis_shm" "")
