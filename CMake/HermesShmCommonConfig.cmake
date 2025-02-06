@@ -305,13 +305,13 @@ macro(jarvis_register_repo REPO_PATH PIPELINE_PATH)
 
     # Install jarvis repo
     install(DIRECTORY ${REPO_PATH}
-        DESTINATION ${CMAKE_INSTALL_PREFIX}/jarvis/${REPO_NAME})
+        DESTINATION ${CMAKE_INSTALL_PREFIX}/jarvis)
 
     # Add jarvis repo after installation
-    install(CODE "execute_process(COMMAND jarvis repo add ${CMAKE_INSTALL_PREFIX}/jarvis/jarvis_chimaera)")
+    install(CODE "execute_process(COMMAND jarvis repo add ${CMAKE_INSTALL_PREFIX}/jarvis/${REPO_NAME})")
 
     if(REPO_NAME)
         install(DIRECTORY ${PIPELINE_PATH}
-            DESTINATION ${CMAKE_INSTALL_PREFIX}/jarvis/pipelines)
+            DESTINATION ${CMAKE_INSTALL_PREFIX}/jarvis)
     endif()
 endmacro()
