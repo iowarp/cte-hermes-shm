@@ -299,7 +299,7 @@ function(add_cuda_executable EXE_NAME DO_COPY)
 endfunction()
 
 # Function for autoregistering a jarvis repo
-macro(jarvis_register_repo REPO_PATH PIPELINE_PATH)
+macro(jarvis_repo_add REPO_PATH PIPELINE_PATH)
     # Get the file name of the source path
     get_filename_component(REPO_NAME ${REPO_PATH} NAME)
 
