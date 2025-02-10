@@ -15,7 +15,7 @@ build
 Testing
 *.env
 *.env.cmake
-CMakePresets.json
+/CMakePresets.json
 vcpkg_installed
 
 .vscode/launch.json

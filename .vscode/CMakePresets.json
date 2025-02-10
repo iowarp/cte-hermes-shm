@@ -1,5 +1,4 @@
 // scspkg build profile m=cmake path=.env.cmake
-// cp CMakePresetsTempl.json ../CMakePresets.json
 {
     "version": 3,
     "cmakeMinimumRequired": {
@@ -15,7 +14,7 @@
             "binaryDir": "${sourceDir}/build",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Debug",
-                "CMAKE_INSTALL_PREFIX": "/home/llogan/Documents/Projects/scspkg/packages/hermes_shm",
+                "CMAKE_INSTALL_PREFIX": "/home/llogan/.scspkg/packages/hermes_shm",
                 "HSHM_ENABLE_COMPRESS": "ON",
                 "HSHM_ENABLE_ENCRYPT": "ON",
                 "HSHM_RPC_THALLIUM": "ON",
@@ -33,7 +32,7 @@
             "binaryDir": "${sourceDir}/build",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Debug",
-                "CMAKE_INSTALL_PREFIX": "/home/llogan/Documents/Projects/scspkg/packages/hermes_shm",
+                "CMAKE_INSTALL_PREFIX": "/home/llogan/.scspkg/packages/hermes_shm",
                 "HSHM_ENABLE_COMPRESS": "ON",
                 "HSHM_ENABLE_ENCRYPT": "ON",
                 "HSHM_ENABLE_ROCM": "ON",
@@ -52,7 +51,7 @@
             "binaryDir": "${sourceDir}/build",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Release",
-                "CMAKE_INSTALL_PREFIX": "/home/llogan/Documents/Projects/scspkg/packages/hermes_shm",
+                "CMAKE_INSTALL_PREFIX": "/home/llogan/.scspkg/packages/hermes_shm",
                 "HSHM_ENABLE_COMPRESS": "ON",
                 "HSHM_ENABLE_ENCRYPT": "ON",
                 "HSHM_ENABLE_ROCM": "ON",
