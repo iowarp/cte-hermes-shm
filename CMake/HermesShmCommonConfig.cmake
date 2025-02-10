@@ -159,7 +159,6 @@ macro(hshm_enable_cuda CXX_STANDARD)
     set(CMAKE_CUDA_USE_RESPONSE_FILE_FOR_INCLUDES 0)
     set(CMAKE_CUDA_USE_RESPONSE_FILE_FOR_LIBRARIES 0)
     set(CMAKE_CUDA_USE_RESPONSE_FILE_FOR_OBJECTS 0)
-
 endmacro()
 
 # Enable rocm boilerplate
@@ -298,3 +297,21 @@ function(add_cuda_executable EXE_NAME DO_COPY)
         )
     endif()
 endfunction()
+
+# Function for autoregistering a jarvis repo
+macro(jarvis_repo_add REPO_PATH PIPELINE_PATH)
+    # Get the file name of the source path
+    get_filename_component(REPO_NAME ${REPO_PATH} NAME)
+
+    # Install jarvis repo
+    install(DIRECTORY ${REPO_PATH}
+        DESTINATION ${CMAKE_INSTALL_PREFIX}/jarvis)
+
+    # Add jarvis repo after installation
+    install(CODE "execute_process(COMMAND jarvis repo add ${CMAKE_INSTALL_PREFIX}/jarvis/${REPO_NAME})")
+
+    if(REPO_NAME)
+        install(DIRECTORY ${PIPELINE_PATH}
+            DESTINATION ${CMAKE_INSTALL_PREFIX}/jarvis)
+    endif()
+endmacro()
