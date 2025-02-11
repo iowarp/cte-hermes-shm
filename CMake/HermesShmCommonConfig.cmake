@@ -10,6 +10,13 @@ if(PkgConfig)
     message(STATUS "found pkg config")
 endif()
 
+# Doxygen
+if(HSHM_ENABLE_DOXYGEN)
+    find_package(Perl REQUIRED)
+    find_package(Doxygen REQUIRED)
+    message(STATUS "found doxygen at ${DOXYGEN_EXECUTABLE}")
+endif()
+
 # Catch2
 find_package(Catch2 3.0.1 REQUIRED)
 message(STATUS "found catch2.h at ${Catch2_CXX_INCLUDE_DIRS}")
@@ -315,3 +322,35 @@ macro(jarvis_repo_add REPO_PATH PIPELINE_PATH)
             DESTINATION ${CMAKE_INSTALL_PREFIX}/jarvis)
     endif()
 endmacro()
+
+# DOXYGEN
+function(add_doxygen_doc)
+    set(options)
+    set(oneValueArgs BUILD_DIR DOXY_FILE TARGET_NAME COMMENT)
+    set(multiValueArgs)
+
+    cmake_parse_arguments(DOXY_DOC
+        "${options}"
+        "${oneValueArgs}"
+        "${multiValueArgs}"
+        ${ARGN}
+    )
+
+    configure_file(
+        ${DOXY_DOC_DOXY_FILE}
+        ${DOXY_DOC_BUILD_DIR}/Doxyfile
+        @ONLY
+    )
+
+    add_custom_target(${DOXY_DOC_TARGET_NAME}
+        COMMAND
+        ${DOXYGEN_EXECUTABLE} Doxyfile
+        WORKING_DIRECTORY
+        ${DOXY_DOC_BUILD_DIR}
+        COMMENT
+        "Building ${DOXY_DOC_COMMENT} with Doxygen"
+        VERBATIM
+    )
+
+    message(STATUS "Added ${DOXY_DOC_TARGET_NAME} [Doxygen] target to build documentation")
+endfunction()

@@ -13,9 +13,8 @@ RUN apt update && apt install
 
 # Install some basic packages
 RUN apt install -y \
-    openssh-server \
-    sudo \
-    git \
+    openssl libssl-dev openssh-server \
+    sudo git \
     gcc g++ gfortran make binutils gpg \
     tar zip xz-utils bzip2 \
     perl m4 libncurses5-dev libxml2-dev diffutils \
