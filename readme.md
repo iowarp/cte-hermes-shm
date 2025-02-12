@@ -7,24 +7,31 @@ compatible with CUDA and ROCm.
 
 [![Coverage Status](https://coveralls.io/repos/github/lukemartinlogan/hermes_shm/badge.svg?branch=master)](https://coveralls.io/github/lukemartinlogan/hermes_shm?branch=master)
 
-## Installation
+## Installation: Users
 
-```
-git clone https://github.com/lukemartinlogan/grc-repo.git
+For those installing this component (rather than all of iowarp):
+```bash
+git clone https://github.com/grc-iit/grc-repo.git
 spack repo add grc-repo
-spack install hermes_shm@dev
-```
-
-## Building
-
-If you want to build the library yourself, do the following:
-```
-git clone https://github.com/lukemartinlogan/hermes_shm.git
-cd hermes_shm
-spack repo add scripts/hermes_shm
 spack install hermes_shm
-spack load --only=dependencies hermes_shm
+```
 
+## Installation: Devs
+
+This will install dependencies of hermes-shm:
+```bash
+git clone https://github.com/grc-iit/grc-repo.git
+spack repo add grc-repo
+spack install hermes_shm +nocompile
+spack load hermes_shm +nocompile
+```
+
+NOTE: spack load needs to be done for each new terminal.
+
+This will compile:
+```bash
+git clone https://github.com/grc-iit/hermes-shm.git
+cd hermes-shm
 mkdir build
 cd build
 cmake ../ -DHSHM_ENABLE_CUDA=OFF -DHSHM_ENABLE_ROCM=OFF

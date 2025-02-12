@@ -85,17 +85,29 @@ class ThreadModel {
   HSHM_INLINE_CROSS_FUN
   ThreadModel(ThreadType type) : type_(type) {}
 
-  // /** Sleep thread for a period of time */
+  // /** Yield the current thread for a period of time */
   // HSHM_CROSS_FUN
-  // void SleepForUs(size_t us) = 0;
+  // void SleepForUs(size_t us);
 
   // /** Yield thread time slice */
   // HSHM_CROSS_FUN
-  // void Yield() = 0;
+  // void Yield();
+
+  // /** Create thread-local storage */
+  // template <typename TLS>
+  // HSHM_CROSS_FUN bool CreateTls(ThreadLocalKey &key, TLS *data);
+
+  // /** Get thread-local storage */
+  // template <typename TLS>
+  // HSHM_CROSS_FUN TLS *GetTls(const ThreadLocalKey &key);
+
+  // /** Create thread-local storage */
+  // template <typename TLS>
+  // HSHM_CROSS_FUN bool SetTls(ThreadLocalKey &key, TLS *data);
 
   // /** Get the TID of the current thread */
   // HSHM_CROSS_FUN
-  // ThreadId GetTid() = 0;
+  // ThreadId GetTid();
 
   /** Get the thread model type */
   HSHM_INLINE_CROSS_FUN

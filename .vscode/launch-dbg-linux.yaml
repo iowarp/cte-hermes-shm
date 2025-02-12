@@ -67,7 +67,4 @@ configurations:
     launch-name: bench-data-structures
     program: benchmark_data_structures_exec
     args: [""]
-  - macro: mpi_debug
-    launch-name: test-rocm-queue
-    program: test_rocm_backend_mpi_exec
-    args: [""]
+    

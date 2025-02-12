@@ -47,7 +47,7 @@ union AllocatorId {
   /**
    * Set this allocator to null
    * */
-  HSHM_INLINE_CROSS_FUN void SetNull() { int_ = 0; }
+  HSHM_INLINE_CROSS_FUN void SetNull() { (*this) = GetNull(); }
 
   /**
    * Check if this is the null allocator
