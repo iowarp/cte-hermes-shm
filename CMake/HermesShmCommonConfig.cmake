@@ -147,6 +147,16 @@ if(HSHM_ENABLE_ENCRYPT)
     set(ENCRYPT_LIB_DIRS ${libcrypto_LIBRARY_DIRS})
 endif()
 
+# Add elf
+if(HSHM_USE_ELF)
+    pkg_check_modules(libelf REQUIRED libelf)
+    message(STATUS "found libelf.h at ${libelf_INCLUDE_DIRS}")
+
+    set(ELF_LIBS ${libelf_LIBRARIES})
+    set(ELF_INCLUDES ${libelf_INCLUDE_DIRS})
+    set(ELF_LIB_DIRS ${libelf_LIBRARY_DIRS})
+endif()
+
 # ------------------------------------------------------------------------------
 # GPU Support Functions
 # ------------------------------------------------------------------------------

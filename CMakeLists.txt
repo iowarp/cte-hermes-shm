@@ -174,11 +174,14 @@ target_link_libraries(host_deps INTERFACE
     ${COMPRESS_LIBS}
     ${ENCRYPT_LIBS}
     ${Boost_LIBRARIES}
+    ${ELF_LIBS}
 )
 target_link_directories(host_deps INTERFACE
-    ${COMPRESS_LIB_DIRS} ${ENCRYPT_LIB_DIRS} ${Boost_LIBRARY_DIRS})
+    ${COMPRESS_LIB_DIRS} ${ENCRYPT_LIB_DIRS} ${Boost_LIBRARY_DIRS}
+    ${ELF_LIB_DIRS})
 target_include_directories(host_deps INTERFACE
-    ${COMPRESS_INCLUDES} ${ENCRYPT_INCLUDES} ${Boost_INCLUDE_DIRS})
+    ${COMPRESS_INCLUDES} ${ENCRYPT_INCLUDES} ${Boost_INCLUDE_DIRS}
+    ${ELF_INCLUDES})
 
 if(HSHM_ENABLE_PTHREADS)
     target_link_libraries(host_deps INTERFACE pthread)
