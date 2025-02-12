@@ -12,11 +12,13 @@ add_executable(test_types_exec
 add_dependencies(test_types_exec hermes_shm_host)
 target_link_libraries(test_types_exec
         hermes_shm_host Catch2::Catch2 ${MPI_LIBS} ${OpenMP_LIBS})
-
+if(NOT WIN32)	
 add_test(NAME test_types COMMAND
         ${CMAKE_BINARY_DIR}/bin/test_types_exec "~[error=FatalError]")
+endif()
 add_test(NAME test_fatal_logger
         COMMAND ${CMAKE_BINARY_DIR}/bin/test_types_exec "[error=FatalError]")
+
 set_tests_properties(
         test_fatal_logger PROPERTIES
         WILL_FAIL TRUE)

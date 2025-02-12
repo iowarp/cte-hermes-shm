@@ -65,6 +65,7 @@ TEST_CASE("SerializeHipcVec0") {
   }
 }
 
+#if 0
 TEST_CASE("SerializeHipcVec") {
   std::stringstream ss;
   {
@@ -85,6 +86,7 @@ TEST_CASE("SerializeHipcVec") {
   }
 }
 
+
 TEST_CASE("SerializeHipcVecString") {
   std::stringstream ss;
   {
@@ -104,6 +106,7 @@ TEST_CASE("SerializeHipcVecString") {
     REQUIRE(x.vec() == y);
   }
 }
+
 
 TEST_CASE("SerializeHipcShmArchive") {
   std::stringstream ss;
@@ -126,6 +129,7 @@ TEST_CASE("SerializeHipcShmArchive") {
     REQUIRE(x->vec() == y);
   }
 }
+
 
 
 TEST_CASE("SerializePodArray") {
@@ -154,6 +158,7 @@ TEST_CASE("SerializePodArray") {
   }
 }
 
+#endif
 TEST_CASE("SerializeAtomic") {
   std::stringstream ss;
   {

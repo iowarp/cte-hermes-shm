@@ -1,0 +1,40 @@
+name: mac
+
+on:
+  workflow_dispatch:
+  push:
+    branches: master
+
+jobs:
+  build:
+    name: mac
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: install
+        run: |
+          brew install automake boost catch2 cereal gfortran \
+            libelf libomp libtool llvm open-mpi yaml-cpp
+#      - name: spack
+#        run: bash scripts/ci/install_deps.sh
+      - name: test
+        run: |
+          export OpenMP_ROOT=$(brew --prefix)/opt/libomp
+          ls /opt/homebrew/opt/libomp/lib
+          export PATH="/opt/homebrew/opt/llvm/bin:$PATH"
+          export LDFLAGS="-L/opt/homebrew/opt/llvm/lib -L/opt/homebrew/opt/libomp/lib"
+          export CPPFLAGS="-I/opt/homebrew/opt/llvm/include -I/opt/homebrew/opt/libomp/include"
+          export DYLD_LIBRARY_PATH="/opt/homebrew/opt/libomp/lib:$DYLD_LIBRARY_PATH"
+          export OpenMP_C_FLAGS="-Xclang -fopenmp"
+          export OpenMP_C_LIB_NAMES="omp"
+          export OpenMP_C_INCLUDE_DIR="/opt/homebrew/opt/libomp/include"
+          export OpenMP_C_LIBRARY_DIR="/opt/homebrew/opt/libomp/lib"
+          export OpenMP_CXX_FLAG="-Xclang -fopenmp"
+          export OpenMP_CXX_INCLUDE_DIR="/opt/homebrew/opt/libomp/include"
+          export OpenMP_CXX_LIB_NAMES="libomp"
+          mkdir build
+          cd build
+          cmake -DOpenMP_CXX_FLAG="-Xclang -fopenmp" -DOpenMP_CXX_INCLUDE_DIR=/opt/homebrew/opt/libomp/include -DOpenMP_CXX_LIB_NAMES=libomp -DOpenMP_C_FLAG="-Xclang -fopenmp" -DOpenMP_C_INCLUDE_DIR=/opt/homebrew/opt/libomp/include -DOpenMP_C_LIB_NAMES=libomp -DOpenMP_libomp_LIBRARY=/opt/homebrew/opt/libomp/lib/libomp.dylib -DSITE:STRING="mac-15" -DHSHM_ENABLE_PROCFS_SYSINFO:BOOL=ON ..
+          ctest -T Build
+          sudo make install 
+          ctest -D Experimental

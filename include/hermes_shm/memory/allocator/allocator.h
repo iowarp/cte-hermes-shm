@@ -313,13 +313,14 @@ class BaseAllocator : public CoreAllocT {
   }
 
   /**
-   * Create a globally-unique thread ID
+   * Create a thread-local storage segment. This storage
+   * is unique even across processes.
    * */
   HSHM_CROSS_FUN
   void CreateTls(MemContext &ctx) { CoreAllocT::CreateTls(ctx); }
 
   /**
-   * Free the memory pointed to by \a ptr Pointer
+   * Free a thread-local storage segment.
    * */
   HSHM_CROSS_FUN
   void FreeTls(const MemContext &ctx) { CoreAllocT::FreeTls(ctx); }

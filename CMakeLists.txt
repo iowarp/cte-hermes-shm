@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.25)
 project(hermes_shm LANGUAGES C CXX)
+include(CTest)
 set(CMAKE_CXX_STANDARD 17)
 
 # ------------------------------------------------------------------------------
@@ -50,7 +51,7 @@ if(WIN32)
     set(HSHM_ENABLE_WINDOWS_SYSINFO ON)
     set(HSHM_ENABLE_WINDOWS_THREADS ON)
 else()
-    message(STATUS "Detected non-Windows OS")
+    message(STATUS "Detected UNIX OS")
     set(HSHM_ENABLE_PROCFS_SYSINFO ON)
     set(HSHM_ENABLE_PTHREADS ON)
 endif()
@@ -109,7 +110,7 @@ endif()
 # ------------------------------------------------------------------------------
 
 # set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "MinGW" OR CMAKE_CXX_COMPILER STREQUAL "Intel")
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "^(Apple)?Clang$" OR CMAKE_CXX_COMPILER_ID STREQUAL "MinGW" OR CMAKE_CXX_COMPILER_ID MATCHES "^Intel")
     if(CMAKE_BUILD_TYPE STREQUAL "Debug")
         message("IN DEBUG MODE")
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O0")
@@ -121,7 +122,14 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang
     endif()
 
     set(HSHM_COMPILER_GNU "ON")
-    set(REAL_TIME_FLAGS "-lrt -ldl")
+
+    if(APPLE)
+        set(REAL_TIME_FLAGS "-ldl")
+    elseif(CMAKE_SYSTEM_NAME STREQUAL "OpenBSD")
+        set(REAL_TIME_FLAGS "")
+    else()
+        set(REAL_TIME_FLAGS "-lrt -ldl")
+    endif()
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     if(CMAKE_BUILD_TYPE STREQUAL "Debug")
         message("IN DEBUG MODE")
@@ -236,8 +244,6 @@ endif()
 # Documentation
 # -----------------------------------------------------------------------------
 if(HSHM_ENABLE_DOXYGEN)
-    include(UseDoxygenDoc)
-
     add_doxygen_doc(
         BUILD_DIR
         ${CMAKE_CURRENT_BINARY_DIR}/_build
@@ -316,11 +322,6 @@ configure_file(
 configure_file(
     ${CMAKE_CURRENT_SOURCE_DIR}/CMake/HermesShmCommonConfig.cmake
     ${PROJECT_BINARY_DIR}/CMakeFiles/HermesShmCommonConfig.cmake @ONLY
-)
-
-configure_file(
-    ${CMAKE_CURRENT_SOURCE_DIR}/CMake/UseDoxygenDoc.cmake
-    ${PROJECT_BINARY_DIR}/CMakeFiles/UseDoxygenDoc.cmake @ONLY
 )
 
 install(
