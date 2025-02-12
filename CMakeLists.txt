@@ -122,11 +122,12 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "^(Appl
     endif()
 
     set(HSHM_COMPILER_GNU "ON")
+
     if(APPLE)
         set(REAL_TIME_FLAGS "-ldl")
     elseif(CMAKE_SYSTEM_NAME STREQUAL "OpenBSD")
         set(REAL_TIME_FLAGS "")
-    else()    
+    else()
         set(REAL_TIME_FLAGS "-lrt -ldl")
     endif()
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
@@ -167,7 +168,7 @@ endif()
 # HOST DEPENDENCIES
 add_library(host_deps INTERFACE)
 target_link_libraries(host_deps INTERFACE
-    yaml-cpp::yaml-cpp
+    yaml-cpp
     ${REAL_TIME_FLAGS}
     ${SERIALIZATION_LIBS}
     ${COMPRESS_LIBS}
