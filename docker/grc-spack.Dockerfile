@@ -70,19 +70,25 @@ RUN passwd -d sshuser
 # Copy the host's SSH keys
 # Docker requires COPY be relative to the current working
 # directory. We cannot pass ~/.ssh/id_ed25519 unfortunately...
+ENV SSHDIR="/home/sshuser/.ssh"
 RUN sudo -u sshuser mkdir ${SSHDIR}
 COPY id_ed25519 ${SSHDIR}/id_ed25519
 COPY id_ed25519.pub ${SSHDIR}/id_ed25519.pub
 
 # Authorize host SSH keys
+RUN sudo chown -R sshuser ${SSHDIR}
 RUN sudo -u sshuser touch ${SSHDIR}/authorized_keys
-RUN cat ${SSHDIR}/id_ed25519.pub >> ${SSHDIR}/authorized_keys
 
 # Set SSH permissions
-RUN chmod 700 ${SSHDIR}
-RUN chmod 644 ${SSHDIR}/id_ed25519.pub
-RUN chmod 600 ${SSHDIR}/id_ed25519
-RUN chmod 600 ${SSHDIR}/authorized_keys
+RUN sudo -u sshuser chmod 700 ${SSHDIR}
+RUN sudo -u sshuser chmod 644 ${SSHDIR}/id_ed25519.pub
+RUN sudo -u sshuser chmod 600 ${SSHDIR}/id_ed25519
+
+# Disable host key checking
+RUN echo "Host *" >> ${SSHDIR}/config
+RUN echo "    StrictHostKeyChecking no" >> ${SSHDIR}/config
+RUN sudo chown -R sshuser ${SSHDIR}
+RUN sudo -u sshuser chmod 600 ${SSHDIR}/config
 
 # Enable passwordless SSH
 # Replaces #PermitEmptyPasswords no with PermitEmptyPasswords yes
@@ -92,5 +98,6 @@ RUN sed -i 's/#PermitEmptyPasswords no/PermitEmptyPasswords yes/' /etc/ssh/sshd_
 RUN mkdir /run/sshd
 
 # Start SSHD
-CMD ["/usr/sbin/sshd", "-D"]
+ENTRYPOINT service ssh restart && bash
+
 
