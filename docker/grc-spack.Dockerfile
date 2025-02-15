@@ -57,16 +57,6 @@ RUN echo "source ${SPACK_DIR}/share/spack/setup-env.sh" >> ${HOME}/.bashrc && \
 # SSH Configuration
 #------------------------------------------------------------
 
-# Create a new user
-# -m makes the home directory
-RUN useradd -m sshuser
-
-# Make the user an admin
-RUN usermod -aG sudo sshuser
-
-# Disable password for this user
-RUN passwd -d sshuser
-
 # Copy the host's SSH keys
 # Docker requires COPY be relative to the current working
 # directory. We cannot pass ~/.ssh/id_ed25519 unfortunately...
