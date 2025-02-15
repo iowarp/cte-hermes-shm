@@ -25,8 +25,8 @@ RUN apt install -y \
     coreutils curl environment-modules \
     gfortran git gpg lsb-release python3 \
     python3-venv unzip zip \
-    bash jq gdbserver gdb gh
-COPY module_load.sh ./module_load.sh
+    bash jq gdbserver gdb gh nano
+COPY module_load.sh /module_load.sh
 
 # Setup basic environment
 ENV USER="root"
@@ -47,4 +47,4 @@ RUN git clone https://github.com/grc-iit/grc-repo.git && \
 
 # Update bashrc
 RUN echo "source ${SPACK_DIR}/share/spack/setup-env.sh" >> ${HOME}/.bashrc && \
-    echo "source module_load.sh" >> ${HOME}/.bashrc
+    echo "source /module_load.sh" >> ${HOME}/.bashrc
