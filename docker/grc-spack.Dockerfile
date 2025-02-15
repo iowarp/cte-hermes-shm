@@ -25,8 +25,12 @@ RUN apt install -y \
     coreutils curl environment-modules \
     gfortran git gpg lsb-release python3 \
     python3-venv unzip zip \
-    bash jq gdbserver gdb gh nano
+    bash jq gdbserver gdb gh nano vim
 COPY module_load.sh /module_load.sh
+
+#------------------------------------------------------------
+# Basic Spack Configuration
+#------------------------------------------------------------
 
 # Setup basic environment
 ENV USER="root"
@@ -48,3 +52,45 @@ RUN git clone https://github.com/grc-iit/grc-repo.git && \
 # Update bashrc
 RUN echo "source ${SPACK_DIR}/share/spack/setup-env.sh" >> ${HOME}/.bashrc && \
     echo "source /module_load.sh" >> ${HOME}/.bashrc
+
+#------------------------------------------------------------
+# SSH Configuration
+#------------------------------------------------------------
+
+# Create a new user
+# -m makes the home directory
+RUN useradd -m sshuser
+
+# Make the user an admin
+RUN usermod -aG sudo sshuser
+
+# Disable password for this user
+RUN passwd -d sshuser
+
+# Copy the host's SSH keys
+# Docker requires COPY be relative to the current working
+# directory. We cannot pass ~/.ssh/id_ed25519 unfortunately...
+RUN sudo -u sshuser mkdir ${SSHDIR}
+COPY id_ed25519 ${SSHDIR}/id_ed25519
+COPY id_ed25519.pub ${SSHDIR}/id_ed25519.pub
+
+# Authorize host SSH keys
+RUN sudo -u sshuser touch ${SSHDIR}/authorized_keys
+RUN cat ${SSHDIR}/id_ed25519.pub >> ${SSHDIR}/authorized_keys
+
+# Set SSH permissions
+RUN chmod 700 ${SSHDIR}
+RUN chmod 644 ${SSHDIR}/id_ed25519.pub
+RUN chmod 600 ${SSHDIR}/id_ed25519
+RUN chmod 600 ${SSHDIR}/authorized_keys
+
+# Enable passwordless SSH
+# Replaces #PermitEmptyPasswords no with PermitEmptyPasswords yes
+RUN sed -i 's/#PermitEmptyPasswords no/PermitEmptyPasswords yes/' /etc/ssh/sshd_config
+
+# Create this directory, because sshd doesn't automatically
+RUN mkdir /run/sshd
+
+# Start SSHD
+CMD ["/usr/sbin/sshd", "-D"]
+
