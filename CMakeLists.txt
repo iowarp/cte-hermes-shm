@@ -21,7 +21,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 option(BUILD_SHARED_LIBS "Build shared libraries (.dll/.so) instead of static ones (.lib/.a)" ON)
 option(BUILD_HSHM_TESTS "Build tests" ON)
 option(BUILD_HSHM_BENCHMARKS "Build benchmarks" OFF)
-option(HSHM_ENABLE_CMAKE_DOTENV "Build benchmarks" ON)
+option(HSHM_ENABLE_CMAKE_DOTENV "Build benchmarks" OFF)
 
 option(HSHM_ENABLE_MPI "Enable MPI support" OFF)
 option(HSHM_RPC_THALLIUM "Build tests which depend on thallium" OFF)
