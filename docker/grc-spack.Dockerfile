@@ -70,25 +70,23 @@ RUN passwd -d sshuser
 # Copy the host's SSH keys
 # Docker requires COPY be relative to the current working
 # directory. We cannot pass ~/.ssh/id_ed25519 unfortunately...
-ENV SSHDIR="/home/sshuser/.ssh"
-RUN sudo -u sshuser mkdir ${SSHDIR}
-COPY id_ed25519 ${SSHDIR}/id_ed25519
-COPY id_ed25519.pub ${SSHDIR}/id_ed25519.pub
+RUN mkdir -p ~/.ssh
+RUN ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519 -N ""
 
 # Authorize host SSH keys
-RUN sudo chown -R sshuser ${SSHDIR}
-RUN sudo -u sshuser touch ${SSHDIR}/authorized_keys
+RUN touch ~/.ssh/authorized_keys
+RUN cat ~/.ssh/id_ed25519.pub >> ~/.ssh/authorized_keys
 
 # Set SSH permissions
-RUN sudo -u sshuser chmod 700 ${SSHDIR}
-RUN sudo -u sshuser chmod 644 ${SSHDIR}/id_ed25519.pub
-RUN sudo -u sshuser chmod 600 ${SSHDIR}/id_ed25519
+RUN chmod 700 ~/.ssh
+RUN chmod 644 ~/.ssh/id_ed25519.pub
+RUN chmod 600 ~/.ssh/id_ed25519
+RUN chmod 600 ~/.ssh/authorized_keys
 
 # Disable host key checking
-RUN echo "Host *" >> ${SSHDIR}/config
-RUN echo "    StrictHostKeyChecking no" >> ${SSHDIR}/config
-RUN sudo chown -R sshuser ${SSHDIR}
-RUN sudo -u sshuser chmod 600 ${SSHDIR}/config
+RUN echo "Host *" >> ~/.ssh/config
+RUN echo "    StrictHostKeyChecking no" >> ~/.ssh/config
+RUN chmod 600 ~/.ssh/config
 
 # Enable passwordless SSH
 # Replaces #PermitEmptyPasswords no with PermitEmptyPasswords yes
