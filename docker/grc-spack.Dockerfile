@@ -49,6 +49,11 @@ RUN git clone https://github.com/grc-iit/grc-repo.git && \
     . "${SPACK_DIR}/share/spack/setup-env.sh" && \
     spack repo add grc-repo
 
+# Download IOWARP
+RUN git clone https://github.com/iowarp/iowarp-install.git && \
+    . "${SPACK_DIR}/share/spack/setup-env.sh" && \
+    spack repo add iowarp-install/iowarp-spack
+
 # Update bashrc
 RUN echo "source ${SPACK_DIR}/share/spack/setup-env.sh" >> ${HOME}/.bashrc && \
     echo "source /module_load.sh" >> ${HOME}/.bashrc
