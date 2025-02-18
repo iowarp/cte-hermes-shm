@@ -162,7 +162,7 @@ endif()
 # HOST DEPENDENCIES
 add_library(host_deps INTERFACE)
 target_link_libraries(host_deps INTERFACE
-    yaml-cpp::yaml-cpp
+    ${YAML_CPP_LIBRARIES}
     ${REAL_TIME_FLAGS}
     ${SERIALIZATION_LIBS}
     ${COMPRESS_LIBS}
@@ -172,10 +172,10 @@ target_link_libraries(host_deps INTERFACE
 )
 target_link_directories(host_deps INTERFACE
     ${COMPRESS_LIB_DIRS} ${ENCRYPT_LIB_DIRS} ${Boost_LIBRARY_DIRS}
-    ${ELF_LIB_DIRS})
+    ${ELF_LIB_DIRS} ${YAML_CPP_LIBRARY_DIR})
 target_include_directories(host_deps INTERFACE
     ${COMPRESS_INCLUDES} ${ENCRYPT_INCLUDES} ${Boost_INCLUDE_DIRS}
-    ${ELF_INCLUDES})
+    ${ELF_INCLUDES} ${YAML_CPP_INCLUDE_DIR})
 
 if(HSHM_ENABLE_PTHREADS)
     target_link_libraries(host_deps INTERFACE pthread)
