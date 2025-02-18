@@ -9,8 +9,8 @@ set(CMAKE_CXX_STANDARD 17)
 set(HSHM_SHM_VERSION_MAJOR 2)
 set(HSHM_SHM_VERSION_MINOR 0)
 set(HSHM_SHM_VERSION_PATCH 0)
-set(HSHM_SHM_ROOT ${CMAKE_CURRENT_SOURCE_DIR})
-include_directories(${HSHM_SHM_ROOT}/include)
+set(HSHM_ROOT ${CMAKE_CURRENT_SOURCE_DIR})
+include_directories(${HSHM_ROOT}/include)
 include_directories(${PROJECT_BINARY_DIR}/include)
 add_compile_definitions(_CRT_SECURE_NO_DEPRECATE)
 
@@ -53,7 +53,7 @@ endif()
 if(HSHM_NO_COMPILE)
     install(
         FILES
-        ${CMAKE_SOURCE_DIR}/include/hermes_shm/constants/settings.h_templ
+        ${HSHM_ROOT}/include/hermes_shm/constants/settings.h_templ
         DESTINATION
         ${CMAKE_INSTALL_PREFIX}/include/hermes_shm/constants/
     )
@@ -278,14 +278,14 @@ endif()
 add_subdirectory(src)
 
 if(NOT IS_HSHM_MAIN)
-    add_custom_target(lint COMMAND bash ${HSHM_SHM_ROOT}/scripts/lint.sh ${HSHM_SHM_ROOT})
-    add_custom_target(preamble COMMAND python3 ${HSHM_SHM_ROOT}/scripts/preamble.py ${HSHM_SHM_ROOT})
+    add_custom_target(lint COMMAND bash ${HSHM_ROOT}/scripts/lint.sh ${HSHM_ROOT})
+    add_custom_target(preamble COMMAND python3 ${HSHM_ROOT}/scripts/preamble.py ${HSHM_ROOT})
 endif()
 
 # ------------------------------------------------------------------------------
 # Build tests + benchmarks
 # ------------------------------------------------------------------------------
-set(TEST_MAIN ${HSHM_SHM_ROOT}/test/unit)
+set(TEST_MAIN ${HSHM_ROOT}/test/unit)
 enable_testing()
 
 if(BUILD_HSHM_TESTS)
@@ -335,4 +335,4 @@ install(EXPORT ${HSHM_EXPORTED_TARGETS}
     DESTINATION cmake
 )
 
-jarvis_repo_add("${CMAKE_SOURCE_DIR}/test/jarvis_hshm" "")
+jarvis_repo_add("${HSHM_ROOT}/test/jarvis_hshm" "")
