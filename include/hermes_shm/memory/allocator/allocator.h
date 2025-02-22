@@ -161,7 +161,9 @@ class Allocator {
    * */
   template <typename T = void>
   HSHM_INLINE_CROSS_FUN bool ContainsPtr(T *ptr) {
-    return reinterpret_cast<size_t>(ptr) >= reinterpret_cast<size_t>(buffer_);
+    return reinterpret_cast<size_t>(buffer_) <= reinterpret_cast<size_t>(ptr) &&
+           reinterpret_cast<size_t>(ptr) <
+               reinterpret_cast<size_t>(buffer_) + buffer_size_;
   }
 
   /** Print */
