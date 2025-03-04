@@ -246,10 +246,6 @@ class MemoryManager {
   }
 };
 
-class MemoryManagerGpu {
- public:
-};
-
 }  // namespace hshm::ipc
 
 #endif  // HSHM_SHM_INCLUDE_HSHM_SHM_MEMORY_MEMORY_MANAGER__H_

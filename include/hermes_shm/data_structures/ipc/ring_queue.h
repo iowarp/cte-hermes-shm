@@ -10,13 +10,13 @@
 #include "hermes_shm/thread/lock.h"
 #include "hermes_shm/types/qtok.h"
 #include "pair.h"
+#include "ring_queue_flags.h"
 #include "vector.h"
 
 namespace hshm::ipc {
 
 /** Forward declaration of ring_queue_base */
-template <typename T, bool IsPushAtomic, bool IsPopAtomic, bool HasFixedReqs,
-          HSHM_CLASS_TEMPL_WITH_DEFAULTS>
+template <typename T, RingQueueFlag RQ_FLAGS, HSHM_CLASS_TEMPL_WITH_DEFAULTS>
 class ring_queue_base;
 
 /**
@@ -24,22 +24,20 @@ class ring_queue_base;
  * Used as inputs to the HIPC_CONTAINER_TEMPLATE
  * */
 #define CLASS_NAME ring_queue_base
-#define CLASS_NEW_ARGS T, IsPushAtomic, IsPopAtomic, HasFixedReqs
+#define CLASS_NEW_ARGS T, RQ_FLAGS
 
 /**
  * A queue optimized for multiple producers (emplace) with a single
  * consumer (pop).
  * @param T The type of the data to store in the queue
- * @param IsPushAtomic If true, the push operation is atomic (thread-safe)
- * @param IsPopAtomic If true, the pop operation is atomic (thread-safe)
- * @param HasFixedReqs If true, the queue is guaranteed to push/pop a fixed
+ * @param RQ_FLAGS Configuration flags
  * number of requests.
  * */
-template <typename T, bool IsPushAtomic, bool IsPopAtomic, bool HasFixedReqs,
-          HSHM_CLASS_TEMPL>
+template <typename T, RingQueueFlag RQ_FLAGS, HSHM_CLASS_TEMPL>
 class ring_queue_base : public ShmContainer {
  public:
   HIPC_CONTAINER_TEMPLATE((CLASS_NAME), (CLASS_NEW_ARGS))
+  RING_QUEUE_DEFS
 
  public:
   /**====================================
@@ -381,16 +379,6 @@ class ring_queue_base : public ShmContainer {
   HSHM_INLINE_CROSS_FUN
   size_t Size() { return GetSize(); }
 };
-
-// bool IsPushAtomic,
-// bool IsPopAtomic,
-// bool HasFixedReqs,
-#define RING_BUFFER_FLAGS bool IsPushAtomic, bool IsPopAtomic, bool HasFixedReqs
-#define RING_BUFFER_FLAGS_ARGS IsPushAtomic, IsPopAtomic, HasFixedReqs
-#define RING_BUFFER_MPSC_FLAGS true, false, false
-#define RING_BUFFER_SPSC_FLAGS false, false, false
-#define RING_BUFFER_FIXED_SPSC_FLAGS false, false, true
-#define RING_BUFFER_FIXED_MPMC_FLAGS true, true, true
 
 template <typename T, HSHM_CLASS_TEMPL_WITH_DEFAULTS>
 using mpsc_queue =

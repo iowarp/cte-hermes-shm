@@ -16,11 +16,11 @@ namespace hshm::ipc {
  * Stores a set of numeric keys and their value. Keys can be reused.
  * Programs must store the keys themselves.
  */
-template <typename T, RING_BUFFER_FLAGS, HSHM_CLASS_TEMPL_WITH_DEFAULTS>
+template <typename T, RingQueueFlag RQ_FLAGS, HSHM_CLASS_TEMPL_WITH_DEFAULTS>
 class key_set_templ : public ShmContainer {
  public:
-  hipc::ring_queue_base<size_t, RING_BUFFER_FLAGS_ARGS, HSHM_CLASS_TEMPL_ARGS>
-      keys_;
+  RING_QUEUE_DEFS
+  hipc::ring_queue_base<size_t, RQ_FLAGS, HSHM_CLASS_TEMPL_ARGS> keys_;
   hipc::vector<T, HSHM_CLASS_TEMPL_ARGS> set_;
   size_t heap_;
   size_t max_size_;
