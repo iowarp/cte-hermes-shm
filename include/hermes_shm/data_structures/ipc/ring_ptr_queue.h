@@ -201,21 +201,19 @@ class ring_ptr_queue_base : public ShmContainer {
     vector_t &queue = (*queue_);
 
     // Check if there's space in the queue.
-    if constexpr (IsPushAtomic) {
-      if constexpr (!HasFixedReqs) {
-        size_t size = tail - head + 1;
-        if (size > queue.size()) {
-          while (true) {
-            head = head_.load();
-            size = tail - head + 1;
-            if (size <= GetDepth()) {
-              break;
-            }
-            HSHM_THREAD_MODEL->Yield();
+    if constexpr (WaitForSpace) {
+      size_t size = tail - head + 1;
+      if (size > queue.size()) {
+        while (true) {
+          head = head_.load();
+          size = tail - head + 1;
+          if (size <= GetDepth()) {
+            break;
           }
+          HSHM_THREAD_MODEL->Yield();
         }
       }
-    } else {
+    } else if constexpr (ErrorOnNoSpace) {
       size_t size = tail - head + 1;
       if (size > queue.size()) {
         tail_.fetch_sub(1);
