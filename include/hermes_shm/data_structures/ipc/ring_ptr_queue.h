@@ -401,6 +401,16 @@ template <typename T, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
 using fixed_mpsc_ptr_queue =
     ring_ptr_queue_base<T, RING_BUFFER_FIXED_MPMC_FLAGS, HSHM_CLASS_TEMPL_ARGS>;
 
+template <typename T, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
+using circular_spsc_ptr_queue =
+    ring_ptr_queue_base<T, RING_BUFFER_CIRCULAR_SPSC_FLAGS,
+                        HSHM_CLASS_TEMPL_ARGS>;
+
+template <typename T, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
+using circular_mpsc_ptr_queue =
+    ring_ptr_queue_base<T, RING_BUFFER_CIRCULAR_MPMC_FLAGS,
+                        HSHM_CLASS_TEMPL_ARGS>;
+
 }  // namespace hshm::ipc
 
 namespace hshm {
@@ -421,6 +431,16 @@ using fixed_spsc_ptr_queue =
 template <typename T, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
 using fixed_mpsc_ptr_queue =
     hipc::ring_ptr_queue_base<T, RING_BUFFER_FIXED_MPMC_FLAGS,
+                              HSHM_CLASS_TEMPL_ARGS>;
+
+template <typename T, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
+using circular_spsc_ptr_queue =
+    hipc::ring_ptr_queue_base<T, RING_BUFFER_CIRCULAR_SPSC_FLAGS,
+                              HSHM_CLASS_TEMPL_ARGS>;
+
+template <typename T, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
+using circular_mpsc_ptr_queue =
+    hipc::ring_ptr_queue_base<T, RING_BUFFER_CIRCULAR_MPMC_FLAGS,
                               HSHM_CLASS_TEMPL_ARGS>;
 
 }  // namespace hshm

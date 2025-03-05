@@ -37,8 +37,11 @@ using hshm::ipc::RqFlag;
 #define RING_BUFFER_MPSC_FLAGS \
   RqFlag::kPushAtomic | RqFlag::kPopAtomic | RqFlag::kWaitForSpace
 #define RING_BUFFER_SPSC_FLAGS RqFlag::kWaitForSpace
-#define RING_BUFFER_FIXED_SPSC_FLAGS 0
-#define RING_BUFFER_FIXED_MPMC_FLAGS RqFlag::kPushAtomic | RqFlag::kPopAtomic
+#define RING_BUFFER_FIXED_SPSC_FLAGS RqFlag::kErrorOnNoSpace
+#define RING_BUFFER_FIXED_MPMC_FLAGS \
+  RqFlag::kPushAtomic | RqFlag::kPopAtomic | RqFlag::kErrorOnNoSpace
+#define RING_BUFFER_CIRCULAR_SPSC_FLAGS 0
+#define RING_BUFFER_CIRCULAR_MPMC_FLAGS RqFlag::kPushAtomic | RqFlag::kPopAtomic
 
 #define RING_QUEUE_DEFS                                                    \
   CLS_CONST RingQueueFlag IsPopAtomic = RQ_FLAGS & RqFlag::kPopAtomic;     \
