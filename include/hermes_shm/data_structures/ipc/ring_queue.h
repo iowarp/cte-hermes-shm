@@ -312,46 +312,49 @@ class ring_queue_base : public ShmContainer {
     }
   }
 
-  /** Consumer peeks an object */
+  /** Consumer peeks an object pair by qtoken */
   HSHM_CROSS_FUN
-  qtok_t peek(T *&val, int off = 0) {
-    // Don't pop if there's no entries
-    qtok_id head = head_.load() + off;
+  qtok_t peek(pair_t *&entry, const qtok_t &tok) {
     qtok_id tail = tail_.load();
-    if (head >= tail) {
+    if (tok.IsNull() || tok.id_ >= tail) {
       return qtok_t::GetNull();
     }
 
     // Pop the element, but only if it's marked valid
-    qtok_id idx = (head) % (*queue_).size();
-    pair_t &entry = (*queue_)[idx];
-    if (entry.GetFirst().Any(1)) {
-      val = &entry.GetSecond();
-      return qtok_t(head);
+    qtok_id idx = tok.id_ % (*queue_).size();
+    entry = &(*queue_)[idx];
+    if (entry->GetFirst().Any(1)) {
+      return tok;
     } else {
       return qtok_t::GetNull();
     }
   }
 
+  /** Consumer peeks an object by qtoken */
+  HSHM_CROSS_FUN
+  qtok_t peek(T *&val, const qtok_t &tok) {
+    // Don't pop if there's no entries
+    pair_t *entry;
+    qtok_t test = peek(entry, tok);
+    if (test.IsNull()) {
+      return test;
+    }
+    val = &entry->GetSecond();
+    return test;
+  }
+
   /** Consumer peeks an object */
   HSHM_CROSS_FUN
-  qtok_t peek(pair_t *&val, int off = 0) {
-    // Don't pop if there's no entries
-    qtok_id head = head_.load() + off;
-    qtok_id tail = tail_.load();
-    if (head >= tail) {
-      return qtok_t::GetNull();
-    }
+  qtok_t peek(T *&val, int off = 0) {
+    qtok_t tok(head_.load() + off);
+    return peek(val, tok);
+  }
 
-    // Pop the element, but only if it's marked valid
-    qtok_id idx = (head) % (*queue_).size();
-    pair_t &entry = (*queue_)[idx];
-    if (entry.GetFirst().Any(1)) {
-      val = &entry;
-      return qtok_t(head);
-    } else {
-      return qtok_t::GetNull();
-    }
+  /** Consumer peeks an object pair */
+  HSHM_CROSS_FUN
+  qtok_t peek(pair_t *&val, int off = 0) {
+    qtok_t tok(head_.load() + off);
+    return peek(val, tok);
   }
 
   /** Get queue depth */
