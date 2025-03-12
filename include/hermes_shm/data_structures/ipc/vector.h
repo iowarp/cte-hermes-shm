@@ -514,6 +514,14 @@ class vector : public ShmContainer {
     ++length_;
   }
 
+  /** Assign elements to vector using iterator */
+  template <typename Iterator>
+  HSHM_INLINE_CROSS_FUN void assign(Iterator first, Iterator last) {
+    for (auto iter = first; iter != last; ++iter) {
+      emplace_back(*iter);
+    }
+  }
+
   /** Construct an element in the front of the vector */
   template <typename... Args>
   HSHM_INLINE_CROSS_FUN void emplace_front(Args &&...args) {

@@ -363,6 +363,14 @@ class list : public ShmContainer {
     emplace(end(), std::forward<Args>(args)...);
   }
 
+  /** Assign elements to vector using iterator */
+  template <typename Iterator>
+  HSHM_INLINE_CROSS_FUN void assign(Iterator first, Iterator last) {
+    for (auto iter = first; iter != last; ++iter) {
+      emplace_back(*iter);
+    }
+  }
+
   /** Construct an element at the beginning of the list */
   template <typename... Args>
   HSHM_CROSS_FUN void emplace_front(Args &&...args) {
