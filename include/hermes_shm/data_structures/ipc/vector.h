@@ -522,6 +522,15 @@ class vector : public ShmContainer {
     }
   }
 
+  /** Assign elements to vector using iterator up to maximum size */
+  template <typename Iterator>
+  HSHM_INLINE_CROSS_FUN void assign(Iterator first, Iterator last,
+                                    int max_count) {
+    for (auto iter = first; iter != last && size() < max_count; ++iter) {
+      emplace_back(*iter);
+    }
+  }
+
   /** Construct an element in the front of the vector */
   template <typename... Args>
   HSHM_INLINE_CROSS_FUN void emplace_front(Args &&...args) {
