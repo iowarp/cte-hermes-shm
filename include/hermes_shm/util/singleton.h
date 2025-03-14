@@ -146,41 +146,61 @@ using GlobalCrossSingleton = LockfreeCrossSingleton<T>;
 /**
  * C-style singleton with global variables
  */
-#ifdef HSHM_IS_HOST
 #define HSHM_DEFINE_GLOBAL_VAR_H(T, NAME) extern __TU(T) NAME;
 #define HSHM_DEFINE_GLOBAL_VAR_CC(T, NAME) __TU(T) NAME;
+template <typename T>
+static inline T *GetGlobalVar(T &instance) {
+  return &instance;
+}
+
+/**
+ * Cross-device C-style singleton with global variables
+ */
+#ifdef HSHM_IS_HOST
+#define HSHM_DEFINE_GLOBAL_CROSS_VAR_H(T, NAME) extern __TU(T) NAME;
+#define HSHM_DEFINE_GLOBAL_CROSS_VAR_CC(T, NAME) __TU(T) NAME;
 #else
-#define HSHM_DEFINE_GLOBAL_VAR_H(T, NAME) extern HSHM_GPU_FUN __TU(T) NAME;
-#define HSHM_DEFINE_GLOBAL_VAR_CC(T, NAME) HSHM_GPU_FUN __TU(T) NAME;
+#define HSHM_DEFINE_GLOBAL_CROSS_VAR_H(T, NAME) \
+  extern HSHM_GPU_FUN __TU(T) NAME;
+#define HSHM_DEFINE_GLOBAL_CROSS_VAR_CC(T, NAME) HSHM_GPU_FUN __TU(T) NAME;
 #endif
+template <typename T>
+HSHM_CROSS_FUN static inline T *GetGlobalCrossVar(T &instance) {
+  return &instance;
+}
 
 /**
  * C-style pointer singleton with global variables
  */
-#ifdef HSHM_IS_HOST
 #define HSHM_DEFINE_GLOBAL_PTR_VAR_H(T, NAME) extern __TU(T) * NAME;
 #define HSHM_DEFINE_GLOBAL_PTR_VAR_CC(T, NAME) __TU(T) * NAME;
-HSHM_HOST_FUN
 template <typename T>
-static inline T *GetSingletonInstance(T *&instance) {
+static inline T *GetGlobalPtrVar(T *&instance) {
   if (instance == nullptr) {
     instance = new T();
   }
   return instance;
 }
+
+/**
+ * Cross-device C-style pointer singleton with global variables
+ */
+#ifdef HSHM_IS_HOST
+#define HSHM_DEFINE_GLOBAL_CROSS_PTR_VAR_H(T, NAME) extern __TU(T) * NAME;
+#define HSHM_DEFINE_GLOBAL_CROSS_PTR_VAR_CC(T, NAME) __TU(T) * NAME;
 #else
-#define HSHM_DEFINE_GLOBAL_PTR_VAR_H(T, NAME) \
+#define HSHM_DEFINE_GLOBAL_CROSS_PTR_VAR_H(T, NAME) \
   extern HSHM_GPU_FUN __TU(T) * NAME;
-#define HSHM_DEFINE_GLOBAL_PTR_VAR_CC(T, NAME) HSHM_GPU_FUN __TU(T) * NAME;
-HSHM_GPU_FUN
+#define HSHM_DEFINE_GLOBAL_CROSS_PTR_VAR_CC(T, NAME) \
+  HSHM_GPU_FUN __TU(T) * NAME;
+#endif
 template <typename T>
-static inline T *GetSingletonInstance(T *&instance) {
+HSHM_CROSS_FUN static inline T *GetGlobalCrossPtrVar(T *&instance) {
   if (instance == nullptr) {
     instance = new T();
   }
   return instance;
 }
-#endif
 
 }  // namespace hshm
 
