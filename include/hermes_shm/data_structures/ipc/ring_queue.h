@@ -230,6 +230,11 @@ class ring_queue_base : public ShmContainer {
         tail_.fetch_sub(1);
         return qtok_t::GetNull();
       }
+    } else if constexpr (DynamicSize) {
+      size_t size = tail - head + 1;
+      if (size > queue.size()) {
+        resize(queue.size() * 2);
+      }
     }
 
     // Emplace into queue at our slot
@@ -412,6 +417,10 @@ template <typename T, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
 using circular_mpsc_queue =
     ring_queue_base<T, RING_BUFFER_CIRCULAR_MPMC_FLAGS, HSHM_CLASS_TEMPL_ARGS>;
 
+template <typename T, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
+using ext_ring_buffer =
+    ring_queue_base<T, RING_BUFFER_EXTENSIBLE_FLAGS, HSHM_CLASS_TEMPL_ARGS>;
+
 }  // namespace hshm::ipc
 
 namespace hshm {
@@ -441,6 +450,10 @@ template <typename T, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
 using circular_mpsc_queue =
     hipc::ring_queue_base<T, RING_BUFFER_CIRCULAR_MPMC_FLAGS,
                           HSHM_CLASS_TEMPL_ARGS>;
+
+template <typename T, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
+using ext_ring_buffer = hipc::ring_queue_base<T, RING_BUFFER_EXTENSIBLE_FLAGS,
+                                              HSHM_CLASS_TEMPL_ARGS>;
 
 }  // namespace hshm
 

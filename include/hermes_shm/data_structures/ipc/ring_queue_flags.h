@@ -20,6 +20,8 @@ class RqFlag {
   CLS_CONST RingQueueFlag kWaitForSpace = BIT_OPT(RingQueueFlag, 3);
   /** If out of space, return null qtoken indicating error */
   CLS_CONST RingQueueFlag kErrorOnNoSpace = BIT_OPT(RingQueueFlag, 4);
+  /** Queue supports dynamic resizing */
+  CLS_CONST RingQueueFlag kDynamicResize = BIT_OPT(RingQueueFlag, 5);
 };
 
 }  // namespace hshm::ipc
@@ -42,6 +44,7 @@ using hshm::ipc::RqFlag;
   RqFlag::kPushAtomic | RqFlag::kPopAtomic | RqFlag::kErrorOnNoSpace
 #define RING_BUFFER_CIRCULAR_SPSC_FLAGS 0
 #define RING_BUFFER_CIRCULAR_MPMC_FLAGS RqFlag::kPushAtomic | RqFlag::kPopAtomic
+#define RING_BUFFER_EXTENSIBLE_FLAGS RqFlag::kDynamicResize
 
 #define RING_QUEUE_DEFS                                                        \
   CLS_CONST RingQueueFlag IsPopAtomic = (RQ_FLAGS & RqFlag::kPopAtomic) > 0;   \
@@ -50,7 +53,6 @@ using hshm::ipc::RqFlag;
       (RQ_FLAGS & RqFlag::kWaitForSpace) > 0;                                  \
   CLS_CONST RingQueueFlag ErrorOnNoSpace =                                     \
       (RQ_FLAGS & RqFlag::kErrorOnNoSpace) > 0;                                \
-  CLS_CONST RingQueueFlag RigidSize =                                          \
-      (RQ_FLAGS & (RqFlag::kWaitForSpace | RqFlag::kErrorOnNoSpace)) > 0;
+  CLS_CONST RingQueueFlag DynamicSize = (RQ_FLAGS & RqFlag::kDynamicResize) > 0;
 
 #endif  // HSHM_SHM_INCLUDE_HSHM_SHM_DATA_STRUCTURES_IPC_RING_QUEUE_FLAGS_H_

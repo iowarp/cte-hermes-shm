@@ -71,6 +71,8 @@
   using circular_mpsc_queue = HSHM_NS::circular_mpsc_queue<T, ALLOC_T>;      \
   template <typename T>                                                      \
   using circular_spsc_queue = HSHM_NS::circular_spsc_queue<T, ALLOC_T>;      \
+  template <typename T>                                                      \
+  using ext_ring_buffer = HSHM_NS::ext_ring_buffer<T, ALLOC_T>;              \
                                                                              \
   template <typename T>                                                      \
   using spsc_ptr_queue = HSHM_NS::spsc_ptr_queue<T, ALLOC_T>;                \
@@ -84,7 +86,9 @@
   using circular_mpsc_ptr_queue =                                            \
       HSHM_NS::circular_mpsc_ptr_queue<T, ALLOC_T>;                          \
   template <typename T>                                                      \
-  using circular_spsc_queue = HSHM_NS::circular_spsc_queue<T, ALLOC_T>;      \
+  using circular_spsc_ptr_queue = HSHM_NS::circular_spsc_queue<T, ALLOC_T>;  \
+  template <typename T>                                                      \
+  using ext_ptr_ring_buffer = HSHM_NS::ext_ring_buffer<T, ALLOC_T>;          \
                                                                              \
   template <typename T>                                                      \
   using slist = HSHM_NS::slist<T, ALLOC_T>;                                  \
