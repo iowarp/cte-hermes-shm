@@ -49,6 +49,8 @@ using hshm::ipc::RqFlag;
   CLS_CONST RingQueueFlag WaitForSpace =                                       \
       (RQ_FLAGS & RqFlag::kWaitForSpace) > 0;                                  \
   CLS_CONST RingQueueFlag ErrorOnNoSpace =                                     \
-      (RQ_FLAGS & RqFlag::kErrorOnNoSpace) > 0;
+      (RQ_FLAGS & RqFlag::kErrorOnNoSpace) > 0;                                \
+  CLS_CONST RingQueueFlag RigidSize =                                          \
+      (RQ_FLAGS & (RqFlag::kWaitForSpace | RqFlag::kErrorOnNoSpace)) > 0;
 
 #endif  // HSHM_SHM_INCLUDE_HSHM_SHM_DATA_STRUCTURES_IPC_RING_QUEUE_FLAGS_H_

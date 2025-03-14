@@ -189,7 +189,14 @@ class ring_queue_base : public ShmContainer {
 
   /** Resize */
   HSHM_CROSS_FUN
-  void resize(size_t new_depth) { queue_->resize(new_depth); }
+  void resize(size_t new_depth) {
+    ring_queue_base new_queue(GetCtxAllocator(), new_depth);
+    T val;
+    while (!pop(val).IsNull()) {
+      new_queue.push(val);
+    }
+    (*this) = std::move(new_queue);
+  }
 
   /** Resize (wrapper) */
   HSHM_INLINE_CROSS_FUN
