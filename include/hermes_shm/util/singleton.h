@@ -137,20 +137,49 @@ T GlobalSingleton<T>::obj_;
  * */
 #ifdef HSHM_IS_HOST
 template <typename T>
-class GlobalCrossSingleton {
- private:
-  static T obj_;
-
- public:
-  GlobalCrossSingleton() = default;
-
-  static T *GetInstance() { return &obj_; }
-};
-template <typename T>
-T GlobalCrossSingleton<T>::obj_;
+using GlobalCrossSingleton = GlobalSingleton<T>;
 #else
 template <typename T>
 using GlobalCrossSingleton = LockfreeCrossSingleton<T>;
+#endif
+
+/**
+ * C-style singleton with global variables
+ */
+#ifdef HSHM_IS_HOST
+#define HSHM_DEFINE_GLOBAL_VAR_H(T, NAME) extern __TU(T) NAME;
+#define HSHM_DEFINE_GLOBAL_VAR_CC(T, NAME) __TU(T) NAME;
+#else
+#define HSHM_DEFINE_GLOBAL_VAR_H(T, NAME) extern HSHM_GPU_FUN __TU(T) NAME;
+#define HSHM_DEFINE_GLOBAL_VAR_CC(T, NAME) HSHM_GPU_FUN __TU(T) NAME;
+#endif
+
+/**
+ * C-style pointer singleton with global variables
+ */
+#ifdef HSHM_IS_HOST
+#define HSHM_DEFINE_GLOBAL_PTR_VAR_H(T, NAME) extern __TU(T) * NAME;
+#define HSHM_DEFINE_GLOBAL_PTR_VAR_CC(T, NAME) __TU(T) * NAME;
+HSHM_HOST_FUN
+template <typename T>
+static inline T *GetSingletonInstance(T *&instance) {
+  if (instance == nullptr) {
+    instance = new T();
+  }
+  return instance;
+}
+#else
+#define HSHM_DEFINE_GLOBAL_PTR_VAR_H(T, NAME) \
+  extern HSHM_GPU_FUN __TU(T) * NAME;
+#define HSHM_DEFINE_GLOBAL_PTR_VAR_CC(T, NAME) HSHM_GPU_FUN __TU(T) * NAME;
+HSHM_GPU_FUN
+template <typename T>
+static inline T *GetSingletonInstance(T *&instance) {
+  if (instance == nullptr) {
+    instance = new T();
+  }
+  return instance;
+}
 #endif
 
 }  // namespace hshm

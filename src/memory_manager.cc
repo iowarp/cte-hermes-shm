@@ -241,6 +241,8 @@ Allocator *MemoryManager::RegisterAllocator(Allocator *alloc, bool do_scan) {
   return alloc;
 }
 
+HSHM_DEFINE_GLOBAL_VAR_CC(hshm::ipc::MemoryManager, hshmMemoryManager);
+
 }  // namespace hshm::ipc
 
 // TODO(llogan): Fix. A hack for HIP compiler to function

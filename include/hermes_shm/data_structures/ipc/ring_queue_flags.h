@@ -43,10 +43,12 @@ using hshm::ipc::RqFlag;
 #define RING_BUFFER_CIRCULAR_SPSC_FLAGS 0
 #define RING_BUFFER_CIRCULAR_MPMC_FLAGS RqFlag::kPushAtomic | RqFlag::kPopAtomic
 
-#define RING_QUEUE_DEFS                                                    \
-  CLS_CONST RingQueueFlag IsPopAtomic = RQ_FLAGS & RqFlag::kPopAtomic;     \
-  CLS_CONST RingQueueFlag IsPushAtomic = RQ_FLAGS & RqFlag::kPushAtomic;   \
-  CLS_CONST RingQueueFlag WaitForSpace = RQ_FLAGS & RqFlag::kWaitForSpace; \
-  CLS_CONST RingQueueFlag ErrorOnNoSpace = RQ_FLAGS & RqFlag::kErrorOnNoSpace;
+#define RING_QUEUE_DEFS                                                        \
+  CLS_CONST RingQueueFlag IsPopAtomic = (RQ_FLAGS & RqFlag::kPopAtomic) > 0;   \
+  CLS_CONST RingQueueFlag IsPushAtomic = (RQ_FLAGS & RqFlag::kPushAtomic) > 0; \
+  CLS_CONST RingQueueFlag WaitForSpace =                                       \
+      (RQ_FLAGS & RqFlag::kWaitForSpace) > 0;                                  \
+  CLS_CONST RingQueueFlag ErrorOnNoSpace =                                     \
+      (RQ_FLAGS & RqFlag::kErrorOnNoSpace) > 0;
 
 #endif  // HSHM_SHM_INCLUDE_HSHM_SHM_DATA_STRUCTURES_IPC_RING_QUEUE_FLAGS_H_

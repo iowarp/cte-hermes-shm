@@ -11,11 +11,6 @@
 #include "hermes_shm/types/numbers.h"
 #include "hermes_shm/util/singleton.h"
 
-/** Singleton declaration */
-#define HSHM_MEMORY_MANAGER \
-  hshm::GlobalCrossSingleton<hshm::ipc::MemoryManager>::GetInstance()
-#define HSHM_MEMORY_MANAGER_T hshm::ipc::MemoryManager *
-
 namespace hshm::ipc {
 
 /** Max # of allocator the mem mngr can hold */
@@ -245,6 +240,11 @@ class MemoryManager {
     return Pointer::GetNull();
   }
 };
+
+/** Singleton declaration */
+HSHM_DEFINE_GLOBAL_VAR_H(hshm::ipc::MemoryManager, hshmMemoryManager);
+#define HSHM_MEMORY_MANAGER (&hshm::ipc::hshmMemoryManager)
+#define HSHM_MEMORY_MANAGER_T hshm::ipc::MemoryManager *
 
 }  // namespace hshm::ipc
 
