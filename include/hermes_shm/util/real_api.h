@@ -63,7 +63,8 @@ struct RealApi {
   }
 
   /**
-   * @brief Construct a new RealApi object
+   * @brief Construct a new RealApi object. Scans the shared object for
+   * interceptor with the given symbol name.
    *
    * @param symbol_name A function name or variable to look for in the shared
    * object
@@ -73,6 +74,7 @@ struct RealApi {
   RealApi(const char *symbol_name, const char *intercept_var) {
     symbol_name_ = symbol_name;
     intercept_var_ = intercept_var;
+
     dl_iterate_phdr(callback, (void *)this);
     if (real_lib_path_) {
       real_lib_ = dlopen(real_lib_path_, RTLD_GLOBAL | RTLD_NOW);
@@ -84,6 +86,21 @@ struct RealApi {
     } else {
       interceptor_lib_ = nullptr;
     }
+  }
+
+  /**
+   * @brief Construct a new RealApi object. Uses RTLD_NEXT and RTLD_DEFAULT.
+   *
+   * @param symbol_name A function name or variable to look for in the shared
+   * object
+   * @param intercept_var The name of the variable indicating this is the
+   * interceptor object
+   */
+  RealApi(const char *symbol_name, const char *intercept_var, bool) {
+    symbol_name_ = symbol_name;
+    intercept_var_ = intercept_var;
+    real_lib_ = RTLD_NEXT;
+    interceptor_lib_ = RTLD_DEFAULT;
   }
 };
 

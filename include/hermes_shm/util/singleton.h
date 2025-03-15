@@ -147,7 +147,7 @@ using GlobalCrossSingleton = LockfreeCrossSingleton<T>;
  * C-style singleton with global variables
  */
 #define HSHM_DEFINE_GLOBAL_VAR_H(T, NAME) extern __TU(T) NAME;
-#define HSHM_DEFINE_GLOBAL_VAR_CC(T, NAME) __TU(T) NAME;
+#define HSHM_DEFINE_GLOBAL_VAR_CC(T, NAME) __TU(T) NAME = T{};
 template <typename T>
 static inline T *GetGlobalVar(T &instance) {
   return &instance;
@@ -158,11 +158,12 @@ static inline T *GetGlobalVar(T &instance) {
  */
 #ifdef HSHM_IS_HOST
 #define HSHM_DEFINE_GLOBAL_CROSS_VAR_H(T, NAME) extern __TU(T) NAME;
-#define HSHM_DEFINE_GLOBAL_CROSS_VAR_CC(T, NAME) __TU(T) NAME;
+#define HSHM_DEFINE_GLOBAL_CROSS_VAR_CC(T, NAME) __TU(T) NAME = T{};
 #else
 #define HSHM_DEFINE_GLOBAL_CROSS_VAR_H(T, NAME) \
   extern HSHM_GPU_FUN __TU(T) NAME;
-#define HSHM_DEFINE_GLOBAL_CROSS_VAR_CC(T, NAME) HSHM_GPU_FUN __TU(T) NAME;
+#define HSHM_DEFINE_GLOBAL_CROSS_VAR_CC(T, NAME) \
+  HSHM_GPU_FUN __TU(T) NAME = T{};
 #endif
 template <typename T>
 HSHM_CROSS_FUN static inline T *GetGlobalCrossVar(T &instance) {
@@ -173,7 +174,7 @@ HSHM_CROSS_FUN static inline T *GetGlobalCrossVar(T &instance) {
  * C-style pointer singleton with global variables
  */
 #define HSHM_DEFINE_GLOBAL_PTR_VAR_H(T, NAME) extern __TU(T) * NAME;
-#define HSHM_DEFINE_GLOBAL_PTR_VAR_CC(T, NAME) __TU(T) * NAME;
+#define HSHM_DEFINE_GLOBAL_PTR_VAR_CC(T, NAME) __TU(T) *NAME = nullptr;
 template <typename T>
 static inline T *GetGlobalPtrVar(T *&instance) {
   if (instance == nullptr) {
@@ -187,7 +188,7 @@ static inline T *GetGlobalPtrVar(T *&instance) {
  */
 #ifdef HSHM_IS_HOST
 #define HSHM_DEFINE_GLOBAL_CROSS_PTR_VAR_H(T, NAME) extern __TU(T) * NAME;
-#define HSHM_DEFINE_GLOBAL_CROSS_PTR_VAR_CC(T, NAME) __TU(T) * NAME;
+#define HSHM_DEFINE_GLOBAL_CROSS_PTR_VAR_CC(T, NAME) __TU(T) *NAME = nullptr;
 #else
 #define HSHM_DEFINE_GLOBAL_CROSS_PTR_VAR_H(T, NAME) \
   extern HSHM_GPU_FUN __TU(T) * NAME;

@@ -219,7 +219,8 @@ class MemoryManager {
    * @param ptr the pointer to convert
    * */
   template <typename T, typename POINTER_T = Pointer>
-  HSHM_INLINE_CROSS_FUN POINTER_T Convert(AllocatorId allocator_id, T *ptr) {
+  HSHM_INLINE_CROSS_FUN POINTER_T Convert(AllocatorId allocator_id,
+                                          const T *ptr) {
     return GetAllocator<NullAllocator>(allocator_id)
         ->template Convert<T, POINTER_T>(ptr);
   }

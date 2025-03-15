@@ -78,14 +78,15 @@ HSHM_INLINE_CROSS_FUN LPointer<T, PointerT>::LPointer(const PointerT &shm)
 }
 
 template <typename T, typename PointerT>
-HSHM_INLINE_CROSS_FUN LPointer<T, PointerT>::LPointer(T *ptr) : ptr_(ptr) {
-  shm_ = HSHM_MEMORY_MANAGER->Convert<T, PointerT>(ptr);
+HSHM_INLINE_CROSS_FUN LPointer<T, PointerT>::LPointer(const T *ptr)
+    : ptr_(const_cast<T *>(ptr)) {
+  shm_ = HSHM_MEMORY_MANAGER->Convert<T, PointerT>(ptr_);
 }
 
 template <typename T, typename PointerT>
 HSHM_INLINE_CROSS_FUN LPointer<T, PointerT>::LPointer(hipc::Allocator *alloc,
-                                                      T *ptr)
-    : ptr_(ptr) {
+                                                      const T *ptr)
+    : ptr_(const_cast<T *>(ptr)) {
   shm_ = alloc->Convert<T, PointerT>(ptr);
 }
 

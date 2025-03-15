@@ -160,7 +160,7 @@ class Allocator {
    * @return True or false
    * */
   template <typename T = void>
-  HSHM_INLINE_CROSS_FUN bool ContainsPtr(T *ptr) {
+  HSHM_INLINE_CROSS_FUN bool ContainsPtr(const T *ptr) {
     return reinterpret_cast<size_t>(buffer_) <= reinterpret_cast<size_t>(ptr) &&
            reinterpret_cast<size_t>(ptr) <
                reinterpret_cast<size_t>(buffer_) + buffer_size_;
@@ -1069,7 +1069,7 @@ class BaseAllocator : public CoreAllocT {
    * @return True or false
    * */
   template <typename T = void>
-  HSHM_INLINE_CROSS_FUN bool ContainsPtr(T *ptr) {
+  HSHM_INLINE_CROSS_FUN bool ContainsPtr(const T *ptr) {
     return CoreAllocT::template ContainsPtr<T>(ptr);
   }
 

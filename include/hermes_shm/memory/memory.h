@@ -467,17 +467,17 @@ struct LPointer : public ShmPointer {
   HSHM_INLINE_CROSS_FUN LPointer() = default;
 
   /** Full constructor */
-  HSHM_INLINE_CROSS_FUN LPointer(T *ptr, const PointerT &shm)
-      : ptr_(ptr), shm_(shm) {}
+  HSHM_INLINE_CROSS_FUN LPointer(const T *ptr, const PointerT &shm)
+      : ptr_(const_cast<T *>(ptr)), shm_(shm) {}
 
   /** SHM constructor (in memory_manager.h) */
   HSHM_INLINE_CROSS_FUN explicit LPointer(const PointerT &shm);
 
   /** Private half constructor (in memory_manager.h) */
-  HSHM_INLINE_CROSS_FUN explicit LPointer(T *ptr);
+  HSHM_INLINE_CROSS_FUN explicit LPointer(const T *ptr);
 
   /** Private half + alloc constructor (in memory_manager.h) */
-  HSHM_INLINE_CROSS_FUN explicit LPointer(hipc::Allocator *alloc, T *ptr);
+  HSHM_INLINE_CROSS_FUN explicit LPointer(hipc::Allocator *alloc, const T *ptr);
 
   /** Shared half + alloc constructor (in memory_manager.h) */
   HSHM_INLINE_CROSS_FUN explicit LPointer(hipc::Allocator *alloc,
