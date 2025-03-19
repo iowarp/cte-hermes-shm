@@ -181,11 +181,11 @@ class ConfigParse {
     } else if (suffix[0] == 'm' || suffix[0] == 'M') {
       return hshm::Unit<hshm::u64>::Megabytes(size);
     } else if (suffix[0] == 'g' || suffix[0] == 'G') {
-      return hshm::Unit<hshm::u64>::Terabytes(size);
+      return hshm::Unit<hshm::u64>::Gigabytes(size);
     } else if (suffix[0] == 't' || suffix[0] == 'T') {
       return hshm::Unit<hshm::u64>::Terabytes(size);
     } else if (suffix[0] == 'p' || suffix[0] == 'P') {
-      return hshm::Unit<hshm::u64>::Terabytes(size);
+      return hshm::Unit<hshm::u64>::Petabytes(size);
     } else {
       HELOG(kFatal, "Could not parse the size: {}", size_text);
       exit(1);

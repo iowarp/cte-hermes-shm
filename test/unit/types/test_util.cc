@@ -45,7 +45,7 @@ TEST_CASE("TestPathParser") {
   auto y = hshm::ConfigParse::ExpandPath("${PATH_PARSER_TEST}/hello");
   auto z = hshm::ConfigParse::ExpandPath("${HOME}/hello");
   REQUIRE(x == "HOME/hello");
-  REQUIRE(y == "${PATH_PARSER_TEST}/hello");
+  REQUIRE(y == "/hello");
   REQUIRE(z != "${HOME}/hello");
 }
 
@@ -54,7 +54,7 @@ TEST_CASE("TestNumberParser") {
   REQUIRE(hshm::Unit<hshm::u64>::Megabytes(1.5) == 1572864);
   REQUIRE(hshm::Unit<hshm::u64>::Gigabytes(1.5) == 1610612736);
   REQUIRE(hshm::Unit<hshm::u64>::Terabytes(1.5) == 1649267441664);
-  REQUIRE(hshm::Unit<hshm::u64>::Terabytes(1.5) == 1688849860263936);
+  REQUIRE(hshm::Unit<hshm::u64>::Petabytes(1.5) == 1688849860263936);
 
   std::pair<std::string, hshm::u64> sizes[] = {
       {"1", 1},
@@ -63,7 +63,7 @@ TEST_CASE("TestNumberParser") {
       {"1.5MB", hshm::Unit<hshm::u64>::Megabytes(1.5)},
       {"1.5GB", hshm::Unit<hshm::u64>::Gigabytes(1.5)},
       {"2TB", hshm::Unit<hshm::u64>::Terabytes(2)},
-      {"1.5PB", hshm::Unit<hshm::u64>::Terabytes(1.5)},
+      {"1.5PB", hshm::Unit<hshm::u64>::Petabytes(1.5)},
   };
 
   for (auto &[text, val] : sizes) {

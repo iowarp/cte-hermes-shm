@@ -44,7 +44,7 @@ TEST_CASE("MemoryManager") {
     mem_mngr->CreateBackend<hipc::PosixShmMmap>(
         hipc::MemoryBackendId::Get(0), hshm::Unit<size_t>::Megabytes(100),
         shm_url);
-    mem_mngr->CreateAllocator<hipc::StackAllocator>(
+    mem_mngr->CreateAllocator<HSHM_DEFAULT_ALLOC_T>(
         hipc::MemoryBackendId::Get(0), alloc_id, 0);
     mem_mngr->ScanBackends();
   }
