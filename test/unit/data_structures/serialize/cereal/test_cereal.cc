@@ -10,13 +10,14 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include "basic_test.h"
-#include "test_init.h"
-#include "hermes_shm/data_structures/ipc/string.h"
-#include "hermes_shm/data_structures/all.h"
-#include "cereal/types/vector.hpp"
-#include "cereal/types/string.hpp"
 #include <cereal/types/atomic.hpp>
+
+#include "basic_test.h"
+#include "cereal/types/string.hpp"
+#include "cereal/types/vector.hpp"
+#include "hermes_shm/data_structures/all.h"
+#include "hermes_shm/data_structures/ipc/string.h"
+#include "test_init.h"
 
 TEST_CASE("SerializePod") {
   std::stringstream ss;
@@ -65,7 +66,6 @@ TEST_CASE("SerializeHipcVec0") {
   }
 }
 
-#if 0
 TEST_CASE("SerializeHipcVec") {
   std::stringstream ss;
   {
@@ -86,7 +86,6 @@ TEST_CASE("SerializeHipcVec") {
   }
 }
 
-
 TEST_CASE("SerializeHipcVecString") {
   std::stringstream ss;
   {
@@ -106,7 +105,6 @@ TEST_CASE("SerializeHipcVecString") {
     REQUIRE(x.vec() == y);
   }
 }
-
 
 TEST_CASE("SerializeHipcShmArchive") {
   std::stringstream ss;
@@ -129,8 +127,6 @@ TEST_CASE("SerializeHipcShmArchive") {
     REQUIRE(x->vec() == y);
   }
 }
-
-
 
 TEST_CASE("SerializePodArray") {
   std::stringstream ss;
@@ -158,7 +154,6 @@ TEST_CASE("SerializePodArray") {
   }
 }
 
-#endif
 TEST_CASE("SerializeAtomic") {
   std::stringstream ss;
   {
@@ -171,5 +166,20 @@ TEST_CASE("SerializeAtomic") {
     cereal::BinaryInputArchive ar(ss);
     ar >> x;
     REQUIRE(x == 225);
+  }
+}
+TEST_CASE("SerializeBitfield") {
+  std::stringstream ss;
+  {
+    hshm::ibitfield x;
+    x.SetBits(0x8);
+    cereal::BinaryOutputArchive ar(ss);
+    ar << x;
+  }
+  {
+    hshm::ibitfield x;
+    cereal::BinaryInputArchive ar(ss);
+    ar >> x;
+    REQUIRE(x.bits_ == 0x8);
   }
 }
