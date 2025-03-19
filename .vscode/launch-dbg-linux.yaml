@@ -46,11 +46,11 @@ configurations:
   - macro: debug
     launch-name: test-data-structures
     program: test_data_structure_exec
-    args: ["TestMpscLifoListQueueIntMultithreaded"]
+    args: ["TestMpscQueueMpi"]
   - macro: debug
     launch-name: test-allocators
     program: test_allocator_exec
-    args: ["ScalablePageAllocatorMultithreaded"]
+    args: ["MallocAllocator"]
   - macro: debug
     launch-name: test-rocm
     program: test_memory_rocm_exec

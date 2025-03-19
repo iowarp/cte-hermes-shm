@@ -5,6 +5,9 @@
 #ifndef HSHM_SHM_INCLUDE_HSHM_SHM_MEMORY_MEMORY_MANAGER__H_
 #define HSHM_SHM_INCLUDE_HSHM_SHM_MEMORY_MEMORY_MANAGER__H_
 
+#include <cstddef>
+#include <limits>
+
 #include "allocator/allocator_factory_.h"
 #include "hermes_shm/memory/allocator/allocator.h"
 #include "hermes_shm/memory/backend/posix_mmap.h"
@@ -233,12 +236,28 @@ class MemoryManager {
    * */
   template <typename T, typename POINTER_T = Pointer>
   HSHM_INLINE_CROSS_FUN POINTER_T Convert(T *ptr) {
+    Allocator *best_alloc = FindNearestAllocator(ptr);
+    if (best_alloc) {
+      return best_alloc->template Convert<T, POINTER_T>(ptr);
+    } else {
+      return Pointer::GetNull();
+    }
+  }
+
+  /**
+   * Find the allocator that most closely contains the pointer
+   */
+  template <typename T>
+  HSHM_INLINE_CROSS_FUN Allocator *FindNearestAllocator(T *ptr) {
+    size_t range = std::numeric_limits<size_t>::max();
+    Allocator *best_alloc = nullptr;
     for (auto &alloc : allocators_) {
-      if (alloc && alloc->ContainsPtr(ptr)) {
-        return alloc->template Convert<T, POINTER_T>(ptr);
+      if (alloc && alloc->ContainsPtr(ptr) && alloc->buffer_size_ <= range) {
+        range = alloc->buffer_size_;
+        best_alloc = alloc;
       }
     }
-    return Pointer::GetNull();
+    return best_alloc;
   }
 };
 
