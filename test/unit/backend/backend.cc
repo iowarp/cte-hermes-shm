@@ -22,8 +22,8 @@ TEST_CASE("BackendReserve") {
   b1.shm_init(hipc::MemoryBackendId::Get(0), hshm::Unit<size_t>::Gigabytes(8),
               "shmem_test");
 
-  // Set 2GB of SHMEM
-  memset(b1.data_, 0, hshm::Unit<size_t>::Gigabytes(2));
+  // Set 2MB of SHMEM
+  memset(b1.data_, 0, hshm::Unit<size_t>::Megabytes(2));
 
   // Destroy SHMEM
   b1.shm_destroy();

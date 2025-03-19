@@ -86,6 +86,11 @@ union AllocatorId {
     printf("(%s) Allocator ID: %u.%u\n", kCurrentDevice, bits_.major_,
            bits_.minor_);
   }
+
+  friend std::ostream &operator<<(std::ostream &os, const AllocatorId &id) {
+    os << id.bits_.major_ << "." << id.bits_.minor_;
+    return os;
+  }
 };
 
 class Allocator;

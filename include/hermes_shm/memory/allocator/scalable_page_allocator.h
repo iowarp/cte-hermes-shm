@@ -77,7 +77,7 @@ class _ScalablePageAllocator : public Allocator {
     id_ = id;
     buffer_ = buffer;
     buffer_size_ = buffer_size;
-    header_ = reinterpret_cast<_ScalablePageAllocatorHeader *>(buffer_);
+    header_ = ConstructHeader<_ScalablePageAllocatorHeader>(buffer_);
     custom_header_ = reinterpret_cast<char *>(header_ + 1);
     size_t region_off = (custom_header_ - buffer_) + custom_header_size;
     size_t region_size = buffer_size_ - region_off;

@@ -33,6 +33,10 @@ using hshm::ipc::MemoryBackendType;
 using hshm::ipc::MemoryManager;
 using hshm::ipc::Pointer;
 
+#define RANK0 0
+
+HSHM_DATA_STRUCTURES_TEMPLATE(sub, HSHM_DEFAULT_ALLOC_T)
+
 void Posttest();
 
 #endif  // HSHM_TEST_UNIT_DATA_STRUCTURES_TEST_INIT_H_

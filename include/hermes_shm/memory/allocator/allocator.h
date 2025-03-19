@@ -114,6 +114,15 @@ class Allocator {
   const AllocatorId &GetId() const { return id_; }
 
   /**
+   * Construct custom header
+   */
+  template <typename HEADER_T>
+  HSHM_INLINE_CROSS_FUN HEADER_T *ConstructHeader(void *buffer) {
+    new ((HEADER_T *)buffer) HEADER_T();
+    return reinterpret_cast<HEADER_T *>(buffer);
+  }
+
+  /**
    * Get the custom header of the shared-memory allocator
    *
    * @return Custom header pointer

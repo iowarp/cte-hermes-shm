@@ -256,6 +256,9 @@ class MemoryManager {
         range = alloc->buffer_size_;
         best_alloc = alloc;
       }
+      if (range < std::numeric_limits<size_t>::max()) {
+        break;
+      }
     }
     return best_alloc;
   }

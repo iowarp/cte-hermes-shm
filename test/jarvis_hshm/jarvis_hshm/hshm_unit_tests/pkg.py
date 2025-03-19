@@ -6,7 +6,7 @@ from jarvis_cd.basic.pkg import Application
 from jarvis_util import *
 
 
-class HshmAllocBench(Application):
+class HshmUnitTests(Application):
     """
     This class provides methods to launch the LabstorIpcTest application.
     """
@@ -26,23 +26,10 @@ class HshmAllocBench(Application):
         """
         return [
             {
-                'name': 'nthreads',
+                'name': 'TEST_CASE',
                 'msg': 'The number of threads to spawn',
                 'type': int,
                 'default': 1,
-            },
-            {
-                'name': 'alloc',
-                'msg': 'Allocator type to use',
-                'type': str,
-                'choices': ['malloc', 'fixed_page', 'scalable'],
-                'default': 1,
-            },
-            {
-                'name': 'ops',
-                'msg': 'The # operations to generate per node',
-                'type': str,
-                'default': '4k',
             },
         ]
 
@@ -63,18 +50,16 @@ class HshmAllocBench(Application):
 
         :return: None
         """
-        nthreads = self.config['nthreads']
         cmd = [
-            'hshm_alloc_bench',
-            str(nthreads),
-            self.config['alloc'],
-            self.config['ops'],
+            'test_data_structure_mpi_exec'
         ]
         cmd = ' '.join(cmd)
         Exec(cmd,
-             LocalExecInfo(env=self.env,
-                           do_dbg=self.config['do_dbg'],
-                           dbg_port=self.config['dbg_port']))
+             MpiExecInfo(env=self.env,
+                         nprocs=2,
+                         ppn=2,
+                         do_dbg=self.config['do_dbg'],
+                         dbg_port=self.config['dbg_port']))
 
     def stop(self):
         """

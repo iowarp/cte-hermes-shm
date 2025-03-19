@@ -66,13 +66,12 @@ class _StackAllocator : public Allocator {
     id_ = id;
     buffer_ = buffer;
     buffer_size_ = buffer_size;
-    header_ = reinterpret_cast<_StackAllocatorHeader *>(buffer_);
+    header_ = ConstructHeader<_StackAllocatorHeader>(buffer_);
     custom_header_ = reinterpret_cast<char *>(header_ + 1);
     size_t region_off = (custom_header_ - buffer_) + custom_header_size;
     size_t region_size = buffer_size_ - region_off;
     header_->Configure(id, custom_header_size, region_off, region_size);
     heap_ = &header_->heap_;
-    Align();
   }
 
   /**

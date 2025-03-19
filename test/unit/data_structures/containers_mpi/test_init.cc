@@ -16,7 +16,7 @@
 
 template <typename AllocT>
 void PretestRank0() {
-  std::string shm_url = "test_allocators";
+  std::string shm_url = "test_allocators2";
   AllocatorId alloc_id(1, 0);
   auto mem_mngr = HSHM_MEMORY_MANAGER;
   mem_mngr->UnregisterAllocator(alloc_id);
@@ -24,11 +24,12 @@ void PretestRank0() {
   mem_mngr->CreateBackend<PosixShmMmap>(hipc::MemoryBackendId::Get(0),
                                         hshm::Unit<size_t>::Megabytes(100),
                                         shm_url);
-  mem_mngr->CreateAllocator<AllocT>(hipc::MemoryBackendId::Get(0), alloc_id, 0);
+  mem_mngr->CreateAllocator<AllocT>(hipc::MemoryBackendId::Get(0), alloc_id,
+                                    sizeof(sub::mpsc_ptr_queue<int>));
 }
 
 void PretestRankN() {
-  std::string shm_url = "test_allocators";
+  std::string shm_url = "test_allocators2";
   AllocatorId alloc_id(1, 0);
   auto mem_mngr = HSHM_MEMORY_MANAGER;
   mem_mngr->AttachBackend(MemoryBackendType::kPosixShmMmap, shm_url);
@@ -37,14 +38,16 @@ void PretestRankN() {
 void MainPretest() {
   int rank;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  if (rank == 0) {
-    // PretestRank0<hipc::StackAllocator>();
-    PretestRank0<hipc::ScalablePageAllocator>();
+  HILOG(kInfo, "PRETEST RANK 0 beginning {}", rank);
+  if (rank == RANK0) {
+    PretestRank0<HSHM_DEFAULT_ALLOC_T>();
   }
   MPI_Barrier(MPI_COMM_WORLD);
-  if (rank != 0) {
+  if (rank != RANK0) {
     PretestRankN();
   }
+  HILOG(kInfo, "PRETEST RANK 0 done {}", rank);
+  MPI_Barrier(MPI_COMM_WORLD);
 }
 
 void MainPosttest() {}

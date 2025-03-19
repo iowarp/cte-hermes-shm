@@ -64,7 +64,7 @@ class _MallocAllocator : public Allocator {
     id_ = id;
     buffer_ = nullptr;
     buffer_size_ = std::numeric_limits<size_t>::max();
-    header_ = reinterpret_cast<_MallocAllocatorHeader *>(
+    header_ = ConstructHeader<_MallocAllocatorHeader>(
         malloc(sizeof(_MallocAllocatorHeader) + custom_header_size));
     custom_header_ = reinterpret_cast<char *>(header_ + 1);
     header_->Configure(id, custom_header_size);

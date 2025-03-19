@@ -49,8 +49,8 @@ configurations:
     args: ["TestMpscQueueMpi"]
   - macro: debug
     launch-name: test-allocators
-    program: test_allocator_exec
-    args: ["MallocAllocator"]
+    program: test_allocator_mp_exec
+    args: ["ScalablePageAllocatorMultithreaded"]
   - macro: debug
     launch-name: test-rocm
     program: test_memory_rocm_exec
@@ -67,4 +67,8 @@ configurations:
     launch-name: bench-data-structures
     program: benchmark_data_structures_exec
     args: [""]
+  - macro: debug
+    launch-name: test-backend
+    program: test_backend_exec
+    args: ["BackendReserve"]
     

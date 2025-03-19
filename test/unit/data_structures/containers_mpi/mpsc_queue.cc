@@ -26,23 +26,24 @@ TEST_CASE("TestMpscQueueMpi") {
   // we are getting the "header" of the allocator
   auto *alloc = HSHM_DEFAULT_ALLOC;
   auto *queue_ =
-      alloc->GetCustomHeader<hipc::delay_ar<hipc::mpsc_ptr_queue<int>>>();
+      alloc->GetCustomHeader<hipc::delay_ar<sub::mpsc_ptr_queue<int>>>();
 
   // Make the queue uptr
-  if (rank == 0) {
+  if (rank == RANK0) {
     // Rank 0 create the pointer queue
     queue_->shm_init(alloc, 256);
     // Affine to CPU 0
     hshm::ProcessAffiner::SetCpuAffinity(HSHM_SYSTEM_INFO->pid_, 0);
   }
   MPI_Barrier(MPI_COMM_WORLD);
-  if (rank != 0) {
+  if (rank != RANK0) {
     // Affine to CPU 1
     hshm::ProcessAffiner::SetCpuAffinity(HSHM_SYSTEM_INFO->pid_, 1);
   }
+  MPI_Barrier(MPI_COMM_WORLD);
 
-  hipc::mpsc_ptr_queue<int> *queue = queue_->get();
-  if (rank == 0) {
+  sub::mpsc_ptr_queue<int> *queue = queue_->get();
+  if (rank == RANK0) {
     // Emplace values into the queue
     for (int i = 0; i < 256; ++i) {
       queue->emplace(i);

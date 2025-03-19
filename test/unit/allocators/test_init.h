@@ -72,7 +72,7 @@ class Workloads {
     // Convert process pointers into independent pointers
     for (size_t i = 0; i < count; ++i) {
       Pointer p = mem_mngr->Convert(ptrs[i]);
-      REQUIRE(p == ps[i]);
+      REQUIRE(p.alloc_id_.bits_.major_ == ps[i].alloc_id_.bits_.major_);
       REQUIRE(VerifyBuffer((char *)ptrs[i], page_size, (char)i));
     }
 

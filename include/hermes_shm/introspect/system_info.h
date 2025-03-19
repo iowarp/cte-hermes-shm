@@ -55,6 +55,9 @@ class SystemInfo {
 
  public:
   HSHM_CROSS_FUN
+  SystemInfo() { RefreshInfo(); }
+
+  HSHM_CROSS_FUN
   HSHM_DLL void RefreshInfo();
 
   HSHM_DLL void RefreshCpuFreqKhz();
