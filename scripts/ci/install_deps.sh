@@ -23,13 +23,11 @@ mkdir -p ${INSTALL_DIR}
 git clone https://github.com/spack/spack ${SPACK_DIR}
 cd ${SPACK_DIR}
 git checkout v${SPACK_VERSION}
+. ${SPACK_DIR}/share/spack/setup-env.sh
 
 # Clone iowarp-install
 git clone https://github.com/iowarp/iowarp-install.git
 spack repo add iowarp-install/iowarp-spack
-
-# Set spack env
-. ${SPACK_DIR}/share/spack/setup-env.sh
 
 # This will allow Spack to skip building some packages that are directly
 spack external find

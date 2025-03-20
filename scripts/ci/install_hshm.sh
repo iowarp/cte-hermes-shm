@@ -46,7 +46,7 @@ export CMAKE_PREFIX_PATH="${INSTALL_PREFIX}:${CMAKE_PREFIX_PATH}"
 export CXXFLAGS="-I${INSTALL_PREFIX}/include:${CXXFLAGS}"
 
 # Run make install unit test
-cd scripts/ci/external
+cd test/unit/external
 mkdir build
 cd build
 cmake ../
