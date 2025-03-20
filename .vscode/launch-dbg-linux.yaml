@@ -71,4 +71,7 @@ configurations:
     launch-name: test-backend
     program: test_backend_exec
     args: ["BackendReserve"]
-    
+  - macro: debug
+    launch-name: test-encrypt
+    program: test_encrypt_exec
+    args: [""]

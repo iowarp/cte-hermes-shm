@@ -15,30 +15,18 @@
 #include "basic_test.h"
 #include "hermes_shm/util/encrypt/encrypt.h"
 
-TEST_CASE("TestEncrypt") {
-  PAGE_DIVIDE("AES") {
-    hshm::AES crypto;
-    crypto.GenerateKey("passwd");
-    size_t encoded_size = 8192 + 256, decoded_size = 8192;
-    std::vector<char> data(8192, 0), encoded(8192 + 256, 1),
-        decoded(8192 + 256, 2);
-    crypto.CreateInitialVector();
-    crypto.Encrypt(encoded.data(), encoded_size, data.data(), data.size());
-    crypto.Decrypt(decoded.data(), decoded_size, encoded.data(), encoded_size);
-    decoded.resize(decoded_size);
-    REQUIRE(data == decoded);
-  }
-
-  PAGE_DIVIDE("Blowfish") {
-    hshm::Blowfish crypto;
-    crypto.GenerateKey("passwd");
-    size_t encoded_size = 8192 + 256, decoded_size = 8192;
-    std::vector<char> data(8192, 0), encoded(8192 + 256, 1),
-        decoded(8192 + 256, 2);
-    crypto.CreateInitialVector();
-    crypto.Encrypt(encoded.data(), encoded_size, data.data(), data.size());
-    crypto.Decrypt(decoded.data(), decoded_size, encoded.data(), encoded_size);
-    decoded.resize(decoded_size);
-    REQUIRE(data == decoded);
-  }
+template <typename CryptoT>
+void CryptoTest() {
+  CryptoT crypto;
+  crypto.GenerateKey("passwd");
+  size_t encoded_size = 8192 + 256, decoded_size = 8192;
+  std::vector<char> data(8192, 0), encoded(8192 + 256, 1),
+      decoded(8192 + 256, 2);
+  crypto.CreateInitialVector();
+  crypto.Encrypt(encoded.data(), encoded_size, data.data(), data.size());
+  crypto.Decrypt(decoded.data(), decoded_size, encoded.data(), encoded_size);
+  decoded.resize(decoded_size);
+  REQUIRE(data == decoded);
 }
+
+TEST_CASE("TestAES") { CryptoTest<hshm::AES>(); }

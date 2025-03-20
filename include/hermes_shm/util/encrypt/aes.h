@@ -33,8 +33,7 @@ class AES {
   void CreateInitialVector(const std::string &salt = "") {
     salt_ = salt;
     iv_ = std::string(EVP_CIPHER_iv_length(EVP_aes_256_cbc()), 0);
-    RAND_bytes((unsigned char *)iv_.c_str(),
-               EVP_CIPHER_iv_length(EVP_aes_256_cbc()));
+    RAND_bytes((unsigned char *)iv_.c_str(), iv_.size());
   }
 
   void GenerateKey(const std::string &password) {

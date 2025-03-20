@@ -16,6 +16,5 @@
 #include <string>
 
 #include "aes.h"
-#include "blowfish.h"
 
 #endif  // HSHM_SHM_INCLUDE_HSHM_SHM_UTIL_ENCRYPT_ENCRYPT_H_
