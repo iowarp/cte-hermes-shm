@@ -29,9 +29,7 @@ git clone https://github.com/iowarp/iowarp-install.git
 spack repo add iowarp-install/iowarp-spack
 
 # Set spack env
-set +x
 . ${SPACK_DIR}/share/spack/setup-env.sh
-set -x
 
 # This will allow Spack to skip building some packages that are directly
 spack external find
