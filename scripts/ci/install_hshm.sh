@@ -15,12 +15,11 @@ SPACK_DIR=${INSTALL_DIR}/spack
 mkdir -p "${HOME}/install"
 mkdir build
 pushd build
-spack load hermes_shm
+spack load cte-hermes-shm
 cmake ../ \
 -DCMAKE_BUILD_TYPE=Debug \
 -DHSHM_ENABLE_COVERAGE=ON \
 -DHSHM_ENABLE_DOXYGEN=ON \
--DBUILD_HSHM_BENCHMARKS=ON \
 -DBUILD_HSHM_TESTS=ON \
 -DHSHM_ENABLE_CEREAL=ON \ 
 -DHSHM_ENABLE_PTHREADS=ON \ 
@@ -28,6 +27,7 @@ cmake ../ \
 -DHSHM_ENABLE_ENCRYPT=ON \ 
 -DHSHM_USE_ELF=ON \ 
 -DCMAKE_INSTALL_PREFIX=${HOME}/install
+# -DBUILD_HSHM_BENCHMARKS=ON \
 make -j8
 make install
 
