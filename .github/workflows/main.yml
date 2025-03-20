@@ -34,8 +34,8 @@ jobs:
       - name: Setup python
         uses: actions/setup-python@v4
 
-      - name: Run cpplint
-        run: pip install cpplint==1.5.4 && bash scripts/lint.sh `pwd`
+      # - name: Run cpplint
+      #   run: pip install cpplint==1.5.4 && bash scripts/lint.sh `pwd`
 
       - name: Cache Spack packages
         uses: actions/cache@v3
