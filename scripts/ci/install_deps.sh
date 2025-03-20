@@ -33,4 +33,4 @@ spack repo add iowarp-install/iowarp-spack
 spack external find
 
 # Install hermes_shm (needed for dependencies)
-spack install cte-hermes-shm +compress +encrypt +elf +pthread +cereal +mpiio +vfd +mochi +boost +nocompile 
+spack install cte-hermes-shm +compress +encrypt +elf +cereal +mpiio +vfd +mochi +boost +nocompile 
