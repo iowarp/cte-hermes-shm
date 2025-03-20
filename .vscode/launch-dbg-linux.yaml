@@ -26,9 +26,9 @@ macros:
       - description: Enable pretty-printing for gdb
         text: -enable-pretty-printing
         ignoreFailures: true 
-    environment: [
-      { name: "LD_PRELOAD", value: "/usr/lib/gcc/x86_64-linux-gnu/13/libasan.so" }
-    ]
+    # environment: [
+    #   { name: "LD_PRELOAD", value: "/usr/lib/gcc/x86_64-linux-gnu/13/libasan.so" }
+    # ]
   rdebug:
     name: $(launch-name)
     type: cppdbg
@@ -91,7 +91,7 @@ configurations:
   - macro: debug
     launch-name: test-types
     program: test_types_exec
-    args: ["ShmArchive"]
+    args: [""]
   - macro: debug
     launch-name: test-cereal
     program: test_cereal_exec
