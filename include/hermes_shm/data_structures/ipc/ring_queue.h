@@ -148,9 +148,7 @@ class ring_queue_base : public ShmContainer {
   template <bool IS_ASSIGN>
   HSHM_CROSS_FUN void shm_move_op(const hipc::CtxAllocator<AllocT> &alloc,
                                   ring_queue_base &&other) noexcept {
-    if constexpr (IS_ASSIGN) {
-      shm_destroy();
-    } else {
+    if constexpr (!IS_ASSIGN) {
       init_shm_container(alloc);
     }
     if (GetAllocator() == other.GetAllocator()) {

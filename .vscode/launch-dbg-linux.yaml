@@ -59,7 +59,7 @@ configurations:
   - macro: debug
     launch-name: test-data-structures
     program: test_data_structure_exec
-    args: ["Pair*"]
+    args: ["PairOfIntString"]
   - macro: debug
     launch-name: test-allocators
     program: test_allocator_mp_exec

@@ -40,21 +40,19 @@ class ShmArchive {
   /** Pointer to internal object */
   HSHM_INLINE_CROSS_FUN T* get() { return reinterpret_cast<T*>(obj_); }
 
+  /** Pointer to internal object (const) */
+  HSHM_INLINE_CROSS_FUN const T* get() const {
+    return reinterpret_cast<const T*>(obj_);
+  }
+
   /** Get pointer (alwyas used and never inlined) */
   HSHM_NO_INLINE_CROSS_FUN T* get_dbg() { return reinterpret_cast<T*>(obj_); }
 
-  /** Pointer to internal object (const) */
-  HSHM_INLINE_CROSS_FUN const T* get() const {
-    return reinterpret_cast<T*>(obj_);
-  }
-
   /** Reference to internal object */
-  HSHM_INLINE_CROSS_FUN T& get_ref() { return reinterpret_cast<T&>(obj_); }
+  HSHM_INLINE_CROSS_FUN T& get_ref() { return *get(); }
 
   /** Reference to internal object (const) */
-  HSHM_INLINE_CROSS_FUN const T& get_ref() const {
-    return reinterpret_cast<const T&>(obj_);
-  }
+  HSHM_INLINE_CROSS_FUN const T& get_ref() const { return *get(); }
 
   /** Dereference operator */
   HSHM_INLINE_CROSS_FUN T& operator*() { return get_ref(); }

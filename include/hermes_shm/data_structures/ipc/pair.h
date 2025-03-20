@@ -204,7 +204,6 @@ class pair : public ShmContainer {
   HSHM_CROSS_FUN
   pair &operator=(pair &&other) noexcept {
     if (this != &other) {
-      shm_destroy();
       if (GetAllocator() == other.GetAllocator()) {
         (*first_) = std::move(*other.first_);
         (*second_) = std::move(*other.second_);

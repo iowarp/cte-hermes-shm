@@ -16,6 +16,8 @@
 #include "hermes_shm/data_structures/ipc/string.h"
 #include "test_init.h"
 
+HSHM_DATA_STRUCTURES_TEMPLATE(sub, hipc::MallocAllocator)
+
 template <typename PairT, typename FirstT, typename SecondT>
 void PairTest() {
   hipc::CtxAllocator<HSHM_DEFAULT_ALLOC_T> alloc(HSHM_DEFAULT_ALLOC);
@@ -64,6 +66,8 @@ void PairTest() {
     CREATE_SET_VAR_TO_INT_OR_STRING(SecondT, second, 130);
     hipc::pair<FirstT, SecondT> data(alloc, first, second);
     hipc::pair<FirstT, SecondT> cpy(alloc);
+    REQUIRE(data.GetFirst() == first);
+    REQUIRE(data.GetSecond() == second);
     cpy = data;
     REQUIRE(cpy.GetFirst() == first);
     REQUIRE(cpy.GetSecond() == second);
@@ -93,8 +97,14 @@ void PairTest() {
   PAGE_DIVIDE("Move assignment operator") {
     CREATE_SET_VAR_TO_INT_OR_STRING(FirstT, first, 124);
     CREATE_SET_VAR_TO_INT_OR_STRING(SecondT, second, 130);
-    hipc::pair<FirstT, SecondT> data(alloc, first, second);
-    hipc::pair<FirstT, SecondT> cpy(alloc);
+    hshm::pair<FirstT, SecondT> data(alloc, first, second);
+    hshm::pair<FirstT, SecondT> cpy(alloc);
+    if constexpr (std::is_same_v<FirstT, std::string>) {
+      bool good = (cpy.GetFirst() == "");
+      if (!good) {
+        exit(1);
+      }
+    }
     cpy = std::move(data);
     REQUIRE(cpy.GetFirst() == first);
     REQUIRE(cpy.GetSecond() == second);
@@ -111,6 +121,6 @@ TEST_CASE("PairOfIntInt") {
 TEST_CASE("PairOfIntString") {
   auto *alloc = HSHM_DEFAULT_ALLOC;
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
-  PairTest<hipc::pair<int, std::string>, int, std::string>();
+  PairTest<hipc::pair<std::string, int>, std::string, int>();
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
 }

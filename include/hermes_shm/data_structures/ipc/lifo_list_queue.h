@@ -271,7 +271,6 @@ class lifo_list_queue : public ShmContainer {
   HSHM_CROSS_FUN
   lifo_list_queue &operator=(lifo_list_queue &&other) noexcept {
     if (this != &other) {
-      shm_destroy();
       if (this != &other) {
         memcpy((void *)this, (void *)&other, sizeof(*this));
         other.SetNull();

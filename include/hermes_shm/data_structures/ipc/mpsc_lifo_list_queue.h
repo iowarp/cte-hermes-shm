@@ -142,7 +142,6 @@ class mpsc_lifo_list_queue : public ShmContainer {
   HSHM_CROSS_FUN
   mpsc_lifo_list_queue &operator=(mpsc_lifo_list_queue &&other) noexcept {
     if (this != &other) {
-      shm_destroy();
       if (this != &other) {
         memcpy((void *)this, (void *)&other, sizeof(*this));
         other.SetNull();

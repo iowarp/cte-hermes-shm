@@ -77,11 +77,9 @@ class CrossSingletonBase {
     if (GetObject() == nullptr) {
       if constexpr (WithLock) {
         hshm::ScopedSpinLock lock(GetSpinLock(), 0);
-        new ((T *)GetData()) T();
-        GetObject() = (T *)GetData();
+        GetObject() = new T();
       } else {
-        new ((T *)GetData()) T();
-        GetObject() = (T *)GetData();
+        GetObject() = new T();
       }
     }
     return GetObject();
@@ -91,12 +89,6 @@ class CrossSingletonBase {
   static hshm::SpinLock &GetSpinLock() {
     static char spinlock_data_[sizeof(hshm::SpinLock)] = {0};
     return *(hshm::SpinLock *)spinlock_data_;
-  }
-
-  HSHM_INLINE_CROSS_FUN
-  static T *GetData() {
-    static char data_[sizeof(T)] = {0};
-    return (T *)data_;
   }
 
   HSHM_INLINE_CROSS_FUN

@@ -299,9 +299,7 @@ class string_templ : public ShmContainer {
   template <bool IS_ASSIGN>
   HSHM_CROSS_FUN void shm_move_op(const hipc::CtxAllocator<AllocT> &alloc,
                                   string_templ &&other) noexcept {
-    if constexpr (IS_ASSIGN) {
-      shm_destroy();
-    } else {
+    if constexpr (!IS_ASSIGN) {
       init_shm_container(alloc);
     }
     if (is_wrap_ || GetAllocator() == other.GetAllocator()) {

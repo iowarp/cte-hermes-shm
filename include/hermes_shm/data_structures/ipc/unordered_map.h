@@ -304,9 +304,7 @@ class unordered_map : public ShmContainer {
   template <bool IS_ASSIGN>
   HSHM_CROSS_FUN void shm_move_op(const hipc::CtxAllocator<AllocT> &alloc,
                                   unordered_map &&other) noexcept {
-    if constexpr (IS_ASSIGN) {
-      shm_destroy();
-    } else {
+    if constexpr (!IS_ASSIGN) {
       init_shm_container(alloc);
     }
     if (GetAllocator() == other.GetAllocator()) {
