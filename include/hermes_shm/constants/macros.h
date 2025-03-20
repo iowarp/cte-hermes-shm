@@ -225,6 +225,7 @@ namespace hipc = hshm::ipc;
 
 /** Default memory context object */
 #define HSHM_DEFAULT_MEM_CTX (hipc::MemContext{})
+#define HSHM_MCTX HSHM_DEFAULT_MEM_CTX
 
 /** Compatability hack for static_assert */
 template <bool TRUTH, typename T = int>
