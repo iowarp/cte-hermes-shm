@@ -142,23 +142,23 @@ int SystemInfo::GetCpuCount() {
 #if defined(HSHM_ENABLE_PROCFS_SYSINFO)
 
 #if __linux__
-  return get_nprocs_conf();  
+  return get_nprocs_conf();
 #else
   int count;
   using size_t = std::size_t;
   size_t count_len = sizeof(count);
-#if __APPLE__  
+#if __APPLE__
   if (sysctlbyname("hw.physicalcpu", &count, &count_len, NULL, 0) == -1) {
 #else
   int mib[2];
   if (sysctl(mib, 2, &count, &count_len, NULL, 0) == -1) {
-#endif    
+#endif
     perror("sysctl");
     return 1;
   }
-  return count;  
+  return count;
 #endif
-  
+
 #elif defined(HSHM_ENABLE_WINDOWS_SYSINFO)
   SYSTEM_INFO sys_info;
   GetSystemInfo(&sys_info);
@@ -183,11 +183,11 @@ int SystemInfo::GetPageSize() {
 int SystemInfo::GetTid() {
 #if defined(HSHM_ENABLE_PROCFS_SYSINFO)
 #ifdef SYS_gettid
-#ifdef __linux__  
+#ifdef __linux__
   return (pid_t)syscall(SYS_gettid);
 #else
   return GetPid();
-#endif  
+#endif
 #else
 #warning "GetTid is not defined"
   return GetPid();
@@ -202,9 +202,9 @@ int SystemInfo::GetPid() {
 #ifdef SYS_getpid
 #ifdef __OpenBSD__
   return (pid_t)getpid();
-#else  
+#else
   return (pid_t)syscall(SYS_getpid);
-#endif  
+#endif
 #else
 #warning "GetPid is not defined"
   return 0;
@@ -234,29 +234,27 @@ size_t SystemInfo::GetRamCapacity() {
 #if defined(HSHM_ENABLE_PROCFS_SYSINFO)
 #if __APPLE__ || __OpenBSD__
   int mib[2];
-  uint64_t mem_total; // Use uint64_t for memory sizes
+  uint64_t mem_total;  // Use uint64_t for memory sizes
 
   mib[0] = CTL_HW;
-#if __APPLE__  
+#if __APPLE__
   mib[1] = HW_MEMSIZE;  // This is what you're looking for
 #else
   mib[1] = HW_PHYSMEM;
-#endif  
+#endif
   using size_t = std::size_t;
   size_t len = sizeof(mem_total);
-  
   if (sysctl(mib, 2, &mem_total, &len, NULL, 0) == -1) {
     perror("sysctl");
     return 1;
-  }
-  else {
+  } else {
     return mem_total;
   }
-#else  
+#else
   struct sysinfo info;
   sysinfo(&info);
   return info.totalram;
-#endif  
+#endif
 #elif defined(HSHM_ENABLE_WINDOWS_SYSINFO)
   MEMORYSTATUSEX mem_info;
   mem_info.dwLength = sizeof(mem_info);
@@ -356,11 +354,11 @@ void *SystemInfo::MapPrivateMemory(size_t size) {
 #if defined(HSHM_ENABLE_PROCFS_SYSINFO)
 #if __APPLE__ || __OpenBSD__
   return mmap(nullptr, size, PROT_READ | PROT_WRITE,
-                MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);  
-#else  
+              MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+#else
   return mmap64(nullptr, size, PROT_READ | PROT_WRITE,
                 MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-#endif  
+#endif
 #elif defined(HSHM_ENABLE_WINDOWS_SYSINFO)
   return VirtualAlloc(nullptr, size, MEM_COMMIT, PAGE_READWRITE);
 #endif

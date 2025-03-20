@@ -162,3 +162,33 @@ TEST_CASE("TestArgpack") {
   test_argpack0();
   test_argpack3<int, double, float>();
 }
+
+class DetectCopy {
+ public:
+  bool is_copied_ = false;
+  bool is_moved_ = false;
+
+ public:
+  DetectCopy() = default;
+  DetectCopy(const DetectCopy &) {
+    is_copied_ = true;
+    std::cout << "Copy" << std::endl;
+  }
+  DetectCopy(DetectCopy &&) {
+    is_moved_ = true;
+    std::cout << "Move" << std::endl;
+  }
+};
+
+template <typename ArgPackT>
+void test_argpack_copy(ArgPackT &&pack) {
+  REQUIRE(pack.template Forward<0>().is_copied_ == false);
+  REQUIRE(pack.template Forward<0>().is_moved_ == false);
+  REQUIRE(pack.template Forward<1>().is_copied_ == false);
+  REQUIRE(pack.template Forward<1>().is_moved_ == false);
+}
+
+TEST_CASE("TestArgpackCopy") {
+  DetectCopy x;
+  test_argpack_copy(hshm::make_argpack(x, DetectCopy()));
+}

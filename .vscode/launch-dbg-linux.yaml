@@ -1,6 +1,17 @@
 requirements:
   os: linux
 macros:
+  run:
+    name: $(launch-name)
+    type: cppdbg
+    request: launch
+    program: ${workspaceFolder}/build/bin/$(program)
+    args: $(args)
+    stopAtEntry: false
+    cwd: ${workspaceFolder}
+    # environment: [
+    #   { name: "LD_PRELOAD", value: "/usr/lib/gcc/x86_64-linux-gnu/13/libasan.so" }
+    # ]
   debug:
     name: $(launch-name)
     type: cppdbg
@@ -9,13 +20,15 @@ macros:
     args: $(args)
     stopAtEntry: false
     cwd: ${workspaceFolder}
-    environment: []
     externalConsole: false
     MIMode: gdb
     setupCommands:
       - description: Enable pretty-printing for gdb
         text: -enable-pretty-printing
         ignoreFailures: true 
+    environment: [
+      { name: "LD_PRELOAD", value: "/usr/lib/gcc/x86_64-linux-gnu/13/libasan.so" }
+    ]
   rdebug:
     name: $(launch-name)
     type: cppdbg
@@ -46,7 +59,7 @@ configurations:
   - macro: debug
     launch-name: test-data-structures
     program: test_data_structure_exec
-    args: ["TestMpscQueueMpi"]
+    args: ["Pair*"]
   - macro: debug
     launch-name: test-allocators
     program: test_allocator_mp_exec
@@ -75,3 +88,11 @@ configurations:
     launch-name: test-encrypt
     program: test_encrypt_exec
     args: [""]
+  - macro: debug
+    launch-name: test-types
+    program: test_types_exec
+    args: ["ShmArchive"]
+  - macro: debug
+    launch-name: test-cereal
+    program: test_cereal_exec
+    args: ["SerializePodArray"]

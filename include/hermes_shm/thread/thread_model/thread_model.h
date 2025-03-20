@@ -83,7 +83,7 @@ class ThreadModel {
  public:
   /** Initializer */
   HSHM_INLINE_CROSS_FUN
-  ThreadModel(ThreadType type) : type_(type) {}
+  explicit ThreadModel(ThreadType type) : type_(type) {}
 
   // /** Yield the current thread for a period of time */
   // HSHM_CROSS_FUN

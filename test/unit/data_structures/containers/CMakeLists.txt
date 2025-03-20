@@ -1,28 +1,27 @@
 project(hermes_shm)
 
-
-
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # Build Tests
-#------------------------------------------------------------------------------
-
+# ------------------------------------------------------------------------------
 set(SOURCES
-    string.cc
-    pair.cc
-    #tuple.cc
-    list.cc
-    slist.cc
-    vector.cc
-    lifo_list_queue.cc
-    unordered_map.cc
-    charwrap.cc
-    pod_array.cc
-    chararr.cc
-    namespace.cc
-    key_set.cc)
-if (HSHM_ENABLE_OPENMP)
-    list(APPEND SOURCES queue.cc)
+        string.cc
+        pair.cc
+
+        # tuple.cc
+        list.cc
+        slist.cc
+        vector.cc
+        lifo_list_queue.cc
+        unordered_map.cc
+        charwrap.cc
+        chararr.cc
+        namespace.cc
+        key_set.cc)
+
+if(HSHM_ENABLE_OPENMP)
+        list(APPEND SOURCES queue.cc)
 endif()
+
 add_executable(test_data_structure_exec
         ${TEST_MAIN}/main.cc
         test_init.cc
@@ -34,9 +33,9 @@ target_link_libraries(test_data_structure_exec
         hermes_shm_host Catch2::Catch2
         ${MPI_LIBS} ${OpenMP_LIBS})
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # Test Cases
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 
 # STRING TESTS
 add_test(NAME test_string COMMAND
@@ -45,10 +44,6 @@ add_test(NAME test_string COMMAND
 # CHARBUF TESTS
 add_test(NAME test_charbuf COMMAND
         ${CMAKE_BINARY_DIR}/bin/test_data_structure_exec "Charbuf")
-
-# PodArray TESTS
-add_test(NAME test_PodArray COMMAND
-        ${CMAKE_BINARY_DIR}/bin/test_data_structure_exec "PodArray")
 
 # VECTOR TESTS
 add_test(NAME test_vector COMMAND
@@ -74,28 +69,28 @@ add_test(NAME test_pair COMMAND
 add_test(NAME test_lifo_list_queue COMMAND
         ${CMAKE_BINARY_DIR}/bin/test_data_structure_exec "lifo_list_queueOfMpPage")
 
-if (HSHM_ENABLE_OPENMP)
-# SPSC TESTS
-add_test(NAME test_spsc COMMAND
-        ${CMAKE_BINARY_DIR}/bin/test_data_structure_exec "TestSpsc*")
+if(HSHM_ENABLE_OPENMP)
+        # SPSC TESTS
+        add_test(NAME test_spsc COMMAND
+                ${CMAKE_BINARY_DIR}/bin/test_data_structure_exec "TestSpsc*")
 
-# MPSC TESTS
-add_test(NAME test_mpsc COMMAND
-        ${CMAKE_BINARY_DIR}/bin/test_data_structure_exec "TestMpsc*")
+        # MPSC TESTS
+        add_test(NAME test_mpsc COMMAND
+                ${CMAKE_BINARY_DIR}/bin/test_data_structure_exec "TestMpsc*")
 endif()
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # Install Targets
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 install(TARGETS
         test_data_structure_exec
         LIBRARY DESTINATION ${HSHM_INSTALL_LIB_DIR}
         ARCHIVE DESTINATION ${HSHM_INSTALL_LIB_DIR}
         RUNTIME DESTINATION ${HSHM_INSTALL_BIN_DIR})
 
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Coverage
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 if(HSHM_ENABLE_COVERAGE)
-    set_coverage_flags(test_data_structure_exec)
+        set_coverage_flags(test_data_structure_exec)
 endif()

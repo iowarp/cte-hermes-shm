@@ -202,7 +202,7 @@ struct PreloadProgress {
     }
   }
 
-  PreloadProgress(RealApi &api) : is_loaded_(false) {
+  explicit PreloadProgress(RealApi &api) : is_loaded_(false) {
     // char exe_path[1024];
     // ssize_t len = readlink("/proc/self/exe", exe_path, sizeof(exe_path) - 1);
     // if (len != -1) {

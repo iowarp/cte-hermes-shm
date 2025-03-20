@@ -1,9 +1,10 @@
 //
 // Created by llogan on 28/10/24.
 //
-#include <unistd.h>
-#include <hermes_shm/util/random.h>
 #include <hermes_shm/util/logging.h>
+#include <hermes_shm/util/random.h>
+#include <unistd.h>
+
 #include "basic_test.h"
 
 TEST_CASE("RandomCountDistribution") {

@@ -89,8 +89,8 @@ namespace hshm {
 
 class Logger {
  public:
+  bool disabled_[HSHM_MAX_LOGGING_CODES];
   FILE *fout_;
-  bool disabled_[HSHM_MAX_LOGGING_CODES] = {0};
 
  public:
   HSHM_CROSS_FUN

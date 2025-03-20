@@ -14,7 +14,7 @@ set -o pipefail
 # Change this especially when your $HOME doesn't have enough disk space. 
 INSTALL_DIR="${HOME}"
 SPACK_DIR=${INSTALL_DIR}/spack
-SPACK_VERSION=0.18.1
+SPACK_VERSION=0.22.2
 
 echo "Installing dependencies at ${INSTALL_DIR}"
 mkdir -p ${INSTALL_DIR}
@@ -24,16 +24,17 @@ git clone https://github.com/spack/spack ${SPACK_DIR}
 cd ${SPACK_DIR}
 git checkout v${SPACK_VERSION}
 
+# Clone iowarp-install
+git clone https://github.com/iowarp/iowarp-install.git
+spack repo add iowarp-install/iowarp-spack
+
 # Set spack env
 set +x
 . ${SPACK_DIR}/share/spack/setup-env.sh
 set -x
 
 # This will allow Spack to skip building some packages that are directly
-# available from the system. For example, autoconf, cmake, m4, etc.
-# Modify ci/pckages.yaml to skip building compilers or build tools via Spack.
-cd ${GITHUB_WORKSPACE}
-cp scripts/ci/packages.yaml ${SPACK_DIR}/etc/spack/packages.yaml
+spack external find
 
 # Install hermes_shm (needed for dependencies)
-spack install hermes_shm
+spack install cte-hermes-shm

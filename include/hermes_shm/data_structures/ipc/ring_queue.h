@@ -208,7 +208,7 @@ class ring_queue_base : public ShmContainer {
     // Allocate a slot in the queue
     // The slot is marked NULL, so pop won't do anything if context switch
     qtok_id head = head_.load();
-    qtok_id tail = tail_.fetch_add(1);
+    qtok_id tail = tail_.fetch_add(qtok_id(1));
     vector_t &queue = (*queue_);
 
     // Check if there's space in the queue.

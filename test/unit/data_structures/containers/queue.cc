@@ -155,7 +155,7 @@ TEST_CASE("TestMpscQueuePeek") {
   auto *alloc = HSHM_DEFAULT_ALLOC;
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
 
-  auto q = alloc->NewObjLocal<hipc::mpsc_queue<int>>(HSHM_DEFAULT_MEM_CTX).ptr_;
+  auto q = alloc->NewObjLocal<hipc::mpsc_queue<int>>(HSHM_DEFAULT_MEM_CTX);
   q->emplace(1);
   int *val;
   q->peek(val, 0);
@@ -163,7 +163,7 @@ TEST_CASE("TestMpscQueuePeek") {
   hipc::pair<hshm::ibitfield, int> *val_pair;
   q->peek(val_pair, 0);
   REQUIRE(val_pair->GetSecond() == 1);
-  alloc->DelObj(HSHM_DEFAULT_MEM_CTX, q);
+  alloc->DelObjLocal(HSHM_DEFAULT_MEM_CTX, q);
 
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
 }

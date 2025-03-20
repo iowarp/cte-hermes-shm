@@ -13,7 +13,10 @@
 #ifndef HSHM_INCLUDE_HSHM_TYPES_ARGPACK_H_
 #define HSHM_INCLUDE_HSHM_TYPES_ARGPACK_H_
 
+#include <utility>
+
 #include "hermes_shm/constants/macros.h"
+#include "numbers.h"
 // #include <functional>
 
 namespace hshm {
@@ -27,10 +30,7 @@ struct EndTemplateRecurrence {};
 /** Recurrence used to create argument pack */
 template <size_t idx, typename T = EndTemplateRecurrence, typename... Args>
 struct ArgPackRecur {
-  constexpr static bool is_rval = std::is_rvalue_reference<T>();
-  typedef typename std::conditional<is_rval, T &&, T &>::type ElementT;
-
-  ElementT arg_;                         /**< The element stored */
+  T arg_;                                /**< The element stored */
   ArgPackRecur<idx + 1, Args...> recur_; /**< Remaining args */
 
   /** Default constructor */
@@ -44,11 +44,7 @@ struct ArgPackRecur {
   template <size_t i>
   HSHM_INLINE_CROSS_FUN constexpr decltype(auto) Forward() const {
     if constexpr (i == idx) {
-      if constexpr (is_rval) {
-        return std::forward<T>(arg_);
-      } else {
-        return arg_;
-      }
+      return std::forward<T>(arg_);
     } else {
       return recur_.template Forward<i>();
     }

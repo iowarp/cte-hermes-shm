@@ -40,7 +40,7 @@ class VariableMaker {
   hipc::atomic<hshm::size_t> count_;
 
  public:
-  VariableMaker(size_t total_vars) : vars_(total_vars) { count_ = 0; }
+  explicit VariableMaker(size_t total_vars) : vars_(total_vars) { count_ = 0; }
 
   static NewT _MakeVariable(size_t num) {
     if constexpr (std::is_arithmetic_v<NewT>) {

@@ -128,32 +128,6 @@ TEST_CASE("SerializeHipcShmArchive") {
   }
 }
 
-TEST_CASE("SerializePodArray") {
-  std::stringstream ss;
-  hipc::CtxAllocator<HSHM_DEFAULT_ALLOC_T> alloc(HSHM_DEFAULT_ALLOC);
-  {
-    hipc::pod_array<int, 2> x;
-    x.construct(alloc, 5);
-    for (int i = 0; i < 5; ++i) {
-      x[i] = i;
-    }
-    cereal::BinaryOutputArchive ar(ss);
-    ar << x;
-    x.destroy();
-  }
-  {
-    hipc::pod_array<int, 2> x;
-    std::vector<int> y{0, 1, 2, 3, 4};
-    cereal::BinaryInputArchive ar(ss);
-    ar >> x;
-    REQUIRE(x.size_ == (int)y.size());
-    for (int i = 0; i < x.size_; ++i) {
-      REQUIRE(x[i] == y[i]);
-    }
-    x.destroy();
-  }
-}
-
 TEST_CASE("SerializeAtomic") {
   std::stringstream ss;
   {

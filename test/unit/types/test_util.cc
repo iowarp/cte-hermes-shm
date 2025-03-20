@@ -12,6 +12,7 @@
 #define HSHM_COMPILING_DLL
 
 #include "basic_test.h"
+#include "hermes_shm/data_structures/internal/shm_archive.h"
 #include "hermes_shm/thread/thread_model_manager.h"
 #include "hermes_shm/util/auto_trace.h"
 #include "hermes_shm/util/config_parse.h"
@@ -19,6 +20,14 @@
 #include "hermes_shm/util/logging.h"
 #include "hermes_shm/util/singleton.h"
 #include "hermes_shm/util/type_switch.h"
+
+TEST_CASE("ShmArchive") {
+  hipc::delay_ar<int> x;
+  x.shm_init(10);
+  REQUIRE(sizeof(hipc::delay_ar<int>) == sizeof(int));
+  REQUIRE(*x == 10);
+  x.shm_destroy();
+}
 
 TEST_CASE("TypeSwitch") {
   typedef hshm::type_switch<int, int, std::string, std::string, size_t,

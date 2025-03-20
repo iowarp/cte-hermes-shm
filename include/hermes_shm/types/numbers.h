@@ -13,6 +13,7 @@
 #ifndef HSHM_SHM_INCLUDE_HSHM_SHM_TYPES_NUMBERS_H_
 #define HSHM_SHM_INCLUDE_HSHM_SHM_TYPES_NUMBERS_H_
 
+#include <cstddef>
 #include <cstdint>
 #include <iostream>
 

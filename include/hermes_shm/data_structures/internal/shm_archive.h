@@ -40,8 +40,8 @@ class ShmArchive {
   /** Pointer to internal object */
   HSHM_INLINE_CROSS_FUN T* get() { return reinterpret_cast<T*>(obj_); }
 
-  /** Pointer to internal object */
-  HSHM_CROSS_FUN T* get_dbg() { return reinterpret_cast<T*>(obj_); }
+  /** Get pointer (alwyas used and never inlined) */
+  HSHM_NO_INLINE_CROSS_FUN T* get_dbg() { return reinterpret_cast<T*>(obj_); }
 
   /** Pointer to internal object (const) */
   HSHM_INLINE_CROSS_FUN const T* get() const {

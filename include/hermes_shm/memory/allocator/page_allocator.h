@@ -37,7 +37,7 @@ struct PageId {
    * to the nearest power of two.
    * */
   HSHM_INLINE_CROSS_FUN
-  PageId(size_t size) {
+  explicit PageId(size_t size) {
     orig_ = size;
 #ifdef HSHM_IS_HOST
     exp_ = (size_t)std::ceil(std::log2(size - sizeof(MpPage)));

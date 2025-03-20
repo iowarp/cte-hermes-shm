@@ -118,10 +118,15 @@
  * */
 #if defined(HSHM_COMPILER_MSVC)
 #define HSHM_INLINE_FLAG __forceinline
+#define HSHM_NO_INLINE_FLAG __declspec(noinline)
+#define HSHM_FUNC_IS_USED __declspec(selectany)
 #elif defined(HSHM_COMPILER_GNU)
 #define HSHM_INLINE_FLAG __attribute__((always_inline))
+#define HSHM_NO_INLINE_FLAG __attribute__((noinline))
+#define HSHM_FUNC_IS_USED __attribute__((used))
 #endif
 
+#define HSHM_NO_INLINE HSHM_NO_INLINE_FLAG
 #ifndef HSHM_DEBUG
 #define HSHM_INLINE
 #else
@@ -150,8 +155,7 @@
 #endif
 
 /** Test cross functions */
-#define HSHM_NO_INLINE_CROSS_FUN
-#define HSHM_NO_CROSS_FUN
+#define HSHM_NO_INLINE_CROSS_FUN HSHM_NO_INLINE HSHM_CROSS_FUN HSHM_FUNC_IS_USED
 
 /** Bitfield macros */
 #define MARK_FIRST_BIT_MASK(T) ((T)1 << (sizeof(T) * 8 - 1))
