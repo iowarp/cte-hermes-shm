@@ -1,5 +1,5 @@
 # docker login
-docker build -t grc-spack docker -f docker/grc-spack.Dockerfile
+docker build --no-cache -t grc-spack docker -f docker/grc-spack.Dockerfile
 docker tag grc-spack lukemartinlogan/grc-repo:latest
 docker push lukemartinlogan/grc-repo:latest
 

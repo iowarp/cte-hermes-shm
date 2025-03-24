@@ -1,5 +1,5 @@
 # Install ubuntu latest
-FROM ubuntu:latest
+FROM ubuntu:24.04
 LABEL maintainer="llogan@hawk.iit.edu"
 LABEL version="0.0"
 LABEL description="GRC spack docker image"
