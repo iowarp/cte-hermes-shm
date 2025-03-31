@@ -267,7 +267,7 @@ TEST_CASE("TestSpscPtrQueuePopBack") {
   PointerQueueTest<size_t>(0);
   PointerQueueTest<hipc::Pointer>(hipc::Pointer(alloc->id_, 0));
   PointerQueueTest<hipc::OffsetPointer>(hipc::OffsetPointer(0));
-  PointerQueueTest<hipc::LPointer<char>>(
-      hipc::LPointer<char>(nullptr, hipc::Pointer(alloc->id_, 0)));
+  PointerQueueTest<hipc::FullPtr<char>>(
+      hipc::FullPtr<char>(nullptr, hipc::Pointer(alloc->id_, 0)));
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
 }

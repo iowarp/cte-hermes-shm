@@ -72,27 +72,27 @@ HSHM_CROSS_FUN void MemoryManager::DestroyAllocator(
 }
 
 template <typename T, typename PointerT>
-HSHM_INLINE_CROSS_FUN LPointer<T, PointerT>::LPointer(const PointerT &shm)
+HSHM_INLINE_CROSS_FUN FullPtr<T, PointerT>::FullPtr(const PointerT &shm)
     : shm_(shm) {
   ptr_ = HSHM_MEMORY_MANAGER->Convert<T, PointerT>(shm);
 }
 
 template <typename T, typename PointerT>
-HSHM_INLINE_CROSS_FUN LPointer<T, PointerT>::LPointer(const T *ptr)
+HSHM_INLINE_CROSS_FUN FullPtr<T, PointerT>::FullPtr(const T *ptr)
     : ptr_(const_cast<T *>(ptr)) {
   shm_ = HSHM_MEMORY_MANAGER->Convert<T, PointerT>(ptr_);
 }
 
 template <typename T, typename PointerT>
-HSHM_INLINE_CROSS_FUN LPointer<T, PointerT>::LPointer(hipc::Allocator *alloc,
-                                                      const T *ptr)
+HSHM_INLINE_CROSS_FUN FullPtr<T, PointerT>::FullPtr(hipc::Allocator *alloc,
+                                                    const T *ptr)
     : ptr_(const_cast<T *>(ptr)) {
   shm_ = alloc->Convert<T, PointerT>(ptr);
 }
 
 template <typename T, typename PointerT>
-HSHM_INLINE_CROSS_FUN LPointer<T, PointerT>::LPointer(
-    hipc::Allocator *alloc, const OffsetPointer &shm) {
+HSHM_INLINE_CROSS_FUN FullPtr<T, PointerT>::FullPtr(hipc::Allocator *alloc,
+                                                    const OffsetPointer &shm) {
   ptr_ = alloc->Convert<T, OffsetPointer>(shm);
   shm_ = PointerT(alloc->GetId(), shm);
 }
