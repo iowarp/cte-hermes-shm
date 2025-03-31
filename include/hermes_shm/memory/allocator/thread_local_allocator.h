@@ -251,7 +251,7 @@ class _ThreadLocalAllocator : public Allocator {
     auto hdr_offset = p - sizeof(MpPage);
     MpPage *hdr = Convert<MpPage>(hdr_offset);
     if (!hdr->IsAllocated()) {
-      HSHM_THROW_ERROR(DOUBLE_FREE);
+      HSHM_THROW_ERROR(DOUBLE_FREE, hdr->page_size_);
     }
     hdr->UnsetAllocated();
     header_->SubSize(hdr->page_size_);
