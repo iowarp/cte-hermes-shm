@@ -45,7 +45,8 @@ struct nonatomic {
   HSHM_INLINE_CROSS_FUN nonatomic() = default;
 
   /** Full constructor */
-  HSHM_INLINE_CROSS_FUN nonatomic(T def) : x(def) {}
+  template <typename U>
+  HSHM_INLINE_CROSS_FUN nonatomic(U def) : x(def) {}
 
   /** Copy constructor */
   HSHM_INLINE_CROSS_FUN nonatomic(const nonatomic &other) : x(other.x) {}
@@ -66,20 +67,22 @@ struct nonatomic {
   }
 
   /** Atomic fetch_add wrapper*/
+  template <typename U>
   HSHM_INLINE_CROSS_FUN T
-  fetch_add(T count, std::memory_order order = std::memory_order_seq_cst) {
+  fetch_add(U count, std::memory_order order = std::memory_order_seq_cst) {
     (void)order;
     T orig_x = x;
-    x += count;
+    x += (T)count;
     return orig_x;
   }
 
   /** Atomic fetch_sub wrapper*/
+  template <typename U>
   HSHM_INLINE_CROSS_FUN T
-  fetch_sub(T count, std::memory_order order = std::memory_order_seq_cst) {
+  fetch_sub(U count, std::memory_order order = std::memory_order_seq_cst) {
     (void)order;
     T orig_x = x;
-    x -= count;
+    x -= (T)count;
     return orig_x;
   }
 
@@ -97,15 +100,17 @@ struct nonatomic {
   HSHM_INLINE_CROSS_FUN const T &ref() const { return x; }
 
   /** Atomic exchange wrapper */
+  template <typename U>
   HSHM_INLINE_CROSS_FUN void exchange(
-      T count, std::memory_order order = std::memory_order_seq_cst) {
+      U count, std::memory_order order = std::memory_order_seq_cst) {
     (void)order;
     x = count;
   }
 
   /** Atomic compare exchange weak wrapper */
+  template <typename U>
   HSHM_INLINE_CROSS_FUN bool compare_exchange_weak(
-      T &expected, T desired,
+      T &expected, U desired,
       std::memory_order order = std::memory_order_seq_cst) {
     (void)expected;
     (void)order;
@@ -114,8 +119,9 @@ struct nonatomic {
   }
 
   /** Atomic compare exchange strong wrapper */
+  template <typename U>
   HSHM_INLINE_CROSS_FUN bool compare_exchange_strong(
-      T &expected, T desired,
+      T &expected, U desired,
       std::memory_order order = std::memory_order_seq_cst) {
     (void)expected;
     (void)order;
@@ -146,38 +152,49 @@ struct nonatomic {
   }
 
   /** Atomic add operator */
-  HSHM_INLINE_CROSS_FUN nonatomic operator+(T count) const {
+  template <typename U>
+  HSHM_INLINE_CROSS_FUN nonatomic operator+(U count) const {
     return nonatomic(x + count);
   }
 
   /** Atomic subtract operator */
-  HSHM_INLINE_CROSS_FUN nonatomic operator-(T count) const {
+  template <typename U>
+  HSHM_INLINE_CROSS_FUN nonatomic operator-(U count) const {
     return nonatomic(x - count);
   }
 
   /** Atomic add assign operator */
-  HSHM_INLINE_CROSS_FUN nonatomic &operator+=(T count) {
+  template <typename U>
+  HSHM_INLINE_CROSS_FUN nonatomic &operator+=(U count) {
     x += count;
     return *this;
   }
 
   /** Atomic subtract assign operator */
-  HSHM_INLINE_CROSS_FUN nonatomic &operator-=(T count) {
+  template <typename U>
+  HSHM_INLINE_CROSS_FUN nonatomic &operator-=(U count) {
     x -= count;
     return *this;
   }
 
   /** Atomic assign operator */
-  HSHM_INLINE_CROSS_FUN nonatomic &operator=(T count) {
+  template <typename U>
+  HSHM_INLINE_CROSS_FUN nonatomic &operator=(U count) {
     x = count;
     return *this;
   }
 
   /** Equality check (number) */
-  HSHM_INLINE_CROSS_FUN bool operator==(T other) const { return (other == x); }
+  template <typename U>
+  HSHM_INLINE_CROSS_FUN bool operator==(U other) const {
+    return (other == x);
+  }
 
   /** Inequality check (number) */
-  HSHM_INLINE_CROSS_FUN bool operator!=(T other) const { return (other != x); }
+  template <typename U>
+  HSHM_INLINE_CROSS_FUN bool operator!=(U other) const {
+    return (other != x);
+  }
 
   /** Equality check */
   HSHM_INLINE_CROSS_FUN bool operator==(const nonatomic &other) const {
@@ -190,34 +207,40 @@ struct nonatomic {
   }
 
   /** Bitwise and */
-  HSHM_INLINE_CROSS_FUN nonatomic operator&(T other) const {
+  template <typename U>
+  HSHM_INLINE_CROSS_FUN nonatomic operator&(U other) const {
     return nonatomic(x & other);
   }
 
   /** Bitwise or */
-  HSHM_INLINE_CROSS_FUN nonatomic operator|(T other) const {
+  template <typename U>
+  HSHM_INLINE_CROSS_FUN nonatomic operator|(U other) const {
     return nonatomic(x | other);
   }
 
   /** Bitwise xor */
-  HSHM_INLINE_CROSS_FUN nonatomic operator^(T other) const {
+  template <typename U>
+  HSHM_INLINE_CROSS_FUN nonatomic operator^(U other) const {
     return nonatomic(x ^ other);
   }
 
   /** Bitwise and assign */
-  HSHM_INLINE_CROSS_FUN nonatomic &operator&=(T other) {
+  template <typename U>
+  HSHM_INLINE_CROSS_FUN nonatomic &operator&=(U other) {
     x &= other;
     return *this;
   }
 
   /** Bitwise or assign */
-  HSHM_INLINE_CROSS_FUN nonatomic &operator|=(T other) {
+  template <typename U>
+  HSHM_INLINE_CROSS_FUN nonatomic &operator|=(U other) {
     x |= other;
     return *this;
   }
 
   /** Bitwise xor assign */
-  HSHM_INLINE_CROSS_FUN nonatomic &operator^=(T other) {
+  template <typename U>
+  HSHM_INLINE_CROSS_FUN nonatomic &operator^=(U other) {
     x ^= other;
     return *this;
   }
@@ -236,7 +259,8 @@ struct rocm_atomic {
   HSHM_INLINE_CROSS_FUN rocm_atomic() = default;
 
   /** Full constructor */
-  HSHM_INLINE_CROSS_FUN rocm_atomic(T def) : x(def) {}
+  template <typename U>
+  HSHM_INLINE_CROSS_FUN rocm_atomic(U def) : x(def) {}
 
   /** Copy constructor */
   HSHM_INLINE_CROSS_FUN rocm_atomic(const rocm_atomic &other) : x(other.x) {}
@@ -258,14 +282,16 @@ struct rocm_atomic {
   }
 
   /** Atomic fetch_add wrapper*/
+  template <typename U>
   HSHM_INLINE_CROSS_FUN T
-  fetch_add(T count, std::memory_order order = std::memory_order_seq_cst) {
+  fetch_add(U count, std::memory_order order = std::memory_order_seq_cst) {
     return atomicAdd(&x, count);
   }
 
   /** Atomic fetch_sub wrapper*/
+  template <typename U>
   HSHM_INLINE_CROSS_FUN T
-  fetch_sub(T count, std::memory_order order = std::memory_order_seq_cst) {
+  fetch_sub(U count, std::memory_order order = std::memory_order_seq_cst) {
     return atomicAdd(&x, -count);
   }
 
@@ -276,27 +302,31 @@ struct rocm_atomic {
   }
 
   /** Atomic store wrapper */
+  template <typename U>
   HSHM_INLINE_CROSS_FUN void store(
-      T count, std::memory_order order = std::memory_order_seq_cst) {
+      U count, std::memory_order order = std::memory_order_seq_cst) {
     exchange(count);
   }
 
   /** Atomic exchange wrapper */
+  template <typename U>
   HSHM_INLINE_CROSS_FUN T
-  exchange(T count, std::memory_order order = std::memory_order_seq_cst) {
+  exchange(U count, std::memory_order order = std::memory_order_seq_cst) {
     return atomicExch(&x, count);
   }
 
   /** Atomic compare exchange weak wrapper */
+  template <typename U>
   HSHM_INLINE_CROSS_FUN bool compare_exchange_weak(
-      T &expected, T desired,
+      T &expected, U desired,
       std::memory_order order = std::memory_order_seq_cst) {
     return atomicCAS(&x, expected, desired);
   }
 
   /** Atomic compare exchange strong wrapper */
+  template <typename U>
   HSHM_INLINE_CROSS_FUN bool compare_exchange_strong(
-      T &expected, T desired,
+      T &expected, U desired,
       std::memory_order order = std::memory_order_seq_cst) {
     return atomicCAS(&x, expected, desired);
   }
@@ -320,40 +350,47 @@ struct rocm_atomic {
   HSHM_INLINE_CROSS_FUN rocm_atomic operator--(int) { return atomic(x - 1); }
 
   /** Atomic add operator */
-  HSHM_INLINE_CROSS_FUN rocm_atomic operator+(T count) const {
+  template <typename U>
+  HSHM_INLINE_CROSS_FUN rocm_atomic operator+(U count) const {
     return atomicAdd(&x, count);
   }
 
   /** Atomic subtract operator */
-  HSHM_INLINE_CROSS_FUN rocm_atomic operator-(T count) const {
+  template <typename U>
+  HSHM_INLINE_CROSS_FUN rocm_atomic operator-(U count) const {
     return atomicAdd(&x, (T)(-count));
   }
 
   /** Atomic add assign operator */
-  HSHM_INLINE_CROSS_FUN rocm_atomic &operator+=(T count) {
+  template <typename U>
+  HSHM_INLINE_CROSS_FUN rocm_atomic &operator+=(U count) {
     atomicAdd(&x, count);
     return *this;
   }
 
   /** Atomic subtract assign operator */
-  HSHM_INLINE_CROSS_FUN rocm_atomic &operator-=(T count) {
+  template <typename U>
+  HSHM_INLINE_CROSS_FUN rocm_atomic &operator-=(U count) {
     atomicAdd(&x, -count);
     return *this;
   }
 
   /** Atomic assign operator */
-  HSHM_INLINE_CROSS_FUN rocm_atomic &operator=(T count) {
+  template <typename U>
+  HSHM_INLINE_CROSS_FUN rocm_atomic &operator=(U count) {
     store(count);
     return *this;
   }
 
   /** Equality check (number) */
-  HSHM_INLINE_CROSS_FUN bool operator==(T other) const {
+  template <typename U>
+  HSHM_INLINE_CROSS_FUN bool operator==(U other) const {
     return atomicCAS(&x, other, other);
   }
 
   /** Inequality check (number) */
-  HSHM_INLINE_CROSS_FUN bool operator!=(T other) const {
+  template <typename U>
+  HSHM_INLINE_CROSS_FUN bool operator!=(U other) const {
     return !atomicCAS(&x, other, other);
   }
 
@@ -368,37 +405,43 @@ struct rocm_atomic {
   }
 
   /** Bitwise and */
-  HSHM_INLINE_CROSS_FUN rocm_atomic operator&(T other) const {
+  template <typename U>
+  HSHM_INLINE_CROSS_FUN rocm_atomic operator&(U other) const {
     T *addr = const_cast<T *>(&x);
     return atomicAnd(addr, other);
   }
 
   /** Bitwise or */
-  HSHM_INLINE_CROSS_FUN rocm_atomic operator|(T other) const {
+  template <typename U>
+  HSHM_INLINE_CROSS_FUN rocm_atomic operator|(U other) const {
     T *addr = const_cast<T *>(&x);
     return atomicOr(addr, other);
   }
 
   /** Bitwise xor */
-  HSHM_INLINE_CROSS_FUN rocm_atomic operator^(T other) const {
+  template <typename U>
+  HSHM_INLINE_CROSS_FUN rocm_atomic operator^(U other) const {
     T *addr = const_cast<T *>(&x);
     return atomicXor(addr, other);
   }
 
   /** Bitwise and assign */
-  HSHM_INLINE_CROSS_FUN rocm_atomic &operator&=(T other) {
+  template <typename U>
+  HSHM_INLINE_CROSS_FUN rocm_atomic &operator&=(U other) {
     atomicAnd(&x, other);
     return *this;
   }
 
   /** Bitwise or assign */
-  HSHM_INLINE_CROSS_FUN rocm_atomic &operator|=(T other) {
+  template <typename U>
+  HSHM_INLINE_CROSS_FUN rocm_atomic &operator|=(U other) {
     atomicOr(&x, other);
     return *this;
   }
 
   /** Bitwise xor assign */
-  HSHM_INLINE_CROSS_FUN rocm_atomic &operator^=(T other) {
+  template <typename U>
+  HSHM_INLINE_CROSS_FUN rocm_atomic &operator^=(U other) {
     atomicXor(&x, other);
     return *this;
   }
@@ -429,7 +472,8 @@ struct std_atomic {
   HSHM_INLINE std_atomic() = default;
 
   /** Full constructor */
-  HSHM_INLINE std_atomic(T def) : x(def) {}
+  template <typename U>
+  HSHM_INLINE std_atomic(U def) : x(def) {}
 
   /** Copy constructor */
   HSHM_INLINE std_atomic(const std_atomic &other) : x(other.x.load()) {}
@@ -450,13 +494,15 @@ struct std_atomic {
   }
 
   /** Atomic fetch_add wrapper*/
-  HSHM_INLINE T fetch_add(T count,
+  template <typename U>
+  HSHM_INLINE T fetch_add(U count,
                           std::memory_order order = std::memory_order_seq_cst) {
     return x.fetch_add(count, order);
   }
 
   /** Atomic fetch_sub wrapper*/
-  HSHM_INLINE T fetch_sub(T count,
+  template <typename U>
+  HSHM_INLINE T fetch_sub(U count,
                           std::memory_order order = std::memory_order_seq_cst) {
     return x.fetch_sub(count, order);
   }
@@ -468,27 +514,31 @@ struct std_atomic {
   }
 
   /** Atomic store wrapper */
-  HSHM_INLINE void store(T count,
+  template <typename U>
+  HSHM_INLINE void store(U count,
                          std::memory_order order = std::memory_order_seq_cst) {
     x.store(count, order);
   }
 
   /** Atomic exchange wrapper */
+  template <typename U>
   HSHM_INLINE void exchange(
-      T count, std::memory_order order = std::memory_order_seq_cst) {
+      U count, std::memory_order order = std::memory_order_seq_cst) {
     x.exchange(count, order);
   }
 
   /** Atomic compare exchange weak wrapper */
+  template <typename U>
   HSHM_INLINE bool compare_exchange_weak(
-      T &expected, T desired,
+      T &expected, U desired,
       std::memory_order order = std::memory_order_seq_cst) {
     return x.compare_exchange_weak(expected, desired, order);
   }
 
   /** Atomic compare exchange strong wrapper */
+  template <typename U>
   HSHM_INLINE bool compare_exchange_strong(
-      T &expected, T desired,
+      T &expected, U desired,
       std::memory_order order = std::memory_order_seq_cst) {
     return x.compare_exchange_strong(expected, desired, order);
   }
@@ -512,34 +562,49 @@ struct std_atomic {
   HSHM_INLINE std_atomic operator--(int) { return atomic(x - 1); }
 
   /** Atomic add operator */
-  HSHM_INLINE std_atomic operator+(T count) const { return x + count; }
+  template <typename U>
+  HSHM_INLINE std_atomic operator+(U count) const {
+    return x + count;
+  }
 
   /** Atomic subtract operator */
-  HSHM_INLINE std_atomic operator-(T count) const { return x - count; }
+  template <typename U>
+  HSHM_INLINE std_atomic operator-(U count) const {
+    return x - count;
+  }
 
   /** Atomic add assign operator */
-  HSHM_INLINE std_atomic &operator+=(T count) {
+  template <typename U>
+  HSHM_INLINE std_atomic &operator+=(U count) {
     x += count;
     return *this;
   }
 
   /** Atomic subtract assign operator */
-  HSHM_INLINE std_atomic &operator-=(T count) {
+  template <typename U>
+  HSHM_INLINE std_atomic &operator-=(U count) {
     x -= count;
     return *this;
   }
 
   /** Atomic assign operator */
-  HSHM_INLINE std_atomic &operator=(T count) {
+  template <typename U>
+  HSHM_INLINE std_atomic &operator=(U count) {
     x.exchange(count);
     return *this;
   }
 
   /** Equality check (number) */
-  HSHM_INLINE bool operator==(T other) const { return (other == x); }
+  template <typename U>
+  HSHM_INLINE bool operator==(U other) const {
+    return (other == x);
+  }
 
   /** Inequality check (number) */
-  HSHM_INLINE bool operator!=(T other) const { return (other != x); }
+  template <typename U>
+  HSHM_INLINE bool operator!=(U other) const {
+    return (other != x);
+  }
 
   /** Equality check */
   HSHM_INLINE bool operator==(const std_atomic &other) const {
@@ -552,28 +617,40 @@ struct std_atomic {
   }
 
   /** Bitwise and */
-  HSHM_INLINE std_atomic operator&(T other) const { return x & other; }
+  template <typename U>
+  HSHM_INLINE std_atomic operator&(U other) const {
+    return x & other;
+  }
 
   /** Bitwise or */
-  HSHM_INLINE std_atomic operator|(T other) const { return x | other; }
+  template <typename U>
+  HSHM_INLINE std_atomic operator|(U other) const {
+    return x | other;
+  }
 
   /** Bitwise xor */
-  HSHM_INLINE std_atomic operator^(T other) const { return x ^ other; }
+  template <typename U>
+  HSHM_INLINE std_atomic operator^(U other) const {
+    return x ^ other;
+  }
 
   /** Bitwise and assign */
-  HSHM_INLINE std_atomic &operator&=(T other) {
+  template <typename U>
+  HSHM_INLINE std_atomic &operator&=(U other) {
     x &= other;
     return *this;
   }
 
   /** Bitwise or assign */
-  HSHM_INLINE std_atomic &operator|=(T other) {
+  template <typename U>
+  HSHM_INLINE std_atomic &operator|=(U other) {
     x |= other;
     return *this;
   }
 
   /** Bitwise xor assign */
-  HSHM_INLINE std_atomic &operator^=(T other) {
+  template <typename U>
+  HSHM_INLINE std_atomic &operator^=(U other) {
     x ^= other;
     return *this;
   }
