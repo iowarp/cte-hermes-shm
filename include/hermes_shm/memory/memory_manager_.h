@@ -266,8 +266,9 @@ class MemoryManager {
 
 /** Singleton declaration */
 HSHM_DEFINE_GLOBAL_CROSS_PTR_VAR_H(hshm::ipc::MemoryManager, hshmMemoryManager);
-#define HSHM_MEMORY_MANAGER \
-  (hshm::GetGlobalCrossPtrVar(hshm::ipc::hshmMemoryManager))
+#define HSHM_MEMORY_MANAGER                               \
+  HSHM_GET_GLOBAL_CROSS_PTR_VAR(hshm::ipc::MemoryManager, \
+                                hshm::ipc::hshmMemoryManager)
 #define HSHM_MEMORY_MANAGER_T hshm::ipc::MemoryManager *
 
 }  // namespace hshm::ipc

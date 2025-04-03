@@ -133,17 +133,21 @@
 #define HSHM_INLINE inline HSHM_INLINE_FLAG
 #endif
 
-/** Function decorators */
-#define HSHM_REG_FUN ROCM_HOST
+/** Macros for gpu/host function + var */
 #define HSHM_HOST_FUN ROCM_HOST
+#define HSHM_HOST_VAR ROCM_HOST
 #define HSHM_GPU_FUN ROCM_DEVICE
+#define HSHM_GPU_VAR ROCM_DEVICE
 #define HSHM_CROSS_FUN ROCM_HOST_DEVICE
 #define HSHM_GPU_KERNEL ROCM_KERNEL
 
-/** Macro for inline function */
-#define HSHM_INLINE_CROSS_FUN HSHM_INLINE HSHM_CROSS_FUN
+/** Macro for inline gpu/host function + var */
+#define HSHM_INLINE_CROSS_FUN HSHM_CROSS_FUN HSHM_INLINE
+#define HSHM_INLINE_CROSS_VAR HSHM_CROSS_FUN inline
 #define HSHM_INLINE_GPU_FUN ROCM_DEVICE HSHM_INLINE
+#define HSHM_INLINE_GPU_VAR ROCM_DEVICE inline
 #define HSHM_INLINE_HOST_FUN ROCM_HOST HSHM_INLINE
+#define HSHM_INLINE_HOST_VAR ROCM_HOST inline
 
 /** Macro for selective cross function */
 #ifdef HSHM_IS_HOST
@@ -165,9 +169,11 @@
 
 /** Class constant macro */
 #define CLS_CONST static inline constexpr const
+#define CLS_CROSS_CONST CLS_CONST
 
 /** Class constant macro */
 #define GLOBAL_CONST inline const
+#define GLOBAL_CROSS_CONST inline const
 
 /** Namespace definitions */
 namespace hshm {}
