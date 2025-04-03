@@ -320,7 +320,7 @@ struct rocm_atomic {
   HSHM_INLINE_CROSS_FUN bool compare_exchange_weak(
       T &expected, U desired,
       std::memory_order order = std::memory_order_seq_cst) {
-    return atomicCAS(&x, expected, desired);
+    return atomicCAS(const_cast<T *>(&x), expected, desired);
   }
 
   /** Atomic compare exchange strong wrapper */
@@ -328,7 +328,7 @@ struct rocm_atomic {
   HSHM_INLINE_CROSS_FUN bool compare_exchange_strong(
       T &expected, U desired,
       std::memory_order order = std::memory_order_seq_cst) {
-    return atomicCAS(&x, expected, desired);
+    return atomicCAS(const_cast<T *>(&x), expected, desired);
   }
 
   /** Atomic pre-increment operator */
@@ -385,23 +385,23 @@ struct rocm_atomic {
   /** Equality check (number) */
   template <typename U>
   HSHM_INLINE_CROSS_FUN bool operator==(U other) const {
-    return atomicCAS(&x, other, other);
+    return atomicCAS(const_cast<T *>(&x), other, other);
   }
 
   /** Inequality check (number) */
   template <typename U>
   HSHM_INLINE_CROSS_FUN bool operator!=(U other) const {
-    return !atomicCAS(&x, other, other);
+    return !atomicCAS(const_cast<T *>(&x), other, other);
   }
 
   /** Equality check */
   HSHM_INLINE_CROSS_FUN bool operator==(const rocm_atomic &other) const {
-    return atomicCAS(&x, other.x, other.x);
+    return atomicCAS(const_cast<T *>(&x), other.x, other.x);
   }
 
   /** Inequality check */
   HSHM_INLINE_CROSS_FUN bool operator!=(const rocm_atomic &other) const {
-    return !atomicCAS(&x, other.x, other.x);
+    return !atomicCAS(const_cast<T *>(&x), other.x, other.x);
   }
 
   /** Bitwise and */
