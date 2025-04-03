@@ -23,6 +23,11 @@ namespace hshm {
 /**
  * A class to represent singleton pattern
  * Does not require specific initialization of the static variable
+ *
+ * NOTE(llogan): Python does NOT play well with this singleton.
+ * I find that it will duplicate the singleton when loading wrapper
+ * functions. It is very strange, but this one should be avoided for
+ * codes that plan to be called by python.
  * */
 template <typename T, bool WithLock>
 class SingletonBase {
