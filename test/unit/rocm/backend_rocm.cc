@@ -158,6 +158,37 @@ void atomic_test() {
   assert(x->load() == 64 * 64);
 }
 
+void cross_process_test() {
+  // Process 1: Allocate and write data
+  void *ptr;
+  hipIpcMemHandle_t handle;
+  if (fork() == 0) {
+    HIP_ERROR_CHECK(hipMalloc(&ptr, 1024));
+    int *data = (int *)ptr;
+    data[0] = 42;
+    HIP_ERROR_CHECK(hipIpcGetMemHandle(&handle, ptr));
+
+    // Write handle to file for Process 2
+    FILE *f = fopen("/tmp/hip_handle", "wb");
+    fwrite(&handle, sizeof(handle), 1, f);
+    fclose(f);
+    exit(0);
+  } else {
+    // Process 2: Open and read data
+    sleep(1);  // Wait for Process 1
+    FILE *f = fopen("/tmp/hip_handle", "rb");
+    fread(&handle, sizeof(handle), 1, f);
+    fclose(f);
+
+    void *ptr2;
+    HIP_ERROR_CHECK(
+        hipIpcOpenMemHandle(&ptr2, handle, hipIpcMemLazyEnablePeerAccess));
+    int *data = (int *)ptr2;
+    printf("Value read from other process: %d\n", data[0]);
+    HIP_ERROR_CHECK(hipIpcCloseMemHandle(ptr2));
+  }
+}
+
 int main() {
   // atomic_test();
   // singleton_test();

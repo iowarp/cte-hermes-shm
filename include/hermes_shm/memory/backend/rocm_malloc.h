@@ -17,9 +17,14 @@
 
 namespace hshm::ipc {
 
+struct RocmMallocHeader : public MemoryBackendHeader {
+  hipIpcMemHandle_t ipc_;
+};
+
 class RocmMalloc : public MemoryBackend {
  private:
-  size_t total_size_;
+  File fd_;
+  hshm::chararr url_;
 
  public:
   /** Constructor */
@@ -36,25 +41,44 @@ class RocmMalloc : public MemoryBackend {
   }
 
   /** Initialize backend */
-  bool shm_init(const MemoryBackendId &backend_id, size_t size) {
+  bool shm_init(const MemoryBackendId &backend_id, size_t size,
+                const hshm::chararr &url) {
     SetInitialized();
     Own();
-    total_size_ = sizeof(MemoryBackendHeader) + size;
-    char *ptr = _Map(total_size_);
-    header_ = reinterpret_cast<MemoryBackendHeader *>(ptr);
-    header_->type_ = MemoryBackendType::kRocmMalloc;
-    header_->id_ = backend_id;
-    header_->data_size_ = size;
+    SystemInfo::DestroySharedMemory(url.c_str());
+    if (!SystemInfo::CreateNewSharedMemory(
+            fd_, url.c_str(), size + HSHM_SYSTEM_INFO->page_size_)) {
+      char *err_buf = strerror(errno);
+      HILOG(kError, "shm_open failed: {}", err_buf);
+      return false;
+    }
+    url_ = url;
+    header_ = (MemoryBackendHeader *)_ShmMap(HSHM_SYSTEM_INFO->page_size_, 0);
+    RocmMallocHeader *header = reinterpret_cast<RocmMallocHeader *>(header_);
+    header->type_ = MemoryBackendType::kRocmMalloc;
+    header->id_ = backend_id;
+    header->data_size_ = size;
     data_size_ = size;
-    data_ = reinterpret_cast<char *>(header_ + 1);
+    data_ = _Map(data_size_);
+    HIP_ERROR_CHECK(hipIpcGetMemHandle(&header->ipc_, (void *)data_));
     return true;
   }
 
   /** Deserialize the backend */
   bool shm_deserialize(const hshm::chararr &url) {
-    (void)url;
-    HSHM_THROW_ERROR(SHMEM_NOT_SUPPORTED);
-    return false;
+    SetInitialized();
+    Disown();
+    if (!SystemInfo::OpenSharedMemory(fd_, url.c_str())) {
+      const char *err_buf = strerror(errno);
+      HILOG(kError, "shm_open failed: {}", err_buf);
+      return false;
+    }
+    header_ = (MemoryBackendHeader *)_ShmMap(HSHM_SYSTEM_INFO->page_size_, 0);
+    RocmMallocHeader *header = reinterpret_cast<RocmMallocHeader *>(header_);
+    data_size_ = header_->data_size_;
+    HIP_ERROR_CHECK(hipIpcOpenMemHandle((void **)&data_, header->ipc_,
+                                        hipIpcMemLazyEnablePeerAccess));
+    return true;
   }
 
   /** Detach the mapped memory */
@@ -69,6 +93,16 @@ class RocmMalloc : public MemoryBackend {
   T *_Map(size_t size) {
     T *ptr;
     HIP_ERROR_CHECK(hipMallocManaged(&ptr, size));
+    return ptr;
+  }
+
+  /** Map shared memory */
+  char *_ShmMap(size_t size, i64 off) {
+    char *ptr =
+        reinterpret_cast<char *>(SystemInfo::MapSharedMemory(fd_, size, off));
+    if (!ptr) {
+      HSHM_THROW_ERROR(SHMEM_CREATE_FAILED);
+    }
     return ptr;
   }
 

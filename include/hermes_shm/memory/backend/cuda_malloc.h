@@ -17,6 +17,10 @@
 
 namespace hshm::ipc {
 
+struct CudaMallocHeader : public MemoryBackendHeader {
+  cudaIpcMemHandle_t ipc_;
+};
+
 class CudaMalloc : public MemoryBackend {
  private:
   size_t total_size_;
@@ -36,25 +40,44 @@ class CudaMalloc : public MemoryBackend {
   }
 
   /** Initialize backend */
-  bool shm_init(const MemoryBackendId &backend_id, size_t size) {
+  bool shm_init(const MemoryBackendId &backend_id, size_t size,
+                const hshm::chararr &url) {
     SetInitialized();
     Own();
-    total_size_ = sizeof(MemoryBackendHeader) + size;
-    char *ptr = _Map(total_size_);
-    header_ = reinterpret_cast<MemoryBackendHeader *>(ptr);
-    header_->type_ = MemoryBackendType::kCudaMalloc;
-    header_->id_ = backend_id;
-    header_->data_size_ = size;
+    SystemInfo::DestroySharedMemory(url.c_str());
+    if (!SystemInfo::CreateNewSharedMemory(
+            fd_, url.c_str(), size + HSHM_SYSTEM_INFO->page_size_)) {
+      char *err_buf = strerror(errno);
+      HILOG(kError, "shm_open failed: {}", err_buf);
+      return false;
+    }
+    url_ = url;
+    header_ = (MemoryBackendHeader *)_ShmMap(HSHM_SYSTEM_INFO->page_size_, 0);
+    CudaMallocHeader *header = reinterpret_cast<CudaMallocHeader *>(header_);
+    header->type_ = MemoryBackendType::kCudaMalloc;
+    header->id_ = backend_id;
+    header->data_size_ = size;
     data_size_ = size;
-    data_ = reinterpret_cast<char *>(header_ + 1);
+    data_ = _Map(data_size_);
+    HIP_ERROR_CHECK(cudaIpcGetMemHandle(&header->ipc_, (void *)data_));
     return true;
   }
 
   /** Deserialize the backend */
   bool shm_deserialize(const hshm::chararr &url) {
-    (void)url;
-    HSHM_THROW_ERROR(SHMEM_NOT_SUPPORTED);
-    return false;
+    SetInitialized();
+    Disown();
+    if (!SystemInfo::OpenSharedMemory(fd_, url.c_str())) {
+      const char *err_buf = strerror(errno);
+      HILOG(kError, "shm_open failed: {}", err_buf);
+      return false;
+    }
+    header_ = (MemoryBackendHeader *)_ShmMap(HSHM_SYSTEM_INFO->page_size_, 0);
+    CudaMallocHeader *header = reinterpret_cast<CudaMallocHeader *>(header_);
+    data_size_ = header_->data_size_;
+    HIP_ERROR_CHECK(cudaIpcOpenMemHandle((void **)&data_, header->ipc_,
+                                         cudaIpcMemLazyEnablePeerAccess));
+    return true;
   }
 
   /** Detach the mapped memory */
