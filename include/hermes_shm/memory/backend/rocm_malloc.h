@@ -21,7 +21,7 @@ struct RocmMallocHeader : public MemoryBackendHeader {
   hipIpcMemHandle_t ipc_;
 };
 
-class RocmMalloc : public MemoryBackend {
+class RocmMalloc : public MemoryBackend, public UrlMemoryBackend {
  public:
   CLS_CONST MemoryBackendType EnumType = MemoryBackendType::kRocmMalloc;
 
@@ -54,7 +54,7 @@ class RocmMalloc : public MemoryBackend {
     HIP_ERROR_CHECK(hipSetDevice(device));
     SystemInfo::DestroySharedMemory(url.c_str());
     if (!SystemInfo::CreateNewSharedMemory(
-            fd_, url.c_str(), size + HSHM_SYSTEM_INFO->page_size_)) {
+            fd_, url.c_str(), md_size + HSHM_SYSTEM_INFO->page_size_)) {
       char *err_buf = strerror(errno);
       HILOG(kError, "shm_open failed: {}", err_buf);
       return false;

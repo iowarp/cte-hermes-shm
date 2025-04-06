@@ -51,7 +51,7 @@ class HshmUnitTests(Application):
         :return: None
         """
         cmd = [
-            'test_memory_rocm_exec_mpi',
+            'test_memory_rocm_exec_mpi'
         ]
         cmd = ' '.join(cmd)
         Exec(cmd,

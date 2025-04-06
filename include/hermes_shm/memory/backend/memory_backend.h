@@ -125,6 +125,7 @@ class MemoryBackend {
 
   ~MemoryBackend() = default;
 
+  HSHM_CROSS_FUN
   MemoryBackend Shift(size_t offset) {
     MemoryBackend backend;
     backend.header_ = header_;
