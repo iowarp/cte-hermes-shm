@@ -107,6 +107,13 @@ struct OffsetPointerBase : public ShmPointer {
   hipc::opt_atomic<hshm::size_t, ATOMIC>
       off_; /**< Offset within the allocator's slot */
 
+  /** ostream operator */
+  friend std::ostream &operator<<(std::ostream &os,
+                                  const OffsetPointerBase &ptr) {
+    os << ptr.off_.load();
+    return os;
+  }
+
   /** Default constructor */
   HSHM_INLINE_CROSS_FUN OffsetPointerBase() = default;
 
@@ -307,6 +314,12 @@ struct PointerBase : public ShmPointer {
   AllocatorId alloc_id_;           /// Allocator the pointer comes from
   OffsetPointerBase<ATOMIC> off_;  /// Offset within the allocator's slot
 
+  /** Ostream operator */
+  friend std::ostream &operator<<(std::ostream &os, const PointerBase &ptr) {
+    os << ptr.alloc_id_ << "::" << ptr.off_;
+    return os;
+  }
+
   /** Default constructor */
   HSHM_INLINE_CROSS_FUN PointerBase() = default;
 
@@ -467,6 +480,12 @@ template <typename T = char, typename PointerT = Pointer>
 struct FullPtr : public ShmPointer {
   T *ptr_;
   PointerT shm_;
+
+  /** Ostream operator */
+  friend std::ostream &operator<<(std::ostream &os, const FullPtr &ptr) {
+    os << (void *)ptr.ptr_ << " " << ptr.shm_;
+    return os;
+  }
 
   /** Default constructor */
   HSHM_INLINE_CROSS_FUN FullPtr() = default;

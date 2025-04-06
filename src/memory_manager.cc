@@ -119,14 +119,15 @@ void AllocateCudaBackend(int dev, MemoryBackend *other) {
   cudaSetDevice(dev);
   switch (other->header_->type_) {
     case MemoryBackendType::kCudaMalloc: {
-      CudaMalloc *pack, *cpy;
-      cudaMallocManaged(&pack, sizeof(CudaMalloc));
-      memcpy((char *)pack, (char *)other, sizeof(CudaMalloc));
-      pack->UnsetScanned();
-      pack->Disown();
-      AttachBackendKernel<<<1, 1>>>(pack);
-      cudaDeviceSynchronize();
-      cudaFree(pack);
+      // CudaMalloc *pack, *cpy;
+      // cudaMallocManaged(&pack, sizeof(CudaMalloc));
+      // memcpy((char *)pack, (char *)other, sizeof(CudaMalloc));
+      // pack->UnsetScanned();
+      // pack->Disown();
+      // AttachBackendKernel<<<1, 1>>>(pack);
+      // cudaDeviceSynchronize();
+      // cudaFree(pack);
+      break;
     }
     case MemoryBackendType::kCudaShmMmap: {
       CudaShmMmap *pack, *cpy;
@@ -137,6 +138,7 @@ void AllocateCudaBackend(int dev, MemoryBackend *other) {
       AttachBackendKernel<<<1, 1>>>(pack);
       cudaDeviceSynchronize();
       cudaFree(pack);
+      break;
     }
     default: {
       break;
@@ -151,13 +153,14 @@ void AllocateRocmBackend(int dev, MemoryBackend *other) {
   HIP_ERROR_CHECK(hipSetDevice(dev));
   switch (other->header_->type_) {
     case MemoryBackendType::kRocmMalloc: {
-      RocmMalloc *pack, *cpy;
-      HIP_ERROR_CHECK(hipMallocManaged(&pack, sizeof(RocmMalloc)));
-      memcpy((char *)pack, (char *)other, sizeof(RocmMalloc));
-      pack->UnsetScanned();
-      pack->Disown();
-      AttachBackendKernel<<<1, 1>>>(pack);
-      HIP_ERROR_CHECK(hipDeviceSynchronize());
+      // RocmMalloc *pack, *cpy;
+      // HIP_ERROR_CHECK(hipMallocManaged(&pack, sizeof(RocmMalloc)));
+      // memcpy((char *)pack, (char *)other, sizeof(RocmMalloc));
+      // pack->UnsetScanned();
+      // pack->Disown();
+      // AttachBackendKernel<<<1, 1>>>(pack);
+      // HIP_ERROR_CHECK(hipDeviceSynchronize());
+      break;
     }
     case MemoryBackendType::kRocmShmMmap: {
       RocmShmMmap *pack, *cpy;

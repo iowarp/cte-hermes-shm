@@ -92,34 +92,11 @@ class _GpuStackAllocator : public Allocator {
    * Allocate a memory of \a size size. The page allocator cannot allocate
    * memory larger than the page size.
    * */
-  HSHM_INLINE_CROSS_FUN
-  OffsetPointer SubAllocateOffset(size_t size) {
-    return heap_->AllocateOffset(size);
-  }
-
-  /** Align the memory to the next page boundary */
-  HSHM_CROSS_FUN
-  void Align() {
-    hshm::size_t off = heap_->heap_off_.load();
-    hshm::size_t page_size = 4096;
-    hshm::size_t new_off = (off + page_size - 1) & ~(page_size - 1);
-    heap_->heap_off_.store(new_off);
-  }
-
-  /**
-   * Allocate a memory of \a size size. The page allocator cannot allocate
-   * memory larger than the page size.
-   * */
   HSHM_CROSS_FUN
   OffsetPointer AllocateOffset(const hipc::MemContext &ctx, size_t size) {
-    size += sizeof(MpPage);
     OffsetPointer p = heap_->AllocateOffset(size);
-    auto hdr = Convert<MpPage>(p);
-    hdr->SetAllocated();
-    hdr->page_size_ = size;
-    hdr->off_ = 0;
-    header_->AddSize(hdr->page_size_);
-    return p + sizeof(MpPage);
+    header_->AddSize(size);
+    return p;
   }
 
   /**
@@ -141,15 +118,8 @@ class _GpuStackAllocator : public Allocator {
   HSHM_CROSS_FUN
   OffsetPointer ReallocateOffsetNoNullCheck(const hipc::MemContext &ctx,
                                             OffsetPointer p, size_t new_size) {
-    OffsetPointer new_p;
-    void *src = Convert<void>(p);
-    auto hdr = Convert<MpPage>(p - sizeof(MpPage));
-    size_t old_size = hdr->page_size_ - sizeof(MpPage);
-    void *dst = ((AllocT *)this)
-                    ->AllocatePtr<void, OffsetPointer>(ctx, new_size, new_p);
-    memcpy((void *)dst, (void *)src, old_size);
-    ((AllocT *)this)->Free(ctx, p);
-    return new_p;
+    HSHM_THROW_ERROR(NOT_IMPLEMENTED, "ReallocateOffsetNoNullCheck");
+    return OffsetPointer::GetNull();
   }
 
   /**
@@ -157,12 +127,8 @@ class _GpuStackAllocator : public Allocator {
    * */
   HSHM_CROSS_FUN
   void FreeOffsetNoNullCheck(const hipc::MemContext &ctx, OffsetPointer p) {
-    auto hdr = Convert<MpPage>(p - sizeof(MpPage));
-    if (!hdr->IsAllocated()) {
-      HSHM_THROW_ERROR(DOUBLE_FREE);
-    }
-    hdr->UnsetAllocated();
-    header_->SubSize(hdr->page_size_);
+    HSHM_THROW_ERROR(NOT_IMPLEMENTED, "FreeOffsetNoNullCheck");
+    return;
   }
 
   /**
