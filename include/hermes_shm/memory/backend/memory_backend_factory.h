@@ -57,15 +57,7 @@ class MemoryBackendFactory {
   template <typename BackendT, typename... Args>
   static MemoryBackend *shm_init(const MemoryBackendId &backend_id, size_t size,
                                  Args... args) {
-    // HSHM_CREATE_BACKEND(PosixShmMmap)
-    if constexpr (std::is_same_v<PosixShmMmap, BackendT>) {
-      auto alloc = HSHM_ROOT_ALLOC;
-      auto backend = alloc->template NewObj<PosixShmMmap>(HSHM_DEFAULT_MEM_CTX);
-      if (!backend->shm_init(backend_id, size, std::forward<Args>(args)...)) {
-        HSHM_THROW_ERROR(MEMORY_BACKEND_CREATE_FAILED);
-      }
-      return backend;
-    }
+    HSHM_CREATE_BACKEND(PosixShmMmap)
 #ifdef HSHM_ENABLE_CUDA
     HSHM_CREATE_BACKEND(CudaShmMmap)
     HSHM_CREATE_BACKEND(CudaMalloc)
