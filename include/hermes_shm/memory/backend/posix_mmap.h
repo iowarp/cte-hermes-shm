@@ -36,6 +36,9 @@
 namespace hshm::ipc {
 
 class PosixMmap : public MemoryBackend {
+ public:
+  CLS_CONST MemoryBackendType EnumType = MemoryBackendType::kPosixMmap;
+
  private:
   size_t total_size_;
 

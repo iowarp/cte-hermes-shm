@@ -29,6 +29,9 @@ namespace hshm::ipc {
 
 class ArrayBackend : public MemoryBackend {
  public:
+  CLS_CONST MemoryBackendType EnumType = MemoryBackendType::kArrayBackend;
+
+ public:
   HSHM_CROSS_FUN
   ArrayBackend() = default;
 

@@ -31,6 +31,9 @@ namespace hshm::ipc {
 
 class CudaShmMmap : public PosixShmMmap {
  public:
+  CLS_CONST MemoryBackendType EnumType = MemoryBackendType::kCudaShmMmap;
+
+ public:
   /** Constructor */
   HSHM_CROSS_FUN
   CudaShmMmap() {}

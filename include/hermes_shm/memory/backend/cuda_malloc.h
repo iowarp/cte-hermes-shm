@@ -22,6 +22,9 @@ struct CudaMallocHeader : public MemoryBackendHeader {
 };
 
 class CudaMalloc : public MemoryBackend {
+ public:
+  CLS_CONST MemoryBackendType EnumType = MemoryBackendType::kCudaMalloc;
+
  private:
   size_t total_size_;
 

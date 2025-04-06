@@ -29,6 +29,9 @@
 namespace hshm::ipc {
 
 class PosixShmMmap : public MemoryBackend, public UrlMemoryBackend {
+ public:
+  CLS_CONST MemoryBackendType EnumType = MemoryBackendType::kPosixShmMmap;
+
  protected:
   File fd_;
   hshm::chararr url_;

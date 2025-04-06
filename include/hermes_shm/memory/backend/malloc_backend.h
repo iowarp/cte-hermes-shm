@@ -27,6 +27,9 @@
 namespace hshm::ipc {
 
 class MallocBackend : public MemoryBackend {
+ public:
+  CLS_CONST MemoryBackendType EnumType = MemoryBackendType::kMallocBackend;
+
  private:
   size_t total_size_;
 

@@ -22,6 +22,9 @@ struct RocmMallocHeader : public MemoryBackendHeader {
 };
 
 class RocmMalloc : public MemoryBackend {
+ public:
+  CLS_CONST MemoryBackendType EnumType = MemoryBackendType::kRocmMalloc;
+
  private:
   File fd_;
   hshm::chararr url_;
@@ -40,9 +43,15 @@ class RocmMalloc : public MemoryBackend {
     }
   }
 
-  /** Initialize backend */
+  /**
+   * Initialize backend
+   * @param backend_id The backend id
+   * @param size The size of the shared memory
+   * @param url The url of the shared memory
+   * @param unused Unused parameter used for template factories
+   */
   bool shm_init(const MemoryBackendId &backend_id, size_t size,
-                const hshm::chararr &url) {
+                const hshm::chararr &url, int unused = 0) {
     SetInitialized();
     Own();
     SystemInfo::DestroySharedMemory(url.c_str());

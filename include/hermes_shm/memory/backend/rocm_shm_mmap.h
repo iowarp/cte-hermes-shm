@@ -32,6 +32,9 @@ namespace hshm::ipc {
 
 class RocmShmMmap : public PosixShmMmap {
  public:
+  CLS_CONST MemoryBackendType EnumType = MemoryBackendType::kRocmShmMmap;
+
+ public:
   /** Constructor */
   HSHM_CROSS_FUN
   RocmShmMmap() {}
