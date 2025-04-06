@@ -43,7 +43,7 @@ struct _ScalablePageAllocatorHeader : public AllocatorHeader {
 
   HSHM_CROSS_FUN
   void Configure(AllocatorId alloc_id, size_t custom_header_size,
-                 StackAllocator *alloc, size_t buffer_size) {
+                 StackAllocator *alloc) {
     AllocatorHeader::Configure(alloc_id, AllocatorType::kScalablePageAllocator,
                                custom_header_size);
     total_alloc_ = 0;
@@ -71,20 +71,20 @@ class _ScalablePageAllocator : public Allocator {
    * Initialize the allocator in shared memory
    * */
   HSHM_CROSS_FUN
-  void shm_init(AllocatorId id, size_t custom_header_size, char *buffer,
-                size_t buffer_size) {
+  void shm_init(AllocatorId id, size_t custom_header_size,
+                MemoryBackend backend) {
     type_ = AllocatorType::kScalablePageAllocator;
     id_ = id;
-    buffer_ = buffer;
-    buffer_size_ = buffer_size;
+    buffer_ = backend.data_;
+    buffer_size_ = backend.data_size_;
     header_ = ConstructHeader<_ScalablePageAllocatorHeader>(buffer_);
     custom_header_ = reinterpret_cast<char *>(header_ + 1);
     size_t region_off = (custom_header_ - buffer_) + custom_header_size;
     size_t region_size = buffer_size_ - region_off;
     AllocatorId sub_id(id.bits_.major_, id.bits_.minor_ + 1);
-    alloc_.shm_init(sub_id, 0, buffer + region_off, region_size);
+    alloc_.shm_init(sub_id, 0, backend.Shift(region_off));
     HSHM_MEMORY_MANAGER->RegisterSubAllocator(&alloc_);
-    header_->Configure(id, custom_header_size, &alloc_, buffer_size);
+    header_->Configure(id, custom_header_size, &alloc_);
     alloc_.Align();
   }
 
@@ -92,9 +92,9 @@ class _ScalablePageAllocator : public Allocator {
    * Attach an existing allocator from shared memory
    * */
   HSHM_CROSS_FUN
-  void shm_deserialize(char *buffer, size_t buffer_size) {
-    buffer_ = buffer;
-    buffer_size_ = buffer_size;
+  void shm_deserialize(MemoryBackend backend) {
+    buffer_ = backend.data_;
+    buffer_size_ = backend.data_size_;
     header_ = reinterpret_cast<_ScalablePageAllocatorHeader *>(buffer_);
     type_ = header_->allocator_type_;
     id_ = header_->alloc_id_;
@@ -102,7 +102,7 @@ class _ScalablePageAllocator : public Allocator {
     size_t region_off =
         (custom_header_ - buffer_) + header_->custom_header_size_;
     size_t region_size = buffer_size_ - region_off;
-    alloc_.shm_deserialize(buffer + region_off, region_size);
+    alloc_.shm_deserialize(backend.Shift(region_off));
     HSHM_MEMORY_MANAGER->RegisterSubAllocator(&alloc_);
   }
 

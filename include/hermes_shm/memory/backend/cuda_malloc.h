@@ -44,9 +44,11 @@ class CudaMalloc : public MemoryBackend {
 
   /** Initialize backend */
   bool shm_init(const MemoryBackendId &backend_id, size_t size,
-                const hshm::chararr &url) {
+                const hshm::chararr &url, int device = 0) {
     SetInitialized();
     Own();
+    cudaDeviceSynchronize();
+    cudaSetDevice(device);
     SystemInfo::DestroySharedMemory(url.c_str());
     if (!SystemInfo::CreateNewSharedMemory(
             fd_, url.c_str(), size + HSHM_SYSTEM_INFO->page_size_)) {

@@ -16,6 +16,7 @@
 #include <cstdint>
 
 #include "hermes_shm/constants/macros.h"
+#include "hermes_shm/memory/backend/memory_backend.h"
 #include "hermes_shm/memory/memory.h"
 #include "hermes_shm/thread/thread_model/thread_model.h"
 #include "hermes_shm/types/numbers.h"
@@ -29,6 +30,8 @@ namespace hshm::ipc {
  * */
 enum class AllocatorType {
   kStackAllocator,
+  kGpuStackAllocator,
+  kSliceAllocator,
   kMallocAllocator,
   kFixedPageAllocator,
   kScalablePageAllocator,
@@ -276,8 +279,8 @@ class BaseAllocator : public CoreAllocT {
    * Deserialize allocator from a buffer.
    * */
   HSHM_CROSS_FUN
-  void shm_deserialize(char *buffer, size_t buffer_size) {
-    CoreAllocT::shm_deserialize(buffer, buffer_size);
+  void shm_deserialize(const MemoryBackend &backend) {
+    CoreAllocT::shm_deserialize(backend);
   }
 
   /**====================================

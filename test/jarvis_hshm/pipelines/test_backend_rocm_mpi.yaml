@@ -1,0 +1,8 @@
+name: chimaera_unit_ipc
+env: chimaera
+pkgs:
+  - pkg_type: hshm_unit_tests
+    pkg_name: hshm_unit_tests
+    do_dbg: true
+    dbg_port: 4000
+

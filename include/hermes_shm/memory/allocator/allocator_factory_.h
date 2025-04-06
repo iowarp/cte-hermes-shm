@@ -32,6 +32,9 @@ typedef BaseAllocator<_StackAllocator> StackAllocator;
 class _ThreadLocalAllocator;
 typedef BaseAllocator<_ThreadLocalAllocator> ThreadLocalAllocator;
 
+class _GpuStackAllocator;
+typedef BaseAllocator<_GpuStackAllocator> GpuStackAllocator;
+
 class _TestAllocator;
 typedef BaseAllocator<_TestAllocator> TestAllocator;
 

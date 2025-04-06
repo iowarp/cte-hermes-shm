@@ -85,10 +85,13 @@ typedef MemoryBackendId memory_backend_id_t;
 struct MemoryBackendHeader {
   MemoryBackendType type_;
   MemoryBackendId id_;
-  size_t data_size_;
+  union {
+    size_t data_size_;  // For CPU-only backends
+    size_t md_size_;    // For CPU+GPU backends
+  };
+  size_t accel_data_size_;
 
-  HSHM_CROSS_FUN
-  void Print() const {
+  HSHM_CROSS_FUN void Print() const {
     printf("(%s) MemoryBackendHeader: type: %d, id: %d, data_size: %lu\n",
            kCurrentDevice, static_cast<int>(type_), id_.id_,
            (long unsigned)data_size_);
@@ -104,8 +107,16 @@ class UrlMemoryBackend {};
 class MemoryBackend {
  public:
   MemoryBackendHeader *header_;
-  char *data_;
-  size_t data_size_;
+  union {
+    char *data_; /** For CPU-only backends */
+    char *md_;   /** For CPU+GPU backends */
+  };
+  union {
+    size_t data_size_; /** For CPU-only backends */
+    size_t md_size_;   /** For CPU+GPU backends */
+  };
+  char *accel_data_;
+  size_t accel_data_size_;
   ibitfield flags_;
 
  public:
@@ -113,6 +124,18 @@ class MemoryBackend {
   MemoryBackend() : header_(nullptr), data_(nullptr) {}
 
   ~MemoryBackend() = default;
+
+  MemoryBackend Shift(size_t offset) {
+    MemoryBackend backend;
+    backend.header_ = header_;
+    backend.md_ = md_ + offset;
+    backend.md_size_ = md_size_ - offset;
+    backend.accel_data_ = accel_data_;
+    backend.accel_data_size_ = accel_data_size_;
+    backend.Disown();
+    backend.SetInitialized();
+    return backend;
+  }
 
   /** Mark data as valid */
   HSHM_CROSS_FUN

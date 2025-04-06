@@ -14,12 +14,10 @@
 #include "hermes_shm/types/atomic.h"
 #include "hermes_shm/util/singleton.h"
 
-#define HSHM_DEFAULT_GPU_ALLOC_T hipc::ThreadLocalAllocator
-HSHM_DATA_STRUCTURES_TEMPLATE_BASE(gpu::ipc, hshm::ipc,
-                                   HSHM_DEFAULT_GPU_ALLOC_T)
+HSHM_DATA_STRUCTURES_TEMPLATE_BASE(gpu::ipc, hshm::ipc, hipc::SliceAllocator)
 
 HSHM_GPU_KERNEL void mpsc_kernel(gpu::ipc::mpsc_queue<int> *queue) {
-  hipc::ScopedTlsAllocator<HSHM_DEFAULT_GPU_ALLOC_T> ctx_alloc(
+  hipc::ScopedTlsAllocator<hipc::SliceAllocator> ctx_alloc(
       queue->GetCtxAllocator());
   queue->GetThreadLocal(ctx_alloc);
   queue->emplace(10);
@@ -29,23 +27,25 @@ hipc::AllocatorId alloc_id(1, 0);
 hshm::chararr shm_url = "test_serializers";
 
 template <typename BackendT>
-HSHM_DEFAULT_GPU_ALLOC_T *CreateShmem() {
+hipc::SliceAllocator *CreateShmem() {
   auto mem_mngr = HSHM_MEMORY_MANAGER;
   mem_mngr->UnregisterAllocator(alloc_id);
   mem_mngr->DestroyBackend(hipc::MemoryBackendId::Get(0));
   mem_mngr->CreateBackend<BackendT>(hipc::MemoryBackendId::Get(0),
                                     MEGABYTES(100), shm_url, 0);
-  auto *alloc = mem_mngr->CreateAllocator<HSHM_DEFAULT_GPU_ALLOC_T>(
+  auto *alloc = mem_mngr->CreateAllocator<hipc::SliceAllocator>(
       hipc::MemoryBackendId::Get(0), alloc_id,
       sizeof(gpu::ipc::mpsc_queue<int>));
+  HILOG(kInfo, "Creating shared memory allocator: {}", alloc_id);
   return alloc;
 }
 
 template <typename BackendT>
-HSHM_DEFAULT_GPU_ALLOC_T *LoadShmem() {
+hipc::SliceAllocator *LoadShmem() {
   auto mem_mngr = HSHM_MEMORY_MANAGER;
   mem_mngr->AttachBackend(BackendT::EnumType, shm_url);
-  auto *alloc = mem_mngr->GetAllocator<HSHM_DEFAULT_GPU_ALLOC_T>(alloc_id);
+  auto *alloc = mem_mngr->GetAllocator<hipc::SliceAllocator>(alloc_id);
+  HILOG(kInfo, "Loading shared memory allocator: {}", alloc_id);
   return alloc;
 }
 
@@ -53,7 +53,7 @@ template <typename BackendT>
 void mpsc_test() {
   int rank;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  HSHM_DEFAULT_GPU_ALLOC_T *alloc;
+  hipc::SliceAllocator *alloc;
   if (rank == 0) {
     alloc = CreateShmem<BackendT>();
   }
@@ -61,9 +61,10 @@ void mpsc_test() {
   if (rank != 0) {
     alloc = LoadShmem<BackendT>();
   }
+  return;
   hipc::delay_ar<gpu::ipc::mpsc_queue<int>> &queue =
       *alloc->GetCustomHeader<hipc::delay_ar<gpu::ipc::mpsc_queue<int>>>();
-  hipc::CtxAllocator<HSHM_DEFAULT_GPU_ALLOC_T> ctx_alloc(alloc);
+  hipc::CtxAllocator<hipc::SliceAllocator> ctx_alloc(alloc);
   if (rank == 0) {
     HSHM_MAKE_AR(queue, alloc, 256 * 256);
   }

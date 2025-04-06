@@ -15,6 +15,7 @@
 
 #include "allocator.h"
 #include "allocator_factory_.h"
+#include "gpu_stack_allocator.h"
 #include "hermes_shm/memory/memory_manager_.h"
 #include "malloc_allocator.h"
 #include "scalable_page_allocator.h"
@@ -27,7 +28,7 @@ namespace hshm::ipc {
 #define HSHM_ALLOC_DSRL_CASE(ALLOC_NAME)                                    \
   case AllocatorType::k##ALLOC_NAME: {                                      \
     auto alloc = HSHM_ROOT_ALLOC->NewObj<ALLOC_NAME>(HSHM_DEFAULT_MEM_CTX); \
-    alloc->shm_deserialize(buffer, buffer_size);                            \
+    alloc->shm_deserialize(backend);                                        \
     return alloc;                                                           \
   }
 
@@ -38,9 +39,9 @@ class AllocatorFactory {
    * */
   template <typename AllocT, typename... Args>
   static AllocT* shm_init(AllocatorId alloc_id, size_t custom_header_size,
-                          char* buffer, size_t buffer_size, Args&&... args) {
+                          const MemoryBackend& backend, Args&&... args) {
     auto alloc = HSHM_ROOT_ALLOC->NewObj<AllocT>(HSHM_DEFAULT_MEM_CTX);
-    alloc->shm_init(alloc_id, custom_header_size, buffer, buffer_size,
+    alloc->shm_init(alloc_id, custom_header_size, backend,
                     std::forward<Args>(args)...);
     return alloc;
   }
@@ -51,20 +52,20 @@ class AllocatorFactory {
   template <typename AllocT, typename... Args>
   static AllocT* shm_init(AllocatorId alloc_id, size_t custom_header_size,
                           MemoryBackend* backend, Args&&... args) {
-    return shm_init<AllocT>(alloc_id, custom_header_size, backend->data_,
-                            backend->data_size_, std::forward<Args>(args)...);
+    return shm_init<AllocT>(alloc_id, custom_header_size, *backend,
+                            std::forward<Args>(args)...);
   }
 
   /**
    * Deserialize the allocator managing this backend.
    * */
   template <typename AllocT = Allocator>
-  HSHM_CROSS_FUN static AllocT* shm_deserialize(char* buffer,
-                                                size_t buffer_size) {
-    auto header_ = reinterpret_cast<AllocatorHeader*>(buffer);
+  HSHM_CROSS_FUN static AllocT* shm_deserialize(const MemoryBackend& backend) {
+    auto header_ = reinterpret_cast<AllocatorHeader*>(backend.md_);
     switch (header_->allocator_type_) {
       // Stack Allocator
       HSHM_ALLOC_DSRL_CASE(StackAllocator)
+      HSHM_ALLOC_DSRL_CASE(GpuStackAllocator)
       HSHM_ALLOC_DSRL_CASE(MallocAllocator)
       HSHM_ALLOC_DSRL_CASE(ScalablePageAllocator)
       HSHM_ALLOC_DSRL_CASE(ThreadLocalAllocator)
@@ -82,18 +83,7 @@ class AllocatorFactory {
     if (backend == nullptr) {
       return nullptr;
     }
-    return shm_deserialize<AllocT>(backend->data_, backend->data_size_);
-  }
-
-  /**
-   * Attach the allocator
-   * */
-  template <typename AllocT = Allocator>
-  HSHM_CROSS_FUN static AllocT* shm_attach(Allocator* other) {
-    if (other == nullptr) {
-      return nullptr;
-    }
-    return shm_deserialize<AllocT>(other->buffer_, other->buffer_size_);
+    return shm_deserialize<AllocT>(*backend);
   }
 };
 

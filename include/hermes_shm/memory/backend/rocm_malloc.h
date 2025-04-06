@@ -44,16 +44,14 @@ class RocmMalloc : public MemoryBackend {
   }
 
   /**
-   * Initialize backend
-   * @param backend_id The backend id
-   * @param size The size of the shared memory
-   * @param url The url of the shared memory
-   * @param unused Unused parameter used for template factories
-   */
-  bool shm_init(const MemoryBackendId &backend_id, size_t size,
-                const hshm::chararr &url, int unused = 0) {
+   * Initialize backend */
+  bool shm_init(const MemoryBackendId &backend_id, size_t accel_data_size,
+                const hshm::chararr &url, int device = 0,
+                size_t md_size = KILOBYTES(4)) {
     SetInitialized();
     Own();
+    HIP_ERROR_CHECK(hipDeviceSynchronize());
+    HIP_ERROR_CHECK(hipSetDevice(device));
     SystemInfo::DestroySharedMemory(url.c_str());
     if (!SystemInfo::CreateNewSharedMemory(
             fd_, url.c_str(), size + HSHM_SYSTEM_INFO->page_size_)) {
@@ -66,10 +64,13 @@ class RocmMalloc : public MemoryBackend {
     RocmMallocHeader *header = reinterpret_cast<RocmMallocHeader *>(header_);
     header->type_ = MemoryBackendType::kRocmMalloc;
     header->id_ = backend_id;
-    header->data_size_ = size;
-    data_size_ = size;
-    data_ = _Map(data_size_);
-    HIP_ERROR_CHECK(hipIpcGetMemHandle(&header->ipc_, (void *)data_));
+    header->md_size_ = md_size;
+    header->accel_data_size_ = accel_data_size;
+    md_ = _ShmMap(md_size, HSHM_SYSTEM_INFO->page_size_);
+    md_size_ = md_size - sizeof(RocmMallocHeader);
+    accel_data_size_ = accel_data_size;
+    accel_data_ = _Map(accel_data_size);
+    HIP_ERROR_CHECK(hipIpcGetMemHandle(&header->ipc_, (void *)accel_data_));
     return true;
   }
 
@@ -84,8 +85,10 @@ class RocmMalloc : public MemoryBackend {
     }
     header_ = (MemoryBackendHeader *)_ShmMap(HSHM_SYSTEM_INFO->page_size_, 0);
     RocmMallocHeader *header = reinterpret_cast<RocmMallocHeader *>(header_);
-    data_size_ = header_->data_size_;
-    HIP_ERROR_CHECK(hipIpcOpenMemHandle((void **)&data_, header->ipc_,
+    md_size_ = header_->md_size_;
+    md_ = _ShmMap(md_size_, HSHM_SYSTEM_INFO->page_size_);
+    accel_data_size_ = header_->accel_data_size_;
+    HIP_ERROR_CHECK(hipIpcOpenMemHandle((void **)&accel_data_, header->ipc_,
                                         hipIpcMemLazyEnablePeerAccess));
     return true;
   }
@@ -101,7 +104,7 @@ class RocmMalloc : public MemoryBackend {
   template <typename T = char>
   T *_Map(size_t size) {
     T *ptr;
-    HIP_ERROR_CHECK(hipMallocManaged(&ptr, size));
+    HIP_ERROR_CHECK(hipMalloc(&ptr, size));
     return ptr;
   }
 

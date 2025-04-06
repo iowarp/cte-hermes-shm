@@ -10,8 +10,8 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HSHM_MEMORY_ALLOCATOR_STACK_ALLOCATOR_H_
-#define HSHM_MEMORY_ALLOCATOR_STACK_ALLOCATOR_H_
+#ifndef HSHM_MEMORY_ALLOCATOR_GPU_STACK_ALLOCATOR_H_
+#define HSHM_MEMORY_ALLOCATOR_GPU_STACK_ALLOCATOR_H_
 
 #include "allocator.h"
 #include "heap.h"
@@ -20,33 +20,33 @@
 
 namespace hshm::ipc {
 
-class _StackAllocator;
-typedef BaseAllocator<_StackAllocator> StackAllocator;
+class _GpuStackAllocator;
+typedef BaseAllocator<_GpuStackAllocator> GpuStackAllocator;
 
-struct _StackAllocatorHeader : public AllocatorHeader {
+struct _GpuStackAllocatorHeader : public AllocatorHeader {
   HeapAllocator<true> heap_;
   hipc::atomic<hshm::size_t> total_alloc_;
 
   HSHM_CROSS_FUN
-  _StackAllocatorHeader() = default;
+  _GpuStackAllocatorHeader() = default;
 
   HSHM_CROSS_FUN
   void Configure(AllocatorId alloc_id, size_t custom_header_size,
                  size_t region_off, size_t region_size) {
-    AllocatorHeader::Configure(alloc_id, AllocatorType::kStackAllocator,
+    AllocatorHeader::Configure(alloc_id, AllocatorType::kGpuStackAllocator,
                                custom_header_size);
     heap_.shm_init(region_off, region_size);
     total_alloc_ = 0;
   }
 };
 
-class _StackAllocator : public Allocator {
+class _GpuStackAllocator : public Allocator {
  public:
-  HSHM_ALLOCATOR(_StackAllocator);
+  HSHM_ALLOCATOR(_GpuStackAllocator);
 
  public:
-  typedef BaseAllocator<_StackAllocator> AllocT;
-  _StackAllocatorHeader *header_;
+  typedef BaseAllocator<_GpuStackAllocator> AllocT;
+  _GpuStackAllocatorHeader *header_;
   HeapAllocator<true> *heap_;
 
  public:
@@ -54,7 +54,7 @@ class _StackAllocator : public Allocator {
    * Allocator constructor
    * */
   HSHM_CROSS_FUN
-  _StackAllocator() : header_(nullptr) {}
+  _GpuStackAllocator() : header_(nullptr) {}
 
   /**
    * Initialize the allocator in shared memory
@@ -62,14 +62,14 @@ class _StackAllocator : public Allocator {
   HSHM_CROSS_FUN
   void shm_init(AllocatorId id, size_t custom_header_size,
                 MemoryBackend backend) {
-    type_ = AllocatorType::kStackAllocator;
+    type_ = AllocatorType::kGpuStackAllocator;
     id_ = id;
-    buffer_ = backend.data_;
-    buffer_size_ = backend.data_size_;
-    header_ = ConstructHeader<_StackAllocatorHeader>(buffer_);
+    buffer_ = backend.accel_data_;
+    buffer_size_ = backend.accel_data_size_;
+    header_ = ConstructHeader<_GpuStackAllocatorHeader>(backend.md_);
     custom_header_ = reinterpret_cast<char *>(header_ + 1);
-    size_t region_off = (custom_header_ - buffer_) + custom_header_size;
-    size_t region_size = buffer_size_ - region_off;
+    size_t region_off = 0;
+    size_t region_size = buffer_size_;
     header_->Configure(id, custom_header_size, region_off, region_size);
     heap_ = &header_->heap_;
   }
@@ -79,9 +79,9 @@ class _StackAllocator : public Allocator {
    * */
   HSHM_CROSS_FUN
   void shm_deserialize(MemoryBackend backend) {
-    buffer_ = backend.data_;
-    buffer_size_ = backend.data_size_;
-    header_ = reinterpret_cast<_StackAllocatorHeader *>(buffer_);
+    buffer_ = backend.accel_data_;
+    buffer_size_ = backend.accel_data_size_;
+    header_ = reinterpret_cast<_GpuStackAllocatorHeader *>(backend.md_);
     type_ = header_->allocator_type_;
     id_ = header_->alloc_id_;
     custom_header_ = reinterpret_cast<char *>(header_ + 1);
@@ -189,4 +189,4 @@ class _StackAllocator : public Allocator {
 
 }  // namespace hshm::ipc
 
-#endif  // HSHM_MEMORY_ALLOCATOR_STACK_ALLOCATOR_H_
+#endif  // HSHM_MEMORY_ALLOCATOR_GPU_STACK_ALLOCATOR_H_
