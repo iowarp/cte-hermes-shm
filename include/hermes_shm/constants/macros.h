@@ -182,8 +182,13 @@
 #define CLS_CROSS_CONST CLS_CONST
 
 /** Class constant macro */
+#ifdef HSHM_IS_HOST
 #define GLOBAL_CONST inline const
 #define GLOBAL_CROSS_CONST inline const
+#else
+#define GLOBAL_CONST inline const
+#define GLOBAL_CROSS_CONST inline const __device__ __constant__
+#endif
 
 /** Namespace definitions */
 namespace hshm {}
