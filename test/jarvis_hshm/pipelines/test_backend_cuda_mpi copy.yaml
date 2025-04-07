@@ -1,4 +1,4 @@
-name: hermes_shm_rocm_mpi
+name: hermes_shm_cuda_mpi
 env: hermes_shm
 pkgs:
   - pkg_type: hshm_unit_tests

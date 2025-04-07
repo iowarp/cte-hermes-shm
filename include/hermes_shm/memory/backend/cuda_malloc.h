@@ -14,6 +14,7 @@
 #include "hermes_shm/util/errors.h"
 #include "hermes_shm/util/logging.h"
 #include "memory_backend.h"
+#include "posix_shm_mmap.h"
 
 namespace hshm::ipc {
 
@@ -21,7 +22,7 @@ struct CudaMallocHeader : public MemoryBackendHeader {
   cudaIpcMemHandle_t ipc_;
 };
 
-class CudaMalloc : public MemoryBackend {
+class CudaMalloc : public PosixShmMmap {
  public:
   CLS_CONST MemoryBackendType EnumType = MemoryBackendType::kCudaMalloc;
 
@@ -43,45 +44,32 @@ class CudaMalloc : public MemoryBackend {
   }
 
   /** Initialize backend */
-  bool shm_init(const MemoryBackendId &backend_id, size_t size,
-                const hshm::chararr &url, int device = 0) {
-    SetInitialized();
-    Own();
-    cudaDeviceSynchronize();
-    cudaSetDevice(device);
-    SystemInfo::DestroySharedMemory(url.c_str());
-    if (!SystemInfo::CreateNewSharedMemory(
-            fd_, url.c_str(), size + HSHM_SYSTEM_INFO->page_size_)) {
-      char *err_buf = strerror(errno);
-      HILOG(kError, "shm_open failed: {}", err_buf);
+  bool shm_init(const MemoryBackendId &backend_id, size_t accel_data_size,
+                const hshm::chararr &url, int device = 0,
+                size_t md_size = KILOBYTES(4)) {
+    bool ret = PosixShmMmap::shm_init(backend_id, md_size, url);
+    if (!ret) {
       return false;
     }
-    url_ = url;
-    header_ = (MemoryBackendHeader *)_ShmMap(HSHM_SYSTEM_INFO->page_size_, 0);
     CudaMallocHeader *header = reinterpret_cast<CudaMallocHeader *>(header_);
     header->type_ = MemoryBackendType::kCudaMalloc;
-    header->id_ = backend_id;
-    header->data_size_ = size;
-    data_size_ = size;
-    data_ = _Map(data_size_);
-    HIP_ERROR_CHECK(cudaIpcGetMemHandle(&header->ipc_, (void *)data_));
+    header->accel_data_size_ = accel_data_size;
+    accel_data_size_ = accel_data_size;
+    accel_data_ = _Map(accel_data_size);
+    CUDA_ERROR_CHECK(cudaIpcGetMemHandle(&header->ipc_, (void *)accel_data_));
     return true;
   }
 
   /** Deserialize the backend */
   bool shm_deserialize(const hshm::chararr &url) {
-    SetInitialized();
-    Disown();
-    if (!SystemInfo::OpenSharedMemory(fd_, url.c_str())) {
-      const char *err_buf = strerror(errno);
-      HILOG(kError, "shm_open failed: {}", err_buf);
+    bool ret = PosixShmMmap::shm_deserialize(url);
+    if (!ret) {
       return false;
     }
-    header_ = (MemoryBackendHeader *)_ShmMap(HSHM_SYSTEM_INFO->page_size_, 0);
     CudaMallocHeader *header = reinterpret_cast<CudaMallocHeader *>(header_);
-    data_size_ = header_->data_size_;
-    HIP_ERROR_CHECK(cudaIpcOpenMemHandle((void **)&data_, header->ipc_,
-                                         cudaIpcMemLazyEnablePeerAccess));
+    accel_data_size_ = header_->accel_data_size_;
+    CUDA_ERROR_CHECK(cudaIpcOpenMemHandle((void **)&accel_data_, header->ipc_,
+                                          cudaIpcMemLazyEnablePeerAccess));
     return true;
   }
 

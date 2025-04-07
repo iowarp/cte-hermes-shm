@@ -113,6 +113,16 @@
     }                                                                       \
   } while (false)
 
+/** Error checking for CUDA */
+#define CUDA_ERROR_CHECK(X)                       \
+  do {                                            \
+    if (X != cudaSuccess) {                       \
+      cudaError_t cudaErr = cudaGetLastError();   \
+      HELOG(kFatal, "CUDA Error {}: {}", cudaErr, \
+            cudaGetErrorString(cudaErr));         \
+    }                                             \
+  } while (false)
+
 /**
  * Ensure that the compiler ALWAYS inlines a particular function.
  * */

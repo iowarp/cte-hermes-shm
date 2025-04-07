@@ -1,5 +1,5 @@
-name: chimaera_unit_ipc
-env: chimaera
+name: hermes_shm_mpsc_queue
+env: hermes_shm
 pkgs:
   - pkg_type: hshm_unit_tests
     pkg_name: hshm_unit_tests
