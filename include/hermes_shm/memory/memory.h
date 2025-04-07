@@ -615,25 +615,25 @@ struct FullPtr : public ShmPointer {
   /** Set to null */
   HSHM_INLINE_CROSS_FUN void SetNull() { ptr_ = nullptr; }
 
-  /** Reintrepret cast to other internal type */
+  /** Reinterpret cast to other internal type */
   template <typename U>
   HSHM_INLINE_CROSS_FUN FullPtr<U, PointerT> &Cast() {
     return DeepCast<FullPtr<U, PointerT>>();
   }
 
-  /** Reintrepret cast to other internal type (const) */
+  /** Reinterpret cast to other internal type (const) */
   template <typename U>
   HSHM_INLINE_CROSS_FUN const FullPtr<U, PointerT> &Cast() const {
     return DeepCast<FullPtr<U, PointerT>>();
   }
 
-  /** Reintrepret cast to another FullPtr */
+  /** Reinterpret cast to another FullPtr */
   template <typename FullPtrT>
   HSHM_INLINE_CROSS_FUN FullPtrT &DeepCast() {
     return *((FullPtrT *)this);
   }
 
-  /** Reintrepret cast to another FullPtr (const) */
+  /** Reinterpret cast to another FullPtr (const) */
   template <typename FullPtrT>
   HSHM_INLINE_CROSS_FUN const FullPtrT &DeepCast() const {
     return *((FullPtrT *)this);
