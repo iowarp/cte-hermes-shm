@@ -84,7 +84,7 @@ class CudaMalloc : public PosixShmMmap {
   template <typename T = char>
   T *_Map(size_t size) {
     T *ptr;
-    cudaMallocManaged(&ptr, size);
+    cudaMalloc(&ptr, size);
     return ptr;
   }
 

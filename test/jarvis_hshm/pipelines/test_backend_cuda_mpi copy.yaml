@@ -3,6 +3,6 @@ env: hermes_shm
 pkgs:
   - pkg_type: hshm_unit_tests
     pkg_name: hshm_unit_tests
-    do_dbg: true
+    do_dbg: false
     dbg_port: 4000
 
