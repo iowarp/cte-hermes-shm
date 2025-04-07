@@ -195,12 +195,6 @@ static inline T *GetGlobalPtrVar(T *&instance) {
 /**
  * Cross-device C-style pointer singleton with global variables
  */
-#ifdef HSHM_ENABLE_CUDA
-#define HSHM_DEFINE_GLOBAL_CROSS_PTR_VAR_H(T, NAME)
-#define HSHM_DEFINE_GLOBAL_CROSS_PTR_VAR_CC(T, NAME)
-#define HSHM_GET_GLOBAL_CROSS_PTR_VAR(T, NAME) \
-  hshm::CrossSingleton<__TU(T)>::GetInstance()
-#else
 #ifdef HSHM_IS_HOST
 #define HSHM_DEFINE_GLOBAL_CROSS_PTR_VAR_H(T, NAME) extern __TU(T) * NAME;
 #define HSHM_DEFINE_GLOBAL_CROSS_PTR_VAR_CC(T, NAME) __TU(T) *NAME = nullptr;
@@ -218,7 +212,6 @@ HSHM_CROSS_FUN static inline T *GetGlobalCrossPtrVar(T *&instance) {
 #define HSHM_DEFINE_GLOBAL_CROSS_PTR_VAR_CC(T, NAME)
 #define HSHM_GET_GLOBAL_CROSS_PTR_VAR(T, NAME) \
   hshm::CrossSingleton<__TU(T)>::GetInstance()
-#endif
 #endif
 
 }  // namespace hshm
