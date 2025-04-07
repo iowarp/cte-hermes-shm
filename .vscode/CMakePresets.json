@@ -64,7 +64,8 @@
                 "HSHM_ENABLE_OPENMP": "ON",
                 "HSHM_ENABLE_MPI": "ON",
                 "BUILD_HSHM_BENCHMARKS": "OFF",
-                "HSHM_ENABLE_CMAKE_DOTENV": "ON"
+                "HSHM_ENABLE_CMAKE_DOTENV": "ON",
+                "CMAKE_CUDA_ARCHITECTURES": "75"
             }
         },
         {

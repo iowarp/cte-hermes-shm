@@ -288,13 +288,8 @@ function(add_cuda_library LIB_NAME SHARED DO_COPY)
     target_link_libraries(${LIB_NAME} PUBLIC hshm::cuda_gpu_lib_deps)
     set_target_properties(${LIB_NAME} PROPERTIES
         CUDA_SEPARABLE_COMPILATION ON
+        POSITION_INDEPENDENT_CODE ON
     )
-
-    if(BUILD_SHARED_LIBS)
-        set_target_properties(${LIB_NAME} PROPERTIES
-            POSITION_INDEPENDENT_CODE ON
-        )
-    endif()
 endfunction()
 
 # Function for adding a CUDA executable
