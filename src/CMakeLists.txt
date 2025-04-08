@@ -7,6 +7,7 @@ set(HSHM_LIBS "")
 
 # BUILD HSHM FOR HOST ONLY
 set(SRC_FILES
+
     # system_info.cc   # NOTE(llogan): Commented out because ROCm is annoying and buggy
     memory_manager.cc)
 add_library(hermes_shm_host ${SRC_FILES})
@@ -26,6 +27,7 @@ if(HSHM_ENABLE_CUDA)
     list(APPEND HSHM_LIBS hermes_shm_cuda)
     add_library(cudacxx INTERFACE)
     target_link_libraries(cudacxx INTERFACE hermes_shm_cuda)
+
     # target_include_directories(cudacxx INTERFACE ${HSHM_INSTALL_INCLUDE_DIR})
     # target_link_directories(cudacxx INTERFACE ${HSHM_INSTALL_LIB_DIR})
     list(APPEND HSHM_LIBS cudacxx)

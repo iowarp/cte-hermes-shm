@@ -243,7 +243,8 @@ Allocator *MemoryManager::RegisterAllocator(Allocator *alloc, bool do_scan) {
   return alloc;
 }
 
-HSHM_DEFINE_GLOBAL_PTR_VAR_CC(hshm::ipc::MemoryManager, hshmMemoryManager);
+HSHM_DEFINE_GLOBAL_CROSS_PTR_VAR_CC(hshm::ipc::MemoryManager,
+                                    hshmMemoryManager);
 
 }  // namespace hshm::ipc
 
