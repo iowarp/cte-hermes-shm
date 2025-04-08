@@ -14,7 +14,7 @@
 #include "hermes_shm/util/errors.h"
 #include "hermes_shm/util/logging.h"
 #include "memory_backend.h"
-#include "posix_Shm_mmap.h"
+#include "posix_shm_mmap.h"
 
 namespace hshm::ipc {
 
