@@ -99,6 +99,7 @@ class Allocator {
  public:
   AllocatorType type_;
   AllocatorId id_;
+  MemoryBackend backend_;
   char *buffer_;
   size_t buffer_size_;
   char *custom_header_;
@@ -115,6 +116,10 @@ class Allocator {
   /** Get the allocator identifier (const) */
   HSHM_INLINE_CROSS_FUN
   const AllocatorId &GetId() const { return id_; }
+
+  /** Check if allocator is a GPU allocator */
+  HSHM_INLINE_CROSS_FUN
+  bool IsGpu() const { return backend_.IsGpu(); }
 
   /**
    * Construct custom header

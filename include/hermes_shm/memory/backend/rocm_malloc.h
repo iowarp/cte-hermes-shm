@@ -51,8 +51,11 @@ class RocmMalloc : public PosixShmMmap {
     RocmMallocHeader *header = reinterpret_cast<RocmMallocHeader *>(header_);
     header->type_ = MemoryBackendType::kRocmMalloc;
     header->accel_data_size_ = accel_data_size;
+    header->accel_id_ = device;
     accel_data_size_ = accel_data_size;
     accel_data_ = _Map(accel_data_size);
+    accel_id_ = device;
+    SetGpu();
     HIP_ERROR_CHECK(hipIpcGetMemHandle(&header->ipc_, (void *)accel_data_));
     return true;
   }
@@ -65,8 +68,10 @@ class RocmMalloc : public PosixShmMmap {
     }
     RocmMallocHeader *header = reinterpret_cast<RocmMallocHeader *>(header_);
     accel_data_size_ = header_->accel_data_size_;
+    accel_id_ = header->accel_id_;
     HIP_ERROR_CHECK(hipIpcOpenMemHandle((void **)&accel_data_, header->ipc_,
                                         hipIpcMemLazyEnablePeerAccess));
+    SetGpu();
     return true;
   }
 

@@ -54,8 +54,11 @@ class CudaMalloc : public PosixShmMmap {
     CudaMallocHeader *header = reinterpret_cast<CudaMallocHeader *>(header_);
     header->type_ = MemoryBackendType::kCudaMalloc;
     header->accel_data_size_ = accel_data_size;
+    header->accel_id_ = device;
     accel_data_size_ = accel_data_size;
     accel_data_ = _Map(accel_data_size);
+    accel_id_ = device;
+    SetGpu();
     CUDA_ERROR_CHECK(cudaIpcGetMemHandle(&header->ipc_, (void *)accel_data_));
     return true;
   }
@@ -68,6 +71,7 @@ class CudaMalloc : public PosixShmMmap {
     }
     CudaMallocHeader *header = reinterpret_cast<CudaMallocHeader *>(header_);
     accel_data_size_ = header_->accel_data_size_;
+    accel_id_ = header->accel_id_;
     CUDA_ERROR_CHECK(cudaIpcOpenMemHandle((void **)&accel_data_, header->ipc_,
                                           cudaIpcMemLazyEnablePeerAccess));
     return true;

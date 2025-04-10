@@ -90,6 +90,7 @@ struct MemoryBackendHeader {
     size_t md_size_;    // For CPU+GPU backends
   };
   size_t accel_data_size_;
+  int accel_id_;
 
   HSHM_CROSS_FUN void Print() const {
     printf("(%s) MemoryBackendHeader: type: %d, id: %d, data_size: %lu\n",
@@ -101,6 +102,7 @@ struct MemoryBackendHeader {
 #define MEMORY_BACKEND_INITIALIZED BIT_OPT(u32, 0)
 #define MEMORY_BACKEND_OWNED BIT_OPT(u32, 1)
 #define MEMORY_BACKEND_SCANNED BIT_OPT(u32, 2)
+#define MEMORY_BACKEND_GPU_DATA BIT_OPT(u32, 3)
 
 class UrlMemoryBackend {};
 
@@ -117,6 +119,7 @@ class MemoryBackend {
   };
   char *accel_data_;
   size_t accel_data_size_;
+  int accel_id_;
   ibitfield flags_;
 
  public:
@@ -173,6 +176,18 @@ class MemoryBackend {
   /** This is not the process which destroys the backend */
   HSHM_CROSS_FUN
   void Disown() { flags_.UnsetBits(MEMORY_BACKEND_OWNED); }
+
+  /** Set allocator as a GPU allocator */
+  HSHM_INLINE_CROSS_FUN
+  void SetGpu() { flags_.SetBits(MEMORY_BACKEND_GPU_DATA); }
+
+  /** Check if allocator is a GPU allocator */
+  HSHM_INLINE_CROSS_FUN
+  bool IsGpu() const { return flags_.Any(MEMORY_BACKEND_GPU_DATA); }
+
+  /** Unset allocator as GPU allocator */
+  HSHM_INLINE_CROSS_FUN
+  void UnsetGpu() { flags_.UnsetBits(MEMORY_BACKEND_GPU_DATA); }
 
   /** Get the ID of this backend */
   HSHM_CROSS_FUN
