@@ -26,9 +26,6 @@ class CudaMalloc : public PosixShmMmap {
  public:
   CLS_CONST MemoryBackendType EnumType = MemoryBackendType::kCudaMalloc;
 
- private:
-  size_t total_size_;
-
  public:
   /** Constructor */
   HSHM_CROSS_FUN
@@ -46,7 +43,7 @@ class CudaMalloc : public PosixShmMmap {
   /** Initialize backend */
   bool shm_init(const MemoryBackendId &backend_id, size_t accel_data_size,
                 const hshm::chararr &url, int device = 0,
-                size_t md_size = KILOBYTES(4)) {
+                size_t md_size = MEGABYTES(1)) {
     bool ret = PosixShmMmap::shm_init(backend_id, md_size, url);
     if (!ret) {
       return false;
@@ -96,7 +93,6 @@ class CudaMalloc : public PosixShmMmap {
     if (!IsInitialized()) {
       return;
     }
-    cudaFree(header_);
     UnsetInitialized();
   }
 };

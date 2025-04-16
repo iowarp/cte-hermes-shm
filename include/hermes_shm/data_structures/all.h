@@ -15,6 +15,7 @@
 
 #include "hermes_shm/memory/memory_manager.h"
 #include "internal/shm_internal.h"
+#include "ipc/charwrap.h"
 #include "ipc/chararr.h"
 #include "ipc/dynamic_queue.h"
 #include "ipc/functional.h"

@@ -366,7 +366,7 @@ void *SystemInfo::MapPrivateMemory(size_t size) {
 
 void *SystemInfo::MapSharedMemory(const File &fd, size_t size, i64 off) {
 #if defined(HSHM_ENABLE_PROCFS_SYSINFO)
-  void *ptr = mmap(nullptr, size, PROT_READ | PROT_WRITE, MAP_SHARED,
+  void *ptr = mmap64(nullptr, size, PROT_READ | PROT_WRITE, MAP_SHARED,
                    fd.posix_fd_, off);
   if (ptr == MAP_FAILED) {
     perror("mmap");

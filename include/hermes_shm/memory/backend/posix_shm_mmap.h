@@ -35,6 +35,7 @@ class PosixShmMmap : public MemoryBackend, public UrlMemoryBackend {
  protected:
   File fd_;
   hshm::chararr url_;
+  CLS_CONST int hdr_size_ = KILOBYTES(16);
 
  public:
   /** Constructor */
@@ -58,20 +59,22 @@ class PosixShmMmap : public MemoryBackend, public UrlMemoryBackend {
                 const hshm::chararr &url) {
     SetInitialized();
     Own();
-    SystemInfo::DestroySharedMemory(url.c_str());
+    std::string url_s = url.str();
+    SystemInfo::DestroySharedMemory(url_s);
     if (!SystemInfo::CreateNewSharedMemory(
-            fd_, url.c_str(), size + HSHM_SYSTEM_INFO->page_size_)) {
+            fd_, url_s, size + hdr_size_)) {
       char *err_buf = strerror(errno);
       HILOG(kError, "shm_open failed: {}", err_buf);
       return false;
     }
     url_ = url;
-    header_ = (MemoryBackendHeader *)_ShmMap(HSHM_SYSTEM_INFO->page_size_, 0);
+    header_ = (MemoryBackendHeader *)_ShmMap(hdr_size_, 0);
+    new (header_) MemoryBackendHeader();
     header_->type_ = MemoryBackendType::kPosixShmMmap;
     header_->id_ = backend_id;
     header_->data_size_ = size;
     data_size_ = size;
-    data_ = _ShmMap(size, HSHM_SYSTEM_INFO->page_size_);
+    data_ = _ShmMap(size, hdr_size_);
     return true;
   }
 
@@ -79,14 +82,15 @@ class PosixShmMmap : public MemoryBackend, public UrlMemoryBackend {
   bool shm_deserialize(const hshm::chararr &url) {
     SetInitialized();
     Disown();
-    if (!SystemInfo::OpenSharedMemory(fd_, url.c_str())) {
+    std::string url_s = url.str();
+    if (!SystemInfo::OpenSharedMemory(fd_, url_s)) {
       const char *err_buf = strerror(errno);
       HILOG(kError, "shm_open failed: {}", err_buf);
       return false;
     }
-    header_ = (MemoryBackendHeader *)_ShmMap(HSHM_SYSTEM_INFO->page_size_, 0);
+    header_ = (MemoryBackendHeader *)_ShmMap(hdr_size_, 0);
     data_size_ = header_->data_size_;
-    data_ = _ShmMap(data_size_, HSHM_SYSTEM_INFO->page_size_);
+    data_ = _ShmMap(data_size_, hdr_size_);
     return true;
   }
 

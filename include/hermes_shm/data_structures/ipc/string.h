@@ -367,6 +367,11 @@ class string_templ : public ShmContainer {
   /** Get the size of the current string */
   HSHM_INLINE_CROSS_FUN size_t size() const { return length_; }
 
+  /** Empty */
+  bool empty() const {
+    return size() == 0;
+  }
+
   /** Get a constant reference to the C-style string */
   HSHM_INLINE_CROSS_FUN const char *c_str() const { return data(); }
 
