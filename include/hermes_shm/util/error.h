@@ -41,8 +41,10 @@
 
 #ifdef HSHM_IS_HOST
 #define HSHM_THROW_ERROR(CODE, ...) throw CODE.format(__VA_ARGS__)
+#define HSHM_THROW_STD_ERROR(...) throw std::runtime_error(__VA_ARGS__);
 #else
 #define HSHM_THROW_ERROR(CODE, ...)
+#define HSHM_THROW_STD_ERROR(...)
 #endif
 
 namespace hshm {
