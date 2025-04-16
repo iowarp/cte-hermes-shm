@@ -101,6 +101,7 @@ struct bitfield {
 typedef bitfield<u8> bitfield8_t;
 typedef bitfield<u16> bitfield16_t;
 typedef bitfield<u32> bitfield32_t;
+typedef bitfield<u64> bitfield64_t;
 typedef bitfield<int> ibitfield;
 
 template <typename T>

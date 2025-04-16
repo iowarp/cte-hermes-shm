@@ -43,7 +43,7 @@ class ring_queue_base : public ShmContainer {
   /**====================================
    * Typedefs
    * ===================================*/
-  typedef pair<ibitfield, T, HSHM_CLASS_TEMPL_ARGS> pair_t;
+  typedef pair<bitfield64_t, T, HSHM_CLASS_TEMPL_ARGS> pair_t;
   typedef vector<pair_t, HSHM_CLASS_TEMPL_ARGS> vector_t;
 
  public:
