@@ -56,6 +56,34 @@ AllocT *MemoryManager::CreateAllocator(const MemoryBackendId &backend_id,
   return GetAllocator<AllocT>(alloc_id);
 }
 
+#if defined(HSHM_ENABLE_CUDA) || defined(HSHM_ENABLE_ROCM)
+template <typename AllocT, typename... Args>
+HSHM_GPU_KERNEL void CreateAllocatorGpuKern(const MemoryBackendId &backend_id,
+                                            const AllocatorId &alloc_id,
+                                            size_t custom_header_size,
+                                            Args &&...args) {
+  HSHM_MEMORY_MANAGER->CreateAllocator<AllocT>(
+      backend_id, alloc_id, custom_header_size, std::forward<Args>(args)...);
+}
+#endif
+
+/**
+ * Create + register allocator on GPU.
+ * */
+template <typename AllocT, typename... Args>
+AllocT *MemoryManager::CreateAllocatorGpu(int gpu_id,
+                                          const MemoryBackendId &backend_id,
+                                          const AllocatorId &alloc_id,
+                                          size_t custom_header_size,
+                                          Args &&...args) {
+#if defined(HSHM_ENABLE_CUDA) || defined(HSHM_ENABLE_ROCM)
+  GpuApi::SetDevice(gpu_id);
+  CreateAllocatorGpuKern<AllocT><<<1, 1>>>(gpu_id, backend_id, alloc_id,
+                                           custom_header_size,
+                                           std::forward<Args>(args)...);
+#endif
+}
+
 /**
  * Destroys an allocator
  * */

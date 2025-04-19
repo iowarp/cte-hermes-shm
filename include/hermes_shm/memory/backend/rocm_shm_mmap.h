@@ -59,6 +59,9 @@ class RocmShmMmap : public PosixShmMmap {
     bool ret = PosixShmMmap::shm_init(backend_id, size, url);
     Register(header_, HSHM_SYSTEM_INFO->page_size_);
     Register(data_, size);
+    header_->accel_data_size_ = size;
+    accel_data_ = data_;
+    accel_data_size_ = data_size_;
     if (!ret) {
       return false;
     }
@@ -71,6 +74,8 @@ class RocmShmMmap : public PosixShmMmap {
     bool ret = PosixShmMmap::shm_deserialize(url);
     Register(header_, HSHM_SYSTEM_INFO->page_size_);
     Register(data_, data_size_);
+    accel_data_ = data_;
+    accel_data_size_ = data_size_;
     return ret;
   }
 

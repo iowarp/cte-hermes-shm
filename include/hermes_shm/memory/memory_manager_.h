@@ -12,6 +12,7 @@
 #include "hermes_shm/memory/allocator/allocator.h"
 #include "hermes_shm/memory/backend/posix_mmap.h"
 #include "hermes_shm/types/numbers.h"
+#include "hermes_shm/util/gpu_api.h"
 #include "hermes_shm/util/singleton.h"
 
 namespace hshm::ipc {
@@ -95,6 +96,13 @@ class MemoryManager {
     return backend;
   }
 
+  /** Copy and existing backend to the GPU */
+  void CopyBackendGpu(int gpu_id, const MemoryBackendId &backend_id);
+
+  /** Create an array backend on the GPU */
+  void CreateBackendGpu(int gpu_id, const MemoryBackendId &backend_id,
+                        char *accel_data, size_t accel_data_size);
+
   /**
    * Attaches to an existing memory backend located at \a url url.
    * */
@@ -131,12 +139,24 @@ class MemoryManager {
   HSHM_DLL void ScanBackends(bool find_allocs = true);
 
   /**
+   * Scans all attached backends on GPU for new memory allocators.
+   * */
+  HSHM_HOST_FUN
+  HSHM_DLL void ScanBackendsGpu(int gpu_id, bool find_allocs = true);
+
+  /**
    * Create and register a memory allocator for a particular backend.
    * */
   template <typename AllocT, typename... Args>
   AllocT *CreateAllocator(const MemoryBackendId &backend_id,
                           const AllocatorId &alloc_id,
                           size_t custom_header_size, Args &&...args);
+
+  /** Create an allocator for the GPU */
+  template <typename AllocT, typename... Args>
+  AllocT *CreateAllocatorGpu(int gpu_id, const MemoryBackendId &backend_id,
+                             const AllocatorId &alloc_id,
+                             size_t custom_header_size, Args &&...args);
 
   /**
    * Registers an allocator. Used internally by ScanBackends, but may

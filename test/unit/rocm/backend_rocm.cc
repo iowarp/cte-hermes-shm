@@ -126,6 +126,7 @@ void mpsc_test() {
   mem_mngr->DestroyBackend(hipc::MemoryBackendId::Get(0));
   mem_mngr->CreateBackend<hipc::RocmShmMmap>(hipc::MemoryBackendId::Get(0),
                                              MEGABYTES(100), shm_url, 0);
+  mem_mngr->CopyBackendGpu(0, hipc::MemoryBackendId::Get(0));
   auto *alloc = mem_mngr->CreateAllocator<HSHM_DEFAULT_GPU_ALLOC_T>(
       hipc::MemoryBackendId::Get(0), alloc_id, 0);
   hipc::CtxAllocator<HSHM_DEFAULT_GPU_ALLOC_T> ctx_alloc(alloc);

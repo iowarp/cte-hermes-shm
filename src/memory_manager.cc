@@ -103,93 +103,54 @@ HSHM_CROSS_FUN void MemoryManager::DestroyBackend(
 }
 
 #if defined(HSHM_ENABLE_CUDA) || defined(HSHM_ENABLE_ROCM)
-template <typename BackendT>
-HSHM_GPU_KERNEL void AttachBackendKernel(BackendT *pack) {
+HSHM_GPU_KERNEL void RegisterBackendGpuKern(const MemoryBackendId &backend_id,
+                                            char *region, size_t size) {
   HSHM_MEMORY_MANAGER;
   HSHM_THREAD_MODEL;
   HSHM_SYSTEM_INFO;
-  HSHM_MEMORY_MANAGER->RegisterBackend(pack);
-  HSHM_MEMORY_MANAGER->ScanBackends();
+  auto alloc = HSHM_ROOT_ALLOC;
+  auto backend =
+      alloc->template NewObj<hipc::ArrayBackend>(HSHM_DEFAULT_MEM_CTX);
+  if (!backend->shm_init(backend_id, size, region)) {
+    HSHM_THROW_ERROR(MEMORY_BACKEND_CREATE_FAILED);
+  }
+  HSHM_MEMORY_MANAGER->RegisterBackend(backend);
+  backend->Own();
+}
+
+HSHM_GPU_KERNEL void ScanBackendGpuKern(bool find_allocs) {
+  HSHM_MEMORY_MANAGER->ScanBackends(find_allocs);
 }
 #endif
 
-#ifdef HSHM_ENABLE_CUDA
-/** Check if a backend is cuda-compatible */
-void AllocateCudaBackend(int dev, MemoryBackend *other) {
-  cudaSetDevice(dev);
-  switch (other->header_->type_) {
-    case MemoryBackendType::kCudaMalloc: {
-      // CudaMalloc *pack, *cpy;
-      // cudaMallocManaged(&pack, sizeof(CudaMalloc));
-      // memcpy((char *)pack, (char *)other, sizeof(CudaMalloc));
-      // pack->UnsetScanned();
-      // pack->Disown();
-      // AttachBackendKernel<<<1, 1>>>(pack);
-      // cudaDeviceSynchronize();
-      // cudaFree(pack);
-      break;
-    }
-    case MemoryBackendType::kCudaShmMmap: {
-      CudaShmMmap *pack, *cpy;
-      cudaMallocManaged(&pack, sizeof(CudaShmMmap));
-      memcpy((char *)pack, (char *)other, sizeof(CudaShmMmap));
-      pack->UnsetScanned();
-      pack->Disown();
-      AttachBackendKernel<<<1, 1>>>(pack);
-      cudaDeviceSynchronize();
-      cudaFree(pack);
-      break;
-    }
-    default: {
-      break;
-    }
+/** Copy and existing backend to the GPU */
+void MemoryManager::CopyBackendGpu(int gpu_id,
+                                   const MemoryBackendId &backend_id) {
+  GpuApi::SetDevice(gpu_id);
+  MemoryBackend *backend = GetBackend(backend_id);
+  if (!backend) {
+    return;
   }
+  CreateBackendGpu(gpu_id, backend_id, backend->accel_data_,
+                   backend->accel_data_size_);
 }
-#endif
 
-#ifdef HSHM_ENABLE_ROCM
-/** Check if a backend is cuda-compatible */
-void AllocateRocmBackend(int dev, MemoryBackend *other) {
-  HIP_ERROR_CHECK(hipSetDevice(dev));
-  switch (other->header_->type_) {
-    case MemoryBackendType::kRocmMalloc: {
-      // RocmMalloc *pack, *cpy;
-      // HIP_ERROR_CHECK(hipMallocManaged(&pack, sizeof(RocmMalloc)));
-      // memcpy((char *)pack, (char *)other, sizeof(RocmMalloc));
-      // pack->UnsetScanned();
-      // pack->Disown();
-      // AttachBackendKernel<<<1, 1>>>(pack);
-      // HIP_ERROR_CHECK(hipDeviceSynchronize());
-      break;
-    }
-    case MemoryBackendType::kRocmShmMmap: {
-      RocmShmMmap *pack, *cpy;
-      HIP_ERROR_CHECK(hipMallocManaged(&pack, sizeof(RocmShmMmap)));
-      memcpy((char *)pack, (char *)other, sizeof(RocmShmMmap));
-      pack->UnsetScanned();
-      pack->Disown();
-      AttachBackendKernel<<<1, 1>>>(pack);
-      HIP_ERROR_CHECK(hipDeviceSynchronize());
-    }
-    default: {
-      break;
-    }
-  }
-}
+/** Create an array backend on the GPU */
+void MemoryManager::CreateBackendGpu(int gpu_id,
+                                     const MemoryBackendId &backend_id,
+                                     char *accel_data, size_t accel_data_size) {
+#if defined(HSHM_ENABLE_CUDA) || defined(HSHM_ENABLE_ROCM)
+  GpuApi::SetDevice(gpu_id);
+  RegisterBackendGpuKern<<<1, 1>>>(backend_id, accel_data, accel_data_size);
+  GpuApi::Synchronize();
 #endif
+}
 
 /**
  * Scans all attached backends for new memory allocators.
  * */
 HSHM_CROSS_FUN
 void MemoryManager::ScanBackends(bool find_allocs) {
-  int num_gpus = 0;
-#if defined(HSHM_ENABLE_CUDA) && defined(HSHM_IS_HOST)
-  cudaGetDeviceCount(&num_gpus);
-#endif
-#if defined(HSHM_ENABLE_ROCM) && defined(HSHM_IS_HOST)
-  HIP_ERROR_CHECK(hipGetDeviceCount(&num_gpus));
-#endif
   for (int i = 0; i < MAX_BACKENDS; ++i) {
     MemoryBackend *backend = backends_[i];
     if (backend == nullptr || backend->IsScanned()) {
@@ -203,17 +164,26 @@ void MemoryManager::ScanBackends(bool find_allocs) {
       }
       RegisterAllocator(alloc, false);
     }
-#if defined(HSHM_ENABLE_CUDA) && defined(HSHM_IS_HOST)
-    for (int dev = 0; dev < num_gpus; ++dev) {
-      AllocateCudaBackend(dev, backend);
-    }
-#endif
-#if defined(HSHM_ENABLE_ROCM) && defined(HSHM_IS_HOST)
-    for (int dev = 0; dev < num_gpus; ++dev) {
-      AllocateRocmBackend(dev, backend);
-    }
-#endif
   }
+
+#ifdef HSHM_IS_HOST
+  int ngpu = GpuApi::GetDeviceCount();
+  for (int gpu_id = 0; gpu_id < ngpu; ++gpu_id) {
+    ScanBackendsGpu(gpu_id, find_allocs);
+  }
+#endif
+}
+
+/**
+ * Scans backends on the GPU
+ */
+HSHM_HOST_FUN
+void MemoryManager::ScanBackendsGpu(int gpu_id, bool find_allocs) {
+#if defined(HSHM_ENABLE_CUDA) || defined(HSHM_ENABLE_ROCM)
+  GpuApi::SetDevice(gpu_id);
+  ScanBackendGpuKern<<<1, 1>>>(find_allocs);
+  GpuApi::Synchronize();
+#endif
 }
 
 /**
