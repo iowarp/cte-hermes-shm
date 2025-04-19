@@ -105,6 +105,7 @@ HSHM_CROSS_FUN void MemoryManager::DestroyBackend(
 #if defined(HSHM_ENABLE_CUDA) || defined(HSHM_ENABLE_ROCM)
 HSHM_GPU_KERNEL void RegisterBackendGpuKern(MemoryBackendId backend_id,
                                             char *region, size_t size) {
+#ifdef HSHM_IS_GPU
   HSHM_MEMORY_MANAGER;
   HSHM_THREAD_MODEL;
   HSHM_SYSTEM_INFO;
@@ -118,6 +119,7 @@ HSHM_GPU_KERNEL void RegisterBackendGpuKern(MemoryBackendId backend_id,
   }
   HSHM_MEMORY_MANAGER->RegisterBackend(backend);
   backend->Own();
+#endif
 }
 
 HSHM_GPU_KERNEL void ScanBackendGpuKern() {

@@ -194,10 +194,12 @@ macro(hshm_enable_rocm GPU_RUNTIME CXX_STANDARD)
     )
 
     if(GPU_RUNTIME STREQUAL "CUDA")
-        list(APPEND include_dirs "${ROCM_ROOT}/include")
+        include_directories("${ROCM_ROOT}/include")
     endif()
 
-    find_package(HIP REQUIRED)
+    if(NOT HIP_FOUND)
+        find_package(HIP REQUIRED)
+    endif()
 endmacro()
 
 # Function for setting source files for rocm
