@@ -26,15 +26,15 @@ namespace hshm::ipc {
 /** Memory manager class */
 class MemoryManager {
  public:
+  char root_alloc_data_[hshm::Unit<size_t>::Kilobytes(64)];
+  char root_backend_space_[256];
+  char root_alloc_space_[256];
   AllocatorId root_alloc_id_;
   MemoryBackend *root_backend_;
   Allocator *root_alloc_;
   MemoryBackend *backends_[MAX_BACKENDS];
   Allocator *allocators_[MAX_ALLOCATORS];
   Allocator *default_allocator_;
-  char root_backend_space_[64];
-  char root_alloc_space_[64];
-  char root_alloc_data_[hshm::Unit<size_t>::Kilobytes(64)];
 
  public:
   /** Create the root allocator */
@@ -136,13 +136,13 @@ class MemoryManager {
    * Scans all attached backends for new memory allocators.
    * */
   HSHM_CROSS_FUN
-  HSHM_DLL void ScanBackends(bool find_allocs = true);
+  HSHM_DLL void ScanBackends();
 
   /**
    * Scans all attached backends on GPU for new memory allocators.
    * */
   HSHM_HOST_FUN
-  HSHM_DLL void ScanBackendsGpu(int gpu_id, bool find_allocs = true);
+  HSHM_DLL void ScanBackendsGpu(int gpu_id);
 
   /**
    * Create and register a memory allocator for a particular backend.
@@ -163,14 +163,32 @@ class MemoryManager {
    * also be used externally.
    * */
   HSHM_CROSS_FUN
-  HSHM_DLL Allocator *RegisterAllocator(Allocator *alloc, bool do_scan = true);
+  HSHM_DLL Allocator *RegisterAllocator(Allocator *alloc);
+
+  /**
+   * Registers an allocator. Used internally by ScanBackends, but may
+   * also be used externally.
+   * */
+  HSHM_CROSS_FUN
+  Allocator *RegisterAllocatorNoScan(Allocator *alloc) {
+    if (alloc == nullptr) {
+      return nullptr;
+    }
+    uint32_t idx = alloc->GetId().ToIndex();
+    if (idx > MAX_ALLOCATORS) {
+      HILOG(kError, "Allocator index out of range: {}", idx);
+      HSHM_THROW_ERROR(TOO_MANY_ALLOCATORS);
+    }
+    allocators_[idx] = alloc;
+    return alloc;
+  }
 
   /**
    * Registers an internal allocator.
    * */
   HSHM_CROSS_FUN
   Allocator *RegisterSubAllocator(Allocator *alloc) {
-    return RegisterAllocator(alloc, false);
+    return RegisterAllocatorNoScan(alloc);
   }
 
   /**

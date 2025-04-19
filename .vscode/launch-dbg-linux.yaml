@@ -69,6 +69,10 @@ configurations:
     program: test_memory_rocm_exec
     args: [""]
   - macro: debug
+    launch-name: test-cuda
+    program: test_memory_cuda_exec
+    args: [""]
+  - macro: debug
     launch-name: test-singleton
     program: test_singleton
     args: [""]

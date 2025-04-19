@@ -30,6 +30,7 @@ namespace hshm::ipc {
 class ArrayBackend : public MemoryBackend {
  public:
   CLS_CONST MemoryBackendType EnumType = MemoryBackendType::kArrayBackend;
+  MemoryBackendHeader local_hdr_;
 
  public:
   HSHM_CROSS_FUN
@@ -44,12 +45,12 @@ class ArrayBackend : public MemoryBackend {
     }
     SetInitialized();
     Own();
-    header_ = reinterpret_cast<MemoryBackendHeader *>(region);
-    header_->type_ = MemoryBackendType::kArrayBackend;
-    header_->id_ = backend_id;
-    header_->data_size_ = size - sizeof(MemoryBackendHeader);
-    data_size_ = header_->data_size_;
-    data_ = region + sizeof(MemoryBackendHeader);
+    header_ = &local_hdr_;
+    local_hdr_.type_ = MemoryBackendType::kArrayBackend;
+    local_hdr_.id_ = backend_id;
+    local_hdr_.data_size_ = size;
+    data_size_ = local_hdr_.data_size_;
+    data_ = region;
     return true;
   }
 

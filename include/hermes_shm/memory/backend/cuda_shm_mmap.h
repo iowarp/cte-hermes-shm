@@ -61,6 +61,9 @@ class CudaShmMmap : public PosixShmMmap {
     }
     Register(header_, HSHM_SYSTEM_INFO->page_size_);
     Register(data_, size);
+    header_->accel_data_size_ = data_size_;
+    accel_data_ = data_;
+    accel_data_size_ = data_size_;
     header_->type_ = MemoryBackendType::kCudaShmMmap;
     return true;
   }
@@ -70,6 +73,8 @@ class CudaShmMmap : public PosixShmMmap {
     bool ret = PosixShmMmap::shm_deserialize(url);
     Register(header_, HSHM_SYSTEM_INFO->page_size_);
     Register(data_, data_size_);
+    accel_data_ = data_;
+    accel_data_size_ = data_size_;
     return ret;
   }
 

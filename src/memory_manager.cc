@@ -56,7 +56,7 @@ void MemoryManager::Init() {
   default_allocator_ = root_alloc_;
 
   // Other allocators
-  RegisterAllocator(root_alloc_);
+  RegisterAllocatorNoScan(root_alloc_);
 }
 
 /** Default backend size */
@@ -103,7 +103,7 @@ HSHM_CROSS_FUN void MemoryManager::DestroyBackend(
 }
 
 #if defined(HSHM_ENABLE_CUDA) || defined(HSHM_ENABLE_ROCM)
-HSHM_GPU_KERNEL void RegisterBackendGpuKern(const MemoryBackendId &backend_id,
+HSHM_GPU_KERNEL void RegisterBackendGpuKern(MemoryBackendId backend_id,
                                             char *region, size_t size) {
   HSHM_MEMORY_MANAGER;
   HSHM_THREAD_MODEL;
@@ -111,6 +111,8 @@ HSHM_GPU_KERNEL void RegisterBackendGpuKern(const MemoryBackendId &backend_id,
   auto alloc = HSHM_ROOT_ALLOC;
   auto backend =
       alloc->template NewObj<hipc::ArrayBackend>(HSHM_DEFAULT_MEM_CTX);
+  MemoryBackendHeader local_hdr;
+  backend->local_hdr_.id_ = backend_id;
   if (!backend->shm_init(backend_id, size, region)) {
     HSHM_THROW_ERROR(MEMORY_BACKEND_CREATE_FAILED);
   }
@@ -118,8 +120,8 @@ HSHM_GPU_KERNEL void RegisterBackendGpuKern(const MemoryBackendId &backend_id,
   backend->Own();
 }
 
-HSHM_GPU_KERNEL void ScanBackendGpuKern(bool find_allocs) {
-  HSHM_MEMORY_MANAGER->ScanBackends(find_allocs);
+HSHM_GPU_KERNEL void ScanBackendGpuKern() {
+  HSHM_MEMORY_MANAGER->ScanBackends();
 }
 #endif
 
@@ -150,26 +152,28 @@ void MemoryManager::CreateBackendGpu(int gpu_id,
  * Scans all attached backends for new memory allocators.
  * */
 HSHM_CROSS_FUN
-void MemoryManager::ScanBackends(bool find_allocs) {
+void MemoryManager::ScanBackends() {
   for (int i = 0; i < MAX_BACKENDS; ++i) {
     MemoryBackend *backend = backends_[i];
-    if (backend == nullptr || backend->IsScanned()) {
+    if (backend == nullptr) {
       continue;
     }
-    backend->SetScanned();
-    if (find_allocs) {
-      auto *alloc = AllocatorFactory::shm_deserialize(backend);
-      if (!alloc) {
-        continue;
-      }
-      RegisterAllocator(alloc, false);
+    Allocator *alloc_hdr = (Allocator *)backend->data_;
+    AllocatorId alloc_id = alloc_hdr->id_;
+    if (GetAllocator<Allocator>(alloc_id)) {
+      continue;
     }
+    auto *alloc = AllocatorFactory::shm_deserialize(backend);
+    if (!alloc) {
+      continue;
+    }
+    RegisterAllocatorNoScan(alloc);
   }
 
 #ifdef HSHM_IS_HOST
   int ngpu = GpuApi::GetDeviceCount();
   for (int gpu_id = 0; gpu_id < ngpu; ++gpu_id) {
-    ScanBackendsGpu(gpu_id, find_allocs);
+    ScanBackendsGpu(gpu_id);
   }
 #endif
 }
@@ -178,10 +182,10 @@ void MemoryManager::ScanBackends(bool find_allocs) {
  * Scans backends on the GPU
  */
 HSHM_HOST_FUN
-void MemoryManager::ScanBackendsGpu(int gpu_id, bool find_allocs) {
+void MemoryManager::ScanBackendsGpu(int gpu_id) {
 #if defined(HSHM_ENABLE_CUDA) || defined(HSHM_ENABLE_ROCM)
   GpuApi::SetDevice(gpu_id);
-  ScanBackendGpuKern<<<1, 1>>>(find_allocs);
+  ScanBackendGpuKern<<<1, 1>>>();
   GpuApi::Synchronize();
 #endif
 }
@@ -191,25 +195,16 @@ void MemoryManager::ScanBackendsGpu(int gpu_id, bool find_allocs) {
  * also be used externally.
  * */
 HSHM_CROSS_FUN
-Allocator *MemoryManager::RegisterAllocator(Allocator *alloc, bool do_scan) {
+Allocator *MemoryManager::RegisterAllocator(Allocator *alloc) {
   if (alloc == nullptr) {
     return nullptr;
   }
-  if (do_scan) {
-    if (default_allocator_ == nullptr || default_allocator_ == root_alloc_ ||
-        default_allocator_->GetId() == alloc->GetId()) {
-      default_allocator_ = alloc;
-    }
+  if (default_allocator_ == nullptr || default_allocator_ == root_alloc_ ||
+      default_allocator_->GetId() == alloc->GetId()) {
+    default_allocator_ = alloc;
   }
-  uint32_t idx = alloc->GetId().ToIndex();
-  if (idx > MAX_ALLOCATORS) {
-    HILOG(kError, "Allocator index out of range: {}", idx);
-    HSHM_THROW_ERROR(TOO_MANY_ALLOCATORS);
-  }
-  allocators_[idx] = alloc;
-  if (do_scan) {
-    ScanBackends(false);
-  }
+  RegisterAllocatorNoScan(alloc);
+  ScanBackends();
   return alloc;
 }
 

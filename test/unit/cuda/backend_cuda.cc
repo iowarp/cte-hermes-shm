@@ -91,11 +91,12 @@ void mpsc_test() {
   mem_mngr->CopyBackendGpu(0, hipc::MemoryBackendId::Get(0));
   auto *alloc = mem_mngr->CreateAllocator<HSHM_DEFAULT_GPU_ALLOC_T>(
       hipc::MemoryBackendId::Get(0), alloc_id, 0);
+  // mem_mngr->ScanBackends();
   hipc::CtxAllocator<HSHM_DEFAULT_GPU_ALLOC_T> ctx_alloc(alloc);
   auto *queue =
       ctx_alloc->NewObj<gpu::ipc::mpsc_queue<int>>(ctx_alloc.ctx_, 256 * 256);
   printf("GetSize: %lu\n", (long unsigned)queue->GetSize());
-  mpsc_kernel<<<16, 16>>>(queue);
+  mpsc_kernel<<<1, 1>>>(queue);
   cudaDeviceSynchronize();
   printf("GetSize: %lu\n", (long unsigned)queue->GetSize());
   int val, sum = 0;
