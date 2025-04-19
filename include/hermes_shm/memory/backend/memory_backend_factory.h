@@ -20,13 +20,9 @@
 #include "memory_backend.h"
 #include "posix_mmap.h"
 #include "posix_shm_mmap.h"
-#ifdef HSHM_ENABLE_CUDA
-#include "cuda_malloc.h"
-#include "cuda_shm_mmap.h"
-#endif
-#ifdef HSHM_ENABLE_ROCM
-#include "rocm_malloc.h"
-#include "rocm_shm_mmap.h"
+#if defined(HSHM_ENABLE_CUDA) or defined(HSHM_ENABLE_ROCM)
+#include "gpu_malloc.h"
+#include "gpu_shm_mmap.h"
 #endif
 
 namespace hshm::ipc {
@@ -58,14 +54,9 @@ class MemoryBackendFactory {
   static MemoryBackend *shm_init(const MemoryBackendId &backend_id, size_t size,
                                  Args... args) {
     HSHM_CREATE_BACKEND(PosixShmMmap)
-#ifdef HSHM_ENABLE_CUDA
-    HSHM_CREATE_BACKEND(CudaShmMmap)
-    HSHM_CREATE_BACKEND(CudaMalloc)
-#endif
-
-#ifdef HSHM_ENABLE_ROCM
-    HSHM_CREATE_BACKEND(RocmMalloc)
-    HSHM_CREATE_BACKEND(RocmShmMmap)
+#if defined(HSHM_ENABLE_CUDA) or defined(HSHM_ENABLE_ROCM)
+    HSHM_CREATE_BACKEND(GpuShmMmap)
+    HSHM_CREATE_BACKEND(GpuMalloc)
 #endif
 
     HSHM_CREATE_BACKEND(PosixMmap)
@@ -81,16 +72,10 @@ class MemoryBackendFactory {
                                         const hshm::chararr &url) {
     switch (type) {
       HSHM_DESERIALIZE_BACKEND(PosixShmMmap)
-#ifdef HSHM_ENABLE_CUDA
-      HSHM_DESERIALIZE_BACKEND(CudaShmMmap)
-      HSHM_DESERIALIZE_BACKEND(CudaMalloc)
+#if defined(HSHM_ENABLE_CUDA) or defined(HSHM_ENABLE_ROCM)
+      HSHM_DESERIALIZE_BACKEND(GpuShmMmap)
+      HSHM_DESERIALIZE_BACKEND(GpuMalloc)
 #endif
-
-#ifdef HSHM_ENABLE_ROCM
-      HSHM_DESERIALIZE_BACKEND(RocmMalloc)
-      HSHM_DESERIALIZE_BACKEND(RocmShmMmap)
-#endif
-
       HSHM_DESERIALIZE_BACKEND(PosixMmap)
       HSHM_DESERIALIZE_BACKEND(MallocBackend)
       HSHM_DESERIALIZE_BACKEND(ArrayBackend)

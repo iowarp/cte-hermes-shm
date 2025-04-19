@@ -33,6 +33,8 @@ enum class MemoryBackendType {
   kPosixMmap,
   kRocmMalloc,
   kRocmShmMmap,
+  kGpuMalloc,
+  kGpuShmMmap,
 };
 
 /** ID for memory backend */

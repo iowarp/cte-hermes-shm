@@ -10,10 +10,9 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HSHM_INCLUDE_MEMORY_BACKEND_CUDA_SHM_MMAP_H
-#define HSHM_INCLUDE_MEMORY_BACKEND_CUDA_SHM_MMAP_H
+#ifndef HSHM_INCLUDE_MEMORY_BACKEND_GPU_SHM_MMAP_H
+#define HSHM_INCLUDE_MEMORY_BACKEND_GPU_SHM_MMAP_H
 
-#include <cuda_runtime.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -23,24 +22,25 @@
 #include "hermes_shm/constants/macros.h"
 #include "hermes_shm/introspect/system_info.h"
 #include "hermes_shm/util/errors.h"
+#include "hermes_shm/util/gpu_api.h"
 #include "hermes_shm/util/logging.h"
 #include "memory_backend.h"
 #include "posix_shm_mmap.h"
 
 namespace hshm::ipc {
 
-class CudaShmMmap : public PosixShmMmap {
+class GpuShmMmap : public PosixShmMmap {
  public:
-  CLS_CONST MemoryBackendType EnumType = MemoryBackendType::kCudaShmMmap;
+  CLS_CONST MemoryBackendType EnumType = MemoryBackendType::kGpuShmMmap;
 
  public:
   /** Constructor */
   HSHM_CROSS_FUN
-  CudaShmMmap() {}
+  GpuShmMmap() {}
 
   /** Destructor */
   HSHM_CROSS_FUN
-  ~CudaShmMmap() {
+  ~GpuShmMmap() {
 #ifdef HSHM_IS_HOST
     if (IsOwned()) {
       _Destroy();
@@ -52,9 +52,7 @@ class CudaShmMmap : public PosixShmMmap {
 
   /** Initialize shared memory */
   bool shm_init(const MemoryBackendId& backend_id, size_t size,
-                const hshm::chararr& url, int device) {
-    cudaDeviceSynchronize();
-    cudaSetDevice(device);
+                const hshm::chararr& url) {
     bool ret = PosixShmMmap::shm_init(backend_id, size, url);
     if (!ret) {
       return false;
@@ -64,7 +62,7 @@ class CudaShmMmap : public PosixShmMmap {
     header_->accel_data_size_ = data_size_;
     accel_data_ = data_;
     accel_data_size_ = data_size_;
-    header_->type_ = MemoryBackendType::kCudaShmMmap;
+    header_->type_ = MemoryBackendType::kGpuShmMmap;
     return true;
   }
 
@@ -81,17 +79,17 @@ class CudaShmMmap : public PosixShmMmap {
   /** Map shared memory */
   template <typename T>
   void Register(T* ptr, size_t size) {
-    cudaHostRegister((void*)ptr, size, cudaHostRegisterPortable);
+    GpuApi::RegisterHostMemory(ptr, size);
   }
 
   /** Detach shared memory */
   void _Detach() {
-    cudaHostUnregister(header_);
-    cudaHostUnregister(data_);
+    GpuApi::UnregisterHostMemory(header_);
+    GpuApi::UnregisterHostMemory(data_);
     PosixShmMmap::_Detach();
   }
 };
 
 }  // namespace hshm::ipc
 
-#endif  // HSHM_INCLUDE_MEMORY_BACKEND_CUDA_SHM_MMAP_H
+#endif  // HSHM_INCLUDE_MEMORY_BACKEND_GPU_SHM_MMAP_H

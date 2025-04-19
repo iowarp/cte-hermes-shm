@@ -2,37 +2,36 @@
 // Created by llogan on 25/10/24.
 //
 
-#ifndef ROCM_MALLOC_H
-#define ROCM_MALLOC_H
-
-#include <hip/hip_runtime.h>
+#ifndef GPU_MALLOC_H
+#define GPU_MALLOC_H
 
 #include <string>
 
 #include "hermes_shm/constants/macros.h"
 #include "hermes_shm/introspect/system_info.h"
 #include "hermes_shm/util/errors.h"
+#include "hermes_shm/util/gpu_api.h"
 #include "hermes_shm/util/logging.h"
 #include "memory_backend.h"
 #include "posix_shm_mmap.h"
 
 namespace hshm::ipc {
 
-struct RocmMallocHeader : public MemoryBackendHeader {
-  hipIpcMemHandle_t ipc_;
+struct GpuMallocHeader : public MemoryBackendHeader {
+  GpuIpcMemHandle ipc_;
 };
 
-class RocmMalloc : public PosixShmMmap {
+class GpuMalloc : public PosixShmMmap {
  public:
-  CLS_CONST MemoryBackendType EnumType = MemoryBackendType::kRocmMalloc;
+  CLS_CONST MemoryBackendType EnumType = MemoryBackendType::kGpuMalloc;
 
  public:
   /** Constructor */
   HSHM_CROSS_FUN
-  RocmMalloc() = default;
+  GpuMalloc() = default;
 
   /** Destructor */
-  ~RocmMalloc() {
+  ~GpuMalloc() {
     if (IsOwned()) {
       _Destroy();
     } else {
@@ -43,17 +42,17 @@ class RocmMalloc : public PosixShmMmap {
   /** Initialize backend */
   bool shm_init(const MemoryBackendId &backend_id, size_t accel_data_size,
                 const hshm::chararr &url, int device = 0,
-                size_t md_size = KILOBYTES(4)) {
+                size_t md_size = MEGABYTES(1)) {
     bool ret = PosixShmMmap::shm_init(backend_id, md_size, url);
     if (!ret) {
       return false;
     }
-    RocmMallocHeader *header = reinterpret_cast<RocmMallocHeader *>(header_);
-    header->type_ = MemoryBackendType::kRocmMalloc;
+    GpuMallocHeader *header = reinterpret_cast<GpuMallocHeader *>(header_);
+    header->type_ = MemoryBackendType::kGpuMalloc;
     header->accel_data_size_ = accel_data_size;
     accel_data_size_ = accel_data_size;
     accel_data_ = _Map(accel_data_size);
-    HIP_ERROR_CHECK(hipIpcGetMemHandle(&header->ipc_, (void *)accel_data_));
+    GpuApi::GetIpcMemHandle(header->ipc_, (void *)accel_data_);
     return true;
   }
 
@@ -63,10 +62,9 @@ class RocmMalloc : public PosixShmMmap {
     if (!ret) {
       return false;
     }
-    RocmMallocHeader *header = reinterpret_cast<RocmMallocHeader *>(header_);
+    GpuMallocHeader *header = reinterpret_cast<GpuMallocHeader *>(header_);
     accel_data_size_ = header_->accel_data_size_;
-    HIP_ERROR_CHECK(hipIpcOpenMemHandle((void **)&accel_data_, header->ipc_,
-                                        hipIpcMemLazyEnablePeerAccess));
+    GpuApi::OpenIpcMemHandle(header->ipc_, &accel_data_);
     return true;
   }
 
@@ -80,9 +78,7 @@ class RocmMalloc : public PosixShmMmap {
   /** Map shared memory */
   template <typename T = char>
   T *_Map(size_t size) {
-    T *ptr;
-    HIP_ERROR_CHECK(hipMalloc(&ptr, size));
-    return ptr;
+    return GpuApi::Malloc<T>(size);
   }
 
   /** Unmap shared memory */
@@ -93,11 +89,10 @@ class RocmMalloc : public PosixShmMmap {
     if (!IsInitialized()) {
       return;
     }
-    HIP_ERROR_CHECK(hipFree(header_));
     UnsetInitialized();
   }
 };
 
 }  // namespace hshm::ipc
 
-#endif  // ROCM_MALLOC_H
+#endif  // GPU_MALLOC_H

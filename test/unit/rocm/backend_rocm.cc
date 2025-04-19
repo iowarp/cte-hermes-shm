@@ -47,8 +47,8 @@ void backend_test() {
   size_t size = sizeof(MyStruct);
 
   // Create a MyStruct instance and copy it to both host and device memory
-  hshm::ipc::RocmShmMmap shm;
-  shm.shm_init(hipc::MemoryBackendId::Get(0), size, "shmem_test", 0);
+  hshm::ipc::GpuShmMmap shm;
+  shm.shm_init(hipc::MemoryBackendId::Get(0), size, "shmem_test");
   MyStruct *shm_struct = (MyStruct *)shm.data_;
   shm_struct->x = 10;
   shm_struct->y = 3.14f;
@@ -86,8 +86,8 @@ void singleton_test() {
   size_t size = sizeof(MyStruct);
 
   // Create a MyStruct instance and copy it to both host and device memory
-  hshm::ipc::RocmShmMmap shm;
-  shm.shm_init(hipc::MemoryBackendId::Get(0), size, "shmem_test", 0);
+  hshm::ipc::GpuShmMmap shm;
+  shm.shm_init(hipc::MemoryBackendId::Get(0), size, "shmem_test");
   MyStruct *shm_struct = (MyStruct *)shm.data_;
   shm_struct->x = 10;
   shm_struct->y = 3.14f;
@@ -124,8 +124,8 @@ void mpsc_test() {
   auto mem_mngr = HSHM_MEMORY_MANAGER;
   mem_mngr->UnregisterAllocator(alloc_id);
   mem_mngr->DestroyBackend(hipc::MemoryBackendId::Get(0));
-  mem_mngr->CreateBackend<hipc::RocmShmMmap>(hipc::MemoryBackendId::Get(0),
-                                             MEGABYTES(100), shm_url, 0);
+  mem_mngr->CreateBackend<hipc::GpuShmMmap>(hipc::MemoryBackendId::Get(0),
+                                            MEGABYTES(100), shm_url);
   mem_mngr->CopyBackendGpu(0, hipc::MemoryBackendId::Get(0));
   auto *alloc = mem_mngr->CreateAllocator<HSHM_DEFAULT_GPU_ALLOC_T>(
       hipc::MemoryBackendId::Get(0), alloc_id, 0);
