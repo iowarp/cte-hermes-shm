@@ -46,6 +46,7 @@ AllocT *CreateShmem() {
   mem_mngr->DestroyBackend(hipc::MemoryBackendId::Get(0));
   mem_mngr->CreateBackend<BackendT>(hipc::MemoryBackendId::Get(0),
                                     MEGABYTES(100), shm_url, 0);
+  // mem_mngr->CopyBackendGpu(0, hipc::MemoryBackendId::Get(0));
   HILOG(kInfo, "Starting create: {}", alloc_id);
   auto *alloc = mem_mngr->CreateAllocator<AllocT>(hipc::MemoryBackendId::Get(0),
                                                   alloc_id, sizeof(Header));
