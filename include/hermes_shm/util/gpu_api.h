@@ -116,8 +116,7 @@ class GpuApi {
   static bool IsDevicePointer(T *ptr) {
 #ifdef HSHM_ENABLE_ROCM
     hipPointerAttribute_t attributes;
-    HIP_ERROR_CHECK(hipPointerGetAttribute(&attributes, hipPointerAttributeType,
-                                           (void *)ptr));
+    HIP_ERROR_CHECK(hipPointerGetAttributes(&attributes, (void *)ptr));
     return attributes.type == hipMemoryTypeDevice;
 #endif
 #ifdef HSHM_ENABLE_CUDA
