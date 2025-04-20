@@ -150,7 +150,6 @@ int main(int argc, char **argv) {
   MPI_Init(&argc, &argv);
   alloc_test<hipc::GpuMalloc>();
   // alloc_test<hipc::GpuShmMmap>();
-  // mpsc_test<hipc::GpuMalloc>();
   // mpsc_test<hipc::GpuShmMmap>();
   MPI_Finalize();
 }
