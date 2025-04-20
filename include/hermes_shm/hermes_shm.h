@@ -26,7 +26,6 @@
 #include "util/errors.h"
 #include "util/formatter.h"
 #include "util/logging.h"
-#include "util/partitioner.h"
 #include "util/singleton.h"
 #include "util/timer.h"
 #include "util/type_switch.h"
