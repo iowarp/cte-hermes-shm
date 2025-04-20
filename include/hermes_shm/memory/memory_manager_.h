@@ -50,8 +50,8 @@ class MemoryManager {
   HSHM_DLL void Init();
 
   /** Default backend size */
-  HSHM_CROSS_FUN
-  HSHM_DLL static size_t GetDefaultBackendSize();
+  template <int nothing = 0>
+  HSHM_CROSS_FUN static size_t GetDefaultBackendSize();
 
   /**
    * Create a memory backend. Memory backends are divided into slots.
@@ -97,21 +97,24 @@ class MemoryManager {
   }
 
   /** Copy and existing backend to the GPU */
+  template <int nothing = 0>
   void CopyBackendGpu(const MemoryBackendId &backend_id);
 
   /** Create an array backend on the GPU */
+  template <int nothing = 0>
   void CreateBackendGpu(int gpu_id, const MemoryBackendId &backend_id,
                         char *accel_data, size_t accel_data_size);
 
   /** Mark a backend as allocated on GPU */
+  template <int nothing = 0>
   void SetBackendHasAlloc(const MemoryBackendId &backend_id);
 
   /**
    * Attaches to an existing memory backend located at \a url url.
    * */
-  HSHM_CROSS_FUN
-  HSHM_DLL MemoryBackend *AttachBackend(MemoryBackendType type,
-                                        const hshm::chararr &url);
+  template <int nothing = 0>
+  HSHM_CROSS_FUN MemoryBackend *AttachBackend(MemoryBackendType type,
+                                              const hshm::chararr &url);
 
   /**
    * Returns a pointer to a backend that has already been attached.
@@ -132,20 +135,20 @@ class MemoryManager {
   }
 
   /** Free the backend */
-  HSHM_CROSS_FUN HSHM_DLL void DestroyBackend(
-      const MemoryBackendId &backend_id);
+  template <int nothing = 0>
+  HSHM_CROSS_FUN void DestroyBackend(const MemoryBackendId &backend_id);
 
   /**
    * Scans all attached backends for new memory allocators.
    * */
-  HSHM_CROSS_FUN
-  HSHM_DLL void ScanBackends();
+  template <int nothing = 0>
+  HSHM_CROSS_FUN void ScanBackends();
 
   /**
    * Scans all attached backends on GPU for new memory allocators.
    * */
-  HSHM_HOST_FUN
-  HSHM_DLL void ScanBackendsGpu(int gpu_id);
+  template <int nothing = 0>
+  HSHM_HOST_FUN void ScanBackendsGpu(int gpu_id);
 
   /**
    * Create and register a memory allocator for a particular backend.
@@ -169,8 +172,8 @@ class MemoryManager {
    * Registers an allocator. Used internally by ScanBackends, but may
    * also be used externally.
    * */
-  HSHM_CROSS_FUN
-  HSHM_DLL Allocator *RegisterAllocator(Allocator *alloc);
+  template <int nothing = 0>
+  HSHM_CROSS_FUN Allocator *RegisterAllocator(Allocator *alloc);
 
   /**
    * Registers an allocator. Used internally by ScanBackends, but may

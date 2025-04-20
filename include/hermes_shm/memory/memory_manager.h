@@ -22,6 +22,73 @@
 
 namespace hshm::ipc {
 
+#if defined(HSHM_ENABLE_CUDA) || defined(HSHM_ENABLE_ROCM)
+/** Register a backend on GPU */
+template <int nothing = 0>
+HSHM_GPU_KERNEL void RegisterBackendGpuKern(MemoryBackendId backend_id,
+                                            char *region, size_t size) {
+#ifdef HSHM_IS_GPU
+  HSHM_MEMORY_MANAGER;
+  HSHM_THREAD_MODEL;
+  HSHM_SYSTEM_INFO;
+  auto alloc = HSHM_ROOT_ALLOC;
+  auto backend =
+      alloc->template NewObj<hipc::ArrayBackend>(HSHM_DEFAULT_MEM_CTX);
+  MemoryBackendHeader local_hdr;
+  backend->local_hdr_.id_ = backend_id;
+  if (!backend->shm_init(backend_id, size, region)) {
+    HSHM_THROW_ERROR(MEMORY_BACKEND_CREATE_FAILED);
+  }
+  HSHM_MEMORY_MANAGER->RegisterBackend(backend);
+  backend->Own();
+#endif
+}
+
+/** Scan backends on GPU */
+template <int nothing = 0>
+HSHM_GPU_KERNEL void ScanBackendGpuKern() {
+  HSHM_MEMORY_MANAGER->ScanBackends();
+}
+
+/** Create an allocator on GPU */
+template <typename AllocT, typename... Args>
+HSHM_GPU_KERNEL void CreateAllocatorGpuKern(const MemoryBackendId &backend_id,
+                                            const AllocatorId &alloc_id,
+                                            size_t custom_header_size,
+                                            Args &&...args) {
+  HSHM_MEMORY_MANAGER->CreateAllocator<AllocT>(
+      backend_id, alloc_id, custom_header_size, std::forward<Args>(args)...);
+}
+
+/** Mark a GPU as having an allocator */
+template <int nothing = 0>
+HSHM_GPU_KERNEL void SetBackendHasAllocKern(MemoryBackendId backend_id) {
+  MemoryBackend *backend = HSHM_MEMORY_MANAGER->GetBackend(backend_id);
+  if (!backend) {
+    return;
+  }
+  backend->SetHasAlloc();
+}
+#endif
+
+/**
+ * Registers an allocator. Used internally by ScanBackends, but may
+ * also be used externally.
+ * */
+template <int>
+HSHM_CROSS_FUN Allocator *MemoryManager::RegisterAllocator(Allocator *alloc) {
+  if (alloc == nullptr) {
+    return nullptr;
+  }
+  if (default_allocator_ == nullptr || default_allocator_ == root_alloc_ ||
+      default_allocator_->GetId() == alloc->GetId()) {
+    default_allocator_ = alloc;
+  }
+  // RegisterAllocatorNoScan(alloc);
+  ScanBackends();
+  return alloc;
+}
+
 /**
  * Create a memory backend. Memory backends are divided into slots.
  * Each slot corresponds directly with a single allocator.
@@ -39,6 +106,74 @@ MemoryBackend *MemoryManager::CreateBackend(const MemoryBackendId &backend_id,
     CopyBackendGpu(backend_id);
   }
   return backend;
+}
+
+/**
+ * Attaches to an existing memory backend located at \a url url.
+ * */
+template <int>
+HSHM_CROSS_FUN MemoryBackend *MemoryManager::AttachBackend(
+    MemoryBackendType type, const hshm::chararr &url) {
+#ifdef HSHM_IS_HOST
+  MemoryBackend *backend = MemoryBackendFactory::shm_deserialize(type, url);
+  RegisterBackend(backend);
+  if (backend->IsCopyGpu()) {
+    CopyBackendGpu(backend->GetId());
+  }
+  ScanBackends();
+  backend->Disown();
+  return backend;
+#else
+  return nullptr;
+#endif
+}
+
+/**
+ * Destroys a backned
+ * */
+template <int>
+HSHM_CROSS_FUN void MemoryManager::DestroyBackend(
+    const MemoryBackendId &backend_id) {
+  auto backend = UnregisterBackend(backend_id);
+  if (backend == nullptr) {
+    return;
+  }
+  FullPtr<MemoryBackend> ptr(backend);
+  backend->Own();
+  auto alloc = GetAllocator<HSHM_ROOT_ALLOC_T>(ptr.shm_.alloc_id_);
+  alloc->DelObjLocal(HSHM_DEFAULT_MEM_CTX, ptr);
+}
+
+/**
+ * Scans all attached backends for new memory allocators.
+ * */
+template <int>
+HSHM_CROSS_FUN void MemoryManager::ScanBackends() {
+  for (int i = 0; i < MAX_BACKENDS; ++i) {
+    MemoryBackend *backend = backends_[i];
+    if (backend == nullptr) {
+      continue;
+    }
+    if (!backend->IsHasAlloc()) {
+      continue;
+    }
+    if (backend->IsScanned()) {
+      continue;
+    }
+    auto *alloc = AllocatorFactory::shm_deserialize(backend);
+    if (!alloc) {
+      continue;
+    }
+    backend->SetScanned();
+    RegisterAllocatorNoScan(alloc);
+  }
+
+#ifdef HSHM_IS_HOST
+  int ngpu = GpuApi::GetDeviceCount();
+  for (int gpu_id = 0; gpu_id < ngpu; ++gpu_id) {
+    ScanBackendsGpu(gpu_id);
+  }
+#endif
 }
 
 /**
@@ -68,17 +203,6 @@ AllocT *MemoryManager::CreateAllocator(const MemoryBackendId &backend_id,
   RegisterAllocator(alloc);
   return GetAllocator<AllocT>(alloc_id);
 }
-
-#if defined(HSHM_ENABLE_CUDA) || defined(HSHM_ENABLE_ROCM)
-template <typename AllocT, typename... Args>
-HSHM_GPU_KERNEL void CreateAllocatorGpuKern(const MemoryBackendId &backend_id,
-                                            const AllocatorId &alloc_id,
-                                            size_t custom_header_size,
-                                            Args &&...args) {
-  HSHM_MEMORY_MANAGER->CreateAllocator<AllocT>(
-      backend_id, alloc_id, custom_header_size, std::forward<Args>(args)...);
-}
-#endif
 
 /**
  * Create + register allocator on GPU.
@@ -119,6 +243,73 @@ HSHM_CROSS_FUN void MemoryManager::DestroyAllocator(
   alloc->template DelObjLocal<AllocT>(HSHM_DEFAULT_MEM_CTX, ptr);
 }
 
+/** Default backend size */
+template <int>
+HSHM_CROSS_FUN size_t MemoryManager::GetDefaultBackendSize() {
+#ifdef HSHM_IS_HOST
+  return HSHM_SYSTEM_INFO->ram_size_;
+#else
+  // TODO(llogan)
+  return 0;
+#endif
+}
+
+/** Copy and existing backend to the GPU */
+template <int>
+void MemoryManager::CopyBackendGpu(const MemoryBackendId &backend_id) {
+  MemoryBackend *backend = GetBackend(backend_id);
+  if (!backend) {
+    return;
+  }
+  GpuApi::SetDevice(backend->accel_id_);
+  CreateBackendGpu(backend->accel_id_, backend_id, backend->accel_data_,
+                   backend->accel_data_size_);
+  if (backend->IsHasGpuAlloc()) {
+    SetBackendHasAlloc(backend_id);
+  }
+}
+
+/** Create an array backend on the GPU */
+template <int>
+void MemoryManager::CreateBackendGpu(int gpu_id,
+                                     const MemoryBackendId &backend_id,
+                                     char *accel_data, size_t accel_data_size) {
+#if defined(HSHM_ENABLE_CUDA) || defined(HSHM_ENABLE_ROCM)
+  GpuApi::SetDevice(gpu_id);
+  RegisterBackendGpuKern<<<1, 1>>>(backend_id, accel_data, accel_data_size);
+  GpuApi::Synchronize();
+#endif
+}
+
+/** Set a backend as having an allocator */
+template <int>
+void MemoryManager::SetBackendHasAlloc(const MemoryBackendId &backend_id) {
+#if defined(HSHM_ENABLE_CUDA) || defined(HSHM_ENABLE_ROCM)
+  MemoryBackend *backend = GetBackend(backend_id);
+  if (!backend) {
+    return;
+  }
+  GpuApi::SetDevice(backend->accel_id_);
+  SetBackendHasAllocKern<<<1, 1>>>(backend_id);
+  GpuApi::Synchronize();
+#endif
+}
+
+/**
+ * Scans backends on the GPU
+ */
+template <int>
+HSHM_HOST_FUN void MemoryManager::ScanBackendsGpu(int gpu_id) {
+#if defined(HSHM_ENABLE_CUDA) || defined(HSHM_ENABLE_ROCM)
+  GpuApi::SetDevice(gpu_id);
+  ScanBackendGpuKern<<<1, 1>>>();
+  GpuApi::Synchronize();
+#endif
+}
+
+/**
+ * Full Pointer Constructors
+ */
 template <typename T, typename PointerT>
 HSHM_INLINE_CROSS_FUN FullPtr<T, PointerT>::FullPtr(const PointerT &shm)
     : shm_(shm) {
