@@ -79,6 +79,9 @@ MemoryBackend *MemoryManager::AttachBackend(MemoryBackendType type,
 #ifdef HSHM_IS_HOST
   MemoryBackend *backend = MemoryBackendFactory::shm_deserialize(type, url);
   RegisterBackend(backend);
+  if (backend->IsCopyGpu()) {
+    CopyBackendGpu(backend->GetId());
+  }
   ScanBackends();
   backend->Disown();
   return backend;
@@ -125,18 +128,28 @@ HSHM_GPU_KERNEL void RegisterBackendGpuKern(MemoryBackendId backend_id,
 HSHM_GPU_KERNEL void ScanBackendGpuKern() {
   HSHM_MEMORY_MANAGER->ScanBackends();
 }
+
+HSHM_GPU_KERNEL void SetBackendHasAllocKern(MemoryBackendId backend_id) {
+  MemoryBackend *backend = HSHM_MEMORY_MANAGER->GetBackend(backend_id);
+  if (!backend) {
+    return;
+  }
+  backend->SetHasAlloc();
+}
 #endif
 
 /** Copy and existing backend to the GPU */
-void MemoryManager::CopyBackendGpu(int gpu_id,
-                                   const MemoryBackendId &backend_id) {
-  GpuApi::SetDevice(gpu_id);
+void MemoryManager::CopyBackendGpu(const MemoryBackendId &backend_id) {
   MemoryBackend *backend = GetBackend(backend_id);
   if (!backend) {
     return;
   }
-  CreateBackendGpu(gpu_id, backend_id, backend->accel_data_,
+  GpuApi::SetDevice(backend->accel_id_);
+  CreateBackendGpu(backend->accel_id_, backend_id, backend->accel_data_,
                    backend->accel_data_size_);
+  if (backend->IsHasGpuAlloc()) {
+    SetBackendHasAlloc(backend_id);
+  }
 }
 
 /** Create an array backend on the GPU */
@@ -146,6 +159,19 @@ void MemoryManager::CreateBackendGpu(int gpu_id,
 #if defined(HSHM_ENABLE_CUDA) || defined(HSHM_ENABLE_ROCM)
   GpuApi::SetDevice(gpu_id);
   RegisterBackendGpuKern<<<1, 1>>>(backend_id, accel_data, accel_data_size);
+  GpuApi::Synchronize();
+#endif
+}
+
+/** Set a backend as having an allocator */
+void MemoryManager::SetBackendHasAlloc(const MemoryBackendId &backend_id) {
+#if defined(HSHM_ENABLE_CUDA) || defined(HSHM_ENABLE_ROCM)
+  MemoryBackend *backend = GetBackend(backend_id);
+  if (!backend) {
+    return;
+  }
+  GpuApi::SetDevice(backend->accel_id_);
+  SetBackendHasAllocKern<<<1, 1>>>(backend_id);
   GpuApi::Synchronize();
 #endif
 }
@@ -160,15 +186,17 @@ void MemoryManager::ScanBackends() {
     if (backend == nullptr) {
       continue;
     }
-    Allocator *alloc_hdr = (Allocator *)backend->data_;
-    AllocatorId alloc_id = alloc_hdr->id_;
-    if (GetAllocator<Allocator>(alloc_id)) {
+    if (!backend->IsHasAlloc()) {
+      continue;
+    }
+    if (backend->IsScanned()) {
       continue;
     }
     auto *alloc = AllocatorFactory::shm_deserialize(backend);
     if (!alloc) {
       continue;
     }
+    backend->SetScanned();
     RegisterAllocatorNoScan(alloc);
   }
 

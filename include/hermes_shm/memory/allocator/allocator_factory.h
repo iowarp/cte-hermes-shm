@@ -39,10 +39,11 @@ class AllocatorFactory {
    * */
   template <typename AllocT, typename... Args>
   static AllocT* shm_init(AllocatorId alloc_id, size_t custom_header_size,
-                          const MemoryBackend& backend, Args&&... args) {
+                          MemoryBackend backend, Args&&... args) {
     auto alloc = HSHM_ROOT_ALLOC->NewObj<AllocT>(HSHM_DEFAULT_MEM_CTX);
     alloc->shm_init(alloc_id, custom_header_size, backend,
                     std::forward<Args>(args)...);
+    backend.SetHasAlloc();
     return alloc;
   }
 

@@ -61,8 +61,7 @@ class PosixShmMmap : public MemoryBackend, public UrlMemoryBackend {
     Own();
     std::string url_s = url.str();
     SystemInfo::DestroySharedMemory(url_s);
-    if (!SystemInfo::CreateNewSharedMemory(
-            fd_, url_s, size + hdr_size_)) {
+    if (!SystemInfo::CreateNewSharedMemory(fd_, url_s, size + hdr_size_)) {
       char *err_buf = strerror(errno);
       HILOG(kError, "shm_open failed: {}", err_buf);
       return false;

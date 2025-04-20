@@ -46,7 +46,6 @@ AllocT *CreateShmem() {
   mem_mngr->DestroyBackend(hipc::MemoryBackendId::Get(0));
   mem_mngr->CreateBackend<BackendT>(hipc::MemoryBackendId::Get(0),
                                     MEGABYTES(100), shm_url, 0);
-  mem_mngr->CopyBackendGpu(0, hipc::MemoryBackendId::Get(0));
   HILOG(kInfo, "Starting create: {}", alloc_id);
   auto *alloc = mem_mngr->CreateAllocator<AllocT>(hipc::MemoryBackendId::Get(0),
                                                   alloc_id, sizeof(Header));
@@ -58,7 +57,6 @@ template <typename BackendT>
 AllocT *LoadShmem() {
   auto mem_mngr = HSHM_MEMORY_MANAGER;
   mem_mngr->AttachBackend(BackendT::EnumType, shm_url);
-  mem_mngr->CopyBackendGpu(0, hipc::MemoryBackendId::Get(0));
   auto *alloc = mem_mngr->GetAllocator<AllocT>(alloc_id);
   HILOG(kInfo, "Loading shared memory allocator: {}", alloc_id);
   return alloc;

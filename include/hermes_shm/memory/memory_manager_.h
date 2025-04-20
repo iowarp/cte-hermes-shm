@@ -97,11 +97,14 @@ class MemoryManager {
   }
 
   /** Copy and existing backend to the GPU */
-  void CopyBackendGpu(int gpu_id, const MemoryBackendId &backend_id);
+  void CopyBackendGpu(const MemoryBackendId &backend_id);
 
   /** Create an array backend on the GPU */
   void CreateBackendGpu(int gpu_id, const MemoryBackendId &backend_id,
                         char *accel_data, size_t accel_data_size);
+
+  /** Mark a backend as allocated on GPU */
+  void SetBackendHasAlloc(const MemoryBackendId &backend_id);
 
   /**
    * Attaches to an existing memory backend located at \a url url.
@@ -157,6 +160,10 @@ class MemoryManager {
   AllocT *CreateAllocatorGpu(int gpu_id, const MemoryBackendId &backend_id,
                              const AllocatorId &alloc_id,
                              size_t custom_header_size, Args &&...args);
+
+  /** Create an allocator for the GPU */
+  template <typename AllocT>
+  AllocT *ShareAllocatorGpu(int gpu_id, const AllocatorId &alloc_id);
 
   /**
    * Registers an allocator. Used internally by ScanBackends, but may

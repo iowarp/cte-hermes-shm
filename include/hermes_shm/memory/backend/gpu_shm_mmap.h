@@ -52,27 +52,34 @@ class GpuShmMmap : public PosixShmMmap {
 
   /** Initialize shared memory */
   bool shm_init(const MemoryBackendId& backend_id, size_t size,
-                const hshm::chararr& url) {
+                const hshm::chararr& url, int gpu_id = 0) {
     bool ret = PosixShmMmap::shm_init(backend_id, size, url);
     if (!ret) {
       return false;
     }
+    SetCopyGpu();
+    SetMirrorGpu();
     Register(header_, HSHM_SYSTEM_INFO->page_size_);
     Register(data_, size);
     header_->accel_data_size_ = data_size_;
+    header_->accel_id_ = accel_id_;
     accel_data_ = data_;
     accel_data_size_ = data_size_;
+    accel_id_ = header_->accel_id_;
     header_->type_ = MemoryBackendType::kGpuShmMmap;
     return true;
   }
 
   /** SHM deserialize */
   bool shm_deserialize(const hshm::chararr& url) {
+    SetCopyGpu();
+    SetMirrorGpu();
     bool ret = PosixShmMmap::shm_deserialize(url);
     Register(header_, HSHM_SYSTEM_INFO->page_size_);
     Register(data_, data_size_);
     accel_data_ = data_;
     accel_data_size_ = data_size_;
+    accel_id_ = header_->accel_id_;
     return ret;
   }
 

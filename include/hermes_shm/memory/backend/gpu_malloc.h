@@ -41,17 +41,20 @@ class GpuMalloc : public PosixShmMmap {
 
   /** Initialize backend */
   bool shm_init(const MemoryBackendId &backend_id, size_t accel_data_size,
-                const hshm::chararr &url, int device = 0,
+                const hshm::chararr &url, int gpu_id = 0,
                 size_t md_size = MEGABYTES(1)) {
     bool ret = PosixShmMmap::shm_init(backend_id, md_size, url);
     if (!ret) {
       return false;
     }
+    SetCopyGpu();
     GpuMallocHeader *header = reinterpret_cast<GpuMallocHeader *>(header_);
     header->type_ = MemoryBackendType::kGpuMalloc;
     header->accel_data_size_ = accel_data_size;
+    header->accel_id_ = gpu_id;
     accel_data_size_ = accel_data_size;
     accel_data_ = _Map(accel_data_size);
+    accel_id_ = header_->accel_id_;
     GpuApi::GetIpcMemHandle(header->ipc_, (void *)accel_data_);
     return true;
   }
@@ -62,8 +65,10 @@ class GpuMalloc : public PosixShmMmap {
     if (!ret) {
       return false;
     }
+    SetCopyGpu();
     GpuMallocHeader *header = reinterpret_cast<GpuMallocHeader *>(header_);
     accel_data_size_ = header_->accel_data_size_;
+    accel_id_ = header_->accel_id_;
     GpuApi::OpenIpcMemHandle(header->ipc_, &accel_data_);
     return true;
   }

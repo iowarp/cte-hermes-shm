@@ -113,13 +113,33 @@ class GpuApi {
   }
 
   template <typename T>
-  static void Memset(T *dst, int value, size_t size) {
+  static bool IsDevicePointer(T *ptr) {
 #ifdef HSHM_ENABLE_ROCM
-    HIP_ERROR_CHECK(hipMemset(dst, value, size));
+    hipPointerAttribute_t attributes;
+    HIP_ERROR_CHECK(hipPointerGetAttribute(&attributes, hipPointerAttributeType,
+                                           (void *)ptr));
+    return attributes.type == hipMemoryTypeDevice;
 #endif
 #ifdef HSHM_ENABLE_CUDA
-    CUDA_ERROR_CHECK(cudaMemset(dst, value, size));
+    cudaPointerAttributes attributes;
+    CUDA_ERROR_CHECK(cudaPointerGetAttributes(&attributes, (void *)ptr));
+    return attributes.type == cudaMemoryTypeDevice;
 #endif
+    return false;
+  }
+
+  template <typename T>
+  static void Memset(T *dst, int value, size_t size) {
+    if (IsDevicePointer(dst)) {
+#ifdef HSHM_ENABLE_ROCM
+      HIP_ERROR_CHECK(hipMemset(dst, value, size));
+#endif
+#ifdef HSHM_ENABLE_CUDA
+      CUDA_ERROR_CHECK(cudaMemset(dst, value, size));
+#endif
+    } else {
+      memset(dst, value, size);
+    }
   }
 
   template <typename T>

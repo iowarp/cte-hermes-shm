@@ -35,6 +35,9 @@ MemoryBackend *MemoryManager::CreateBackend(const MemoryBackendId &backend_id,
       backend_id, size, std::forward<Args>(args)...);
   RegisterBackend(backend);
   backend->Own();
+  if (backend->IsCopyGpu()) {
+    CopyBackendGpu(backend_id);
+  }
   return backend;
 }
 
@@ -49,6 +52,16 @@ AllocT *MemoryManager::CreateAllocator(const MemoryBackendId &backend_id,
   MemoryBackend *backend = GetBackend(backend_id);
   if (alloc_id.IsNull()) {
     HELOG(kFatal, "Allocator cannot be created with a NIL ID");
+  }
+  if (backend == nullptr) {
+    return nullptr;
+  }
+  backend->SetHasAlloc();
+  if (backend->IsMirrorGpu()) {
+    backend->SetHasGpuAlloc();
+  }
+  if (backend->IsHasGpuAlloc()) {
+    SetBackendHasAlloc(backend->GetId());
   }
   AllocT *alloc = AllocatorFactory::shm_init<AllocT>(
       alloc_id, custom_header_size, backend, std::forward<Args>(args)...);
@@ -77,10 +90,17 @@ AllocT *MemoryManager::CreateAllocatorGpu(int gpu_id,
                                           size_t custom_header_size,
                                           Args &&...args) {
 #if defined(HSHM_ENABLE_CUDA) || defined(HSHM_ENABLE_ROCM)
+  if (alloc_id.IsNull()) {
+    HELOG(kFatal, "Allocator cannot be created with a NIL ID");
+  }
   GpuApi::SetDevice(gpu_id);
   CreateAllocatorGpuKern<AllocT><<<1, 1>>>(gpu_id, backend_id, alloc_id,
                                            custom_header_size,
                                            std::forward<Args>(args)...);
+  MemoryBackend *backend = GetBackend(backend_id);
+  if (backend) {
+    backend->SetHasGpuAlloc();
+  }
 #endif
 }
 
