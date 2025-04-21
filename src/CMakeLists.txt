@@ -23,21 +23,20 @@ list(APPEND HSHM_LIBS cxx)
 # BUILD HSHM FOR CUDA ONLY
 if(HSHM_ENABLE_CUDA)
     add_cuda_library(hermes_shm_cuda STATIC TRUE ${SRC_FILES})
-    target_link_libraries(hermes_shm_cuda PUBLIC cuda_gpu_lib_deps)
+    target_link_libraries(hermes_shm_cuda PUBLIC host_deps)
     target_compile_definitions(hermes_shm_cuda PUBLIC HSHM_ENABLE_CUDA)
     list(APPEND HSHM_LIBS hermes_shm_cuda)
     add_library(cudacxx INTERFACE)
     target_link_libraries(cudacxx INTERFACE hermes_shm_cuda)
-
-    # target_include_directories(cudacxx INTERFACE ${HSHM_INSTALL_INCLUDE_DIR})
-    # target_link_directories(cudacxx INTERFACE ${HSHM_INSTALL_LIB_DIR})
+    target_include_directories(cudacxx INTERFACE ${HSHM_INSTALL_INCLUDE_DIR})
+    target_link_directories(cudacxx INTERFACE ${HSHM_INSTALL_LIB_DIR})
     list(APPEND HSHM_LIBS cudacxx)
 endif()
 
 # BUILD HSHM FOR ROCM ONLY
 if(HSHM_ENABLE_ROCM)
     add_rocm_gpu_library(hermes_shm_rocm_gpu STATIC TRUE ${SRC_FILES})
-    target_link_libraries(hermes_shm_rocm_gpu PUBLIC rocm_gpu_lib_deps)
+    target_link_libraries(hermes_shm_rocm_gpu PUBLIC host_deps)
     target_compile_definitions(hermes_shm_rocm_gpu PUBLIC HSHM_ENABLE_ROCM)
     list(APPEND HSHM_LIBS hermes_shm_rocm_gpu)
     add_library(rocmcxx_gpu INTERFACE)
@@ -47,7 +46,7 @@ if(HSHM_ENABLE_ROCM)
     list(APPEND HSHM_LIBS rocmcxx_gpu)
 
     add_rocm_host_library(hermes_shm_rocm_host TRUE ${SRC_FILES})
-    target_link_libraries(hermes_shm_rocm_host PUBLIC rocm_host_lib_deps)
+    target_link_libraries(hermes_shm_rocm_host PUBLIC host_deps)
     list(APPEND HSHM_LIBS hermes_shm_rocm_host)
     add_library(rocmcxx_host INTERFACE)
     target_link_libraries(rocmcxx_host INTERFACE hermes_shm_rocm_host)
@@ -61,12 +60,6 @@ endif()
 # -----------------------------------------------------------------------------
 install(TARGETS
     ${HSHM_LIBS}
-    rocm_gpu_lib_deps
-    rocm_host_lib_deps
-    rocm_host_exec_deps
-    rocm_gpu_exec_deps
-    cuda_gpu_lib_deps
-    cuda_gpu_exec_deps
     host_deps
     EXPORT
     ${HSHM_EXPORTED_TARGETS}

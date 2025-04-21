@@ -242,70 +242,84 @@ function(set_cuda_sources DO_COPY SRC_FILES CUDA_SOURCE_FILES_VAR)
 endfunction()
 
 # Function for adding a ROCm library
-function(add_rocm_gpu_library LIB_NAME SHARED DO_COPY)
+function(add_rocm_gpu_library TARGET SHARED DO_COPY)
     set(SRC_FILES ${ARGN})
     set(ROCM_SOURCE_FILES "")
     set_rocm_sources(gpu "${DO_COPY}" "${SRC_FILES}" ROCM_SOURCE_FILES)
-    add_library(${LIB_NAME} ${SHARED} ${ROCM_SOURCE_FILES})
-
-    # if (SHARED)
-    # set_target_properties(${LIB_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
-    # endif()
-    target_link_libraries(${LIB_NAME} PUBLIC hshm::rocm_gpu_lib_deps)
-    set_target_properties(${LIB_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
+    add_library(${TARGET} ${SHARED} ${ROCM_SOURCE_FILES})
+    target_link_libraries(${TARGET} PUBLIC -fgpu-rdc)
+    target_compile_options(${TARGET} PUBLIC -fgpu-rdc)
+    set_target_properties(${TARGET} PROPERTIES POSITION_INDEPENDENT_CODE ON)
 endfunction()
 
 # Function for adding a ROCm host-only library
-function(add_rocm_host_library LIB_NAME DO_COPY)
+function(add_rocm_host_library TARGET DO_COPY)
     set(SRC_FILES ${ARGN})
     set(ROCM_SOURCE_FILES "")
     set_rocm_sources(host "${DO_COPY}" "${SRC_FILES}" ROCM_SOURCE_FILES)
-    add_library(${LIB_NAME} ${ROCM_SOURCE_FILES})
-    target_link_libraries(${LIB_NAME} PUBLIC hshm::rocm_host_lib_deps)
-    target_compile_definitions(${LIB_NAME} PRIVATE HSHM_ENABLE_ROCM)
-    set_target_properties(${LIB_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
+    add_library(${TARGET} ${ROCM_SOURCE_FILES})
+    target_link_libraries(${TARGET} PUBLIC -fgpu-rdc)
+    target_compile_options(${TARGET} PUBLIC -fgpu-rdc)
+    set_target_properties(${TARGET} PROPERTIES POSITION_INDEPENDENT_CODE ON)
 endfunction()
 
 # Function for adding a ROCm executable
-function(add_rocm_host_executable EXE_NAME)
+function(add_rocm_host_executable TARGET)
     set(SRC_FILES ${ARGN})
-    add_executable(${EXE_NAME} ${SRC_FILES})
-    target_link_libraries(${EXE_NAME} PUBLIC hshm::rocm_host_exec_deps)
+    add_executable(${TARGET} ${SRC_FILES})
+    target_link_libraries(${TARGET} PUBLIC -fgpu-rdc)
+    target_compile_options(${TARGET} PUBLIC -fgpu-rdc)
 endfunction()
 
 # Function for adding a ROCm executable
-function(add_rocm_gpu_executable EXE_NAME DO_COPY)
+function(add_rocm_gpu_executable TARGET DO_COPY)
     set(SRC_FILES ${ARGN})
     set(ROCM_SOURCE_FILES "")
     set_rocm_sources(exec "${DO_COPY}" "${SRC_FILES}" ROCM_SOURCE_FILES)
-    add_executable(${EXE_NAME} ${ROCM_SOURCE_FILES})
-    target_link_libraries(${EXE_NAME} PUBLIC hshm::rocm_gpu_exec_deps)
+    add_executable(${TARGET} ${ROCM_SOURCE_FILES})
+    target_link_libraries(${TARGET} PUBLIC amdhip64 amd_comgr)
+    target_link_libraries(${TARGET} PUBLIC -fgpu-rdc)
+    target_compile_options(${TARGET} PUBLIC -fgpu-rdc)
 endfunction()
 
 # Function for adding a CUDA library
-function(add_cuda_library LIB_NAME SHARED DO_COPY)
+function(add_cuda_library TARGET SHARED DO_COPY)
     set(SRC_FILES ${ARGN})
     set(CUDA_SOURCE_FILES "")
     set_cuda_sources("${DO_COPY}" "${SRC_FILES}" CUDA_SOURCE_FILES)
-    add_library(${LIB_NAME} ${SHARED} ${CUDA_SOURCE_FILES})
-    target_link_libraries(${LIB_NAME} PUBLIC hshm::cuda_gpu_lib_deps)
-    set_target_properties(${LIB_NAME} PROPERTIES
-        CUDA_SEPARABLE_COMPILATION ON
-        POSITION_INDEPENDENT_CODE ON
-    )
+    add_library(${TARGET} ${SHARED} ${CUDA_SOURCE_FILES})
+    target_link_libraries(${TARGET} PRIVATE cudart)
+    target_compile_options(${TARGET} PRIVATE
+        $<$<COMPILE_LANGUAGE:CUDA>:--expt-relaxed-constexpr>)
+
+    if(SHARED STREQUAL "SHARED")
+        set_target_properties(${TARGET} PROPERTIES
+            CUDA_SEPARABLE_COMPILATION OFF
+            POSITION_INDEPENDENT_CODE ON
+            CUDA_RUNTIME_LIBRARY Shared
+        )
+    else()
+        set_target_properties(${TARGET} PROPERTIES
+            CUDA_SEPARABLE_COMPILATION ON
+            POSITION_INDEPENDENT_CODE ON
+            CUDA_RUNTIME_LIBRARY Static
+        )
+    endif()
 endfunction()
 
 # Function for adding a CUDA executable
-function(add_cuda_executable EXE_NAME DO_COPY)
+function(add_cuda_executable TARGET DO_COPY)
     set(SRC_FILES ${ARGN})
     set(CUDA_SOURCE_FILES "")
     set_cuda_sources("${DO_COPY}" "${SRC_FILES}" CUDA_SOURCE_FILES)
-    add_executable(${EXE_NAME} ${CUDA_SOURCE_FILES})
-    target_link_libraries(${EXE_NAME} PUBLIC hshm::cuda_gpu_exec_deps)
-    set_target_properties(${EXE_NAME} PROPERTIES
+    add_executable(${TARGET} ${CUDA_SOURCE_FILES})
+    set_target_properties(${TARGET} PROPERTIES
         CUDA_SEPARABLE_COMPILATION ON
         POSITION_INDEPENDENT_CODE ON
     )
+    target_link_libraries(${TARGET} PUBLIC cudart)
+    target_compile_options(${TARGET} PUBLIC
+        $<$<COMPILE_LANGUAGE:CUDA>:--expt-relaxed-constexpr>)
 endfunction()
 
 # Function for autoregistering a jarvis repo
