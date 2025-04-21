@@ -201,7 +201,6 @@ add_library(hshm::cuda_gpu_lib_deps ALIAS cuda_gpu_lib_deps)
 
 if(HSHM_ENABLE_CUDA)
     target_link_libraries(cuda_gpu_lib_deps INTERFACE host_deps)
-    target_compile_definitions(cuda_gpu_lib_deps INTERFACE HSHM_ENABLE_CUDA)
     target_compile_options(cuda_gpu_lib_deps INTERFACE
         $<$<COMPILE_LANGUAGE:CUDA>:--expt-relaxed-constexpr>)
 endif()
@@ -221,7 +220,6 @@ add_library(hshm::rocm_gpu_lib_deps ALIAS rocm_gpu_lib_deps)
 if(HSHM_ENABLE_ROCM)
     target_link_libraries(rocm_gpu_lib_deps INTERFACE -fgpu-rdc host_deps)
     target_compile_options(rocm_gpu_lib_deps INTERFACE -fgpu-rdc)
-    target_compile_definitions(rocm_gpu_lib_deps INTERFACE HSHM_ENABLE_ROCM)
 
     # target_include_directories(rocm_gpu_lib_deps INTERFACE ${CMAKE_PREFIX_PATH}/hsa/include)
 endif()

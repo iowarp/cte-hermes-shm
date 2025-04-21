@@ -23,11 +23,6 @@
 namespace hshm::ipc {
 
 #if defined(HSHM_ENABLE_CUDA) || defined(HSHM_ENABLE_ROCM)
-template <int nothing = 0>
-static HSHM_GPU_KERNEL void TestHipcKernel() {
-  printf("WILL I PRINT?\n");
-}
-
 /** Register a backend on GPU */
 template <int nothing = 0>
 static HSHM_GPU_KERNEL void RegisterBackendGpuKern(MemoryBackendId backend_id,
@@ -72,8 +67,9 @@ static HSHM_GPU_KERNEL void CreateAllocatorGpuKern(
 
 /** Mark a GPU as having an allocator */
 template <int nothing = 0>
-static HSHM_GPU_KERNEL void SetBackendHasAllocKern(MemoryBackendId backend_id) {
-  printf("HSHM: SetBackendHasAllocKern (%d)\n", nothing);
+static HSHM_GPU_KERNEL void SetBackendHasAllocGpuKern(
+    MemoryBackendId backend_id) {
+  printf("HSHM: SetBackendHasAllocGpuKern (%d)\n", nothing);
   MemoryBackend *backend = HSHM_MEMORY_MANAGER->GetBackend(backend_id);
   if (!backend) {
     return;
@@ -209,7 +205,7 @@ AllocT *MemoryManager::CreateAllocator(const MemoryBackendId &backend_id,
     backend->SetHasGpuAlloc();
   }
   if (backend->IsHasGpuAlloc()) {
-    SetBackendHasAlloc(backend->GetId());
+    SetBackendHasAllocGpu(backend->GetId());
   }
   AllocT *alloc = AllocatorFactory::shm_init<AllocT>(
       alloc_id, custom_header_size, backend, std::forward<Args>(args)...);
@@ -278,7 +274,7 @@ void MemoryManager::CopyBackendGpu(const MemoryBackendId &backend_id) {
   CreateBackendGpu(backend->accel_id_, backend_id, backend->accel_data_,
                    backend->accel_data_size_);
   if (backend->IsHasGpuAlloc()) {
-    SetBackendHasAlloc(backend_id);
+    SetBackendHasAllocGpu(backend_id);
   }
 }
 
@@ -296,14 +292,14 @@ void MemoryManager::CreateBackendGpu(int gpu_id,
 
 /** Set a backend as having an allocator */
 template <int>
-void MemoryManager::SetBackendHasAlloc(const MemoryBackendId &backend_id) {
+void MemoryManager::SetBackendHasAllocGpu(const MemoryBackendId &backend_id) {
 #if defined(HSHM_ENABLE_CUDA) || defined(HSHM_ENABLE_ROCM)
   MemoryBackend *backend = GetBackend(backend_id);
   if (!backend) {
     return;
   }
   GpuApi::SetDevice(backend->accel_id_);
-  SetBackendHasAllocKern<<<1, 1>>>(backend_id);
+  SetBackendHasAllocGpuKern<<<1, 1>>>(backend_id);
   GpuApi::Synchronize();
 #endif
 }

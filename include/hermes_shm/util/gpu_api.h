@@ -26,7 +26,7 @@ class GpuApi {
   }
 
   static int GetDeviceCount() {
-    int ngpu;
+    int ngpu = 0;
 #ifdef HSHM_ENABLE_ROCM
     HIP_ERROR_CHECK(hipGetDeviceCount(&ngpu));
 #endif

@@ -107,7 +107,7 @@ class MemoryManager {
 
   /** Mark a backend as allocated on GPU */
   template <int nothing = 0>
-  void SetBackendHasAlloc(const MemoryBackendId &backend_id);
+  void SetBackendHasAllocGpu(const MemoryBackendId &backend_id);
 
   /**
    * Attaches to an existing memory backend located at \a url url.

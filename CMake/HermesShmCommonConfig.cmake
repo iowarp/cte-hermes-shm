@@ -304,13 +304,8 @@ function(add_cuda_executable EXE_NAME DO_COPY)
     target_link_libraries(${EXE_NAME} PUBLIC hshm::cuda_gpu_exec_deps)
     set_target_properties(${EXE_NAME} PROPERTIES
         CUDA_SEPARABLE_COMPILATION ON
+        POSITION_INDEPENDENT_CODE ON
     )
-
-    if(BUILD_SHARED_LIBS)
-        set_target_properties(${EXE_NAME} PROPERTIES
-            POSITION_INDEPENDENT_CODE ON
-        )
-    endif()
 endfunction()
 
 # Function for autoregistering a jarvis repo
