@@ -58,7 +58,18 @@ class SystemInfo {
   SystemInfo() { RefreshInfo(); }
 
   HSHM_CROSS_FUN
-  HSHM_DLL void RefreshInfo();
+  void RefreshInfo() {
+#ifdef HSHM_IS_HOST
+    pid_ = GetPid();
+    ncpu_ = GetCpuCount();
+    page_size_ = GetPageSize();
+    uid_ = GetUid();
+    gid_ = GetGid();
+    ram_size_ = GetRamCapacity();
+    cur_cpu_freq_.resize(ncpu_);
+    RefreshCpuFreqKhz();
+#endif
+  }
 
   HSHM_DLL void RefreshCpuFreqKhz();
 

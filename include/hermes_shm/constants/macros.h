@@ -40,8 +40,8 @@
 #define HSHM_DLL_EXPORT __declspec(dllexport)
 #define HSHM_DLL_IMPORT __declspec(dllimport)
 #else
-#define HSHM_DLL_EXPORT  // __attribute__((visibility("default")))
-#define HSHM_DLL_IMPORT  // __attribute__((visibility("default")))
+#define HSHM_DLL_EXPORT __attribute__((visibility("default")))
+#define HSHM_DLL_IMPORT __attribute__((visibility("default")))
 #endif
 
 // The following should be set internally in HSHM source files.

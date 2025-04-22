@@ -288,13 +288,14 @@ function(add_cuda_library TARGET SHARED DO_COPY)
     set(CUDA_SOURCE_FILES "")
     set_cuda_sources("${DO_COPY}" "${SRC_FILES}" CUDA_SOURCE_FILES)
     add_library(${TARGET} ${SHARED} ${CUDA_SOURCE_FILES})
-    target_link_libraries(${TARGET} PRIVATE cudart)
-    target_compile_options(${TARGET} PRIVATE
-        $<$<COMPILE_LANGUAGE:CUDA>:--expt-relaxed-constexpr>)
+
+    # target_link_libraries(${TARGET} PUBLIC cudart)
+    target_compile_options(${TARGET} PUBLIC
+        $<$<COMPILE_LANGUAGE:CUDA>:--expt-relaxed-constexpr> -fvisibility=hidden)
 
     if(SHARED STREQUAL "SHARED")
         set_target_properties(${TARGET} PROPERTIES
-            CUDA_SEPARABLE_COMPILATION OFF
+            CUDA_SEPARABLE_COMPILATION ON
             POSITION_INDEPENDENT_CODE ON
             CUDA_RUNTIME_LIBRARY Shared
         )
@@ -317,7 +318,8 @@ function(add_cuda_executable TARGET DO_COPY)
         CUDA_SEPARABLE_COMPILATION ON
         POSITION_INDEPENDENT_CODE ON
     )
-    target_link_libraries(${TARGET} PUBLIC cudart)
+
+    # target_link_libraries(${TARGET} PUBLIC cudart)
     target_compile_options(${TARGET} PUBLIC
         $<$<COMPILE_LANGUAGE:CUDA>:--expt-relaxed-constexpr>)
 endfunction()

@@ -27,20 +27,6 @@
 
 namespace hshm {
 
-HSHM_CROSS_FUN
-void SystemInfo::RefreshInfo() {
-#ifdef HSHM_IS_HOST
-  pid_ = GetPid();
-  ncpu_ = GetCpuCount();
-  page_size_ = GetPageSize();
-  uid_ = GetUid();
-  gid_ = GetGid();
-  ram_size_ = GetRamCapacity();
-  cur_cpu_freq_.resize(ncpu_);
-  RefreshCpuFreqKhz();
-#endif
-}
-
 void SystemInfo::RefreshCpuFreqKhz() {
 #ifdef HSHM_IS_HOST
   for (int i = 0; i < ncpu_; ++i) {
@@ -367,7 +353,7 @@ void *SystemInfo::MapPrivateMemory(size_t size) {
 void *SystemInfo::MapSharedMemory(const File &fd, size_t size, i64 off) {
 #if defined(HSHM_ENABLE_PROCFS_SYSINFO)
   void *ptr = mmap64(nullptr, size, PROT_READ | PROT_WRITE, MAP_SHARED,
-                   fd.posix_fd_, off);
+                     fd.posix_fd_, off);
   if (ptr == MAP_FAILED) {
     perror("mmap");
     return nullptr;

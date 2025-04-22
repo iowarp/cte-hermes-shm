@@ -24,41 +24,6 @@
 
 namespace hshm::ipc {
 
-/** Create the root allocator */
-HSHM_CROSS_FUN
-MemoryManager::MemoryManager() { Init(); }
-
-/** Initialize memory manager */
-HSHM_CROSS_FUN
-void MemoryManager::Init() {
-  // System info
-  HSHM_SYSTEM_INFO->RefreshInfo();
-
-  // Initialize tables
-  memset(backends_, 0, sizeof(backends_));
-  memset(allocators_, 0, sizeof(allocators_));
-
-  // Root backend
-  ArrayBackend *root_backend = (ArrayBackend *)root_backend_space_;
-  Allocator::ConstructObj(*root_backend);
-  root_backend->shm_init(MemoryBackendId::GetRoot(), sizeof(root_alloc_data_),
-                         root_alloc_data_);
-  root_backend->Own();
-  root_backend_ = root_backend;
-
-  // Root allocator
-  root_alloc_id_.bits_.major_ = 0;
-  root_alloc_id_.bits_.minor_ = 0;
-  StackAllocator *root_alloc = (StackAllocator *)root_alloc_space_;
-  Allocator::ConstructObj(*root_alloc);
-  root_alloc->shm_init(root_alloc_id_, 0, *root_backend_);
-  root_alloc_ = root_alloc;
-  default_allocator_ = root_alloc_;
-
-  // Other allocators
-  RegisterAllocatorNoScan(root_alloc_);
-}
-
 HSHM_DEFINE_GLOBAL_CROSS_PTR_VAR_CC(hshm::ipc::MemoryManager,
                                     hshmMemoryManager);
 

@@ -39,15 +39,15 @@ class MemoryManager {
  public:
   /** Create the root allocator */
   HSHM_CROSS_FUN
-  HSHM_DLL MemoryManager();
+  MemoryManager() { Init(); }
 
   /**
    * Initialize memory manager
    * Automatically called in default constructor if on CPU.
    * Must be called explicitly if on GPU.
    * */
-  HSHM_CROSS_FUN
-  HSHM_DLL void Init();
+  template <int nothing = 0>
+  HSHM_CROSS_FUN void Init();
 
   /** Default backend size */
   template <int nothing = 0>
