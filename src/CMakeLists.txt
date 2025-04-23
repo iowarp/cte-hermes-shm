@@ -22,7 +22,7 @@ list(APPEND HSHM_LIBS cxx)
 
 # BUILD HSHM FOR CUDA ONLY
 if(HSHM_ENABLE_CUDA)
-    add_cuda_library(hermes_shm_cuda STATIC TRUE ${SRC_FILES})
+    add_cuda_library(hermes_shm_cuda SHARED TRUE ${SRC_FILES})
     target_link_libraries(hermes_shm_cuda PUBLIC host_deps)
     target_compile_definitions(hermes_shm_cuda PUBLIC HSHM_ENABLE_CUDA)
     list(APPEND HSHM_LIBS hermes_shm_cuda)

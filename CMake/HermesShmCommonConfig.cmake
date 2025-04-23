@@ -291,8 +291,9 @@ function(add_cuda_library TARGET SHARED DO_COPY)
 
     # target_link_libraries(${TARGET} PUBLIC cudart)
     target_compile_options(${TARGET} PUBLIC
-        $<$<COMPILE_LANGUAGE:CUDA>:--expt-relaxed-constexpr> -fvisibility=hidden)
+        $<$<COMPILE_LANGUAGE:CUDA>:--expt-relaxed-constexpr>)
 
+    # -fvisibility=hidden -fvisibility-inlines-hidden
     if(SHARED STREQUAL "SHARED")
         set_target_properties(${TARGET} PROPERTIES
             CUDA_SEPARABLE_COMPILATION ON

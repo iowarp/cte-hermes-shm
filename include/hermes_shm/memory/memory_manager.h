@@ -24,11 +24,9 @@ namespace hshm::ipc {
 
 #if defined(HSHM_ENABLE_CUDA) || defined(HSHM_ENABLE_ROCM)
 /** Register a backend on GPU */
-template <int nothing = 0>
 static HSHM_GPU_KERNEL void RegisterBackendGpuKern(MemoryBackendId backend_id,
                                                    char *region, size_t size) {
-  printf("HSHM: Registering backend on a GPU (%d): %u\n", nothing,
-         backend_id.id_);
+  printf("HSHM: Registering backend on a GPU: %u\n", backend_id.id_);
 #ifdef HSHM_IS_GPU
   HSHM_MEMORY_MANAGER;
   HSHM_THREAD_MODEL;
@@ -44,14 +42,12 @@ static HSHM_GPU_KERNEL void RegisterBackendGpuKern(MemoryBackendId backend_id,
   HSHM_MEMORY_MANAGER->RegisterBackend(backend);
   backend->Own();
 #endif
-  printf("HSHM: Registered backend on a GPU (%d): %u \n", nothing,
-         backend_id.id_);
+  printf("HSHM: Registered backend on a GPU: %u \n", backend_id.id_);
 }
 
 /** Scan backends on GPU */
-template <int nothing = 0>
 static HSHM_GPU_KERNEL void ScanBackendGpuKern() {
-  printf("HSHM: Scanning backends on GPU (%d)\n", nothing);
+  printf("HSHM: Scanning backends on GPU\n");
   HSHM_MEMORY_MANAGER->ScanBackends();
 }
 
@@ -66,10 +62,9 @@ static HSHM_GPU_KERNEL void CreateAllocatorGpuKern(
 }
 
 /** Mark a GPU as having an allocator */
-template <int nothing = 0>
 static HSHM_GPU_KERNEL void SetBackendHasAllocGpuKern(
     MemoryBackendId backend_id) {
-  printf("HSHM: SetBackendHasAllocGpuKern (%d)\n", nothing);
+  printf("HSHM: SetBackendHasAllocGpuKern\n");
   MemoryBackend *backend = HSHM_MEMORY_MANAGER->GetBackend(backend_id);
   if (!backend) {
     return;
@@ -338,7 +333,7 @@ void MemoryManager::SetBackendHasAllocGpu(const MemoryBackendId &backend_id) {
 /**
  * Scans backends on the GPU
  */
-template <int>
+template <int nothing>
 HSHM_HOST_FUN void MemoryManager::ScanBackendsGpu(int gpu_id) {
 #if defined(HSHM_ENABLE_CUDA) || defined(HSHM_ENABLE_ROCM)
   GpuApi::SetDevice(gpu_id);
