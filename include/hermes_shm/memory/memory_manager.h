@@ -26,7 +26,7 @@ namespace hshm::ipc {
 /** Register a backend on GPU */
 static HSHM_GPU_KERNEL void RegisterBackendGpuKern(MemoryBackendId backend_id,
                                                    char *region, size_t size) {
-  printf("HSHM: Registering backend on a GPU: %u\n", backend_id.id_);
+  // printf("HSHM: Registering backend on a GPU: %u\n", backend_id.id_);
 #ifdef HSHM_IS_GPU
   HSHM_MEMORY_MANAGER;
   HSHM_THREAD_MODEL;
@@ -42,12 +42,12 @@ static HSHM_GPU_KERNEL void RegisterBackendGpuKern(MemoryBackendId backend_id,
   HSHM_MEMORY_MANAGER->RegisterBackend(backend);
   backend->Own();
 #endif
-  printf("HSHM: Registered backend on a GPU: %u \n", backend_id.id_);
+  // printf("HSHM: Registered backend on a GPU: %u \n", backend_id.id_);
 }
 
 /** Scan backends on GPU */
 static HSHM_GPU_KERNEL void ScanBackendGpuKern() {
-  printf("HSHM: Scanning backends on GPU\n");
+  // printf("HSHM: Scanning backends on GPU\n");
   HSHM_MEMORY_MANAGER->ScanBackends();
 }
 
@@ -56,7 +56,7 @@ template <typename AllocT, typename... Args>
 static HSHM_GPU_KERNEL void CreateAllocatorGpuKern(
     const MemoryBackendId &backend_id, const AllocatorId &alloc_id,
     size_t custom_header_size, Args &&...args) {
-  printf("HSHM: CreateAllocatorGpuKern\n");
+  // printf("HSHM: CreateAllocatorGpuKern\n");
   HSHM_MEMORY_MANAGER->CreateAllocator<AllocT>(
       backend_id, alloc_id, custom_header_size, std::forward<Args>(args)...);
 }
@@ -64,7 +64,7 @@ static HSHM_GPU_KERNEL void CreateAllocatorGpuKern(
 /** Mark a GPU as having an allocator */
 static HSHM_GPU_KERNEL void SetBackendHasAllocGpuKern(
     MemoryBackendId backend_id) {
-  printf("HSHM: SetBackendHasAllocGpuKern\n");
+  // printf("HSHM: SetBackendHasAllocGpuKern\n");
   MemoryBackend *backend = HSHM_MEMORY_MANAGER->GetBackend(backend_id);
   if (!backend) {
     return;
@@ -197,8 +197,8 @@ HSHM_CROSS_FUN void MemoryManager::ScanBackends() {
     if (!alloc) {
       continue;
     }
-    printf("HSHM: Discovered allocator on %s: %u\n", kCurrentDevice,
-           backend->GetId().id_);
+    // printf("HSHM: Discovered allocator on %s: %u\n", kCurrentDevice,
+    //        backend->GetId().id_);
     backend->SetScanned();
     RegisterAllocatorNoScan(alloc);
   }
