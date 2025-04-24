@@ -113,11 +113,7 @@ HSHM_CROSS_FUN Allocator *MemoryManager::RegisterAllocator(Allocator *alloc) {
   if (alloc == nullptr) {
     return nullptr;
   }
-  if (default_allocator_ == nullptr || default_allocator_ == root_alloc_ ||
-      default_allocator_->GetId() == alloc->GetId()) {
-    default_allocator_ = alloc;
-  }
-  // RegisterAllocatorNoScan(alloc);
+  RegisterAllocatorNoScan(alloc);
   ScanBackends();
   return alloc;
 }
