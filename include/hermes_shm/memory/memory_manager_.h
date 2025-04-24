@@ -184,9 +184,10 @@ class MemoryManager {
     if (alloc == nullptr) {
       return nullptr;
     }
-    if (default_allocator_ == nullptr || default_allocator_ == root_alloc_ ||
-        default_allocator_->GetId() == alloc->GetId()) {
-      default_allocator_ = alloc;
+    if (default_allocator_ == nullptr || default_allocator_ == root_alloc_) {
+      if (alloc->GetId().bits_.minor_ == 0) {
+        default_allocator_ = alloc;
+      }
     }
     uint32_t idx = alloc->GetId().ToIndex();
     if (idx > MAX_ALLOCATORS) {
