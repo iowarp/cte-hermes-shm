@@ -24,9 +24,10 @@ TEST_CASE("TestMpscQueueMpi") {
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   // The allocator was initialized in test_init.c
   // we are getting the "header" of the allocator
-  auto *alloc = HSHM_DEFAULT_ALLOC;
+  auto *alloc = HSHM_MEMORY_MANAGER->GetAllocator<HSHM_DEFAULT_ALLOC_T>(
+      AllocatorId(1, 0));
   auto *queue_ =
-      alloc->GetCustomHeader<hipc::delay_ar<sub::mpsc_ptr_queue<int>>>();
+      alloc->GetCustomHeader<hipc::delay_ar<sub::ipc::mpsc_ptr_queue<int>>>();
 
   // Make the queue uptr
   if (rank == RANK0) {
@@ -42,7 +43,7 @@ TEST_CASE("TestMpscQueueMpi") {
   }
   MPI_Barrier(MPI_COMM_WORLD);
 
-  sub::mpsc_ptr_queue<int> *queue = queue_->get();
+  sub::ipc::mpsc_ptr_queue<int> *queue = queue_->get();
   if (rank == RANK0) {
     // Emplace values into the queue
     for (int i = 0; i < 256; ++i) {

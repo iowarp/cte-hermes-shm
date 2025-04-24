@@ -25,7 +25,7 @@ void PretestRank0() {
                                         hshm::Unit<size_t>::Megabytes(100),
                                         shm_url);
   mem_mngr->CreateAllocator<AllocT>(hipc::MemoryBackendId::Get(0), alloc_id,
-                                    sizeof(sub::mpsc_ptr_queue<int>));
+                                    sizeof(sub::ipc::mpsc_ptr_queue<int>));
 }
 
 void PretestRankN() {
