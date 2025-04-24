@@ -99,6 +99,7 @@ class Allocator {
  public:
   AllocatorType type_;
   AllocatorId id_;
+  MemoryBackend backend_;
   char *buffer_;
   size_t buffer_size_;
   char *custom_header_;

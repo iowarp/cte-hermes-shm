@@ -64,8 +64,7 @@ class _GpuStackAllocator : public Allocator {
                 MemoryBackend backend) {
     type_ = AllocatorType::kGpuStackAllocator;
     id_ = id;
-    buffer_ = backend.accel_data_;
-    buffer_size_ = backend.accel_data_size_;
+    backend_ = backend;
     header_ = ConstructHeader<_GpuStackAllocatorHeader>(backend.md_);
     custom_header_ = reinterpret_cast<char *>(header_ + 1);
     size_t region_off = 0;
