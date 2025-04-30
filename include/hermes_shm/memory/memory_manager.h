@@ -53,9 +53,10 @@ static HSHM_GPU_KERNEL void ScanBackendGpuKern() {
 
 /** Create an allocator on GPU */
 template <typename AllocT, typename... Args>
-static HSHM_GPU_KERNEL void CreateAllocatorGpuKern(
-    const MemoryBackendId &backend_id, const AllocatorId &alloc_id,
-    size_t custom_header_size, Args &&...args) {
+static HSHM_GPU_KERNEL void CreateAllocatorGpuKern(MemoryBackendId backend_id,
+                                                   AllocatorId alloc_id,
+                                                   size_t custom_header_size,
+                                                   Args &&...args) {
   // printf("HSHM: CreateAllocatorGpuKern\n");
   HSHM_MEMORY_MANAGER->CreateAllocator<AllocT>(
       backend_id, alloc_id, custom_header_size, std::forward<Args>(args)...);
