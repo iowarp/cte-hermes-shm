@@ -211,10 +211,9 @@ HSHM_CROSS_FUN void MemoryManager::ScanBackends() {
  * Create and register a memory allocator for a particular backend.
  * */
 template <typename AllocT, typename... Args>
-AllocT *MemoryManager::CreateAllocator(const MemoryBackendId &backend_id,
-                                       const AllocatorId &alloc_id,
-                                       size_t custom_header_size,
-                                       Args &&...args) {
+HSHM_INLINE_CROSS_FUN AllocT *MemoryManager::CreateAllocator(
+    const MemoryBackendId &backend_id, const AllocatorId &alloc_id,
+    size_t custom_header_size, Args &&...args) {
   MemoryBackend *backend = GetBackend(backend_id);
   if (alloc_id.IsNull()) {
     HELOG(kFatal, "Allocator cannot be created with a NIL ID");
@@ -239,19 +238,19 @@ AllocT *MemoryManager::CreateAllocator(const MemoryBackendId &backend_id,
  * Create + register allocator on GPU.
  * */
 template <typename AllocT, typename... Args>
-AllocT *MemoryManager::CreateAllocatorGpu(int gpu_id,
-                                          const MemoryBackendId &backend_id,
-                                          const AllocatorId &alloc_id,
-                                          size_t custom_header_size,
-                                          Args &&...args) {
+void MemoryManager::CreateAllocatorGpu(int gpu_id,
+                                       const MemoryBackendId &backend_id,
+                                       const AllocatorId &alloc_id,
+                                       size_t custom_header_size,
+                                       Args &&...args) {
 #if defined(HSHM_ENABLE_CUDA) || defined(HSHM_ENABLE_ROCM)
   if (alloc_id.IsNull()) {
     HELOG(kFatal, "Allocator cannot be created with a NIL ID");
   }
   GpuApi::SetDevice(gpu_id);
-  CreateAllocatorGpuKern<AllocT><<<1, 1>>>(gpu_id, backend_id, alloc_id,
-                                           custom_header_size,
-                                           std::forward<Args>(args)...);
+  CreateAllocatorGpuKern<AllocT><<<1, 1>>>(
+      backend_id, alloc_id, custom_header_size, std::forward<Args>(args)...);
+  GpuApi::Synchronize();
   MemoryBackend *backend = GetBackend(backend_id);
   if (backend) {
     backend->SetHasGpuAlloc();

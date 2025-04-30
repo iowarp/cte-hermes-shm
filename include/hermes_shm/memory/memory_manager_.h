@@ -154,15 +154,15 @@ class MemoryManager {
    * Create and register a memory allocator for a particular backend.
    * */
   template <typename AllocT, typename... Args>
-  AllocT *CreateAllocator(const MemoryBackendId &backend_id,
-                          const AllocatorId &alloc_id,
-                          size_t custom_header_size, Args &&...args);
+  HSHM_INLINE_CROSS_FUN AllocT *CreateAllocator(
+      const MemoryBackendId &backend_id, const AllocatorId &alloc_id,
+      size_t custom_header_size, Args &&...args);
 
   /** Create an allocator for the GPU */
   template <typename AllocT, typename... Args>
-  AllocT *CreateAllocatorGpu(int gpu_id, const MemoryBackendId &backend_id,
-                             const AllocatorId &alloc_id,
-                             size_t custom_header_size, Args &&...args);
+  void CreateAllocatorGpu(int gpu_id, const MemoryBackendId &backend_id,
+                          const AllocatorId &alloc_id,
+                          size_t custom_header_size, Args &&...args);
 
   /** Create an allocator for the GPU */
   template <typename AllocT>
