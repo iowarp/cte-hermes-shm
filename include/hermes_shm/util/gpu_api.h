@@ -151,12 +151,14 @@ class GpuApi {
 #endif
   }
 
+#ifdef HSHM_CUDA_OR_ROCM
   HSHM_GPU_FUN static size_t GetGlobalThreadId() {
     return threadIdx.x + blockIdx.x * blockDim.x +
            (threadIdx.y + blockIdx.y * blockDim.y) * (blockDim.x * gridDim.x) +
            (threadIdx.z + blockIdx.z * blockDim.z) *
                (blockDim.x * gridDim.x * blockDim.y * gridDim.y);
   }
+#endif
 };
 
 }  // namespace hshm

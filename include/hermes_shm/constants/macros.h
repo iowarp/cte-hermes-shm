@@ -82,6 +82,10 @@
 #define VANISH
 #define __TU(X) TYPE_UNWRAP(X)
 
+#if defined(HSHM_ENABLE_CUDA) or defined(HSHM_ENABLE_ROCM)
+#define HSHM_ENABLE_CUDA_OR_ROCM
+#endif
+
 /** Includes for CUDA and ROCm */
 #ifdef HSHM_ENABLE_CUDA
 #include <cuda_runtime.h>
