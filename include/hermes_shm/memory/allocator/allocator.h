@@ -29,6 +29,7 @@ namespace hshm::ipc {
  * Used to reconstruct allocator from shared memory
  * */
 enum class AllocatorType {
+  kNullAllocator,
   kStackAllocator,
   kGpuStackAllocator,
   kSliceAllocator,
@@ -1112,8 +1113,19 @@ class _NullAllocator : public Allocator {
    * each allocator has its own arguments to this method. Though each
    * allocator must have "id" as its first argument.
    * */
-  void shm_init(AllocatorId alloc_id, size_t custom_header_size, char *buffer,
-                size_t buffer_size) {}
+  HSHM_CROSS_FUN
+  void shm_init(AllocatorId id, size_t custom_header_size,
+                MemoryBackend backend) {
+    type_ = AllocatorType::kNullAllocator;
+    id_ = id;
+    if (backend.IsCopyGpu()) {
+      buffer_ = backend.accel_data_;
+      buffer_size_ = backend.accel_data_size_;
+    } else {
+      buffer_ = backend.data_;
+      buffer_size_ = backend.data_size_;
+    }
+  }
 
   /**
    * Deserialize allocator from a buffer.

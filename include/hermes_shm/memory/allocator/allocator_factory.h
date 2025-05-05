@@ -38,8 +38,10 @@ class AllocatorFactory {
    * Create a new memory allocator
    * */
   template <typename AllocT, typename... Args>
-  static AllocT* shm_init(AllocatorId alloc_id, size_t custom_header_size,
-                          MemoryBackend backend, Args&&... args) {
+  HSHM_CROSS_FUN static AllocT* shm_init(AllocatorId alloc_id,
+                                         size_t custom_header_size,
+                                         MemoryBackend backend,
+                                         Args&&... args) {
     auto alloc = HSHM_ROOT_ALLOC->NewObj<AllocT>(HSHM_DEFAULT_MEM_CTX);
     alloc->backend_ = backend;
     alloc->shm_init(alloc_id, custom_header_size, backend,
@@ -52,8 +54,10 @@ class AllocatorFactory {
    * Create a new memory allocator
    * */
   template <typename AllocT, typename... Args>
-  static AllocT* shm_init(AllocatorId alloc_id, size_t custom_header_size,
-                          MemoryBackend* backend, Args&&... args) {
+  HSHM_CROSS_FUN static AllocT* shm_init(AllocatorId alloc_id,
+                                         size_t custom_header_size,
+                                         MemoryBackend* backend,
+                                         Args&&... args) {
     return shm_init<AllocT>(alloc_id, custom_header_size, *backend,
                             std::forward<Args>(args)...);
   }

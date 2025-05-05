@@ -34,15 +34,15 @@ static HSHM_GPU_KERNEL void RegisterBackendGpuKern(MemoryBackendId backend_id,
   auto alloc = HSHM_ROOT_ALLOC;
   auto backend =
       alloc->template NewObj<hipc::ArrayBackend>(HSHM_DEFAULT_MEM_CTX);
-  MemoryBackendHeader local_hdr;
   backend->local_hdr_.id_ = backend_id;
   if (!backend->shm_init(backend_id, size, region)) {
     HSHM_THROW_ERROR(MEMORY_BACKEND_CREATE_FAILED);
   }
   HSHM_MEMORY_MANAGER->RegisterBackend(backend);
   backend->Own();
+  HSHM_MEMORY_MANAGER->ScanBackends();
 #endif
-  // printf("HSHM: Registered backend on a GPU: %u \n", backend_id.id_);
+  printf("HSHM: Registered backend on a GPU: %u \n", backend_id.id_);
 }
 
 /** Scan backends on GPU */
@@ -56,10 +56,19 @@ template <typename AllocT, typename... Args>
 static HSHM_GPU_KERNEL void CreateAllocatorGpuKern(MemoryBackendId backend_id,
                                                    AllocatorId alloc_id,
                                                    size_t custom_header_size,
-                                                   Args &&...args) {
-  // printf("HSHM: CreateAllocatorGpuKern\n");
+                                                   Args... args) {
+  printf("HSHM: CreateAllocatorGpuKern: %d.%d\n", alloc_id.bits_.major_,
+         alloc_id.bits_.minor_);
+  auto *backend = HSHM_MEMORY_MANAGER->GetBackend(backend_id);
+  if (!backend) {
+    printf("HSHM: CreateAllocatorGpuKern: backend is null\n");
+    return;
+  }
   HSHM_MEMORY_MANAGER->CreateAllocator<AllocT>(
       backend_id, alloc_id, custom_header_size, std::forward<Args>(args)...);
+  auto *alloc = HSHM_MEMORY_MANAGER->GetAllocator<AllocT>(alloc_id);
+  printf("HSHM: Created allocator on GPU: (%p) %d.%d\n", alloc,
+         alloc_id.bits_.major_, alloc_id.bits_.minor_);
 }
 
 /** Mark a GPU as having an allocator */
@@ -249,6 +258,8 @@ void MemoryManager::CreateAllocatorGpu(int gpu_id,
     HELOG(kFatal, "Allocator cannot be created with a NIL ID");
   }
   GpuApi::SetDevice(gpu_id);
+  HSHM_MEMORY_MANAGER->CreateAllocator<NullAllocator>(backend_id, alloc_id,
+                                                      custom_header_size);
   CreateAllocatorGpuKern<AllocT><<<1, 1>>>(
       backend_id, alloc_id, custom_header_size, std::forward<Args>(args)...);
   GpuApi::Synchronize();
