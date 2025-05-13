@@ -139,6 +139,12 @@ struct vector_iterator_templ {
     }
   }
 
+  /** Difference between two iterators */
+  HSHM_INLINE_CROSS_FUN friend i64 operator-(const vector_iterator_templ &a,
+                                             const vector_iterator_templ &b) {
+    return (a.i_ - b.i_);
+  }
+
   /** Increment iterator by \a count in-place */
   HSHM_INLINE_CROSS_FUN void operator+=(size_t count) {
     if constexpr (FORWARD_ITER) {
@@ -167,6 +173,30 @@ struct vector_iterator_templ {
   HSHM_INLINE_CROSS_FUN friend bool operator!=(const vector_iterator_templ &a,
                                                const vector_iterator_templ &b) {
     return (a.i_ != b.i_);
+  }
+
+  /** Less than operator */
+  HSHM_INLINE_CROSS_FUN friend bool operator<(const vector_iterator_templ &a,
+                                              const vector_iterator_templ &b) {
+    return (a.i_ < b.i_);
+  }
+
+  /** Greater than operator */
+  HSHM_INLINE_CROSS_FUN friend bool operator>(const vector_iterator_templ &a,
+                                              const vector_iterator_templ &b) {
+    return (a.i_ > b.i_);
+  }
+
+  /** Less than or equal operator */
+  HSHM_INLINE_CROSS_FUN friend bool operator<=(const vector_iterator_templ &a,
+                                               const vector_iterator_templ &b) {
+    return (a.i_ <= b.i_);
+  }
+
+  /** Greater than or equal operator */
+  HSHM_INLINE_CROSS_FUN friend bool operator>=(const vector_iterator_templ &a,
+                                               const vector_iterator_templ &b) {
+    return (a.i_ >= b.i_);
   }
 
   /** Set this iterator to end */

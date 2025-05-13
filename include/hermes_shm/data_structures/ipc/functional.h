@@ -10,13 +10,19 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HSHM_SHM_SHM_DATA_STRUCTURES_CONTAINERS_FUNCTIONAL_H_
-#define HSHM_SHM_SHM_DATA_STRUCTURES_CONTAINERS_FUNCTIONAL_H_
+#ifndef HSHM_SHM_SHM_DATA_STRUCTURES_CONTAINERS_CmpTIONAL_H_
+#define HSHM_SHM_SHM_DATA_STRUCTURES_CONTAINERS_CmpTIONAL_H_
+
+#include <hermes_shm/constants/macros.h>
+#include <hermes_shm/types/numbers.h>
+
+#include "algorithm.h"
 
 namespace hshm {
 
-template <typename T, typename IteratorT>
-HSHM_CROSS_FUN IteratorT find(IteratorT start, const IteratorT &end, T &val) {
+/** Find a value \val between start and end */
+template <typename T, typename IterT>
+HSHM_CROSS_FUN IterT find(IterT start, const IterT &end, T &val) {
   for (; start != end; ++start) {
     T &ref = *start;
     if (ref == val) {
@@ -28,4 +34,4 @@ HSHM_CROSS_FUN IteratorT find(IteratorT start, const IteratorT &end, T &val) {
 
 }  // namespace hshm
 
-#endif  // HSHM_SHM_SHM_DATA_STRUCTURES_CONTAINERS_FUNCTIONAL_H_
+#endif  // HSHM_SHM_SHM_DATA_STRUCTURES_CONTAINERS_CmpTIONAL_H_

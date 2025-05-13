@@ -131,3 +131,44 @@ TEST_CASE("VectorOfListOfString") {
   VectorOfListOfStringTest();
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
 }
+
+TEST_CASE("VectorOfIntInsertionSort") {
+  auto *alloc = HSHM_DEFAULT_ALLOC;
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+  hshm::vector<int> vec(alloc);
+  vec.resize(10);
+  for (int i = 0; i < 10; ++i) {
+    vec[i] = 10 - i;
+  }
+  hshm::insertion_sort(vec.begin(), vec.end());
+  REQUIRE(hshm::is_sorted(vec.begin(), vec.end()));
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+}
+
+TEST_CASE("VectorOfIntQuicksort") {
+  auto *alloc = HSHM_DEFAULT_ALLOC;
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+  hshm::vector<int> vec(alloc);
+  int length = 91;
+  vec.resize(length);
+  for (int i = 0; i < length; ++i) {
+    vec[i] = length - i;
+  }
+  hshm::quick_sort(vec.begin(), vec.end());
+  REQUIRE(hshm::is_sorted(vec.begin(), vec.end()));
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+}
+
+TEST_CASE("VectorOfIntHeapSort") {
+  auto *alloc = HSHM_DEFAULT_ALLOC;
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+  hshm::vector<int> vec(alloc);
+  int length = 91;
+  vec.resize(length);
+  for (int i = 0; i < length; ++i) {
+    vec[i] = length - i;
+  }
+  hshm::heap_sort(vec.begin(), vec.end());
+  REQUIRE(hshm::is_sorted(vec.begin(), vec.end()));
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+}
