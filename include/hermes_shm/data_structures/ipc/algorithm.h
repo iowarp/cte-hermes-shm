@@ -18,6 +18,11 @@
 
 namespace hshm {
 
+/** Iterator type */
+template <typename IterT>
+using iterator_type_v =
+    typename std::remove_reference<decltype(*std::declval<IterT>())>::type;
+
 /** Swap two values */
 template <typename T>
 HSHM_CROSS_FUN void swap(T &a, T &b) {
@@ -27,26 +32,26 @@ HSHM_CROSS_FUN void swap(T &a, T &b) {
 }
 
 /** Default sorting algorithm */
-#define HSHM_DEFAULT_SORT_CMP hshm ::less_than<IterT>
+#define HSHM_DEFAULT_SORT_CMP hshm ::less_than<iterator_type_v<IterT>>
 
 /** Greater than comparison */
 template <typename IterT>
 HSHM_CROSS_FUN bool greater_than(const IterT &a, const IterT &b) {
-  return *a > *b;
+  return a > b;
 }
 
 /** Less than comparison */
 template <typename IterT>
 HSHM_CROSS_FUN bool less_than(const IterT &a, const IterT &b) {
-  return *a < *b;
+  return a < b;
 }
 
 /** Comparitor type */
-template <typename IterT>
-using Comparitor = bool (*)(const IterT &a, const IterT &b);
+template <typename T>
+using Comparitor = bool (*)(const T &a, const T &b);
 
 /** Check if a set of values is sorted */
-template <typename IterT, typename CmpT = Comparitor<IterT>>
+template <typename IterT, typename CmpT = Comparitor<iterator_type_v<IterT>>>
 HSHM_CROSS_FUN bool is_sorted(IterT start, const IterT &end,
                               CmpT &&cmp = HSHM_DEFAULT_SORT_CMP) {
   if (start == end) {
@@ -55,7 +60,7 @@ HSHM_CROSS_FUN bool is_sorted(IterT start, const IterT &end,
   auto prev = start;
   ++start;
   for (; start != end; ++start) {
-    if (!cmp(prev, start)) {
+    if (!cmp(*prev, *start)) {
       return false;
     }
     ++prev;
@@ -64,23 +69,23 @@ HSHM_CROSS_FUN bool is_sorted(IterT start, const IterT &end,
 }
 
 /** General sort forward declaration */
-template <typename IterT, typename CmpT = Comparitor<IterT>,
+template <typename IterT, typename CmpT = Comparitor<iterator_type_v<IterT>>,
           int INSERT_SORT_CUTOFF = 32>
 HSHM_CROSS_FUN void sort(IterT start, const IterT &end,
                          CmpT &&cmp = HSHM_DEFAULT_SORT_CMP);
 
 /** Insertion sort forward declaration */
-template <typename IterT, typename CmpT = Comparitor<IterT>>
+template <typename IterT, typename CmpT = Comparitor<iterator_type_v<IterT>>>
 HSHM_CROSS_FUN void insertion_sort(IterT start, const IterT &end,
                                    CmpT &&cmp = HSHM_DEFAULT_SORT_CMP);
 
 /** heap_sort forward declaration */
-template <typename IterT, typename CmpT = Comparitor<IterT>>
+template <typename IterT, typename CmpT = Comparitor<iterator_type_v<IterT>>>
 HSHM_CROSS_FUN void heap_sort(IterT start, const IterT &end,
                               CmpT &&cmp = HSHM_DEFAULT_SORT_CMP);
 
 /** Quicksort forward declaration */
-template <typename IterT, typename CmpT = Comparitor<IterT>>
+template <typename IterT, typename CmpT = Comparitor<iterator_type_v<IterT>>>
 HSHM_CROSS_FUN void quick_sort(IterT start, const IterT &end,
                                CmpT &&cmp = HSHM_DEFAULT_SORT_CMP);
 
@@ -102,7 +107,7 @@ HSHM_CROSS_FUN void insertion_sort(IterT start, const IterT &end, CmpT &&cmp) {
   }
   for (auto i = start; i != end; ++i) {
     auto j = i;
-    while (j != start && cmp(j, (j - 1))) {
+    while (j != start && cmp(*(j), *(j - 1))) {
       swap(*j, *(j - 1));
       --j;
     }
@@ -116,9 +121,9 @@ HSHM_CROSS_FUN void heapify(IterT start, size_t n, size_t i, CmpT &&cmp) {
   size_t left = 2 * i + 1;
   size_t right = 2 * i + 2;
 
-  if (left < n && cmp(start + largest, start + left)) largest = left;
+  if (left < n && cmp(*(start + largest), *(start + left))) largest = left;
 
-  if (right < n && cmp(start + largest, start + right)) largest = right;
+  if (right < n && cmp(*(start + largest), *(start + right))) largest = right;
 
   if (largest != i) {
     swap(*(start + i), *(start + largest));
@@ -152,7 +157,7 @@ HSHM_CROSS_FUN void quick_sort(IterT start, const IterT &end, CmpT &&cmp) {
   swap(*pivot, *(end - 1));
   auto store = start;
   for (auto i = start; i < end - 1; ++i) {
-    if (cmp(i, end - 1)) {
+    if (cmp(*(i), *(end - 1))) {
       swap(*store, *i);
       ++store;
     }

@@ -172,3 +172,18 @@ TEST_CASE("VectorOfIntHeapSort") {
   REQUIRE(hshm::is_sorted(vec.begin(), vec.end()));
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
 }
+
+TEST_CASE("VectorOfIntQuickSortLambda") {
+  auto *alloc = HSHM_DEFAULT_ALLOC;
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+  hshm::vector<int> vec(alloc);
+  int length = 91;
+  vec.resize(length);
+  for (int i = 0; i < length; ++i) {
+    vec[i] = length - i;
+  }
+  hshm::quick_sort(vec.begin(), vec.end(),
+                   [](const int &a, const int &b) { return a < b; });
+  REQUIRE(hshm::is_sorted(vec.begin(), vec.end()));
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+}
