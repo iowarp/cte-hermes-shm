@@ -48,6 +48,28 @@ struct RealNumber {
     numerator_ = (u32)(rem * precision / denominator);
   }
 
+  HSHM_INLINE_CROSS_FUN
+  RealNumber(const RealNumber &other)
+      : decimal_(other.decimal_), numerator_(other.numerator_) {}
+
+  HSHM_INLINE_CROSS_FUN
+  RealNumber &operator=(const RealNumber &other) {
+    decimal_ = other.decimal_;
+    numerator_ = other.numerator_;
+    return *this;
+  }
+
+  HSHM_INLINE_CROSS_FUN
+  RealNumber(RealNumber &&other) noexcept
+      : decimal_(other.decimal_), numerator_(other.numerator_) {}
+
+  HSHM_INLINE_CROSS_FUN
+  RealNumber &operator=(RealNumber &&other) noexcept {
+    decimal_ = other.decimal_;
+    numerator_ = other.numerator_;
+    return *this;
+  }
+
   /**
    * (d1 + n1/p) * d2 =
    * d1 * d2 + d2 * n1 / p
