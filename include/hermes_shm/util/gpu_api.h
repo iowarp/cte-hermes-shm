@@ -81,6 +81,21 @@ class GpuApi {
   }
 
   template <typename T>
+  static T *MallocManaged(size_t size) {
+#ifdef HSHM_ENABLE_ROCM
+    T *ptr;
+    HIP_ERROR_CHECK(hipMallocManaged(&ptr, size));
+    return ptr;
+#endif
+#ifdef HSHM_ENABLE_CUDA
+    T *ptr;
+    CUDA_ERROR_CHECK(cudaMallocManaged(&ptr, size));
+    return ptr;
+#endif
+    return nullptr;
+  }
+
+  template <typename T>
   static void RegisterHostMemory(T *ptr, size_t size) {
 #ifdef HSHM_ENABLE_ROCM
     HIP_ERROR_CHECK(

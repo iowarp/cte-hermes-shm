@@ -17,11 +17,14 @@
 
 namespace hshm::ipc {
 
+/** Max # of GPUs mem mngr can hold */
+#define HSHM_MAX_GPUS 16
+
 /** Max # of allocator the mem mngr can hold */
-#define MAX_ALLOCATORS 64
+#define HSHM_MAX_ALLOCATORS 64
 
 /** Max number of memory backends that can be mounted */
-#define MAX_BACKENDS 16
+#define HSHM_MAX_BACKENDS 16
 
 /** Memory manager class */
 class MemoryManager {
@@ -32,8 +35,9 @@ class MemoryManager {
   AllocatorId root_alloc_id_;
   MemoryBackend *root_backend_;
   Allocator *root_alloc_;
-  MemoryBackend *backends_[MAX_BACKENDS];
-  Allocator *allocators_[MAX_ALLOCATORS];
+  MemoryManager **gpu_ptrs_[HSHM_MAX_GPUS];
+  MemoryBackend *backends_[HSHM_MAX_BACKENDS];
+  Allocator *allocators_[HSHM_MAX_ALLOCATORS];
   Allocator *default_allocator_;
 
  public:
@@ -96,6 +100,10 @@ class MemoryManager {
     return backend;
   }
 
+  /** Copy backends to GPU */
+  template <int nothing = 0>
+  HSHM_INLINE void CopyAllBackendsToGpu();
+
   /** Copy and existing backend to the GPU */
   template <int nothing = 0>
   void CopyBackendGpu(const MemoryBackendId &backend_id);
@@ -145,10 +153,16 @@ class MemoryManager {
   HSHM_CROSS_FUN void ScanBackends();
 
   /**
+   * Scans all backends on all GPUs for new memory allocators
+   */
+  template <int nothing = 0>
+  HSHM_INLINE void ScanBackendsAllGpu();
+
+  /**
    * Scans all attached backends on GPU for new memory allocators.
    * */
   template <int nothing = 0>
-  HSHM_HOST_FUN void ScanBackendsGpu(int gpu_id);
+  HSHM_INLINE void ScanBackendsGpu(int gpu_id);
 
   /**
    * Create and register a memory allocator for a particular backend.
@@ -190,7 +204,7 @@ class MemoryManager {
       }
     }
     uint32_t idx = alloc->GetId().ToIndex();
-    if (idx > MAX_ALLOCATORS) {
+    if (idx > HSHM_MAX_ALLOCATORS) {
       HILOG(kError, "Allocator index out of range: {}", idx);
       HSHM_THROW_ERROR(TOO_MANY_ALLOCATORS);
     }
