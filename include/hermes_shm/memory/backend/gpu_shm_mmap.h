@@ -62,7 +62,7 @@ class GpuShmMmap : public PosixShmMmap {
     Register(header_, HSHM_SYSTEM_INFO->page_size_);
     Register(data_, size);
     header_->accel_data_size_ = data_size_;
-    header_->accel_id_ = accel_id_;
+    header_->accel_id_ = gpu_id;
     accel_data_ = data_;
     accel_data_size_ = data_size_;
     accel_id_ = header_->accel_id_;
