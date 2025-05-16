@@ -107,6 +107,12 @@ struct OffsetPointerBase : public ShmPointer {
   hipc::opt_atomic<hshm::size_t, ATOMIC>
       off_; /**< Offset within the allocator's slot */
 
+  /** Serialize an hipc::OffsetPointerBase */
+  template <typename Ar>
+  HSHM_INLINE_CROSS_FUN void serialize(Ar &ar) {
+    ar & off_;
+  }
+
   /** ostream operator */
   friend std::ostream &operator<<(std::ostream &os,
                                   const OffsetPointerBase &ptr) {
@@ -314,6 +320,13 @@ struct PointerBase : public ShmPointer {
   AllocatorId alloc_id_;           /// Allocator the pointer comes from
   OffsetPointerBase<ATOMIC> off_;  /// Offset within the allocator's slot
 
+  /** Serialize a pointer */
+  template <typename Ar>
+  HSHM_INLINE_CROSS_FUN void serialize(Ar &ar) {
+    ar & alloc_id_;
+    ar & off_;
+  }
+
   /** Ostream operator */
   friend std::ostream &operator<<(std::ostream &os, const PointerBase &ptr) {
     os << ptr.alloc_id_ << "::" << ptr.off_;
@@ -480,6 +493,19 @@ template <typename T = char, typename PointerT = Pointer>
 struct FullPtr : public ShmPointer {
   T *ptr_;
   PointerT shm_;
+
+  /** Serialize an hipc::FullPtr */
+  template <typename Ar>
+  HSHM_INLINE_CROSS_FUN void save(Ar &ar) const {
+    ar & shm_;
+  }
+
+  /** Deserialize an hipc::FullPtr */
+  template <typename Ar>
+  HSHM_INLINE_CROSS_FUN void load(Ar &ar) {
+    ar & shm_;
+    ptr_ = FullPtr<T>(shm_);
+  }
 
   /** Ostream operator */
   friend std::ostream &operator<<(std::ostream &os, const FullPtr &ptr) {
