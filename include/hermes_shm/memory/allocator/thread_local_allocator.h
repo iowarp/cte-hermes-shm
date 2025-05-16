@@ -153,17 +153,17 @@ class _ThreadLocalAllocator : public Allocator {
   HSHM_INLINE_CROSS_FUN
   hshm::ThreadId GetOrCreateTid(const hipc::MemContext &ctx) {
     hshm::ThreadId tid = ctx.tid_;
-    if (tid.IsNull()) {
-      TLS *tls = HSHM_THREAD_MODEL->GetTls<TLS>(tls_key_);
-      if (!tls) {
+    TLS *tls = HSHM_THREAD_MODEL->GetTls<TLS>(tls_key_);
+    if (!tls) {
+      if (tid.IsNull()) {
         tid = header_->CreateTid();
-        tls = header_->GetTls(tid);
-        tls->alloc_ = this;
-        tls->tid_ = tid;
-        HSHM_THREAD_MODEL->SetTls(tls_key_, tls);
-      } else {
-        tid = tls->tid_;
       }
+      tls = header_->GetTls(tid);
+      tls->alloc_ = this;
+      tls->tid_ = tid;
+      HSHM_THREAD_MODEL->SetTls(tls_key_, tls);
+    } else {
+      tid = tls->tid_;
     }
     return tid;
   }

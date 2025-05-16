@@ -37,7 +37,11 @@ class Cuda : public ThreadModel {
 
   /** Yield thread time slice */
   HSHM_CROSS_FUN
-  void Yield() {}
+  void Yield() {
+#ifdef HSHM_IS_GPU
+    __nanosleep(100);
+#endif
+  }
 
   /** Create thread-local storage */
   template <typename TLS>

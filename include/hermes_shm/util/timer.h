@@ -18,6 +18,7 @@
 #include <vector>
 
 #include "hermes_shm/constants/macros.h"
+// #include "hermes_shm/data_structures/internal/shm_archive.h"
 #include "singleton.h"
 
 namespace hshm {
@@ -28,12 +29,20 @@ class TimepointBase {
   std::chrono::time_point<T> start_;
 
  public:
-  HSHM_INLINE_CROSS_FUN void Now() { start_ = T::now(); }
+  HSHM_INLINE_CROSS_FUN void Now() {
+#ifdef HSHM_IS_HOST
+    start_ = T::now();
+#endif
+  }
   HSHM_INLINE_CROSS_FUN double GetNsecFromStart(TimepointBase &now) const {
+#ifdef HSHM_IS_HOST
     double elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(
                          now.start_ - start_)
                          .count();
     return elapsed;
+#else
+    return 0;
+#endif
   }
   HSHM_INLINE_CROSS_FUN double GetUsecFromStart(TimepointBase &now) const {
     return GetNsecFromStart(now) / 1000;
@@ -45,12 +54,16 @@ class TimepointBase {
     return GetNsecFromStart(now) / 1000000000;
   }
   HSHM_INLINE_CROSS_FUN double GetNsecFromStart() const {
-    std::chrono::time_point<T> end_ = T::now();
+#ifdef HSHM_IS_HOST
+    std::chrono::time_point<T> end = T::now();
     double elapsed =
-        (double)std::chrono::duration_cast<std::chrono::nanoseconds>(end_ -
+        (double)std::chrono::duration_cast<std::chrono::nanoseconds>(end -
                                                                      start_)
             .count();
     return elapsed;
+#else
+    return 0;
+#endif
   }
   HSHM_INLINE_CROSS_FUN double GetUsecFromStart() const {
     return GetNsecFromStart() / 1000;
@@ -78,27 +91,37 @@ class NsecTimer {
 
 template <typename T>
 class TimerBase : public TimepointBase<T>, public NsecTimer {
- private:
-  std::chrono::time_point<T> end_;
-
  public:
-  TimerBase() = default;
+  /** Constructor */
+  HSHM_INLINE_CROSS_FUN
+  TimerBase() {}
 
+  /** Resume timer */
   HSHM_INLINE_CROSS_FUN void Resume() { TimepointBase<T>::Now(); }
+
+  /** Pause timer */
   HSHM_INLINE_CROSS_FUN double Pause() {
     time_ns_ += TimepointBase<T>::GetNsecFromStart();
     return time_ns_;
   }
+
+  /** Reset timer */
   HSHM_INLINE_CROSS_FUN void Reset() {
     Resume();
     time_ns_ = 0;
   }
+
+  /** Get microseconds since timer started */
   HSHM_INLINE_CROSS_FUN double GetUsFromEpoch() const {
+#ifdef HSHM_IS_HOST
     std::chrono::time_point<std::chrono::system_clock> point =
         std::chrono::system_clock::now();
     return std::chrono::duration_cast<std::chrono::microseconds>(
                point.time_since_epoch())
         .count();
+#else
+    return 0;
+#endif
   }
 };
 
