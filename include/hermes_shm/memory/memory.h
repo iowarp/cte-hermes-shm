@@ -494,18 +494,24 @@ struct FullPtr : public ShmPointer {
   T *ptr_;
   PointerT shm_;
 
-  /** Serialize an hipc::FullPtr */
+  /** Serialize hipc::FullPtr */
   template <typename Ar>
-  HSHM_INLINE_CROSS_FUN void save(Ar &ar) const {
+  HSHM_INLINE_CROSS_FUN void serialize(Ar &ar) {
     ar & shm_;
   }
 
-  /** Deserialize an hipc::FullPtr */
-  template <typename Ar>
-  HSHM_INLINE_CROSS_FUN void load(Ar &ar) {
-    ar & shm_;
-    ptr_ = FullPtr<T>(shm_).ptr_;
-  }
+  // /** Serialize an hipc::FullPtr */
+  // template <typename Ar>
+  // HSHM_INLINE_CROSS_FUN void save(Ar &ar) const {
+  //   ar & shm_;
+  // }
+
+  // /** Deserialize an hipc::FullPtr */
+  // template <typename Ar>
+  // HSHM_INLINE_CROSS_FUN void load(Ar &ar) {
+  //   ar & shm_;
+  //   ptr_ = FullPtr<T>(shm_).ptr_;
+  // }
 
   /** Ostream operator */
   friend std::ostream &operator<<(std::ostream &os, const FullPtr &ptr) {
