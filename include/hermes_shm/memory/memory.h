@@ -504,7 +504,7 @@ struct FullPtr : public ShmPointer {
   template <typename Ar>
   HSHM_INLINE_CROSS_FUN void load(Ar &ar) {
     ar & shm_;
-    ptr_ = FullPtr<T>(shm_);
+    ptr_ = FullPtr<T>(shm_).ptr_;
   }
 
   /** Ostream operator */
