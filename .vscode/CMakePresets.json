@@ -22,6 +22,7 @@
                 "HSHM_ENABLE_MPI": "ON",
                 "HSHM_ENABLE_ROCM": "OFF",
                 "HSHM_BUILD_BENCHMARKS": "OFF",
+                "HSHM_ENABLE_ELF": "ON",
                 "HSHM_ENABLE_CMAKE_DOTENV": "ON"
             }
         },
@@ -43,6 +44,7 @@
                 "HSHM_ENABLE_OPENMP": "ON",
                 "HSHM_ENABLE_MPI": "ON",
                 "HSHM_BUILD_BENCHMARKS": "OFF",
+                "HSHM_ENABLE_ELF": "ON",
                 "HSHM_ENABLE_CMAKE_DOTENV": "ON"
             }
         },
@@ -64,7 +66,7 @@
                 "HSHM_ENABLE_OPENMP": "ON",
                 "HSHM_ENABLE_MPI": "ON",
                 "HSHM_BUILD_BENCHMARKS": "OFF",
-                "HSHM_ENABLE_CMAKE_DOTENV": "ON",
+                "HSHM_ENABLE_ELF": "ON",
                 "CMAKE_CUDA_ARCHITECTURES": "75"
             }
         },
@@ -81,6 +83,7 @@
                 "HSHM_ENABLE_ROCM": "ON",
                 "HSHM_ENABLE_MPI": "ON",
                 "HSHM_BUILD_TESTS": "OFF",
+                "HSHM_ENABLE_ELF": "ON",
                 "HSHM_ENABLE_CMAKE_DOTENV": "ON"
             }
         }
