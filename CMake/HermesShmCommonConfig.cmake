@@ -148,7 +148,7 @@ if(HSHM_ENABLE_ENCRYPT)
 endif()
 
 # Add elf
-if(HSHM_USE_ELF)
+if(HSHM_ENABLE_ELF)
     pkg_check_modules(libelf REQUIRED libelf)
     message(STATUS "found libelf.h at ${libelf_INCLUDE_DIRS}")
 

@@ -22,7 +22,7 @@
 #cmakedefine HSHM_DEBUG_LOCK
 #cmakedefine HSHM_ENABLE_COMPRESS
 #cmakedefine HSHM_ENABLE_ENCRYPT
-#cmakedefine HSHM_USE_ELF
+#cmakedefine HSHM_ENABLE_ELF
 // #cmakedefine HSHM_ENABLE_CUDA
 // #cmakedefine HSHM_ENABLE_ROCM
 
