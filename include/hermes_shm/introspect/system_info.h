@@ -36,7 +36,7 @@ namespace hshm {
 
 /** Library wrapper */
 struct SharedLibrary {
-  void *handle_;
+  void *handle_ = nullptr;
 
   SharedLibrary() = default;
 
