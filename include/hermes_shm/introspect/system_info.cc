@@ -459,12 +459,33 @@ void SharedLibrary::Load(const std::string &name) {
 #endif
 }
 
+std::string SharedLibrary::GetError() const {
+#if defined(HSHM_ENABLE_PROCFS_SYSINFO)
+  return std::string(dlerror());
+#elif defined(HSHM_ENABLE_WINDOWS_SYSINFO)
+  return std::string();
+#endif
+}
+
 void *SharedLibrary::GetSymbol(const std::string &name) {
 #if defined(HSHM_ENABLE_PROCFS_SYSINFO)
   return dlsym(handle_, name.c_str());
 #elif defined(HSHM_ENABLE_WINDOWS_SYSINFO)
   return (void *)::GetProcAddress((HMODULE)handle_, name.c_str());
 #endif
+}
+
+SharedLibrary::SharedLibrary(SharedLibrary &&other) noexcept
+    : handle_(other.handle_) {
+  other.handle_ = nullptr;
+}
+
+SharedLibrary &SharedLibrary::operator=(SharedLibrary &&other) noexcept {
+  if (this != &other) {
+    handle_ = other.handle_;
+    other.handle_ = nullptr;
+  }
+  return *this;
 }
 
 }  // namespace hshm

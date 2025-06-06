@@ -34,19 +34,27 @@
 
 namespace hshm {
 
-/** Library wrapper */
+/** Dynamically load shared libraries */
 struct SharedLibrary {
-  void *handle_ = nullptr;
+  void *handle_;
 
   SharedLibrary() = default;
-
   HSHM_DLL SharedLibrary(const std::string &name);
-
   HSHM_DLL ~SharedLibrary();
 
-  HSHM_DLL void Load(const std::string &name);
+  // Delete copy operations
+  SharedLibrary(const SharedLibrary &) = delete;
+  SharedLibrary &operator=(const SharedLibrary &) = delete;
 
+  // Move operations
+  HSHM_DLL SharedLibrary(SharedLibrary &&other) noexcept;
+  HSHM_DLL SharedLibrary &operator=(SharedLibrary &&other) noexcept;
+
+  HSHM_DLL void Load(const std::string &name);
   HSHM_DLL void *GetSymbol(const std::string &name);
+  HSHM_DLL std::string GetError() const;
+
+  bool IsNull() { return handle_ == nullptr; }
 };
 
 /** File wrapper */
