@@ -18,6 +18,7 @@
 #include <memory>
 #include <vector>
 
+#include "hermes_shm/types/argpack.h"
 #include "hermes_shm/types/bitfield.h"
 #include "hermes_shm/types/numbers.h"
 
@@ -69,7 +70,7 @@ struct ThreadGroup {
 template <typename FUN, typename... Args>
 struct ThreadParams {
   FUN func_;
-  std::tuple<Args...> args_;
+  ArgPack<Args...> args_;
 
   ThreadParams(FUN &&func, Args &&...args)
       : func_(std::forward<FUN>(func)), args_(std::forward<Args>(args)...) {}

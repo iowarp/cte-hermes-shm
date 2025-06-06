@@ -42,7 +42,7 @@ struct ArgPackRecur {
 
   /** Forward an rvalue reference (only if argpack) */
   template <size_t i>
-  HSHM_INLINE_CROSS_FUN constexpr decltype(auto) Forward() const {
+  HSHM_INLINE_CROSS_FUN constexpr decltype(auto) Forward() {
     if constexpr (i == idx) {
       return std::forward<T>(arg_);
     } else {
@@ -59,7 +59,7 @@ struct ArgPackRecur<idx, EndTemplateRecurrence> {
 
   /** Forward an rvalue reference (only if argpack) */
   template <size_t i>
-  HSHM_INLINE_CROSS_FUN constexpr void Forward() const {
+  HSHM_INLINE_CROSS_FUN constexpr void Forward() {
     // TODO(llogan): fix assert
     STATIC_ASSERT(true, "(Forward) ArgPack index outside of range", void);
   }
@@ -79,7 +79,7 @@ struct ArgPack {
 
   /** Get forward reference */
   template <size_t idx>
-  HSHM_INLINE_CROSS_FUN constexpr decltype(auto) Forward() const {
+  HSHM_INLINE_CROSS_FUN constexpr decltype(auto) Forward() {
     return recur_.template Forward<idx>();
   }
 
@@ -125,7 +125,12 @@ class PassArgPack {
           std::forward<ArgPackT>(pack), std::forward<F>(f),
           std::forward<CurArgs>(args)..., FORWARD_ARGPACK_PARAM(pack, i));
     } else {
-      return f(std::forward<CurArgs>(args)...);
+      if constexpr (std::is_void_v<decltype(f(
+                        std::forward<CurArgs>(args)...))>) {
+        f(std::forward<CurArgs>(args)...);
+      } else {
+        return f(std::forward<CurArgs>(args)...);
+      }
     }
   }
 };

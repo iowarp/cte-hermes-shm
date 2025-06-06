@@ -33,6 +33,10 @@ class Argobots : public ThreadModel {
   HSHM_CROSS_FUN
   ~Argobots() = default;
 
+  /** Initialize Argobots */
+  HSHM_CROSS_FUN
+  void Init() { ABT_init(0, nullptr); }
+
   /** Yield the current thread for a period of time */
   HSHM_CROSS_FUN
   void SleepForUs(size_t us) {
@@ -140,7 +144,8 @@ class Argobots : public ThreadModel {
   static void SpawnWrapper(void *arg) {
     ThreadParams<FUNC, Args...> *params =
         static_cast<ThreadParams<FUNC, Args...> *>(arg);
-    std::apply(params->func_, params->args_);
+    PassArgPack::Call(std::forward<ArgPack<Args...>>(params->args_),
+                      std::forward<FUNC>(params->func_));
     delete params;
   }
 

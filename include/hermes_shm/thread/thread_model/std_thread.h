@@ -15,6 +15,10 @@ class StdThread : public ThreadModel {
   HSHM_INLINE_CROSS_FUN
   StdThread() : ThreadModel(ThreadType::kStdThread) {}
 
+  /** Initialize std thread */
+  HSHM_CROSS_FUN
+  void Init() {}
+
   /** Sleep thread for a period of time */
   HSHM_CROSS_FUN
   void SleepForUs(size_t us) {
@@ -74,8 +78,6 @@ class StdThread : public ThreadModel {
   HSHM_CROSS_FUN Thread Spawn(ThreadGroup &group, FUNC &&func, Args &&...args) {
     Thread thread;
     thread.group_ = group;
-    ThreadParams<FUNC, Args...> *params = new ThreadParams<FUNC, Args...>(
-        std::forward<FUNC>(func), std::forward<Args>(args)...);
     thread.std_thread_ =
         std::thread(std::forward<FUNC>(func), std::forward<Args>(args)...);
     return thread;
