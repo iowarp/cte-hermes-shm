@@ -34,6 +34,21 @@
 
 namespace hshm {
 
+/** Library wrapper */
+struct SharedLibrary {
+  void *handle_;
+
+  SharedLibrary() = default;
+
+  HSHM_DLL SharedLibrary(const std::string &name);
+
+  HSHM_DLL ~SharedLibrary();
+
+  HSHM_DLL void Load(const std::string &name);
+
+  HSHM_DLL void *GetSymbol(const std::string &name);
+};
+
 /** File wrapper */
 union File {
   int posix_fd_;

@@ -3,10 +3,13 @@
 
 #include "hermes_shm/introspect/system_info.h"
 
+#include <dlfcn.h>
+
 #include <cstdlib>
 
 #include "hermes_shm/constants/macros.h"
 #if defined(HSHM_ENABLE_PROCFS_SYSINFO)
+// LINUX
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
@@ -18,6 +21,7 @@
 #endif
 #include <sys/types.h>
 #include <unistd.h>
+// WINDOWS
 #elif defined(HSHM_ENABLE_WINDOWS_SYSINFO)
 #include <windows.h>
 #else
@@ -429,6 +433,37 @@ void SystemInfo::Unsetenv(const char *name) {
   unsetenv(name);
 #elif defined(HSHM_ENABLE_WINDOWS_SYSINFO)
   SetEnvironmentVariable(name, nullptr);
+#endif
+}
+
+SharedLibrary::SharedLibrary(const std::string &name) : handle_(nullptr) {
+  Load(name);
+}
+
+SharedLibrary::~SharedLibrary() {
+  if (handle_) {
+#if defined(HSHM_ENABLE_PROCFS_SYSINFO)
+    dlclose(handle_);
+#elif defined(HSHM_ENABLE_WINDOWS_SYSINFO)
+    ::FreeLibrary((HMODULE)handle_);
+#endif
+    handle_ = nullptr;
+  }
+}
+
+void SharedLibrary::Load(const std::string &name) {
+#if defined(HSHM_ENABLE_PROCFS_SYSINFO)
+  handle_ = dlopen(name.c_str(), RTLD_GLOBAL | RTLD_NOW);
+#elif defined(HSHM_ENABLE_WINDOWS_SYSINFO)
+  handle_ = LoadLibraryA(name.c_str());
+#endif
+}
+
+void *SharedLibrary::GetSymbol(const std::string &name) {
+#if defined(HSHM_ENABLE_PROCFS_SYSINFO)
+  return dlsym(handle_, name.c_str());
+#elif defined(HSHM_ENABLE_WINDOWS_SYSINFO)
+  return (void *)::GetProcAddress((HMODULE)handle_, name.c_str());
 #endif
 }
 
