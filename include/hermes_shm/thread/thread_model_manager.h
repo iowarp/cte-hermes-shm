@@ -29,11 +29,8 @@
 #ifdef HSHM_ENABLE_ROCM
 #include "thread_model/rocm.h"
 #endif
-#ifdef HSHM_ENABLE_WINDOWS_THREADS
-#include "thread_model/windows.h"
-#endif
-
 #include "hermes_shm/util/singleton.h"
+#include "thread_model/std_thread.h"
 
 #if defined(HSHM_IS_HOST)
 #define HSHM_THREAD_MODEL \

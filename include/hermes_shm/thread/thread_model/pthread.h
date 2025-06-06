@@ -109,6 +109,42 @@ class Pthread : public ThreadModel {
     return ThreadId{0};
 #endif
   }
+
+  /** Create a thread group */
+  HSHM_CROSS_FUN
+  ThreadGroup CreateThreadGroup(const ThreadGroupContext &ctx) {
+    return ThreadGroup{};
+  }
+
+  /** Spawn a thread */
+  template <typename FUNC, typename... Args>
+  HSHM_CROSS_FUN Thread Spawn(ThreadGroup &group, FUNC &&func, Args &&...args) {
+    Thread thread;
+    thread.group_ = group;
+    ThreadParams<FUNC, Args...> *params = new ThreadParams<FUNC, Args...>(
+        std::forward<FUNC>(func), std::forward<Args>(args)...);
+    pthread_create(&thread.pthread_thread_, nullptr,
+                   SpawnWrapper<FUNC, Args...>, (void *)params);
+    return thread;
+  }
+
+  /** Wrapper for spawning a thread */
+  template <typename FUNC, typename... Args>
+  static void *SpawnWrapper(void *arg) {
+    ThreadParams<FUNC, Args...> *params =
+        static_cast<ThreadParams<FUNC, Args...> *>(arg);
+    std::apply(params->func_, params->args_);
+    delete params;
+    return nullptr;
+  }
+
+  /** Join a thread */
+  HSHM_CROSS_FUN
+  void Join(Thread &thread) {
+#ifdef HSHM_IS_HOST
+    pthread_join(thread.pthread_thread_, nullptr);
+#endif
+  }
 };
 
 }  // namespace hshm::thread

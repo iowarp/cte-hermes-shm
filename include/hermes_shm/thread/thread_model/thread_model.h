@@ -33,11 +33,12 @@
 #ifdef HSHM_ENABLE_ROCM
 #include <hip/hip_runtime.h>
 #endif
+#include <thread>
 
 namespace hshm {
 
 /** Available threads that are mapped */
-enum class ThreadType { kNone, kPthread, kArgobots, kCuda, kRocm, kWindows };
+enum class ThreadType { kNone, kPthread, kArgobots, kCuda, kRocm, kStdThread };
 
 /** Thread-local key */
 union ThreadLocalKey {
@@ -52,12 +53,55 @@ union ThreadLocalKey {
 #endif
 };
 
+/** Thread Group Context */
+struct ThreadGroupContext {
+  // NOTE(llogan): Argobots supports various schedulers, etc.
+  int nothing_;
+};
+
+/** Thread group */
+struct ThreadGroup {
+#ifdef HSHM_RPC_THALLIUM
+  ABT_xstream abtxstream_ = nullptr;
+#endif
+};
+
+template <typename FUN, typename... Args>
+struct ThreadParams {
+  FUN func_;
+  std::tuple<Args...> args_;
+
+  ThreadParams(FUN &&func, Args &&...args)
+      : func_(std::forward<FUN>(func)), args_(std::forward<Args>(args)...) {}
+};
+
+/** Thread */
+struct Thread {
+  ThreadGroup group_;
+#ifdef HSHM_RPC_THALLIUM
+  ABT_thread abt_thread_ = nullptr;
+#endif
+#ifdef HSHM_ENABLE_PTHREADS
+  pthread_t pthread_thread_;
+#endif
+  std::thread std_thread_;
+};
+
 }  // namespace hshm
 
 namespace hshm::thread {
 
 /** Thread-local key */
 using hshm::ThreadLocalKey;
+
+/** Thread group */
+using hshm::ThreadGroup;
+
+/** Thread */
+using hshm::Thread;
+
+/** Thread group context */
+using hshm::ThreadGroupContext;
 
 /** Thread-local storage */
 class ThreadLocalData {
@@ -68,10 +112,10 @@ class ThreadLocalData {
   template <typename TLS>
   HSHM_CROSS_FUN static void destroy_wrap(void *data) {
     if (data) {
-    // TODO(llogan): Figure out why this segfaults on exit
-    //   if constexpr (std::is_base_of_v<ThreadLocalData, TLS>) {
-    //     static_cast<TLS *>(data)->destroy();
-    //   }
+      // TODO(llogan): Figure out why this segfaults on exit
+      //   if constexpr (std::is_base_of_v<ThreadLocalData, TLS>) {
+      //     static_cast<TLS *>(data)->destroy();
+      //   }
     }
   }
 };
@@ -85,30 +129,6 @@ class ThreadModel {
   /** Initializer */
   HSHM_INLINE_CROSS_FUN
   explicit ThreadModel(ThreadType type) : type_(type) {}
-
-  // /** Yield the current thread for a period of time */
-  // HSHM_CROSS_FUN
-  // void SleepForUs(size_t us);
-
-  // /** Yield thread time slice */
-  // HSHM_CROSS_FUN
-  // void Yield();
-
-  // /** Create thread-local storage */
-  // template <typename TLS>
-  // HSHM_CROSS_FUN bool CreateTls(ThreadLocalKey &key, TLS *data);
-
-  // /** Get thread-local storage */
-  // template <typename TLS>
-  // HSHM_CROSS_FUN TLS *GetTls(const ThreadLocalKey &key);
-
-  // /** Create thread-local storage */
-  // template <typename TLS>
-  // HSHM_CROSS_FUN bool SetTls(ThreadLocalKey &key, TLS *data);
-
-  // /** Get the TID of the current thread */
-  // HSHM_CROSS_FUN
-  // ThreadId GetTid();
 
   /** Get the thread model type */
   HSHM_INLINE_CROSS_FUN

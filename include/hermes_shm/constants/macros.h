@@ -244,7 +244,7 @@ namespace hipc = hshm::ipc;
 #if defined(HSHM_ENABLE_PTHREADS)
 #define HSHM_DEFAULT_THREAD_MODEL hshm::thread::Pthread
 #elif defined(HSHM_ENABLE_WINDOWS_THREADS)
-#define HSHM_DEFAULT_THREAD_MODEL hshm::thread::WindowsThread
+#define HSHM_DEFAULT_THREAD_MODEL hshm::thread::StdThread
 #endif
 #endif
 

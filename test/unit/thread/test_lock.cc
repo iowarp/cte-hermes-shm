@@ -10,10 +10,9 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-
 #include "basic_test.h"
-#include "omp.h"
 #include "hermes_shm/thread/lock.h"
+#include "omp.h"
 
 using hshm::Mutex;
 using hshm::RwLock;
@@ -45,9 +44,8 @@ void RwLockTest(int producers, int consumers, size_t loop_count) {
   RwLock lock;
 
   omp_set_dynamic(0);
-#pragma omp parallel \
-  shared(lock, nthreads, producers, consumers, loop_count, count) \
-  num_threads(nthreads)
+#pragma omp parallel shared(lock, nthreads, producers, consumers, loop_count, \
+                                count) num_threads(nthreads)
   {  // NOLINT
     int tid = omp_get_thread_num();
 
@@ -74,12 +72,46 @@ void RwLockTest(int producers, int consumers, size_t loop_count) {
   }
 }
 
-TEST_CASE("Mutex") {
-  MutexTest(8);
-}
+TEST_CASE("Mutex") { MutexTest(8); }
 
 TEST_CASE("RwLock") {
   RwLockTest(8, 0, 1000000);
   RwLockTest(7, 1, 1000000);
   RwLockTest(4, 4, 1000000);
+}
+
+#ifdef HSHM_RPC_THALLIUM
+TEST_CASE("AbtThread") {
+  hshm::thread::Argobots argobots;
+  hshm::thread::ThreadGroup group = argobots.CreateThreadGroup({});
+  hshm::thread::Thread thread = argobots.Spawn(
+      group,
+      [](int tid) { std::cout << "Hello, world! (abt) " << tid << std::endl; },
+      1);
+  argobots.Join(thread);
+}
+#endif
+
+#ifdef HSHM_ENABLE_PTHREADS
+TEST_CASE("Pthread") {
+  hshm::thread::Pthread pthread;
+  hshm::thread::ThreadGroup group = pthread.CreateThreadGroup({});
+  hshm::thread::Thread thread = pthread.Spawn(
+      group,
+      [](int tid) {
+        std::cout << "Hello, world! (pthread) " << tid << std::endl;
+      },
+      1);
+  pthread.Join(thread);
+}
+#endif
+
+TEST_CASE("StdThread") {
+  hshm::thread::StdThread std_thread;
+  hshm::thread::ThreadGroup group = std_thread.CreateThreadGroup({});
+  hshm::thread::Thread thread = std_thread.Spawn(
+      group,
+      [](int tid) { std::cout << "Hello, world! (std) " << tid << std::endl; },
+      1);
+  std_thread.Join(thread);
 }

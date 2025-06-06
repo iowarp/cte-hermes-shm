@@ -105,6 +105,60 @@ class Argobots : public ThreadModel {
     return ThreadId{0};
 #endif
   }
+
+  /** Create a thread group */
+  HSHM_CROSS_FUN
+  ThreadGroup CreateThreadGroup(const ThreadGroupContext &ctx) {
+#ifdef HSHM_IS_HOST
+    ABT_xstream xstream;
+    ABT_xstream_create(ABT_SCHED_NULL, &xstream);
+    return ThreadGroup{xstream};
+#else
+    return ThreadGroup{nullptr};
+#endif
+  }
+
+  /** Spawn a thread */
+  template <typename FUNC, typename... Args>
+  HSHM_CROSS_FUN Thread Spawn(ThreadGroup &group, FUNC &&func, Args &&...args) {
+#ifdef HSHM_IS_HOST
+    Thread thread;
+    ThreadParams<FUNC, Args...> *params = new ThreadParams<FUNC, Args...>(
+        std::forward<FUNC>(func), std::forward<Args>(args)...);
+    thread.group_ = group;
+    ABT_thread_create_on_xstream(group.abtxstream_, SpawnWrapper<FUNC, Args...>,
+                                 (void *)params, ABT_THREAD_ATTR_NULL,
+                                 &thread.abt_thread_);
+    return thread;
+#else
+    return Thread{};
+#endif
+  }
+
+  /** Wrapper for spawning a thread */
+  template <typename FUNC, typename... Args>
+  static void SpawnWrapper(void *arg) {
+    ThreadParams<FUNC, Args...> *params =
+        static_cast<ThreadParams<FUNC, Args...> *>(arg);
+    std::apply(params->func_, params->args_);
+    delete params;
+  }
+
+  /** Join a thread */
+  HSHM_CROSS_FUN
+  void Join(Thread &thread) {
+#ifdef HSHM_IS_HOST
+    ABT_thread_join(thread.abt_thread_);
+#endif
+  }
+
+  /** Set CPU affinity for thread */
+  HSHM_CROSS_FUN
+  void SetAffinity(Thread &thread, int cpu_id) {
+#ifdef HSHM_IS_HOST
+    ABT_xstream_set_affinity(thread.group_.abtxstream_, 1, &cpu_id);
+#endif
+  }
 };
 
 }  // namespace hshm::thread
