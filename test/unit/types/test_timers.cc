@@ -53,7 +53,13 @@ TEST_CASE("TestMpiTimer") {
   sleep(3);
   mpi_timer.Pause();
   mpi_timer.Collect();
-  HILOG(kInfo, "Print timer: {}", mpi_timer.GetSec());
+  HILOG(kInfo, "Print timer (Collect): {}", mpi_timer.GetSec());
+  mpi_timer.CollectMin();
+  HILOG(kInfo, "Print timer (Min): {}", mpi_timer.GetSec());
+  mpi_timer.CollectMax();
+  HILOG(kInfo, "Print timer (Max): {}", mpi_timer.GetSec());
+  mpi_timer.CollectAvg();
+  HILOG(kInfo, "Print timer (Avg): {}", mpi_timer.GetSec());
 }
 #endif
 
