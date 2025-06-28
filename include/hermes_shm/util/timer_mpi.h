@@ -31,11 +31,7 @@ class MpiTimer : public Timer {
     MPI_Comm_size(comm_, &nprocs_);
   }
 
-  void Collect() {
-    MPI_Barrier(comm_);
-    double my_nsec = GetNsec();
-    MPI_Reduce(&my_nsec, &time_ns_, 1, MPI_DOUBLE, MPI_MAX, 0, comm_);
-  }
+  void Collect() { CollectAvg(); }
 
   void CollectMax() {
     MPI_Barrier(comm_);
