@@ -24,6 +24,14 @@ message(STATUS "found catch2.h at ${Catch2_CXX_INCLUDE_DIRS}")
 # YAML-CPP
 find_package(yaml-cpp REQUIRED)
 message(STATUS "found yaml-cpp at ${yaml-cpp_DIR}")
+if (${YAML_CPP_LIBRARIES})
+    set(YAML_CPP_LIBS ${YAML_CPP_LIBRARIES})
+elseif(TARGET yaml-cpp::yaml-cpp)
+        set(YAML_CPP_LIBS yaml-cpp::yaml-cpp)
+else()
+  set(YAML_CPP_LIBS yaml-cpp)
+endif()
+
 
 # MPICH
 if(HSHM_ENABLE_MPI)

@@ -171,12 +171,8 @@ endif()
 # HOST DEPENDENCIES
 add_library(host_deps INTERFACE)
 
-if(NOT YAML_CPP_LIBRARIES)
-    set(YAML_CPP_LIBRARIES yaml-cpp)
-endif()
-
 target_link_libraries(host_deps INTERFACE
-    ${YAML_CPP_LIBRARIES}
+    ${YAML_CPP_LIBS}
     ${REAL_TIME_FLAGS}
     ${SERIALIZATION_LIBS}
     ${COMPRESS_LIBS}
