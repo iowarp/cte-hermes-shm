@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.25)
+cmake_minimum_required(VERSION 3.10)
 project(hermes_shm LANGUAGES C CXX)
 include(CTest)
 set(CMAKE_CXX_STANDARD 17)
@@ -230,6 +230,7 @@ endif()
 # Build hermes_shm
 # ------------------------------------------------------------------------------
 add_subdirectory(src)
+add_subdirectory(src/lightbeam)
 
 if(NOT IS_HSHM_MAIN)
     add_custom_target(lint COMMAND bash ${HSHM_ROOT}/scripts/lint.sh ${HSHM_ROOT})
@@ -290,3 +291,8 @@ install(EXPORT ${HSHM_EXPORTED_TARGETS}
 )
 
 jarvis_repo_add("${HSHM_ROOT}/test/jarvis_hshm" "")
+
+# Add at the top (after add_library)
+include_directories(/mnt/common/rpawar4/spack/opt/spack/linux-ubuntu22.04-skylake_avx512/gcc-11.4.0/libzmq-4.3.5-pok35prm6qglcrwqiiijyp6gkqndoqsi/include)
+
+link_directories(/mnt/common/rpawar4/spack/opt/spack/linux-ubuntu22.04-skylake_avx512/gcc-11.4.0/libzmq-4.3.5-pok35prm6qglcrwqiiijyp6gkqndoqsi/lib)
