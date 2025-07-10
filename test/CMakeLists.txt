@@ -14,3 +14,10 @@ add_subdirectory(unit)
 
 add_executable(lightbeam_test lightbeam_test.cc)
 target_link_libraries(lightbeam_test PRIVATE lightbeam ${ZMQ_LIBRARY} pthread)
+
+# Separate client and server tests for benchmark purposes
+add_executable(lightbeam_client_test lightbeam_client_test.cc)
+target_link_libraries(lightbeam_client_test PRIVATE lightbeam ${ZMQ_LIBRARY} pthread)
+
+add_executable(lightbeam_server_test lightbeam_server_test.cc)
+target_link_libraries(lightbeam_server_test PRIVATE lightbeam ${ZMQ_LIBRARY} pthread)
