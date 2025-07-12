@@ -31,6 +31,7 @@ add_library(lightbeam STATIC
     lightbeam.cc
     server.cc
     client.cc
+    types.cc
     zmq_client.cc
     zmq_server.cc
     libfabric_client.cc

@@ -5,16 +5,25 @@
 namespace hshm::lbm::libfabric {
 
 class Server : public hshm::lbm::IServer {
- public:
+public:
   Server();
-  void StartServer(const std::string &url, hshm::lbm::TransportType transport) override;
+  ~Server();
+  
+  void StartServer(const std::string &url, TransportType transport = TransportType::AUTO) override;
   void Stop() override;
   void ProcessMessages() override;
   bool IsRunning() const override;
-  ~Server() override;
- private:
+  
+  // Additional methods for RDMA
+  std::shared_ptr<MemoryRegion> RegisterMemory(void* addr, size_t length, uint64_t access_flags);
+  void InitializeReceiveBuffers();
+  void PostReceiveOperations();
+  void ProcessCompletions();
+  void SendEcho(const char* data, size_t size, uint64_t sequence);
+
+private:
   struct Impl;
   std::unique_ptr<Impl> impl_;
 };
 
-}  // namespace hshm::lbm::libfabric 
+} // namespace hshm::lbm::libfabric

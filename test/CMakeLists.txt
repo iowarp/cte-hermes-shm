@@ -12,12 +12,24 @@ link_directories(${ZMQ_LIB_DIR})
 
 add_subdirectory(unit)
 
+# Main integrated test
 add_executable(lightbeam_test lightbeam_test.cc)
 target_link_libraries(lightbeam_test PRIVATE lightbeam ${ZMQ_LIBRARY} pthread)
 
-# Separate client and server tests for benchmark purposes
-add_executable(lightbeam_client_test lightbeam_client_test.cc)
-target_link_libraries(lightbeam_client_test PRIVATE lightbeam ${ZMQ_LIBRARY} pthread)
+# Comprehensive nonblocking test
+add_executable(lightbeam_nonblocking_test lightbeam_nonblocking_test.cc)
+target_link_libraries(lightbeam_nonblocking_test PRIVATE lightbeam ${ZMQ_LIBRARY} pthread)
 
-add_executable(lightbeam_server_test lightbeam_server_test.cc)
-target_link_libraries(lightbeam_server_test PRIVATE lightbeam ${ZMQ_LIBRARY} pthread)
+# Unit tests with built-in timing and timeout handling
+add_executable(lightbeam_client_unit_test lightbeam_client_unit_test.cc)
+target_link_libraries(lightbeam_client_unit_test PRIVATE lightbeam ${ZMQ_LIBRARY} pthread)
+
+add_executable(lightbeam_server_unit_test lightbeam_server_unit_test.cc)
+target_link_libraries(lightbeam_server_unit_test PRIVATE lightbeam ${ZMQ_LIBRARY} pthread)
+
+# Simple unit tests (easier to understand)
+add_executable(simple_client_test simple_client_test.cc)
+target_link_libraries(simple_client_test PRIVATE lightbeam ${ZMQ_LIBRARY} pthread)
+
+add_executable(simple_server_test simple_server_test.cc)
+target_link_libraries(simple_server_test PRIVATE lightbeam ${ZMQ_LIBRARY} pthread)

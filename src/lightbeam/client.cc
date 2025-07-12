@@ -9,20 +9,19 @@ struct Client::Impl {
     TransportType current_transport_ = TransportType::AUTO;
 };
 
-Client::Client() : impl_(std::make_unique<Impl>()) {}
+Client::Client(TransportType transport) : impl_(std::make_unique<Impl>()) {
+    impl_->current_transport_ = transport;
+    impl_->client_ = Transport::CreateClient(transport);
+}
 
 Client::~Client() = default;
 
 void Client::Connect(const std::string &url, TransportType transport) {
-    // Auto-detect transport type if needed
-    if (transport == TransportType::AUTO) {
-        // Default to TCP for now, could be made smarter
-        transport = TransportType::TCP;
+    // Update transport if different from constructor
+    if (transport != impl_->current_transport_) {
+        impl_->current_transport_ = transport;
+        impl_->client_ = Transport::CreateClient(transport);
     }
-    
-    // Create the appropriate transport implementation
-    impl_->client_ = Transport::CreateClient(transport);
-    impl_->current_transport_ = transport;
     
     if (impl_->client_) {
         impl_->client_->Connect(url, transport);
@@ -42,23 +41,23 @@ Bulk Client::Expose(const std::string &url, const char *data, size_t data_size, 
     return {}; // Return empty Bulk on error
 }
 
-Event* Client::Send(const Bulk &bulk) {
+std::unique_ptr<Event> Client::Send(const Bulk &bulk) {
     if (impl_->client_) {
         return impl_->client_->Send(bulk);
     }
     return nullptr;
 }
 
-Event* Client::Recv(char *buffer, size_t buffer_size, const std::string &from_url) {
+std::unique_ptr<Event> Client::Recv(char *buffer, size_t buffer_size, const std::string &from_url) {
     if (impl_->client_) {
         return impl_->client_->Recv(buffer, buffer_size, from_url);
     }
     return nullptr;
 }
 
-void Client::ProcessCompletions() {
+void Client::ProcessCompletions(double timeout_msec) {
     if (impl_->client_) {
-        impl_->client_->ProcessCompletions();
+        impl_->client_->ProcessCompletions(timeout_msec);
     }
 }
 
