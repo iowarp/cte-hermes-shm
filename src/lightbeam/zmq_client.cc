@@ -86,7 +86,7 @@ hshm::lbm::Bulk Client::Expose(const std::string& url, const char* data, size_t 
     bulk.size = data_size;
     bulk.target_url = url;
     bulk.preferred_transport = hshm::lbm::TransportType::TCP;
-    bulk.zmq_handle = impl_->socket;
+    bulk.transport_context = impl_->socket;
     return bulk;
 }
 

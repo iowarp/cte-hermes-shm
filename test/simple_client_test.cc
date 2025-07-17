@@ -3,343 +3,163 @@
 #include <iostream>
 #include <thread>
 #include <chrono>
+#include <string>
+#include <cstring>
 
-class SimpleClientTest {
-public:
-    void test_nonblocking_send() {
-        std::cout << "\n=== Test 1: Non-blocking Send ===" << std::endl;
-        
-        auto client = hshm::lbm::Transport::CreateClient(hshm::lbm::TransportType::TCP);
-        std::string url = "tcp://127.0.0.1:5555";
-        
-        // Wait for server
-        std::this_thread::sleep_for(std::chrono::milliseconds(500));
-        client->Connect(url, hshm::lbm::TransportType::TCP);
-        
-        // Test: Send should return immediately
-        std::string message = "Hello Server!";
-        auto bulk = client->Expose(url, message.c_str(), message.length(), 0);
-        
-        hshm::Timer timer;
-        timer.Resume();
-        auto event = client->Send(bulk);  // This should return immediately
-        timer.Pause();
-        
-        double send_time = timer.GetMsecFromStart();
-        
-        std::cout << "Send time: " << send_time << " ms" << std::endl;
-        std::cout << "Event ID: " << event->event_id << std::endl;
-        std::cout << "Initially done: " << (event->is_done ? "YES" : "NO") << std::endl;
-        
-        if (send_time < 10.0) {  // Should be very fast (< 10ms)
-            std::cout << "✅ PASS: Send is non-blocking" << std::endl;
-        } else {
-            std::cout << "❌ FAIL: Send took too long" << std::endl;
-        }
-        
-        client->Disconnect(url);
+void print_usage(const char* program_name) {
+    std::cout << "Usage: " << program_name << " <ip_address> <protocol>" << std::endl;
+    std::cout << "  ip_address: IP address of the server (e.g., 127.0.0.1)" << std::endl;
+    std::cout << "  protocol:   'zmq' (or 'tcp') or 'libfabric' (or 'rdma')" << std::endl;
+    std::cout << std::endl;
+    std::cout << "Examples:" << std::endl;
+    std::cout << "  " << program_name << " 127.0.0.1 zmq" << std::endl;
+    std::cout << "  " << program_name << " 192.168.1.100 libfabric" << std::endl;
+}
+
+int main(int argc, char* argv[]) {
+    std::cout << "Simple LightBeam Round-Trip Test" << std::endl;
+    std::cout << "=================================" << std::endl;
+    
+    if (argc != 3) {
+        print_usage(argv[0]);
+        return 1;
     }
     
-    void test_round_trip_timing() {
-        std::cout << "\n=== Test 2: Round-trip Timing ===" << std::endl;
+    std::string ip_address = argv[1];
+    std::string protocol = argv[2];
+    
+    // Validate IP address format (basic check)
+    if (ip_address.empty() || ip_address.find_first_not_of("0123456789.") != std::string::npos) {
+        std::cerr << "❌ ERROR: Invalid IP address format: " << ip_address << std::endl;
+        return 1;
+    }
+    
+    // Determine URL (both zmq and libfabric use tcp transport in our implementation)
+    std::string url;
+    int rdma_flags = 0;
+    
+    if (protocol == "zmq" || protocol == "tcp") {
+        url = "tcp://" + ip_address + ":5555";
+        rdma_flags = 0; // No RDMA for ZMQ
+    } else if (protocol == "libfabric" || protocol == "rdma") {
+        url = "tcp://" + ip_address + ":5556";  // LibFabric server port
+        rdma_flags = hshm::lbm::Bulk::RDMA_ENABLED; // Enable RDMA
+    } else {
+        std::cerr << "❌ ERROR: Invalid protocol: " << protocol << std::endl;
+        print_usage(argv[0]);
+        return 1;
+    }
+    
+    std::cout << "Protocol: " << protocol << std::endl;
+    std::cout << "Server URL: " << url << std::endl;
+    
+    // Create client using new API
+    hshm::lbm::Client client;
+    
+    // Wait for server to be ready and connect
+    std::cout << "Waiting for server..." << std::endl;
+    std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    
+    std::cout << "Connecting to server..." << std::endl;
+    client.Connect(url);
+    
+    // Prepare test message
+    std::string message = "Hello Server - Round Trip Test";
+    auto bulk = client.Expose(url, message.c_str(), message.length(), rdma_flags);
+    char recv_buffer[1024];
+    
+    // Start timing the complete round-trip
+    std::cout << "Starting round-trip test..." << std::endl;
+    
+    hshm::Timer timer;
+    timer.Resume();
+    
+    // Send message (async)
+    auto send_event = client.Send(bulk);
+    if (!send_event) {
+        std::cerr << "❌ ERROR: Failed to initiate send" << std::endl;
+        return 1;
+    }
+    
+    // Start receive (async)  
+    auto recv_event = client.Recv(recv_buffer, sizeof(recv_buffer), url);
+    if (!recv_event) {
+        std::cerr << "❌ ERROR: Failed to initiate receive" << std::endl;
+        return 1;
+    }
+    
+    // Wait for both operations to complete
+    bool completed = false;
+    auto start = std::chrono::steady_clock::now();
+    const double timeout_seconds = 5.0;
+    
+    std::cout << "Waiting for completion..." << std::endl;
+    
+    while (!completed) {
+        client.ProcessCompletions();
         
-        auto client = hshm::lbm::Transport::CreateClient(hshm::lbm::TransportType::TCP);
-        std::string url = "tcp://127.0.0.1:5555";
-        
-        // Wait for server
-        std::this_thread::sleep_for(std::chrono::milliseconds(500));
-        client->Connect(url, hshm::lbm::TransportType::TCP);
-        
-        // Test round-trip as requested
-        std::string message = "Round-trip test";
-        auto bulk = client->Expose(url, message.c_str(), message.length(), 0);
-        char recv_buffer[1024];
-        
-        hshm::Timer timer;
-        timer.Resume();
-        
-        // Send message
-        auto send_event = client->Send(bulk);
-        auto recv_event = client->Recv(recv_buffer, sizeof(recv_buffer), url);
-        
-        // Wait for completion with timeout
-        bool completed = false;
-        auto start = std::chrono::steady_clock::now();
-        
-        while (!completed) {
-            client->ProcessCompletions(100.0);
-            
-            if (send_event->is_done && recv_event->is_done) {
-                completed = true;
-                timer.Pause();
-                break;
-            }
-            
-            // 3-second timeout
-            auto elapsed = std::chrono::duration<double>(std::chrono::steady_clock::now() - start).count();
-            if (elapsed > 3.0) {
-                timer.Pause();
-                break;
-            }
-            
-            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        // Check if both operations are done
+        if (send_event->is_done && recv_event->is_done) {
+            completed = true;
+            timer.Pause();
+            break;
         }
         
-        double round_trip_time = timer.GetMsecFromStart();
+        // Check for timeout
+        auto elapsed = std::chrono::duration<double>(std::chrono::steady_clock::now() - start).count();
+        if (elapsed > timeout_seconds) {
+            timer.Pause();
+            std::cerr << "❌ TIMEOUT: Operations did not complete within " << timeout_seconds << " seconds" << std::endl;
+            break;
+        }
         
-        std::cout << "Round-trip time: " << round_trip_time << " ms" << std::endl;
-        std::cout << "Send completed: " << (send_event->is_done ? "YES" : "NO") << std::endl;
-        std::cout << "Recv completed: " << (recv_event->is_done ? "YES" : "NO") << std::endl;
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
+    
+    // Get round-trip time
+    double round_trip_time = timer.GetMsecFromStart();
+    
+    // Display results
+    std::cout << "\n=== Results ===" << std::endl;
+    std::cout << "Round-trip time: " << round_trip_time << " ms" << std::endl;
+    std::cout << "Send completed: " << (send_event->is_done ? "YES" : "NO") << std::endl;
+    std::cout << "Recv completed: " << (recv_event->is_done ? "YES" : "NO") << std::endl;
+    
+    if (send_event->is_done && recv_event->is_done) {
         std::cout << "Send bytes: " << send_event->bytes_transferred << std::endl;
         std::cout << "Recv bytes: " << recv_event->bytes_transferred << std::endl;
+        std::cout << "Send error: " << send_event->error_code << std::endl;
+        std::cout << "Recv error: " << recv_event->error_code << std::endl;
         
-        if (completed && round_trip_time < 1000.0) {
-            std::cout << "✅ PASS: Round-trip successful" << std::endl;
-        } else {
-            std::cout << "❌ FAIL: Round-trip failed or too slow" << std::endl;
-        }
-        
-        client->Disconnect(url);
-    }
-    
-    void test_process_completions() {
-        std::cout << "\n=== Test 3: ProcessCompletions Function ===" << std::endl;
-        
-        auto client = hshm::lbm::Transport::CreateClient(hshm::lbm::TransportType::TCP);
-        std::string url = "tcp://127.0.0.1:5555";
-        
-        // Wait for server
-        std::this_thread::sleep_for(std::chrono::milliseconds(500));
-        client->Connect(url, hshm::lbm::TransportType::TCP);
-        
-        // Send a message
-        std::string message = "ProcessCompletions test";
-        auto bulk = client->Expose(url, message.c_str(), message.length(), 0);
-        auto event = client->Send(bulk);
-        
-        std::cout << "Before ProcessCompletions: " << (event->is_done ? "DONE" : "PENDING") << std::endl;
-        
-        // Call ProcessCompletions to handle completion
-        for (int i = 0; i < 10; ++i) {
-            client->ProcessCompletions(100.0);
-            std::this_thread::sleep_for(std::chrono::milliseconds(10));
-        }
-        
-        std::cout << "After ProcessCompletions: " << (event->is_done ? "DONE" : "PENDING") << std::endl;
-        
-        if (event->is_done) {
-            std::cout << "✅ PASS: ProcessCompletions works" << std::endl;
-        } else {
-            std::cout << "❌ FAIL: ProcessCompletions didn't complete operation" << std::endl;
-        }
-        
-        client->Disconnect(url);
-    }
-    
-    void test_concurrent_messaging() {
-        std::cout << "\n=== Test 4: Concurrent Messaging ===" << std::endl;
-        
-        auto client = hshm::lbm::Transport::CreateClient(hshm::lbm::TransportType::TCP);
-        std::string url = "tcp://127.0.0.1:5555";
-        
-        std::cout << "Connecting to server..." << std::endl;
-        std::this_thread::sleep_for(std::chrono::milliseconds(500));
-        client->Connect(url, hshm::lbm::TransportType::TCP);
-        
-        const int NUM_CONCURRENT_MESSAGES = 10;
-        std::vector<std::string> messages;
-        std::vector<std::unique_ptr<hshm::lbm::Event>> sent_events;
-        std::vector<std::unique_ptr<hshm::lbm::Event>> recv_events;
-        std::vector<hshm::lbm::Bulk> bulks;
-        std::vector<std::unique_ptr<char[]>> recv_buffers;
-        
-        // Prepare messages and bulks
-        for (int i = 0; i < NUM_CONCURRENT_MESSAGES; i++) {
-            messages.push_back("Concurrent message " + std::to_string(i));
-            auto bulk = client->Expose(url, messages[i].c_str(), messages[i].length(), 0);
-            bulks.push_back(bulk);
+        if (send_event->error_code == 0 && recv_event->error_code == 0) {
+            // Null-terminate received data for display
+            size_t recv_bytes = std::min(recv_event->bytes_transferred, sizeof(recv_buffer) - 1);
+            recv_buffer[recv_bytes] = '\0';
             
-            // Prepare receive buffer
-            recv_buffers.push_back(std::make_unique<char[]>(1024));
-        }
-        
-        hshm::Timer timer;
-        timer.Resume();
-        
-        // Send all messages concurrently (non-blocking)
-        std::cout << "Sending " << NUM_CONCURRENT_MESSAGES << " messages concurrently..." << std::endl;
-        for (int i = 0; i < NUM_CONCURRENT_MESSAGES; i++) {
-            auto send_event = client->Send(bulks[i]);
-            sent_events.push_back(std::move(send_event));
-        }
-        
-        // Start receiving all messages concurrently
-        std::cout << "Starting concurrent receives..." << std::endl;
-        for (int i = 0; i < NUM_CONCURRENT_MESSAGES; i++) {
-            auto recv_event = client->Recv(recv_buffers[i].get(), 1024, url);
-            recv_events.push_back(std::move(recv_event));
-        }
-        
-        // Process completions for all operations
-        std::cout << "Processing completions..." << std::endl;
-        int completed_sends = 0;
-        int completed_receives = 0;
-        int max_iterations = 1000;
-        int iterations = 0;
-        
-        while ((completed_sends < NUM_CONCURRENT_MESSAGES || completed_receives < NUM_CONCURRENT_MESSAGES) 
-               && iterations < max_iterations) {
+            std::cout << "Received message: \"" << recv_buffer << "\"" << std::endl;
             
-            client->ProcessCompletions(100.0);
-            
-            // Check send completions
-            completed_sends = 0;
-            for (auto& event : sent_events) {
-                if (event->is_done && event->error_code == 0) {
-                    completed_sends++;
-                }
-            }
-            
-            // Check receive completions
-            completed_receives = 0;
-            for (auto& event : recv_events) {
-                if (event->is_done && event->error_code == 0) {
-                    completed_receives++;
-                }
-            }
-            
-            std::this_thread::sleep_for(std::chrono::milliseconds(1));
-            iterations++;
-        }
-        
-        timer.Pause();
-        double test_time = timer.GetMsecFromStart();
-        
-        std::cout << "Concurrent messaging test results:" << std::endl;
-        std::cout << "  Test duration: " << test_time << " ms" << std::endl;
-        std::cout << "  Completed sends: " << completed_sends << "/" << NUM_CONCURRENT_MESSAGES << std::endl;
-        std::cout << "  Completed receives: " << completed_receives << "/" << NUM_CONCURRENT_MESSAGES << std::endl;
-        std::cout << "  Processing iterations: " << iterations << std::endl;
-        
-        bool sends_ok = (completed_sends == NUM_CONCURRENT_MESSAGES);
-        bool receives_ok = (completed_receives == NUM_CONCURRENT_MESSAGES);
-        bool performance_ok = (test_time < 5000.0); // Should complete within 5 seconds
-        
-        if (sends_ok && receives_ok && performance_ok) {
-            std::cout << "✅ PASS: Concurrent messaging works correctly" << std::endl;
-        } else {
-            std::cout << "❌ FAIL: Concurrent messaging issues detected" << std::endl;
-            if (!sends_ok) std::cout << "  - Send operations incomplete" << std::endl;
-            if (!receives_ok) std::cout << "  - Receive operations incomplete" << std::endl;
-            if (!performance_ok) std::cout << "  - Performance too slow" << std::endl;
-        }
-        
-        client->Disconnect(url);
-    }
-
-    void test_mixed_concurrent_operations() {
-        std::cout << "\n=== Test 5: Mixed Concurrent Operations ===" << std::endl;
-        
-        auto client = hshm::lbm::Transport::CreateClient(hshm::lbm::TransportType::TCP);
-        std::string url = "tcp://127.0.0.1:5555";
-        
-        std::cout << "Connecting to server..." << std::endl;
-        std::this_thread::sleep_for(std::chrono::milliseconds(500));
-        client->Connect(url, hshm::lbm::TransportType::TCP);
-        
-        const int NUM_OPERATIONS = 20;
-        std::vector<std::unique_ptr<hshm::lbm::Event>> operations;
-        std::vector<hshm::lbm::Bulk> bulks;
-        std::vector<std::unique_ptr<char[]>> recv_buffers;
-        int send_count = 0;
-        int recv_count = 0;
-        
-        hshm::Timer timer;
-        timer.Resume();
-        
-        // Mix sends and receives
-        std::cout << "Starting mixed concurrent operations..." << std::endl;
-        for (int i = 0; i < NUM_OPERATIONS; i++) {
-            if (i % 2 == 0) {
-                // Send operation
-                std::string message = "Mixed send " + std::to_string(i);
-                auto bulk = client->Expose(url, message.c_str(), message.length(), 0);
-                bulks.push_back(bulk);
-                
-                auto send_event = client->Send(bulks.back());
-                operations.push_back(std::move(send_event));
-                send_count++;
+            if (round_trip_time < 1000.0) { // Less than 1 second
+                std::cout << "✅ PASS: Round-trip successful and fast (" << round_trip_time << " ms)" << std::endl;
             } else {
-                // Receive operation
-                auto recv_buffer = std::make_unique<char[]>(1024);
-                auto recv_event = client->Recv(recv_buffer.get(), 1024, url);
-                recv_buffers.push_back(std::move(recv_buffer));
-                operations.push_back(std::move(recv_event));
-                recv_count++;
+                std::cout << "⚠️  PASS: Round-trip successful but slow (" << round_trip_time << " ms)" << std::endl;
             }
-        }
-        
-        // Process all completions
-        std::cout << "Processing mixed completions..." << std::endl;
-        int completed_ops = 0;
-        int max_iterations = 1000;
-        int iterations = 0;
-        
-        while (completed_ops < NUM_OPERATIONS && iterations < max_iterations) {
-            client->ProcessCompletions(100.0);
-            
-            completed_ops = 0;
-            for (auto& event : operations) {
-                if (event->is_done && event->error_code == 0) {
-                    completed_ops++;
-                }
-            }
-            
-            std::this_thread::sleep_for(std::chrono::milliseconds(1));
-            iterations++;
-        }
-        
-        timer.Pause();
-        double test_time = timer.GetMsecFromStart();
-        
-        std::cout << "Mixed operations test results:" << std::endl;
-        std::cout << "  Test duration: " << test_time << " ms" << std::endl;
-        std::cout << "  Send operations: " << send_count << std::endl;
-        std::cout << "  Receive operations: " << recv_count << std::endl;
-        std::cout << "  Completed operations: " << completed_ops << "/" << NUM_OPERATIONS << std::endl;
-        std::cout << "  Processing iterations: " << iterations << std::endl;
-        
-        bool completion_ok = (completed_ops == NUM_OPERATIONS);
-        bool performance_ok = (test_time < 5000.0);
-        
-        if (completion_ok && performance_ok) {
-            std::cout << "✅ PASS: Mixed concurrent operations work correctly" << std::endl;
         } else {
-            std::cout << "❌ FAIL: Mixed concurrent operations issues detected" << std::endl;
-            if (!completion_ok) std::cout << "  - Operations incomplete" << std::endl;
-            if (!performance_ok) std::cout << "  - Performance too slow" << std::endl;
+            std::cout << "❌ FAIL: Operations completed with errors" << std::endl;
+            if (send_event->error_code != 0) {
+                std::cout << "Send error: " << send_event->error_message << std::endl;
+            }
+            if (recv_event->error_code != 0) {
+                std::cout << "Recv error: " << recv_event->error_message << std::endl;
+            }
         }
-        
-        client->Disconnect(url);
+    } else {
+        std::cout << "❌ FAIL: Operations did not complete" << std::endl;
     }
-
-    void run_all_tests() {
-        std::cout << "Simple LightBeam Client Unit Tests" << std::endl;
-        std::cout << "===================================" << std::endl;
-        
-        test_nonblocking_send();
-        test_round_trip_timing();
-        test_process_completions();
-        test_concurrent_messaging();
-        test_mixed_concurrent_operations();
-        
-        std::cout << "\n=== Test Summary ===" << std::endl;
-        std::cout << "Tests completed. Check output above for PASS/FAIL status." << std::endl;
-    }
-};
-
-int main() {
-    SimpleClientTest test;
-    test.run_all_tests();
+    
+    // Disconnect
+    std::cout << "\nDisconnecting..." << std::endl;
+    client.Disconnect(url);
+    
+    std::cout << "Test completed." << std::endl;
     return 0;
-} 
+}

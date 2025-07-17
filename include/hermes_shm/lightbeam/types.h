@@ -15,9 +15,7 @@ enum class TransportType {
 
 enum class OperationType {
     SEND = 0,
-    RECV = 1,
-    RMA_WRITE = 2,
-    RMA_READ = 3
+    RECV = 1
 };
 
 struct Event {
@@ -44,36 +42,18 @@ struct Event {
     }
 };
 
-struct MemoryRegion {
-    void* addr = nullptr;
-    size_t length = 0;
-    uint64_t key = 0;  // Remote key for RDMA
-    void* desc = nullptr;  // Local descriptor
-    void* mr = nullptr;  // libfabric memory region - use void* to avoid forward declaration issues
-    
-    // For cleanup
-    ~MemoryRegion();
-    
-    // Non-copyable but movable
-    MemoryRegion() = default;
-    MemoryRegion(const MemoryRegion&) = delete;
-    MemoryRegion& operator=(const MemoryRegion&) = delete;
-    MemoryRegion(MemoryRegion&& other) noexcept;
-    MemoryRegion& operator=(MemoryRegion&& other) noexcept;
-};
-
 struct Bulk {
     char* data = nullptr;
     size_t size = 0;
     std::string target_url;
+    
+    // Flags to enable/disable RDMA
+    int flags = 0;
+    static const int RDMA_ENABLED = 1;
+    
+    // Internal transport details
     TransportType preferred_transport = TransportType::AUTO;
-    
-    // For ZMQ
-    void* zmq_handle = nullptr;
-    
-    // For RDMA - memory registration info
-    std::shared_ptr<MemoryRegion> local_mr;
-    std::shared_ptr<MemoryRegion> remote_mr;  // For RMA operations
+    void* transport_context = nullptr; // For libfabric-specific data
     
     // Message header for proper size handling
     struct MessageHeader {

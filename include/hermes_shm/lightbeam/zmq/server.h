@@ -11,6 +11,8 @@ class Server : public hshm::lbm::IServer {
   void Stop() override;
   void ProcessMessages() override;
   bool IsRunning() const override;
+  bool Recv(const Bulk &bulk) override;
+
   ~Server() override;
  private:
   struct Impl;

@@ -127,8 +127,62 @@ void Server::ProcessMessages() {
     }
 }
 
+// NEW: Recv method implementation
+bool Server::Recv(const Bulk &bulk) {
+    if (!impl_->running || !impl_->socket) return false;
+    
+    // Non-blocking check for incoming messages
+    zmq_pollitem_t items[] = {{impl_->socket, 0, ZMQ_POLLIN, 0}};
+    int rc = zmq_poll(items, 1, 0); // Non-blocking poll
+    
+    if (rc > 0 && (items[0].revents & ZMQ_POLLIN)) {
+        char identity_buffer[256];
+        
+        // Receive client identity
+        int identity_size = zmq_recv(impl_->socket, identity_buffer, sizeof(identity_buffer) - 1, 0);
+        if (identity_size <= 0) {
+            return false;
+        }
+        
+        // Check if there's more data
+        int more;
+        size_t more_size = sizeof(more);
+        zmq_getsockopt(impl_->socket, ZMQ_RCVMORE, &more, &more_size);
+        
+        if (!more) {
+            return false;
+        }
+        
+        // Receive message into bulk buffer
+        int n = zmq_recv(impl_->socket, bulk.data, bulk.size - 1, 0);
+        if (n > 0) {
+            bulk.data[n] = '\0'; // Null terminate
+            
+            std::cout << "[ZMQ Server] Recv function received " << n << " bytes" << std::endl;
+            
+            // Parse message if it has header
+            if (n >= static_cast<int>(sizeof(hshm::lbm::Bulk::MessageHeader))) {
+                auto* header = reinterpret_cast<hshm::lbm::Bulk::MessageHeader*>(bulk.data);
+                if (header->magic == 0xDEADBEEF) {
+                    // Move payload to start of buffer
+                    size_t payload_size = std::min(static_cast<size_t>(header->size), 
+                                                  static_cast<size_t>(n) - sizeof(hshm::lbm::Bulk::MessageHeader));
+                    std::memmove(bulk.data, bulk.data + sizeof(hshm::lbm::Bulk::MessageHeader), payload_size);
+                    bulk.data[payload_size] = '\0';
+                    
+                    std::cout << "[ZMQ Server] Extracted payload: " << payload_size << " bytes" << std::endl;
+                }
+            }
+            
+            return true; // Successfully received a message
+        }
+    }
+    
+    return false; // No message received
+}
+
 bool Server::IsRunning() const {
     return impl_->running;
 }
 
-} // namespace hshm::lbm::zmq 
+} // namespace hshm::lbm::zmq
