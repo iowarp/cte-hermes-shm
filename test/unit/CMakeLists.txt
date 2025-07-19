@@ -30,3 +30,7 @@ endif()
 if(HSHM_ENABLE_ENCRYPT)
     add_subdirectory(encrypt)
 endif()
+
+if(HSHM_ENABLE_ZMQ)
+    add_subdirectory(lightbeam)
+endif()

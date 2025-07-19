@@ -1,7 +1,55 @@
 #pragma once
-#include "hermes_shm/lightbeam/types.h"
-#include "hermes_shm/lightbeam/server.h"
-#include "hermes_shm/lightbeam/client.h"
-#include "hermes_shm/lightbeam/transport_factory.h"
+// Common types, interfaces, and factory for lightbeam transports.
+// Users must include the appropriate transport header (zmq_transport.h or thallium_transport.h)
+// before using the factory for that transport.
+#include <string>
+#include <memory>
+#include <queue>
+#include <mutex>
+#include <cstring>
+#include <cassert>
+#include <iostream>
 
-// Main include file for LightBeam transport library
+namespace hshm::lbm {
+
+// --- Types ---
+struct Event {
+    bool is_done = false;
+    int error_code = 0;
+    std::string error_message;
+    size_t bytes_transferred = 0;
+};
+struct Bulk {
+    char *data;
+    size_t size;
+    int flags;
+};
+
+// --- Interfaces ---
+class Client {
+public:
+    virtual ~Client() = default;
+    virtual Bulk Expose(const char *data, size_t data_size, int flags) = 0;
+    virtual Event* Send(const Bulk &bulk) = 0;
+
+};
+class Server {
+public:
+    virtual ~Server() = default;
+    virtual Bulk Expose(char *data, size_t data_size, int flags) = 0;
+    virtual Event* Recv(const Bulk &bulk) = 0;
+    virtual std::string GetAddress() const = 0;
+};
+
+// --- Transport Enum ---
+enum class Transport { kZeroMq, kThallium };
+
+// --- Factory ---
+class TransportFactory {
+public:
+    // Users must include the correct transport header before calling these.
+    static std::unique_ptr<Client> GetClient(const std::string &url, Transport t);
+    static std::unique_ptr<Server> GetServer(const std::string &url, Transport t);
+};
+
+} // namespace hshm::lbm

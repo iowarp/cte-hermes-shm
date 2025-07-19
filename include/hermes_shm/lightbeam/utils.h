@@ -13,17 +13,6 @@ namespace hshm::lbm::utils {
 std::pair<std::string, std::string> parseUrl(const std::string& url);
 
 /**
- * @brief Get the list of supported libfabric providers in priority order
- * @return array of provider names (null-terminated)
- */
-const char** getLibfabricProviders();
-
-/**
- * @brief Get default libfabric version
- */
-uint32_t getLibfabricVersion();
-
-/**
  * @brief Default buffer size for message operations
  */
 constexpr size_t getDefaultBufferSize() { return 1024; }

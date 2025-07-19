@@ -24,6 +24,7 @@ option(HSHM_BUILD_BENCHMARKS "Build benchmarks" OFF)
 option(HSHM_ENABLE_CMAKE_DOTENV "Build benchmarks" OFF)
 
 option(HSHM_ENABLE_MPI "Enable MPI support" OFF)
+option(HSHM_ENABLE_ZMQ "Enable ZeroMQ transport" ON)
 option(HSHM_RPC_THALLIUM "Build tests which depend on thallium" OFF)
 option(HSHM_ENABLE_OPENMP "Enable the use of OpenMP" OFF)
 option(HSHM_ENABLE_CEREAL "Enable serialization using cereal" ON)
@@ -296,3 +297,30 @@ jarvis_repo_add("${HSHM_ROOT}/test/jarvis_hshm" "")
 include_directories(/mnt/common/rpawar4/spack/opt/spack/linux-ubuntu22.04-skylake_avx512/gcc-11.4.0/libzmq-4.3.5-pok35prm6qglcrwqiiijyp6gkqndoqsi/include)
 
 link_directories(/mnt/common/rpawar4/spack/opt/spack/linux-ubuntu22.04-skylake_avx512/gcc-11.4.0/libzmq-4.3.5-pok35prm6qglcrwqiiijyp6gkqndoqsi/lib)
+
+# Find Thallium via Spack (using pkg-config or environment variables)
+find_package(PkgConfig)
+if(PKG_CONFIG_FOUND)
+    pkg_check_modules(THALLIUM thallium)
+    if(THALLIUM_FOUND)
+        include_directories(${THALLIUM_INCLUDE_DIRS})
+        link_directories(${THALLIUM_LIBRARY_DIRS})
+        message(STATUS "Found Thallium via pkg-config: ${THALLIUM_INCLUDE_DIRS}")
+    else()
+        message(WARNING "Thallium not found via pkg-config. Trying environment variables.")
+    endif()
+endif()
+
+# Fallback: Use SPACK environment variables if set
+if(DEFINED ENV{SPACK_ROOT})
+    if(DEFINED ENV{THALLIUM_DIR})
+        include_directories($ENV{THALLIUM_DIR}/include)
+        link_directories($ENV{THALLIUM_DIR}/lib)
+        message(STATUS "Found Thallium via SPACK THALLIUM_DIR: $ENV{THALLIUM_DIR}")
+    endif()
+endif()
+
+# When adding executables or libraries that use Thallium, link with ${THALLIUM_LIBRARIES} if set
+# Example:
+# target_link_libraries(simple_server_test ... ${THALLIUM_LIBRARIES})
+# target_link_libraries(simple_client_test ... ${THALLIUM_LIBRARIES})
