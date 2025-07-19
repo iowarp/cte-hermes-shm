@@ -165,6 +165,15 @@ if(HSHM_ENABLE_ELF)
     set(ELF_LIB_DIRS ${libelf_LIBRARY_DIRS})
 endif()
 
+# ZeroMQ
+if(HSHM_ENABLE_ZMQ)
+    pkg_check_modules(ZeroMQ REQUIRED libzmq)
+    message(STATUS "found zmq.h at ${ZeroMQ_INCLUDE_DIRS}")
+    set(ZMQ_LIBS ${ZeroMQ_LIBRARIES})
+    set(ZMQ_INCLUDES ${ZeroMQ_INCLUDE_DIRS})
+    set(ZMQ_LIB_DIRS ${ZeroMQ_LIBRARY_DIRS})
+endif()
+
 # ------------------------------------------------------------------------------
 # GPU Support Functions
 # ------------------------------------------------------------------------------

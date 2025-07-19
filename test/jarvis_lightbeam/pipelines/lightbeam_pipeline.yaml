@@ -1,0 +1,17 @@
+name: lightbeam_benchmark
+env: lightbeam
+pkgs:
+  - pkg_type: lightbeam_server
+    pkg_name: lightbeam_server
+    SERVER_IP: 0.0.0.0
+    SERVER_PORT: 5555
+    TRANSPORT_TYPE: tcp
+    VERBOSE: true
+  - pkg_type: lightbeam_client
+    pkg_name: lightbeam_client
+    SERVER_IP: 127.0.0.1
+    SERVER_PORT: 5555
+    TRANSPORT_TYPE: tcp
+    ITERATIONS: 1000
+    MESSAGE_SIZE: 64
+    VERBOSE: true 
