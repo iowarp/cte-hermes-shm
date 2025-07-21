@@ -48,8 +48,10 @@ enum class Transport { kZeroMq, kThallium };
 class TransportFactory {
 public:
     // Users must include the correct transport header before calling these.
-    static std::unique_ptr<Client> GetClient(const std::string &url, Transport t);
-    static std::unique_ptr<Server> GetServer(const std::string &url, Transport t);
+    static std::unique_ptr<Client> GetClient(const std::string &addr, Transport t, const std::string &protocol = "", int port = 0);
+    static std::unique_ptr<Client> GetClient(const std::string &addr, Transport t, const std::string &protocol, int port, const std::string &domain);
+    static std::unique_ptr<Server> GetServer(const std::string &addr, Transport t, const std::string &protocol = "", int port = 0);
+    static std::unique_ptr<Server> GetServer(const std::string &addr, Transport t, const std::string &protocol, int port, const std::string &domain);
 };
 
 } // namespace hshm::lbm

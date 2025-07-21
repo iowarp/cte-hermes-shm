@@ -9,9 +9,10 @@ namespace hshm::lbm {
 
 class ZeroMqClient : public Client {
 public:
-    explicit ZeroMqClient(const std::string &url)
-        : url_(url), ctx_(zmq_ctx_new()), socket_(zmq_socket(ctx_, ZMQ_PUSH)) {
-        zmq_connect(socket_, url.c_str());
+    explicit ZeroMqClient(const std::string &addr, const std::string &protocol = "tcp", int port = 8192)
+        : addr_(addr), protocol_(protocol), port_(port), ctx_(zmq_ctx_new()), socket_(zmq_socket(ctx_, ZMQ_PUSH)) {
+        std::string full_url = protocol_ + "://" + addr_ + ":" + std::to_string(port_);
+        zmq_connect(socket_, full_url.c_str());
     }
     ~ZeroMqClient() override {
         zmq_close(socket_);
@@ -39,18 +40,21 @@ public:
     }
 
 private:
-    std::string url_;
+    std::string addr_;
+    std::string protocol_;
+    int port_;
     void *ctx_;
     void *socket_;
 };
 
 class ZeroMqServer : public Server {
 public:
-    explicit ZeroMqServer(const std::string &url)
-        : url_(url), ctx_(zmq_ctx_new()), socket_(zmq_socket(ctx_, ZMQ_PULL)) {
-        int rc = zmq_bind(socket_, url.c_str());
+    explicit ZeroMqServer(const std::string &addr, const std::string &protocol = "tcp", int port = 8192)
+        : addr_(addr), protocol_(protocol), port_(port), ctx_(zmq_ctx_new()), socket_(zmq_socket(ctx_, ZMQ_PULL)) {
+        std::string full_url = protocol_ + "://" + addr_ + ":" + std::to_string(port_);
+        int rc = zmq_bind(socket_, full_url.c_str());
         if (rc == -1) {
-            std::string err = "ZeroMqServer failed to bind to URL '" + url + "': " + zmq_strerror(zmq_errno());
+            std::string err = "ZeroMqServer failed to bind to URL '" + full_url + "': " + zmq_strerror(zmq_errno());
             zmq_close(socket_);
             zmq_ctx_destroy(ctx_);
             throw std::runtime_error(err);
@@ -84,10 +88,12 @@ public:
     }
     
     std::string GetAddress() const override {
-        return url_;
+        return addr_;
     }
 private:
-    std::string url_;
+    std::string addr_;
+    std::string protocol_;
+    int port_;
     void *ctx_;
     void *socket_;
 };

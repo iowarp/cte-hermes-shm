@@ -10,14 +10,14 @@ using namespace hshm::lbm;
 
 class LightbeamTransportTest {
 public:
-    LightbeamTransportTest(Transport transport, const std::string& url)
-        : transport_(transport), url_(url) {}
+    LightbeamTransportTest(Transport transport, const std::string& addr, const std::string& protocol, int port)
+        : transport_(transport), addr_(addr), protocol_(protocol), port_(port) {}
 
     void Run() {
-        std::cout << "\n==== Testing backend: " << BackendName() << " ====" << std::endl;
-        auto server_ptr = TransportFactory::GetServer(url_, transport_);
+        std::cout << "\n==== Testing backend: " << BackendName() << " ====\n";
+        auto server_ptr = TransportFactory::GetServer(addr_, transport_, protocol_, port_);
         std::string server_addr = server_ptr->GetAddress();
-        auto client_ptr = TransportFactory::GetClient(server_addr, transport_);
+        auto client_ptr = TransportFactory::GetClient(server_addr, transport_, protocol_, port_);
 
         const std::string magic = "unit_test_magic";
         // Client exposes and sends data
@@ -57,22 +57,28 @@ private:
         }
     }
     Transport transport_;
-    std::string url_;
+    std::string addr_;
+    std::string protocol_;
+    int port_;
 };
 
 int main() {
     // Test ZeroMQ
 #ifdef HSHM_ENABLE_ZMQ
     {
-        std::string zmq_url = "tcp://127.0.0.1:8192";
-        LightbeamTransportTest test(Transport::kZeroMq, zmq_url);
+        std::string zmq_addr = "127.0.0.1";
+        std::string zmq_protocol = "tcp";
+        int zmq_port = 8192;
+        LightbeamTransportTest test(Transport::kZeroMq, zmq_addr, zmq_protocol, zmq_port);
         test.Run();
     }
 #endif
     // Test Thallium
     {
-        std::string thallium_url = "ofi+sockets://127.0.0.1:8193";
-        LightbeamTransportTest test(Transport::kThallium, thallium_url);
+        std::string thallium_addr = "127.0.0.1";
+        std::string thallium_protocol = "ofi+sockets";
+        int thallium_port = 8193;
+        LightbeamTransportTest test(Transport::kThallium, thallium_addr, thallium_protocol, thallium_port);
         test.Run();
     }
     std::cout << "All transport tests passed!" << std::endl;

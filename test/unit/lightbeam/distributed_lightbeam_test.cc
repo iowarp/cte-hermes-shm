@@ -8,6 +8,7 @@
 #include <chrono>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <mpi.h>
 
 using namespace hshm::lbm;
 
@@ -75,37 +76,53 @@ std::string WaitForServerAddr(const std::string &filename) {
 }
 
 int main(int argc, char **argv) {
-    if (argc < 4) {
-        std::cerr << "Usage: " << argv[0] << " <zeromq|thallium> <hostfile> <my_rank>\n";
+    MPI_Init(&argc, &argv);
+    int my_rank = 0, world_size = 0;
+    MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &world_size);
+    if (argc < 3) {
+        std::cerr << "Usage: " << argv[0] << " <zeromq|thallium> <hostfile> [protocol] [domain] [port]\n";
+        std::cerr << "Note: Number of MPI processes (mpirun -n) should match the number of hosts in the hostfile." << std::endl;
+        MPI_Finalize();
         return 1;
     }
     std::string transport_str = argv[1];
     std::string hostfile = argv[2];
-    int my_rank = std::stoi(argv[3]);
     std::string magic = "1212412";
+
+    // Parse optional protocol, domain, port
+    std::string protocol = (transport_str == "zeromq") ? "tcp" : "ofi+sockets";
+    std::string domain = "";
+    int port = (transport_str == "zeromq") ? 8192 : 8200;
+    if (argc > 3) protocol = argv[3];
+    if (argc > 4) domain = argv[4];
+    if (argc > 5) port = std::stoi(argv[5]);
 
     Transport transport = ParseTransport(transport_str);
     std::vector<std::string> hosts = ReadHosts(hostfile);
-    if (my_rank < 0 || my_rank >= (int)hosts.size()) {
-        std::cerr << "Invalid my_rank: " << my_rank << std::endl;
+    if ((int)hosts.size() != world_size) {
+        std::cerr << "Error: Number of MPI processes (" << world_size << ") does not match number of hosts in hostfile (" << hosts.size() << ")." << std::endl;
+        MPI_Finalize();
         return 1;
     }
 
     bool is_server = (my_rank == 0);
-    std::string server_url = hosts[0];
+    std::string server_addr = hosts[0];
     const std::string addrfile = "/tmp/thallium_server_addr.txt";
 
     if (transport == Transport::kThallium) {
         if (is_server) {
-            auto server_ptr = TransportFactory::GetServer(server_url, transport);
+            auto server_ptr = TransportFactory::GetServer(server_addr, transport, protocol, port, domain);
             std::string actual_addr = server_ptr->GetAddress();
             std::ofstream(addrfile) << actual_addr << std::endl;
             std::thread server_thread(ServerThread, std::ref(*server_ptr), hosts.size() - 1, std::ref(magic));
             server_thread.join();
             std::cout << "[Server] All messages received!" << std::endl;
-        } else {
+        }
+        MPI_Barrier(MPI_COMM_WORLD);
+        if (!is_server) {
             std::string actual_addr = WaitForServerAddr(addrfile);
-            auto client_ptr = TransportFactory::GetClient(actual_addr, transport);
+            auto client_ptr = TransportFactory::GetClient(actual_addr, transport, protocol, port, domain);
             std::vector<std::unique_ptr<Client>> clients;
             clients.emplace_back(std::move(client_ptr));
             std::thread client_thread(Clients, std::ref(clients), std::ref(magic));
@@ -113,14 +130,15 @@ int main(int argc, char **argv) {
             std::cout << "[Client] Message sent!" << std::endl;
         }
     } else {
-        // ZeroMQ logic unchanged
         if (is_server) {
-            auto server_ptr = TransportFactory::GetServer(server_url, transport);
+            auto server_ptr = TransportFactory::GetServer(server_addr, transport, protocol, port);
             std::thread server_thread(ServerThread, std::ref(*server_ptr), hosts.size() - 1, std::ref(magic));
             server_thread.join();
             std::cout << "[Server] All messages received!" << std::endl;
-        } else {
-            auto client_ptr = TransportFactory::GetClient(server_url, transport);
+        }
+        MPI_Barrier(MPI_COMM_WORLD);
+        if (!is_server) {
+            auto client_ptr = TransportFactory::GetClient(server_addr, transport, protocol, port);
             std::vector<std::unique_ptr<Client>> clients;
             clients.emplace_back(std::move(client_ptr));
             std::thread client_thread(Clients, std::ref(clients), std::ref(magic));
@@ -128,5 +146,6 @@ int main(int argc, char **argv) {
             std::cout << "[Client] Message sent!" << std::endl;
         }
     }
+    MPI_Finalize();
     return 0;
 } 
