@@ -231,7 +231,6 @@ endif()
 # Build hermes_shm
 # ------------------------------------------------------------------------------
 add_subdirectory(src)
-add_subdirectory(src/lightbeam)
 
 if(NOT IS_HSHM_MAIN)
     add_custom_target(lint COMMAND bash ${HSHM_ROOT}/scripts/lint.sh ${HSHM_ROOT})

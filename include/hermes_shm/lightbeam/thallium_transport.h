@@ -37,7 +37,7 @@ public:
         return bulk;
     }
     Event* Send(const Bulk &bulk) override {
-        auto event = std::make_unique<Event>();
+        Event* event = new Event();
         try {
             std::cout << "[ThalliumClient] Defining RPC: " << rpc_name_ << std::endl;
             thallium::remote_procedure rpc = engine_->define(rpc_name_);
@@ -64,9 +64,7 @@ public:
             event->error_code = -1;
             event->error_message = e.what();
         }
-        std::lock_guard<std::mutex> lock(mutex_);
-        events_.push(std::move(event));
-        return events_.back().get();
+        return event;
     }
 
 private:
@@ -74,39 +72,36 @@ private:
     std::string protocol_;
     std::string rpc_name_;
     std::unique_ptr<thallium::engine> engine_;
-    std::queue<std::unique_ptr<Event>> events_;
-    std::mutex mutex_;
 };
 
 class ThalliumServer : public Server {
 public:
     explicit ThalliumServer(const std::string &url)
         : url_(url), engine_(nullptr), rpc_name_("bulk_send"), has_data_(false) {
-        auto proto_end = url.find("://");
-        protocol_ = (proto_end != std::string::npos) ? url.substr(0, proto_end) : url;
-        std::cout << "[ThalliumServer] Creating server with protocol: " << protocol_ << std::endl;
-        std::cout << "[ThalliumServer] Using full URL: " << url_ << std::endl;
-        // For ofi+tcp and ofi+sockets, use just the protocol, not the full URL
-        if (protocol_ == "ofi+tcp" || protocol_ == "ofi+sockets") {
-            engine_ = std::make_unique<thallium::engine>(protocol_, THALLIUM_SERVER_MODE);
-        } else {
-            // For other protocols like na+sm, use the full URL
-            engine_ = std::make_unique<thallium::engine>(url_, THALLIUM_SERVER_MODE);
+        try {
+            auto proto_end = url.find("://");
+            protocol_ = (proto_end != std::string::npos) ? url.substr(0, proto_end) : url;
+            std::cout << "[ThalliumServer] Creating server with protocol: " << protocol_ << std::endl;
+            std::cout << "[ThalliumServer] Using full URL: " << url_ << std::endl;
+            if (protocol_ == "ofi+tcp" || protocol_ == "ofi+sockets") {
+                engine_ = std::make_unique<thallium::engine>(protocol_, THALLIUM_SERVER_MODE);
+            } else {
+                engine_ = std::make_unique<thallium::engine>(url_, THALLIUM_SERVER_MODE);
+            }
+            std::cout << "[ThalliumServer] Engine created, defining RPC: " << rpc_name_ << std::endl;
+            engine_->define(rpc_name_, [this](const thallium::request &req, const std::vector<char> &buf) {
+                std::cout << "[ThalliumServer] RPC handler called with data size: " << buf.size() << std::endl;
+                std::cout << "[ThalliumServer] Data: " << std::string(buf.begin(), buf.end()) << std::endl;
+                received_data_ = buf;
+                has_data_ = true;
+                std::cout << "[ThalliumServer] RPC handler: stored data, has_data_ = " << has_data_ << std::endl;
+                std::cout << "[ThalliumServer] RPC handler completed successfully" << std::endl;
+            });
+            std::string server_addr = engine_->self();
+            std::cout << "[ThalliumServer] Server address: " << server_addr << std::endl;
+        } catch (const std::exception &e) {
+            throw std::runtime_error(std::string("ThalliumServer failed to initialize with URL '") + url + "': " + e.what());
         }
-        std::cout << "[ThalliumServer] Engine created, defining RPC: " << rpc_name_ << std::endl;
-        engine_->define(rpc_name_, [this](const thallium::request &req, const std::vector<char> &buf) {
-            std::cout << "[ThalliumServer] RPC handler called with data size: " << buf.size() << std::endl;
-            std::cout << "[ThalliumServer] Data: " << std::string(buf.begin(), buf.end()) << std::endl;
-            std::lock_guard<std::mutex> lock(mutex_);
-            received_data_ = buf;
-            has_data_ = true;
-            std::cout << "[ThalliumServer] RPC handler: stored data, has_data_ = " << has_data_ << std::endl;
-            std::cout << "[ThalliumServer] RPC handler completed successfully" << std::endl;
-        });
-        
-        // Get the server's actual address
-        std::string server_addr = engine_->self();
-        std::cout << "[ThalliumServer] Server address: " << server_addr << std::endl;
     }
     
     void Start() {
@@ -128,8 +123,7 @@ public:
         return bulk;
     }
     Event* Recv(const Bulk &bulk) override {
-        auto event = std::make_unique<Event>();
-        std::lock_guard<std::mutex> lock(mutex_);
+        Event* event = new Event();
         std::cout << "[ThalliumServer] Recv: checking for data, has_data_ = " << has_data_ << std::endl;
         if (has_data_) {
             size_t copy_size = std::min(bulk.size, received_data_.size());
@@ -143,8 +137,7 @@ public:
             std::cout << "[ThalliumServer] Recv: no data available" << std::endl;
             event->is_done = false;
         }
-        events_.push(std::move(event));
-        return events_.back().get();
+        return event;
     }
     
     std::string GetAddress() const override {
@@ -160,22 +153,6 @@ private:
     std::unique_ptr<thallium::engine> engine_;
     std::vector<char> received_data_;
     bool has_data_;
-    std::mutex mutex_;
-    std::queue<std::unique_ptr<Event>> events_;
 };
-
-// Factory implementation for Thallium
-inline std::unique_ptr<Client> TransportFactory::GetClient(const std::string &url, Transport t) {
-    if (t == Transport::kThallium) {
-        return std::make_unique<ThalliumClient>(url);
-    }
-    return nullptr;
-}
-inline std::unique_ptr<Server> TransportFactory::GetServer(const std::string &url, Transport t) {
-    if (t == Transport::kThallium) {
-        return std::make_unique<ThalliumServer>(url);
-    }
-    return nullptr;
-}
 
 } // namespace hshm::lbm 
