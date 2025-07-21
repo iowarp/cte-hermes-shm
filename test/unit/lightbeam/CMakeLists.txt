@@ -11,3 +11,8 @@ if(HSHM_ENABLE_ZMQ)
     add_test(NAME lightbeam_transport_test COMMAND lightbeam_transport_test)
 endif()
 
+add_executable(distributed_lightbeam_test distributed_lightbeam_test.cc)
+target_include_directories(distributed_lightbeam_test PRIVATE ${ZeroMQ_INCLUDE_DIRS} ${Thallium_INCLUDE_DIRS})
+target_link_directories(distributed_lightbeam_test PRIVATE ${ZeroMQ_LIBRARY_DIRS} ${Thallium_LIBRARY_DIRS})
+target_link_libraries(distributed_lightbeam_test ${ZeroMQ_LIBRARIES} ${Thallium_LIBRARIES})
+
