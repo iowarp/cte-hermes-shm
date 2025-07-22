@@ -1,0 +1,10 @@
+name: lightbeam_distributed_test2
+env: hermes_shm  # or your environment name
+pkgs:
+  - pkg_type: lightbeam_distributed_test
+    pkg_name: lightbeam_distributed_test
+    hostfile: /home/rpawar4/hostfile  # or hosts_thallium.txt
+    transport: thallium  # or thallium
+    protocol: ofi+sockets
+    port: 8192
+    domain: ""

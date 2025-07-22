@@ -114,7 +114,7 @@ private:
 class ThalliumServer : public Server {
 public:
     explicit ThalliumServer(const std::string &addr, const std::string &protocol = "ofi+sockets", int port = 8200, const std::string &domain = "")
-        : addr_(addr), protocol_(protocol), port_(port), domain_(domain), engine_(nullptr), rpc_name_("bulk_send"), has_data_(false) {
+        : addr_(addr), protocol_(protocol), port_(port), domain_(domain), engine_(nullptr), rpc_name_("bulk_send") {
         try {
             ThalliumUrl url_builder(protocol_, domain_, addr_, port_);
             std::string full_url = url_builder.Build();
@@ -123,17 +123,17 @@ public:
             std::cout << "[ThalliumServer] Creating server with protocol: " << proto << std::endl;
             std::cout << "[ThalliumServer] Using full URL: " << full_url << std::endl;
             if (proto == "ofi+tcp" || proto == "ofi+sockets") {
-                engine_ = std::make_unique<thallium::engine>(proto, THALLIUM_SERVER_MODE);
+                engine_ = std::make_unique<thallium::engine>(proto, THALLIUM_SERVER_MODE, true, 1);
             } else {
-                engine_ = std::make_unique<thallium::engine>(full_url, THALLIUM_SERVER_MODE);
+                engine_ = std::make_unique<thallium::engine>(full_url, THALLIUM_SERVER_MODE, true, 1);
             }
             std::cout << "[ThalliumServer] Engine created, defining RPC: " << rpc_name_ << std::endl;
             engine_->define(rpc_name_, [this](const thallium::request &req, const std::vector<char> &buf) {
+                std::lock_guard<std::mutex> lock(queue_mutex_);
+                received_queue_.push(buf);
                 std::cout << "[ThalliumServer] RPC handler called with data size: " << buf.size() << std::endl;
                 std::cout << "[ThalliumServer] Data: " << std::string(buf.begin(), buf.end()) << std::endl;
-                received_data_ = buf;
-                has_data_ = true;
-                std::cout << "[ThalliumServer] RPC handler: stored data, has_data_ = " << has_data_ << std::endl;
+                std::cout << "[ThalliumServer] RPC handler: queued data, queue size = " << received_queue_.size() << std::endl;
                 std::cout << "[ThalliumServer] RPC handler completed successfully" << std::endl;
             });
             std::string server_addr = engine_->self();
@@ -163,17 +163,17 @@ public:
     }
     Event* Recv(const Bulk &bulk) override {
         Event* event = new Event();
-        std::cout << "[ThalliumServer] Recv: checking for data, has_data_ = " << has_data_ << std::endl;
-        if (has_data_) {
-            size_t copy_size = std::min(bulk.size, received_data_.size());
-            std::memcpy(bulk.data, received_data_.data(), copy_size);
+        std::lock_guard<std::mutex> lock(queue_mutex_);
+        if (!received_queue_.empty()) {
+            const auto& data = received_queue_.front();
+            size_t copy_size = std::min(bulk.size, data.size());
+            std::memcpy(bulk.data, data.data(), copy_size);
             std::cout << "[ThalliumServer] Recv: copied " << copy_size << " bytes" << std::endl;
             std::cout << "[ThalliumServer] Recv: data = " << std::string(bulk.data, copy_size) << std::endl;
-            has_data_ = false;
+            received_queue_.pop();
             event->is_done = true;
             event->bytes_transferred = copy_size;
         } else {
-            std::cout << "[ThalliumServer] Recv: no data available" << std::endl;
             event->is_done = false;
         }
         return event;
@@ -193,8 +193,8 @@ private:
     std::string full_url_;
     std::string rpc_name_;
     std::unique_ptr<thallium::engine> engine_;
-    std::vector<char> received_data_;
-    bool has_data_;
+    std::queue<std::vector<char>> received_queue_;
+    std::mutex queue_mutex_;
 };
 
 } // namespace hshm::lbm 

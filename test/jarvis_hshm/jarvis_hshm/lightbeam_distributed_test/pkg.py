@@ -27,18 +27,21 @@ class LightbeamDistributedTest(Application):
 
     def start(self):
         self.binary = 'distributed_lightbeam_test'
-        self.transport = self.config['transport']
-        self.hostfile = self.config['hostfile']
-        self.protocol = self.config['protocol']
-        self.domain = self.config['domain']
-        self.port = self.config['port']
+        # Replace None or empty string with '' for all parameters before use
+        def quote_if_empty(val):
+            return "''" if val is None or (isinstance(val, str) and val.strip() == '') else str(val)
+        self.transport = quote_if_empty(self.config['transport'])
+        self.hostfile = quote_if_empty(self.config['hostfile'])
+        self.protocol = quote_if_empty(self.config['protocol'])
+        self.domain = quote_if_empty(self.config['domain'])
+        self.port = quote_if_empty(self.config['port'])
         cmd = f"{self.binary} {self.transport} {self.hostfile} {self.protocol} {self.domain} {self.port}"
         print(f"[LightbeamDistributedTest] Launching: {cmd}")
         hosts = Hostfile(path=self.config['hostfile'])
         print(f"[LightbeamDistributedTest] Hosts: {hosts} , len(hosts): {len(hosts)}", hosts.path)
         print(f" cmd: {cmd}")
         # hosts = self.jarvis.hostfile
-        Exec(cmd, MpiExecInfo(hosts= hosts, env=self.env, exec_async=False, nprocs=len(hosts), ppn=1))
+        Exec(cmd, MpiExecInfo(hosts= hosts, env=self.env, exec_async=False, nprocs=len(hosts), ppn=2))
 
     def stop(self):
         """
