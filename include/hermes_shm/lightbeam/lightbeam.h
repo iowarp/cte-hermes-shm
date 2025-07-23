@@ -23,6 +23,8 @@ struct Bulk {
     char *data;
     size_t size;
     int flags;
+    void *desc = nullptr; // For RDMA memory registration
+    void *mr = nullptr;   // For RDMA memory region handle (fid_mr*)
 };
 
 // --- Interfaces ---

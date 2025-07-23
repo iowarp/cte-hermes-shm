@@ -37,16 +37,18 @@ inline std::vector<uint8_t> hex_to_addr(const std::string& hex) {
 class LibfabricClient : public Client {
 public:
     LibfabricClient(const std::string &server_addr_hex, const std::string &protocol = "tcp", int port = 9222)
-        : protocol_(protocol), port_(port), fabric_(nullptr), domain_(nullptr), ep_(nullptr), av_(nullptr), cq_(nullptr) {
+        : protocol_(protocol), port_(port), fabric_(nullptr), domain_(nullptr), ep_(nullptr), av_(nullptr), cq_(nullptr), supports_rdma_(false) {
         struct fi_info *hints = fi_allocinfo();
         hints->ep_attr->type = FI_EP_RDM;
-        hints->caps = FI_MSG;
+        hints->caps = FI_MSG | FI_RMA;
         hints->mode = 0;
         hints->addr_format = FI_SOCKADDR_IN;
         hints->fabric_attr->prov_name = strdup("sockets");
         struct fi_info *info = nullptr;
         int ret = fi_getinfo(FI_VERSION(1, 11), nullptr, nullptr, 0, hints, &info);
         if (ret) throw std::runtime_error("fi_getinfo failed: " + std::to_string(ret));
+        supports_rdma_ = (info->caps & FI_RMA) != 0;
+        std::cout << "[LibfabricClient] supports_rdma_=" << supports_rdma_ << std::endl;
         ret = fi_fabric(info->fabric_attr, &fabric_, nullptr);
         if (ret) throw std::runtime_error("fi_fabric failed");
         ret = fi_domain(fabric_, info, &domain_, nullptr);
@@ -91,6 +93,15 @@ public:
         bulk.data = const_cast<char*>(data);
         bulk.size = data_size;
         bulk.flags = flags;
+        bulk.desc = nullptr;
+        bulk.mr = nullptr;
+        if (supports_rdma_) {
+            struct fid_mr *mr = nullptr;
+            int ret = fi_mr_reg(domain_, (void*)data, data_size, FI_SEND | FI_RECV | FI_READ | FI_WRITE, 0, 0, 0, &mr, nullptr);
+            if (ret) throw std::runtime_error("fi_mr_reg failed: " + std::to_string(ret));
+            bulk.desc = fi_mr_desc(mr);
+            bulk.mr = mr;
+        }
         return bulk;
     }
     Event* Send(const Bulk &bulk) override {
@@ -100,7 +111,7 @@ public:
         }
         Event* event = new Event();
         std::cout << "[LibfabricClient] About to fi_send: ptr=" << static_cast<void*>(bulk.data) << ", size=" << bulk.size << std::endl;
-        ssize_t ret = fi_send(ep_, bulk.data, bulk.size, nullptr, server_fi_addr_, nullptr);
+        ssize_t ret = fi_send(ep_, bulk.data, bulk.size, bulk.desc, server_fi_addr_, nullptr);
         std::cout << "[LibfabricClient] fi_send returned " << ret << std::endl;
         if (ret < 0) {
             event->is_done = true;
@@ -124,6 +135,8 @@ public:
                 break;
             }
         }
+        // Cleanup MR if used
+        if (bulk.mr) fi_close((fid_t)bulk.mr);
         return event;
     }
 private:
@@ -135,21 +148,24 @@ private:
     struct fid_av *av_;
     struct fid_cq *cq_;
     fi_addr_t server_fi_addr_;
+    bool supports_rdma_;
 };
 
 class LibfabricServer : public Server {
 public:
     LibfabricServer(const std::string &addr, const std::string &protocol = "tcp", int port = 9222)
-        : addr_(addr), protocol_(protocol), port_(port), fabric_(nullptr), domain_(nullptr), ep_(nullptr), av_(nullptr), cq_(nullptr) {
+        : addr_(addr), protocol_(protocol), port_(port), fabric_(nullptr), domain_(nullptr), ep_(nullptr), av_(nullptr), cq_(nullptr), supports_rdma_(false) {
         struct fi_info *hints = fi_allocinfo();
         hints->ep_attr->type = FI_EP_RDM;
-        hints->caps = FI_MSG;
+        hints->caps = FI_MSG | FI_RMA;
         hints->mode = 0;
         hints->addr_format = FI_SOCKADDR_IN;
         hints->fabric_attr->prov_name = strdup("sockets");
         struct fi_info *info = nullptr;
         int ret = fi_getinfo(FI_VERSION(1, 11), addr.c_str(), std::to_string(port).c_str(), FI_SOURCE, hints, &info);
         if (ret) throw std::runtime_error("fi_getinfo failed: " + std::to_string(ret));
+        supports_rdma_ = (info->caps & FI_RMA) != 0;
+        std::cout << "[LibfabricServer] supports_rdma_=" << supports_rdma_ << std::endl;
         ret = fi_fabric(info->fabric_attr, &fabric_, nullptr);
         if (ret) throw std::runtime_error("fi_fabric failed");
         ret = fi_domain(fabric_, info, &domain_, nullptr);
@@ -194,6 +210,15 @@ public:
         bulk.data = data;
         bulk.size = data_size;
         bulk.flags = flags;
+        bulk.desc = nullptr;
+        bulk.mr = nullptr;
+        if (supports_rdma_) {
+            struct fid_mr *mr = nullptr;
+            int ret = fi_mr_reg(domain_, data, data_size, FI_SEND | FI_RECV | FI_READ | FI_WRITE, 0, 0, 0, &mr, nullptr);
+            if (ret) throw std::runtime_error("fi_mr_reg failed: " + std::to_string(ret));
+            bulk.desc = fi_mr_desc(mr);
+            bulk.mr = mr;
+        }
         return bulk;
     }
     Event* Recv(const Bulk &bulk) override {
@@ -203,7 +228,7 @@ public:
         }
         Event* event = new Event();
         std::cout << "[LibfabricServer] About to fi_recv: ptr=" << static_cast<void*>(bulk.data) << ", size=" << bulk.size << std::endl;
-        ssize_t ret = fi_recv(ep_, bulk.data, bulk.size, nullptr, FI_ADDR_UNSPEC, nullptr);
+        ssize_t ret = fi_recv(ep_, bulk.data, bulk.size, bulk.desc, FI_ADDR_UNSPEC, nullptr);
         std::cout << "[LibfabricServer] fi_recv returned " << ret << std::endl;
         if (ret < 0) {
             event->is_done = true;
@@ -227,6 +252,8 @@ public:
                 break;
             }
         }
+        // Cleanup MR if used
+        if (bulk.mr) fi_close((fid_t)bulk.mr);
         return event;
     }
     std::string GetAddress() const override {
@@ -242,6 +269,7 @@ private:
     struct fid_ep *ep_;
     struct fid_av *av_;
     struct fid_cq *cq_;
+    bool supports_rdma_;
 };
 
 } // namespace hshm::lbm 
