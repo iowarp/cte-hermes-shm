@@ -17,7 +17,12 @@ public:
         std::cout << "\n==== Testing backend: " << BackendName() << " ====\n";
         auto server_ptr = TransportFactory::GetServer(addr_, transport_, protocol_, port_);
         std::string server_addr = server_ptr->GetAddress();
-        auto client_ptr = TransportFactory::GetClient(server_addr, transport_, protocol_, port_);
+        std::unique_ptr<Client> client_ptr;
+        if (transport_ == Transport::kLibfabric) {
+            client_ptr = TransportFactory::GetClient(server_addr, transport_, protocol_, port_);
+        } else {
+            client_ptr = TransportFactory::GetClient(server_addr, transport_, protocol_, port_);
+        }
 
         const std::string magic = "unit_test_magic";
         // Client exposes and sends data
@@ -53,6 +58,7 @@ private:
         switch (transport_) {
             case Transport::kZeroMq: return "ZeroMQ";
             case Transport::kThallium: return "Thallium";
+            case Transport::kLibfabric: return "Libfabric";
             default: return "Unknown";
         }
     }
@@ -79,6 +85,14 @@ int main() {
         std::string thallium_protocol = "ofi+sockets";
         int thallium_port = 8193;
         LightbeamTransportTest test(Transport::kThallium, thallium_addr, thallium_protocol, thallium_port);
+        test.Run();
+    }
+    // Test Libfabric
+    {
+        std::string libfabric_addr = "127.0.0.1";
+        std::string libfabric_protocol = "tcp";
+        int libfabric_port = 9222;
+        LightbeamTransportTest test(Transport::kLibfabric, libfabric_addr, libfabric_protocol, libfabric_port);
         test.Run();
     }
     std::cout << "All transport tests passed!" << std::endl;

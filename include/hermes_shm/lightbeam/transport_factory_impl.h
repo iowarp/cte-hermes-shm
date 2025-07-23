@@ -1,6 +1,7 @@
 #pragma once
 #include "zmq_transport.h"
 #include "thallium_transport.h"
+#include "libfabric_transport.h"
 
 namespace hshm::lbm {
 
@@ -10,6 +11,8 @@ inline std::unique_ptr<Client> TransportFactory::GetClient(const std::string &ad
             return std::make_unique<ZeroMqClient>(addr, protocol.empty() ? "tcp" : protocol, port == 0 ? 8192 : port);
         case Transport::kThallium:
             return std::make_unique<ThalliumClient>(addr, protocol.empty() ? "ofi+sockets" : protocol, port == 0 ? 8200 : port);
+        case Transport::kLibfabric:
+            return std::make_unique<LibfabricClient>(addr, protocol.empty() ? "tcp" : protocol, port == 0 ? 9222 : port);
         default:
             return nullptr;
     }
@@ -21,6 +24,8 @@ inline std::unique_ptr<Client> TransportFactory::GetClient(const std::string &ad
             return std::make_unique<ZeroMqClient>(addr, protocol.empty() ? "tcp" : protocol, port == 0 ? 8192 : port);
         case Transport::kThallium:
             return std::make_unique<ThalliumClient>(addr, protocol.empty() ? "ofi+sockets" : protocol, port == 0 ? 8200 : port, domain);
+        case Transport::kLibfabric:
+            return std::make_unique<LibfabricClient>(addr, protocol.empty() ? "tcp" : protocol, port == 0 ? 9222 : port);
         default:
             return nullptr;
     }
@@ -32,6 +37,8 @@ inline std::unique_ptr<Server> TransportFactory::GetServer(const std::string &ad
             return std::make_unique<ZeroMqServer>(addr, protocol.empty() ? "tcp" : protocol, port == 0 ? 8192 : port);
         case Transport::kThallium:
             return std::make_unique<ThalliumServer>(addr, protocol.empty() ? "ofi+sockets" : protocol, port == 0 ? 8200 : port);
+        case Transport::kLibfabric:
+            return std::make_unique<LibfabricServer>(addr, protocol.empty() ? "tcp" : protocol, port == 0 ? 9222 : port);
         default:
             return nullptr;
     }
@@ -43,6 +50,8 @@ inline std::unique_ptr<Server> TransportFactory::GetServer(const std::string &ad
             return std::make_unique<ZeroMqServer>(addr, protocol.empty() ? "tcp" : protocol, port == 0 ? 8192 : port);
         case Transport::kThallium:
             return std::make_unique<ThalliumServer>(addr, protocol.empty() ? "ofi+sockets" : protocol, port == 0 ? 8200 : port, domain);
+        case Transport::kLibfabric:
+            return std::make_unique<LibfabricServer>(addr, protocol.empty() ? "tcp" : protocol, port == 0 ? 9222 : port);
         default:
             return nullptr;
     }

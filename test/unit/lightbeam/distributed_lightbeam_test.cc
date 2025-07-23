@@ -30,6 +30,7 @@ std::vector<std::string> ReadHosts(const std::string &hostfile) {
 Transport ParseTransport(const std::string &s) {
     if (s == "zeromq") return Transport::kZeroMq;
     if (s == "thallium") return Transport::kThallium;
+    if (s == "libfabric") return Transport::kLibfabric;
     throw std::runtime_error("Unknown transport type: " + s);
 }
 
@@ -118,31 +119,17 @@ void PrintAllInterfaces() {
         perror("getifaddrs");
         return;
     }
-    printf("[Debug] Network interfaces and addresses:\n");
-    for (ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next) {
-        if (ifa->ifa_addr == NULL)
-            continue;
-        int family = ifa->ifa_addr->sa_family;
-        if (family == AF_INET || family == AF_INET6) {
-            int s = getnameinfo(ifa->ifa_addr,
-                                (family == AF_INET) ? sizeof(struct sockaddr_in) : sizeof(struct sockaddr_in6),
-                                host, NI_MAXHOST, NULL, 0, NI_NUMERICHOST);
-            if (s == 0) {
-                printf("    %s: %s\n", ifa->ifa_name, host);
-            }
-        }
-    }
     freeifaddrs(ifaddr);
 }
 
 int main(int argc, char **argv) {
-    PrintAllInterfaces();
+    // PrintAllInterfaces();
     MPI_Init(&argc, &argv);
     int my_rank = 0, world_size = 0;
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
     MPI_Comm_size(MPI_COMM_WORLD, &world_size);
     if (argc < 6) {
-        std::cerr << "Usage: " << argv[0] << " <zeromq|thallium> <hostfile> <protocol> <domain> <port>\n";
+        std::cerr << "Usage: " << argv[0] << " <zeromq|thallium|libfabric> <hostfile> <protocol> <domain> <port>\n";
         std::cerr << "All parameters are required. Number of MPI processes (mpirun -n) should match the number of hosts in the hostfile." << std::endl;
         MPI_Finalize();
         return 1;
@@ -164,14 +151,10 @@ int main(int argc, char **argv) {
 
     int my_port = (transport == Transport::kThallium) ? 0 : port + my_rank;
     std::string bind_addr = get_primary_ip();
-    std::cout << "[Rank " << my_rank << "] Binding server to IP: " << bind_addr << std::endl;
-    const char* iface_env = getenv("FI_SOCKETS_IFACE");
-    printf("[Debug] FI_SOCKETS_IFACE=%s\n", iface_env ? iface_env : "(not set)");
-    printf("[Debug] Protocol: %s\n", protocol.c_str());
-    printf("[Debug] bind_addr: %s\n", bind_addr.c_str());
+
     std::string domain_arg = (transport == Transport::kThallium) ? "" : domain;
     auto server_ptr = TransportFactory::GetServer(bind_addr, transport, protocol, my_port, domain_arg);
-    printf("[Debug] server_ptr->GetAddress(): %s\n", server_ptr->GetAddress().c_str());
+    // printf("[Debug] server_ptr->GetAddress(): %s\n", server_ptr->GetAddress().c_str());
     std::string actual_addr = server_ptr->GetAddress();
     std::cout << "[Rank " << my_rank << "] Server address: " << actual_addr << ", port: " << my_port << std::endl;
     std::thread server_thread(ServerThread, std::ref(*server_ptr), world_size, std::ref(magic));

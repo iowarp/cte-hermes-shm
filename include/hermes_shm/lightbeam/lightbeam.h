@@ -42,7 +42,7 @@ public:
 };
 
 // --- Transport Enum ---
-enum class Transport { kZeroMq, kThallium };
+enum class Transport { kZeroMq, kThallium, kLibfabric };
 
 // --- Factory ---
 class TransportFactory {
