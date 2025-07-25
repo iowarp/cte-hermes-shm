@@ -8,5 +8,5 @@ pkgs:
     protocol: ofi+sockets
     port: 8192
     domain: ""
-    num_msgs: 10
+    num_msgs: 100
     msg_size: 32

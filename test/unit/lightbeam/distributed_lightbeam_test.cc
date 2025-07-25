@@ -170,69 +170,112 @@ int main(int argc, char** argv) {
   int my_port = (transport == Transport::kThallium) ? 0 : port + my_rank;
   std::string bind_addr = GetPrimaryIp();
   std::string domain_arg = (transport == Transport::kThallium) ? "" : domain;
-  auto server_ptr = TransportFactory::GetServer(bind_addr, transport, protocol,
-                                                my_port, domain_arg);
-  std::string actual_addr = server_ptr->GetAddress();
-  std::cout << "[Rank " << my_rank << "] Server address: " << actual_addr
-            << ", port: " << my_port << std::endl;
+  
+  // Only rank 0 creates a server
+  std::unique_ptr<Server> server_ptr;
+  std::string actual_addr;
+  if (my_rank == 0) {
+    server_ptr = TransportFactory::GetServer(bind_addr, transport, protocol,
+                                            my_port, domain_arg);
+    actual_addr = server_ptr->GetAddress();
+    std::cout << "[Rank " << my_rank << "] Server address: " << actual_addr
+              << ", port: " << my_port << std::endl;
+  }
+  
   // Start timing before any send
   auto global_start = std::chrono::high_resolution_clock::now();
-  // Start server thread with num_msgs
-  std::thread server_thread([&]() {
-    std::ostringstream oss;
-    oss << std::this_thread::get_id();
-    std::cout << "[ServerThread] Thread ID: " << oss.str() << std::endl;
-    int received = 0;
-    for (int i = 0; i < num_msgs * world_size; ++i) {
-      auto recv_time = std::chrono::high_resolution_clock::now();
-      std::vector<char> y(msg_size);
-      Bulk bulk = server_ptr->Expose(y.data(), y.size(), 0);
-      Event* event = nullptr;
-      while (!event || !event->is_done) {
-        if (event) delete event;
-        event = server_ptr->Recv(bulk);
-        if (!event->is_done) {
-          std::this_thread::sleep_for(std::chrono::milliseconds(1));
+  
+  // Only rank 0 starts server thread
+  std::thread server_thread;
+  if (my_rank == 0) {
+    server_thread = std::thread([&]() {
+      std::ostringstream oss;
+      oss << std::this_thread::get_id();
+      std::cout << "[ServerThread] Thread ID: " << oss.str() << std::endl;
+      int received = 0;
+      // Expect messages from all other ranks (world_size - 1) * num_msgs
+      for (int i = 0; i < num_msgs * (world_size - 1); ++i) {
+        auto recv_time = std::chrono::high_resolution_clock::now();
+        std::vector<char> y(msg_size);
+        Bulk bulk = server_ptr->Expose(y.data(), y.size(), 0);
+        Event* event = nullptr;
+        int retry_count = 0;
+        const int max_retries = 10000; // Add timeout to prevent infinite waiting
+        while (!event || !event->is_done) {
+          if (event) delete event;
+          event = server_ptr->Recv(bulk);
+          if (!event->is_done) {
+            retry_count++;
+            if (retry_count > max_retries) {
+              std::cout << "[Rank " << my_rank << "] WARNING: Timeout waiting for message " 
+                        << (received + 1) << " after " << max_retries << " retries" << std::endl;
+              break;
+            }
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+          }
+        }
+        if (event && event->is_done) {
+          received++;
+          delete event;
+          double t = std::chrono::duration<double>(recv_time - global_start).count();
+          std::cout << "[Rank " << my_rank << "] Received message " << received
+                    << " at " << t << " s" << std::endl;
+        } else {
+          std::cout << "[Rank " << my_rank << "] ERROR: Failed to receive message " 
+                    << (received + 1) << std::endl;
+          if (event) delete event;
+          break;
         }
       }
-      received++;
-      delete event;
-      double t = std::chrono::duration<double>(recv_time - global_start).count();
-      std::cout << "[Rank " << my_rank << "] Received message " << received
-                << " at " << t << " s" << std::endl;
-    }
-    auto end = std::chrono::high_resolution_clock::now();
-    double elapsed = std::chrono::duration<double>(end - global_start).count();
-    std::cout << "[Server] Received " << received
-              << " messages. Time: " << elapsed << " s" << std::endl;
-    std::cout << "[ServerThread] Exiting after receiving all messages"
-              << std::endl;
-  });
+      auto end = std::chrono::high_resolution_clock::now();
+      double elapsed = std::chrono::duration<double>(end - global_start).count();
+      std::cout << "[Server] Received " << received
+                << " messages. Time: " << elapsed << " s" << std::endl;
+      std::cout << "[ServerThread] Exiting after receiving all messages"
+                << std::endl;
+    });
+  }
 
   MPI_Barrier(MPI_COMM_WORLD);
-  // Gather all server addresses using MPI_Allgather
+  
+  // Broadcast server address from rank 0 to all other ranks
   const int addr_len = 256;
   std::vector<char> addr_buf(addr_len, 0);
-  strncpy(addr_buf.data(), actual_addr.c_str(), addr_len - 1);
-  std::vector<char> all_addrs(world_size * addr_len, 0);
-  MPI_Allgather(addr_buf.data(), addr_len, MPI_CHAR, all_addrs.data(), addr_len,
-                MPI_CHAR, MPI_COMM_WORLD);
-  std::vector<std::string> server_addrs;
-  for (int i = 0; i < world_size; ++i) {
-    server_addrs.emplace_back(&all_addrs[i * addr_len]);
+  if (my_rank == 0) {
+    strncpy(addr_buf.data(), actual_addr.c_str(), addr_len - 1);
   }
+  MPI_Bcast(addr_buf.data(), addr_len, MPI_CHAR, 0, MPI_COMM_WORLD);
+  std::string server_addr(&addr_buf[0]);
+  
+  // Only non-server ranks create clients
   std::vector<std::unique_ptr<Client>> clients;
-  for (int i = 0; i < world_size; ++i) {
-    auto client_ptr = TransportFactory::GetClient(server_addrs[i], transport,
-                                                  protocol, 0, "");
+  if (my_rank != 0) {
+    std::string client_addr = server_addr;
+    int client_port = 0;
+    
+    // For ZeroMQ, parse address:port format
+    if (transport == Transport::kZeroMq) {
+      size_t colon_pos = client_addr.find(':');
+      if (colon_pos != std::string::npos) {
+        std::string addr_part = client_addr.substr(0, colon_pos);
+        std::string port_part = client_addr.substr(colon_pos + 1);
+        client_port = std::stoi(port_part);
+        client_addr = addr_part;
+      }
+    }
+    
+    auto client_ptr = TransportFactory::GetClient(client_addr, transport,
+                                                  protocol, client_port, "");
     clients.emplace_back(std::move(client_ptr));
   }
+  
+  // Only non-server ranks send messages
   int sent = 0;
-  for (int m = 0; m < num_msgs; ++m) {
-    for (size_t i = 0; i < clients.size(); ++i) {
+  if (my_rank != 0) {
+    for (int m = 0; m < num_msgs; ++m) {
       auto send_time = std::chrono::high_resolution_clock::now();
-      Bulk bulk = clients[i]->Expose(magic.data(), magic.size(), 0);
-      Event* event = clients[i]->Send(bulk);
+      Bulk bulk = clients[0]->Expose(magic.data(), magic.size(), 0);
+      Event* event = clients[0]->Send(bulk);
       while (!event->is_done) {
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
       }
@@ -241,15 +284,28 @@ int main(int argc, char** argv) {
       sent++;
       double t = std::chrono::duration<double>(send_time - global_start).count();
       std::cout << "[Rank " << my_rank << "] Sent message " << sent
-                << " to server " << i << " at " << t << " s" << std::endl;
+                << " to server at " << t << " s" << std::endl;
     }
+    std::cout << "[Rank " << my_rank << "] Completed sending all " << sent << " messages" << std::endl;
   }
-  server_thread.join();
+  
+  // Wait for server thread to complete
+  if (my_rank == 0) {
+    server_thread.join();
+  }
+  
   auto global_end = std::chrono::high_resolution_clock::now();
   double global_elapsed =
       std::chrono::duration<double>(global_end - global_start).count();
-  std::cout << "[Rank " << my_rank << "] All server messages received!"
-            << std::endl;
+  
+  if (my_rank == 0) {
+    std::cout << "[Rank " << my_rank << "] All server messages received!"
+              << std::endl;
+  } else {
+    std::cout << "[Rank " << my_rank << "] All client messages sent!"
+              << std::endl;
+  }
+  
   std::cout << "[Rank " << my_rank
             << "] Overall runtime (first send to last receive): "
             << global_elapsed << " s" << std::endl;

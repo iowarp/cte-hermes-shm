@@ -7,5 +7,5 @@ pkgs:
     transport: zeromq  # or thallium
     protocol: tcp
     port: 8192
-    num_msgs: 10
+    num_msgs: 100
     msg_size: 32
