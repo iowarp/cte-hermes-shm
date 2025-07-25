@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.25)
+cmake_minimum_required(VERSION 3.10)
 project(hermes_shm LANGUAGES C CXX)
 include(CTest)
 set(CMAKE_CXX_STANDARD 17)
@@ -24,6 +24,7 @@ option(HSHM_BUILD_BENCHMARKS "Build benchmarks" OFF)
 option(HSHM_ENABLE_CMAKE_DOTENV "Build benchmarks" OFF)
 
 option(HSHM_ENABLE_MPI "Enable MPI support" OFF)
+option(HSHM_ENABLE_ZMQ "Enable ZeroMQ transport" ON)
 option(HSHM_RPC_THALLIUM "Build tests which depend on thallium" OFF)
 option(HSHM_ENABLE_OPENMP "Enable the use of OpenMP" OFF)
 option(HSHM_ENABLE_CEREAL "Enable serialization using cereal" ON)

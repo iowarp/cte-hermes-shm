@@ -1,0 +1,11 @@
+name: lightbeam_distributed_test
+env: hermes_shm  # or your environment name
+pkgs:
+  - pkg_type: lightbeam_distributed_test
+    pkg_name: lightbeam_distributed_test
+    hostfile: /home/rpawar4/hostfile  # or hosts_thallium.txt
+    transport: zeromq  # or thallium
+    protocol: tcp
+    port: 8192
+    num_msgs: 10
+    msg_size: 32

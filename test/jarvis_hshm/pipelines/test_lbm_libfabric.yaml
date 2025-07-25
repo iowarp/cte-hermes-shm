@@ -1,0 +1,9 @@
+name: test_lbm_libfabric
+env: hermes_shm  # or your environment name
+pkgs:
+  - pkg_type: lightbeam_distributed_test
+    pkg_name: lightbeam_distributed_test
+    hostfile: /home/rpawar4/cte-hermes-shm/test/unit/lightbeam/hosts_libfabric.txt  # or hosts_thallium.txt
+    transport: libfabric  # or thallium
+    protocol: tcp
+    port: 8200

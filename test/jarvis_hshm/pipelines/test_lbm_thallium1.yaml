@@ -1,0 +1,10 @@
+name: test_lbm_thallium1
+env: hermes_shm  # or your environment name
+pkgs:
+  - pkg_type: lightbeam_distributed_test
+    pkg_name: lightbeam_distributed_test
+    hostfile: /home/rpawar4/cte-hermes-shm/test/unit/lightbeam/hosts_thallium.txt  # or hosts_thallium.txt
+    transport: thallium  # or thallium
+    protocol: ofi+tcp
+    domain: ""
+    port: 8200

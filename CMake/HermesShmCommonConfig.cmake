@@ -17,6 +17,9 @@ if(HSHM_ENABLE_DOXYGEN)
     message(STATUS "found doxygen at ${DOXYGEN_EXECUTABLE}")
 endif()
 
+link_directories(${ZeroMQ_LIBRARY_DIRS})
+include_directories(${ZeroMQ_INCLUDE_DIRS})
+
 # Catch2
 find_package(Catch2 3.0.1 REQUIRED)
 message(STATUS "found catch2.h at ${Catch2_CXX_INCLUDE_DIRS}")
@@ -163,6 +166,15 @@ if(HSHM_ENABLE_ELF)
     set(ELF_LIBS ${libelf_LIBRARIES})
     set(ELF_INCLUDES ${libelf_INCLUDE_DIRS})
     set(ELF_LIB_DIRS ${libelf_LIBRARY_DIRS})
+endif()
+
+# ZeroMQ
+if(HSHM_ENABLE_ZMQ)
+    pkg_check_modules(ZeroMQ REQUIRED libzmq)
+    message(STATUS "found zmq.h at ${ZeroMQ_INCLUDE_DIRS}")
+    set(ZMQ_LIBS ${ZeroMQ_LIBRARIES})
+    set(ZMQ_INCLUDES ${ZeroMQ_INCLUDE_DIRS})
+    set(ZMQ_LIB_DIRS ${ZeroMQ_LIBRARY_DIRS})
 endif()
 
 # ------------------------------------------------------------------------------
