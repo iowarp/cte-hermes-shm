@@ -17,6 +17,9 @@ if(HSHM_ENABLE_DOXYGEN)
     message(STATUS "found doxygen at ${DOXYGEN_EXECUTABLE}")
 endif()
 
+link_directories(${ZeroMQ_LIBRARY_DIRS})
+include_directories(${ZeroMQ_INCLUDE_DIRS})
+
 # Catch2
 find_package(Catch2 3.0.1 REQUIRED)
 message(STATUS "found catch2.h at ${Catch2_CXX_INCLUDE_DIRS}")

@@ -128,18 +128,22 @@ int main(int argc, char **argv) {
     int my_rank = 0, world_size = 0;
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
     MPI_Comm_size(MPI_COMM_WORLD, &world_size);
+    int num_msgs = 10; // default
+    int msg_size = 32; // default small message
     if (argc < 6) {
-        std::cerr << "Usage: " << argv[0] << " <zeromq|thallium|libfabric> <hostfile> <protocol> <domain> <port>\n";
-        std::cerr << "All parameters are required. Number of MPI processes (mpirun -n) should match the number of hosts in the hostfile." << std::endl;
+        std::cerr << "Usage: " << argv[0] << " <zeromq|thallium|libfabric> <hostfile> <protocol> <domain> <port> [num_msgs] [msg_size]\n";
+        std::cerr << "All parameters are required except [num_msgs] and [msg_size]. Number of MPI processes (mpirun -n) should match the number of hosts in the hostfile." << std::endl;
         MPI_Finalize();
         return 1;
     }
+    if (argc > 6) num_msgs = std::stoi(argv[6]);
+    if (argc > 7) msg_size = std::stoi(argv[7]);
     std::string transport_str = argv[1];
     std::string hostfile = argv[2];
     std::string protocol = argv[3];
     std::string domain = argv[4];
     int port = std::stoi(argv[5]);
-    std::string magic = "1212412";
+    std::string magic(msg_size, 'x');
 
     Transport transport = ParseTransport(transport_str);
     std::vector<std::string> hosts = ReadHosts(hostfile);
@@ -151,42 +155,78 @@ int main(int argc, char **argv) {
 
     int my_port = (transport == Transport::kThallium) ? 0 : port + my_rank;
     std::string bind_addr = get_primary_ip();
-
     std::string domain_arg = (transport == Transport::kThallium) ? "" : domain;
     auto server_ptr = TransportFactory::GetServer(bind_addr, transport, protocol, my_port, domain_arg);
-    // printf("[Debug] server_ptr->GetAddress(): %s\n", server_ptr->GetAddress().c_str());
     std::string actual_addr = server_ptr->GetAddress();
     std::cout << "[Rank " << my_rank << "] Server address: " << actual_addr << ", port: " << my_port << std::endl;
-    std::thread server_thread(ServerThread, std::ref(*server_ptr), world_size, std::ref(magic));
+    // Start timing before any send
+    auto global_start = std::chrono::high_resolution_clock::now();
+    // Start server thread with num_msgs
+    std::thread server_thread([&](){
+        std::ostringstream oss;
+        oss << std::this_thread::get_id();
+        std::cout << "[ServerThread] Thread ID: " << oss.str() << std::endl;
+        int received = 0;
+        for (int i = 0; i < num_msgs * world_size; ++i) {
+            auto recv_time = std::chrono::high_resolution_clock::now();
+            std::vector<char> y(msg_size);
+            Bulk bulk = server_ptr->Expose(y.data(), y.size(), 0);
+            Event *event = nullptr;
+            while (!event || !event->is_done) {
+                if (event) delete event;
+                event = server_ptr->Recv(bulk);
+                if (!event->is_done) {
+                    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+                }
+            }
+            received++;
+            delete event;
+            double t = std::chrono::duration<double>(recv_time - global_start).count();
+            std::cout << "[Rank " << my_rank << "] Received message " << received << " at " << t << " s" << std::endl;
+        }
+        auto end = std::chrono::high_resolution_clock::now();
+        double elapsed = std::chrono::duration<double>(end - global_start).count();
+        std::cout << "[Server] Received " << received << " messages. Time: " << elapsed << " s" << std::endl;
+        std::cout << "[ServerThread] Exiting after receiving all messages" << std::endl;
+    });
 
-    // Synchronize all ranks to ensure all servers are ready before clients connect
     MPI_Barrier(MPI_COMM_WORLD);
-
     // Gather all server addresses using MPI_Allgather
     const int addr_len = 256;
     std::vector<char> addr_buf(addr_len, 0);
     strncpy(addr_buf.data(), actual_addr.c_str(), addr_len - 1);
     std::vector<char> all_addrs(world_size * addr_len, 0);
     MPI_Allgather(addr_buf.data(), addr_len, MPI_CHAR, all_addrs.data(), addr_len, MPI_CHAR, MPI_COMM_WORLD);
-
-    // Build vector of all addresses (for client connections)
     std::vector<std::string> server_addrs;
     for (int i = 0; i < world_size; ++i) {
         server_addrs.emplace_back(&all_addrs[i * addr_len]);
     }
-
-    // All ranks run the client logic (including rank 0)
     std::vector<std::unique_ptr<Client>> clients;
     for (int i = 0; i < world_size; ++i) {
-        // Use the full address string as returned by the server, protocol/port/domain are ignored for the client
         auto client_ptr = TransportFactory::GetClient(server_addrs[i], transport, protocol, 0, "");
         clients.emplace_back(std::move(client_ptr));
     }
-    std::thread client_thread(Clients, std::ref(clients), std::ref(magic));
-    client_thread.join();
-    std::cout << "[Rank " << my_rank << "] All client messages sent!" << std::endl;
+    int sent = 0;
+    for (int m = 0; m < num_msgs; ++m) {
+        for (size_t i = 0; i < clients.size(); ++i) {
+            auto send_time = std::chrono::high_resolution_clock::now();
+            Bulk bulk = clients[i]->Expose(magic.data(), magic.size(), 0);
+            Event *event = clients[i]->Send(bulk);
+            while (!event->is_done) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            }
+            assert(event->error_code == 0);
+            delete event;
+            sent++;
+            double t = std::chrono::duration<double>(send_time - global_start).count();
+            std::cout << "[Rank " << my_rank << "] Sent message " << sent << " to server " << i << " at " << t << " s" << std::endl;
+        }
+    }
     server_thread.join();
+    auto global_end = std::chrono::high_resolution_clock::now();
+    double global_elapsed = std::chrono::duration<double>(global_end - global_start).count();
     std::cout << "[Rank " << my_rank << "] All server messages received!" << std::endl;
+    std::cout << "[Rank " << my_rank << "] Overall runtime (first send to last receive): " << global_elapsed << " s" << std::endl;
     MPI_Finalize();
     return 0;
 } 
