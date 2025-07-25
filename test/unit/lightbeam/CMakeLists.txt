@@ -1,8 +1,3 @@
-find_package(PkgConfig REQUIRED)
-pkg_check_modules(ZeroMQ REQUIRED libzmq)
-pkg_check_modules(Thallium REQUIRED thallium)
-pkg_check_modules(Libfabric REQUIRED libfabric)
-
 if(HSHM_ENABLE_ZMQ)
     add_executable(lightbeam_transport_test lightbeam_transport_test.cc)
     target_include_directories(lightbeam_transport_test PRIVATE ${ZeroMQ_INCLUDE_DIRS} ${Thallium_INCLUDE_DIRS} ${Libfabric_INCLUDE_DIRS})
