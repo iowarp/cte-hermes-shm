@@ -3,6 +3,7 @@
 #include <cereal/types/vector.hpp>
 #include <margo.h>
 #include "lightbeam.h"
+#include "hermes_shm/util/logging.h"
 #include <queue>
 #include <mutex>
 #include <memory>
@@ -71,8 +72,6 @@ class ThalliumClient : public Client {
       engine_ = std::make_unique<thallium::engine>(full_url, THALLIUM_CLIENT_MODE,
                                                    true, 1);
     }
-    std::cout << "[ThalliumClient] Created with protocol: " << proto
-              << std::endl;
     full_url_ = full_url;
     lookup_url_ = url_builder.BuildForLookup();
   }
@@ -92,30 +91,20 @@ class ThalliumClient : public Client {
   Event* Send(const Bulk& bulk) override {
     Event* event = new Event();
     try {
-      std::cout << "[ThalliumClient] Defining RPC: " << rpc_name_ << std::endl;
       thallium::remote_procedure rpc = engine_->define(rpc_name_);
-      std::cout << "[ThalliumClient] Looking up server: " << lookup_url_
-                << std::endl;
       thallium::endpoint server = engine_->lookup(lookup_url_);
-      std::cout << "[ThalliumClient] Sending data of size: " << bulk.size
-                << std::endl;
       std::vector<char> buf_vec(bulk.data, bulk.data + bulk.size);
       rpc.disable_response();
       rpc.on(server)(buf_vec);
-      std::cout << "[ThalliumClient] RPC call completed successfully"
-                << std::endl;
       event->is_done = true;
       event->bytes_transferred = bulk.size;
     } catch (const thallium::margo_exception& e) {
-      std::cout << "[ThalliumClient] Margo exception: " << e.what()
-                << std::endl;
+      HILOG(kError, "ThalliumClient: Margo exception: {}", e.what());
       event->is_done = true;
       event->error_code = -1;
       event->error_message = e.what();
     } catch (const std::exception& e) {
-      std::cout << "[ThalliumClient] Exception: " << e.what() << std::endl;
-      std::cout << "[ThalliumClient] Exception type: " << typeid(e).name()
-                << std::endl;
+      HILOG(kError, "ThalliumClient: Exception: {} (type: {})", e.what(), typeid(e).name());
       event->is_done = true;
       event->error_code = -1;
       event->error_message = e.what();
@@ -152,10 +141,6 @@ class ThalliumServer : public Server {
       std::string proto = (proto_end != std::string::npos)
                               ? full_url.substr(0, proto_end)
                               : full_url;
-      std::cout << "[ThalliumServer] Creating server with protocol: " << proto
-                << std::endl;
-      std::cout << "[ThalliumServer] Using full URL: " << full_url
-                << std::endl;
       if (proto == "ofi+tcp" || proto == "ofi+sockets") {
         engine_ = std::make_unique<thallium::engine>(proto, THALLIUM_SERVER_MODE,
                                                      true, 1);
@@ -164,29 +149,13 @@ class ThalliumServer : public Server {
                                                      THALLIUM_SERVER_MODE, true,
                                                      1);
       }
-      std::cout << "[ThalliumServer] Engine created, defining RPC: "
-                << rpc_name_ << std::endl;
       engine_->define(rpc_name_,
                       [this](const thallium::request& req,
                              const std::vector<char>& buf) {
                         std::lock_guard<std::mutex> lock(queue_mutex_);
                         received_queue_.push(buf);
-                        std::cout << "[ThalliumServer] RPC handler called with "
-                                    "data size: "
-                                 << buf.size() << std::endl;
-                        std::cout << "[ThalliumServer] Data: "
-                                 << std::string(buf.begin(), buf.end())
-                                 << std::endl;
-                        std::cout << "[ThalliumServer] RPC handler: queued data, "
-                                    "queue size = "
-                                 << received_queue_.size() << std::endl;
-                        std::cout << "[ThalliumServer] RPC handler completed "
-                                    "successfully"
-                                 << std::endl;
                       });
       std::string server_addr = engine_->self();
-      std::cout << "[ThalliumServer] Server address: " << server_addr
-                << std::endl;
       full_url_ = full_url;
     } catch (const std::exception& e) {
       throw std::runtime_error(
@@ -196,13 +165,11 @@ class ThalliumServer : public Server {
   }
 
   void Start() {
-    std::cout << "[ThalliumServer] Server ready for connections" << std::endl;
+    // Server ready for connections
   }
 
   ~ThalliumServer() override {
-    std::cout << "[ThalliumServer] Destructor called" << std::endl;
     if (engine_) {
-      std::cout << "[ThalliumServer] Finalizing engine" << std::endl;
       engine_->finalize();
     }
   }
@@ -222,10 +189,6 @@ class ThalliumServer : public Server {
       const auto& data = received_queue_.front();
       size_t copy_size = std::min(bulk.size, data.size());
       std::memcpy(bulk.data, data.data(), copy_size);
-      std::cout << "[ThalliumServer] Recv: copied " << copy_size
-                << " bytes" << std::endl;
-      std::cout << "[ThalliumServer] Recv: data = "
-                << std::string(bulk.data, copy_size) << std::endl;
       received_queue_.pop();
       event->is_done = true;
       event->bytes_transferred = copy_size;

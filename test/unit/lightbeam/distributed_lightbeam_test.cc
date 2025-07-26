@@ -1,5 +1,7 @@
 #include <hermes_shm/lightbeam/lightbeam.h>
 #include <hermes_shm/lightbeam/transport_factory_impl.h>
+#include <hermes_shm/util/timer_mpi.h>
+#include <hermes_shm/util/logging.h>
 #include <cassert>
 #include <iostream>
 #include <fstream>
@@ -171,31 +173,24 @@ int main(int argc, char** argv) {
   std::string bind_addr = GetPrimaryIp();
   std::string domain_arg = (transport == Transport::kThallium) ? "" : domain;
   
-  // Only rank 0 creates a server
+  // Each rank creates its own server
   std::unique_ptr<Server> server_ptr;
   std::string actual_addr;
-  if (my_rank == 0) {
-    server_ptr = TransportFactory::GetServer(bind_addr, transport, protocol,
-                                            my_port, domain_arg);
-    actual_addr = server_ptr->GetAddress();
-    std::cout << "[Rank " << my_rank << "] Server address: " << actual_addr
-              << ", port: " << my_port << std::endl;
-  }
+  server_ptr = TransportFactory::GetServer(bind_addr, transport, protocol,
+                                          my_port, domain_arg);
+  actual_addr = server_ptr->GetAddress();
+  HILOG(kInfo, "Rank {}: Server address: {}, port: {}", my_rank, actual_addr, my_port);
   
-  // Start timing before any send
-  auto global_start = std::chrono::high_resolution_clock::now();
+  // Initialize MPI timer
+  hshm::MpiTimer mpi_timer(MPI_COMM_WORLD);
   
-  // Only rank 0 starts server thread
+  // Each rank starts its own server thread
   std::thread server_thread;
-  if (my_rank == 0) {
-    server_thread = std::thread([&]() {
-      std::ostringstream oss;
-      oss << std::this_thread::get_id();
-      std::cout << "[ServerThread] Thread ID: " << oss.str() << std::endl;
-      int received = 0;
-      // Expect messages from all other ranks (world_size - 1) * num_msgs
-      for (int i = 0; i < num_msgs * (world_size - 1); ++i) {
-        auto recv_time = std::chrono::high_resolution_clock::now();
+  server_thread = std::thread([&]() {
+    int received = 0;
+    // Expect messages from all ranks (including self): each rank sends num_msgs to this server
+    // Total expected: world_size * num_msgs
+    for (int i = 0; i < num_msgs * world_size; ++i) {
         std::vector<char> y(msg_size);
         Bulk bulk = server_ptr->Expose(y.data(), y.size(), 0);
         Event* event = nullptr;
@@ -207,8 +202,8 @@ int main(int argc, char** argv) {
           if (!event->is_done) {
             retry_count++;
             if (retry_count > max_retries) {
-              std::cout << "[Rank " << my_rank << "] WARNING: Timeout waiting for message " 
-                        << (received + 1) << " after " << max_retries << " retries" << std::endl;
+              HILOG(kWarning, "Timeout waiting for message {} after {} retries", 
+                    (received + 1), max_retries);
               break;
             }
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
@@ -217,40 +212,35 @@ int main(int argc, char** argv) {
         if (event && event->is_done) {
           received++;
           delete event;
-          double t = std::chrono::duration<double>(recv_time - global_start).count();
-          std::cout << "[Rank " << my_rank << "] Received message " << received
-                    << " at " << t << " s" << std::endl;
         } else {
-          std::cout << "[Rank " << my_rank << "] ERROR: Failed to receive message " 
-                    << (received + 1) << std::endl;
+          HILOG(kError, "Failed to receive message {}", (received + 1));
           if (event) delete event;
           break;
         }
       }
-      auto end = std::chrono::high_resolution_clock::now();
-      double elapsed = std::chrono::duration<double>(end - global_start).count();
-      std::cout << "[Server] Received " << received
-                << " messages. Time: " << elapsed << " s" << std::endl;
-      std::cout << "[ServerThread] Exiting after receiving all messages"
-                << std::endl;
+      HILOG(kInfo, "Rank {}: Server received {} messages", my_rank, received);
     });
-  }
 
   MPI_Barrier(MPI_COMM_WORLD);
   
-  // Broadcast server address from rank 0 to all other ranks
+  // All ranks exchange their server addresses
   const int addr_len = 256;
+  std::vector<std::string> all_addrs(world_size);
   std::vector<char> addr_buf(addr_len, 0);
-  if (my_rank == 0) {
-    strncpy(addr_buf.data(), actual_addr.c_str(), addr_len - 1);
-  }
-  MPI_Bcast(addr_buf.data(), addr_len, MPI_CHAR, 0, MPI_COMM_WORLD);
-  std::string server_addr(&addr_buf[0]);
   
-  // Only non-server ranks create clients
+  // Each rank broadcasts its address
+  for (int rank = 0; rank < world_size; ++rank) {
+    if (my_rank == rank) {
+      strncpy(addr_buf.data(), actual_addr.c_str(), addr_len - 1);
+    }
+    MPI_Bcast(addr_buf.data(), addr_len, MPI_CHAR, rank, MPI_COMM_WORLD);
+    all_addrs[rank] = std::string(&addr_buf[0]);
+  }
+  
+  // Each rank creates clients to all ranks (including self)
   std::vector<std::unique_ptr<Client>> clients;
-  if (my_rank != 0) {
-    std::string client_addr = server_addr;
+  for (int target_rank = 0; target_rank < world_size; ++target_rank) {
+    std::string client_addr = all_addrs[target_rank];
     int client_port = 0;
     
     // For ZeroMQ, parse address:port format
@@ -269,46 +259,34 @@ int main(int argc, char** argv) {
     clients.emplace_back(std::move(client_ptr));
   }
   
-  // Only non-server ranks send messages
+  // Each rank sends messages to all ranks (including self)
   int sent = 0;
-  if (my_rank != 0) {
+  mpi_timer.Resume();
+  for (int target_rank = 0; target_rank < world_size; ++target_rank) {
+    int client_idx = target_rank;  // Direct indexing since we create clients for all ranks
     for (int m = 0; m < num_msgs; ++m) {
-      auto send_time = std::chrono::high_resolution_clock::now();
-      Bulk bulk = clients[0]->Expose(magic.data(), magic.size(), 0);
-      Event* event = clients[0]->Send(bulk);
+      Bulk bulk = clients[client_idx]->Expose(magic.data(), magic.size(), 0);
+      Event* event = clients[client_idx]->Send(bulk);
       while (!event->is_done) {
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
       }
       assert(event->error_code == 0);
       delete event;
       sent++;
-      double t = std::chrono::duration<double>(send_time - global_start).count();
-      std::cout << "[Rank " << my_rank << "] Sent message " << sent
-                << " to server at " << t << " s" << std::endl;
     }
-    std::cout << "[Rank " << my_rank << "] Completed sending all " << sent << " messages" << std::endl;
   }
+  mpi_timer.Pause();
+  HILOG(kInfo, "Rank {} completed sending all {} messages", my_rank, sent);
   
   // Wait for server thread to complete
+  server_thread.join();
+  
+  // Collect and print timing results
+  float sec = mpi_timer.CollectAvg().GetSec();
   if (my_rank == 0) {
-    server_thread.join();
+    HILOG(kInfo, "Lightbeam distributed test completed");
+    HILOG(kInfo, "Average runtime across ranks: {} s", sec);
   }
-  
-  auto global_end = std::chrono::high_resolution_clock::now();
-  double global_elapsed =
-      std::chrono::duration<double>(global_end - global_start).count();
-  
-  if (my_rank == 0) {
-    std::cout << "[Rank " << my_rank << "] All server messages received!"
-              << std::endl;
-  } else {
-    std::cout << "[Rank " << my_rank << "] All client messages sent!"
-              << std::endl;
-  }
-  
-  std::cout << "[Rank " << my_rank
-            << "] Overall runtime (first send to last receive): "
-            << global_elapsed << " s" << std::endl;
   MPI_Finalize();
   return 0;
 } 

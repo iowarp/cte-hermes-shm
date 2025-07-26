@@ -3,6 +3,52 @@ from jarvis_util.shell.exec import Exec
 from jarvis_util.shell.pssh_exec import PsshExecInfo
 from jarvis_util import *
 import os
+import re
+
+def parse_size_string(size_str):
+    """
+    Parse human-readable size strings like '1Mb', '1kb', '1GB', etc.
+    Returns size in bytes.
+    """
+    if isinstance(size_str, int):
+        return size_str
+    
+    if not isinstance(size_str, str):
+        return size_str
+    
+    # Remove any whitespace
+    size_str = size_str.strip()
+    
+    # Pattern to match number + unit (case insensitive)
+    # Only match if there's actually a unit present
+    pattern = r'^(\d+(?:\.\d+)?)\s*([kmg]b?|[kmg])$'
+    match = re.match(pattern, size_str.lower())
+    
+    if not match:
+        # If no unit found, assume it's already in bytes
+        try:
+            return int(size_str)
+        except ValueError:
+            raise ValueError(f"Invalid size format: {size_str}")
+    
+    number = float(match.group(1))
+    unit = match.group(2)
+    
+    # Convert to bytes
+    multipliers = {
+        'b': 1,
+        'kb': 1024,
+        'mb': 1024 * 1024,
+        'gb': 1024 * 1024 * 1024,
+        'k': 1024,
+        'm': 1024 * 1024,
+        'g': 1024 * 1024 * 1024
+    }
+    
+    if unit in multipliers:
+        return int(number * multipliers[unit])
+    else:
+        raise ValueError(f"Unknown unit: {unit}")
 
 class LightbeamDistributedTest(Application):
     def _init(self):
@@ -16,7 +62,7 @@ class LightbeamDistributedTest(Application):
             {'name': 'domain', 'msg': 'Domain (e.g., localhost)', 'type': str, 'default': 'localhost'},
             {'name': 'port', 'msg': 'Port (e.g., 8200)', 'type': int, 'default': 8200},
             {'name': 'num_msgs', 'msg': 'Number of messages per node', 'type': int, 'default': 10},
-            {'name': 'msg_size', 'msg': 'Size of each message', 'type': int, 'default': 32},
+            {'name': 'msg_size', 'msg': 'Size of each message (e.g., 32, 1kb, 1Mb)', 'type': str, 'default': '32'},
         ]
 
     def _configure(self, **kwargs):
@@ -26,6 +72,10 @@ class LightbeamDistributedTest(Application):
         self.protocol = self.config['protocol']
         self.domain = self.config['domain']
         self.port = self.config['port']
+        
+        # Parse msg_size if it's a string
+        if 'msg_size' in self.config:
+            self.config['msg_size'] = parse_size_string(self.config['msg_size'])
 
     def start(self):
         self.binary = 'distributed_lightbeam_test'
