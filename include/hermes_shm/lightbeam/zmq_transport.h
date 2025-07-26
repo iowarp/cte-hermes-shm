@@ -4,6 +4,7 @@
 #include <queue>
 #include <mutex>
 #include <memory>
+#include <iostream> // Added for debugging output
 
 namespace hshm::lbm {
 
@@ -100,11 +101,16 @@ class ZeroMqServer : public Server {
       event->is_done = true;
       event->error_code = zmq_errno();
       event->error_message = zmq_strerror(event->error_code);
+      // Add debugging for non-EAGAIN errors
+      std::cout << "[ZeroMqServer] Recv error: " << event->error_message 
+                << " (errno=" << event->error_code << ")" << std::endl;
     }
     return event;
   }
 
-  std::string GetAddress() const override { return addr_; }
+  std::string GetAddress() const override { 
+    return addr_ + ":" + std::to_string(port_); 
+  }
 
  private:
   std::string addr_;

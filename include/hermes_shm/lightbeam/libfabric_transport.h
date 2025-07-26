@@ -12,6 +12,7 @@
 #include <iomanip>
 #include <vector>
 #include "lightbeam.h"
+#include "hermes_shm/util/logging.h"
 
 namespace hshm::lbm {
 
@@ -56,8 +57,6 @@ class LibfabricClient : public Client {
     int ret = fi_getinfo(FI_VERSION(1, 11), nullptr, nullptr, 0, hints, &info);
     if (ret) throw std::runtime_error("fi_getinfo failed: " + std::to_string(ret));
     supports_rdma_ = (info->caps & FI_RMA) != 0;
-    std::cout << "[LibfabricClient] supports_rdma_=" << supports_rdma_
-              << std::endl;
     ret = fi_fabric(info->fabric_attr, &fabric_, nullptr);
     if (ret) throw std::runtime_error("fi_fabric failed");
     ret = fi_domain(fabric_, info, &domain_, nullptr);
@@ -81,12 +80,8 @@ class LibfabricClient : public Client {
     if (ret) throw std::runtime_error("fi_enable failed");
     // Insert server address into AV
     std::vector<uint8_t> server_addr = HexToAddr(server_addr_hex);
-    std::cout << "[LibfabricClient] server_addr_hex=" << server_addr_hex
-              << ", size=" << server_addr.size() << "\n";
     fi_addr_t server_fi_addr;
     ret = fi_av_insert(av_, server_addr.data(), 1, &server_fi_addr, 0, nullptr);
-    std::cout << "[LibfabricClient] fi_av_insert ret=" << ret
-              << ", server_fi_addr=" << server_fi_addr << "\n";
     if (ret != 1) throw std::runtime_error("fi_av_insert failed: " + std::to_string(ret));
     server_fi_addr_ = server_fi_addr;
     fi_freeinfo(info);
@@ -122,16 +117,11 @@ class LibfabricClient : public Client {
 
   Event* Send(const Bulk& bulk) override {
     if (!ep_ || !cq_ || !av_) {
-      std::cerr << "[LibfabricClient] Null resource in fi_send" << std::endl;
       throw std::runtime_error("Null resource in fi_send");
     }
     Event* event = new Event();
-    std::cout << "[LibfabricClient] About to fi_send: ptr="
-              << static_cast<void*>(bulk.data) << ", size=" << bulk.size
-              << std::endl;
     ssize_t ret = fi_send(ep_, bulk.data, bulk.size, bulk.desc, server_fi_addr_,
                           nullptr);
-    std::cout << "[LibfabricClient] fi_send returned " << ret << std::endl;
     if (ret < 0) {
       event->is_done = true;
       event->error_code = ret;
@@ -223,9 +213,7 @@ class LibfabricServer : public Server {
     size_t addrlen = sizeof(addr_buf);
     ret = fi_getname(&ep_->fid, addr_buf, &addrlen);
     if (ret) throw std::runtime_error("fi_getname failed: " + std::to_string(ret));
-    std::cout << "[LibfabricServer] fi_getname addrlen=" << addrlen << "\n";
     addr_hex_ = AddrToHex(addr_buf, addrlen);
-    std::cout << "[LibfabricServer] addr_hex_=" << addr_hex_ << "\n";
     fi_freeinfo(info);
     fi_freeinfo(hints);
   }
@@ -259,16 +247,11 @@ class LibfabricServer : public Server {
 
   Event* Recv(const Bulk& bulk) override {
     if (!ep_ || !cq_ || !av_) {
-      std::cerr << "[LibfabricServer] Null resource in fi_recv" << std::endl;
       throw std::runtime_error("Null resource in fi_recv");
     }
     Event* event = new Event();
-    std::cout << "[LibfabricServer] About to fi_recv: ptr="
-              << static_cast<void*>(bulk.data) << ", size=" << bulk.size
-              << std::endl;
     ssize_t ret = fi_recv(ep_, bulk.data, bulk.size, bulk.desc, FI_ADDR_UNSPEC,
                           nullptr);
-    std::cout << "[LibfabricServer] fi_recv returned " << ret << std::endl;
     if (ret < 0) {
       event->is_done = true;
       event->error_code = ret;
