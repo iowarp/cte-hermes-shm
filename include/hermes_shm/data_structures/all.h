@@ -23,6 +23,7 @@
 #include "ipc/lifo_list_queue.h"
 #include "ipc/list.h"
 #include "ipc/mpsc_lifo_list_queue.h"
+#include "ipc/multi_ring_buffer.h"
 #include "ipc/pair.h"
 #include "ipc/ring_ptr_queue.h"
 #include "ipc/ring_queue.h"
@@ -73,6 +74,16 @@
   using circular_spsc_queue = HSHM_NS::circular_spsc_queue<T, ALLOC_T>;      \
   template <typename T>                                                      \
   using ext_ring_buffer = HSHM_NS::ext_ring_buffer<T, ALLOC_T>;              \
+                                                                             \
+  template <typename T>                                                      \
+  using multi_mpsc_queue = HSHM_NS::multi_mpsc_queue<T, ALLOC_T>;            \
+  template <typename T>                                                      \
+  using multi_spsc_queue = HSHM_NS::multi_spsc_queue<T, ALLOC_T>;            \
+  template <typename T>                                                      \
+  using multi_fixed_mpsc_queue = HSHM_NS::multi_fixed_mpsc_queue<T, ALLOC_T>;\
+  template <typename T>                                                      \
+  using multi_circular_mpsc_queue =                                          \
+      HSHM_NS::multi_circular_mpsc_queue<T, ALLOC_T>;                        \
                                                                              \
   template <typename T>                                                      \
   using spsc_ptr_queue = HSHM_NS::spsc_ptr_queue<T, ALLOC_T>;                \

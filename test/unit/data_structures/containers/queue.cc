@@ -13,6 +13,7 @@
 #include "queue.h"
 
 #include "basic_test.h"
+#include "hermes_shm/data_structures/ipc/multi_ring_buffer.h"
 #include "test_init.h"
 
 /**
@@ -269,5 +270,199 @@ TEST_CASE("TestSpscPtrQueuePopBack") {
   PointerQueueTest<hipc::OffsetPointer>(hipc::OffsetPointer(0));
   PointerQueueTest<hipc::FullPtr<char>>(
       hipc::FullPtr<char>(nullptr, hipc::Pointer(alloc->id_, 0)));
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+}
+
+/**
+ * TEST MULTI RING BUFFER
+ * */
+
+TEST_CASE("TestMultiRingBufferBasic") {
+  auto *alloc = HSHM_DEFAULT_ALLOC;
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+
+  PAGE_DIVIDE("TEST") {
+    // Create a multi-ring buffer with 2 lanes, 3 priorities, depth 8
+    hshm::multi_mpsc_queue<int> buffer(alloc, 2, 3, 8);
+
+    // Test basic properties
+    REQUIRE(buffer.GetNumLanes() == 2);
+    REQUIRE(buffer.GetNumPriorities() == 3);
+
+    // Push items to different lanes and priorities using GetLane
+    auto &lane_0_pri_0 = buffer.GetLane(0, 0);  // Lane 0, Priority 0 (highest)
+    auto &lane_0_pri_1 = buffer.GetLane(0, 1);  // Lane 0, Priority 1
+    auto &lane_1_pri_0 = buffer.GetLane(1, 0);  // Lane 1, Priority 0 (highest)
+    auto &lane_1_pri_2 = buffer.GetLane(1, 2);  // Lane 1, Priority 2 (lowest)
+
+    auto tok1 = lane_0_pri_0.emplace(100);
+    auto tok2 = lane_0_pri_1.emplace(200);
+    auto tok3 = lane_1_pri_0.emplace(300);
+    auto tok4 = lane_1_pri_2.emplace(400);
+
+    REQUIRE(!tok1.IsNull());
+    REQUIRE(!tok2.IsNull());
+    REQUIRE(!tok3.IsNull());
+    REQUIRE(!tok4.IsNull());
+
+    // Check sizes
+    REQUIRE(lane_0_pri_0.GetSize() == 1);
+    REQUIRE(lane_0_pri_1.GetSize() == 1);
+    REQUIRE(lane_1_pri_0.GetSize() == 1);
+    REQUIRE(lane_1_pri_2.GetSize() == 1);
+
+    // Pop from individual lanes
+    int val;
+    auto pop_tok = lane_0_pri_0.pop(val);
+    REQUIRE(!pop_tok.IsNull());
+    REQUIRE(val == 100);
+
+    pop_tok = lane_0_pri_1.pop(val);
+    REQUIRE(!pop_tok.IsNull());
+    REQUIRE(val == 200);
+
+    pop_tok = lane_1_pri_0.pop(val);
+    REQUIRE(!pop_tok.IsNull());
+    REQUIRE(val == 300);
+
+    pop_tok = lane_1_pri_2.pop(val);
+    REQUIRE(!pop_tok.IsNull());
+    REQUIRE(val == 400);
+
+    // All items popped
+
+    // Try to pop from empty lanes
+    pop_tok = lane_0_pri_0.pop(val);
+    REQUIRE(pop_tok.IsNull());
+  }
+
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+}
+
+TEST_CASE("TestMultiRingBufferLaneAccess") {
+  auto *alloc = HSHM_DEFAULT_ALLOC;
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+
+  PAGE_DIVIDE("TEST") {
+    // Create a multi-ring buffer with 3 lanes, 2 priorities
+    hshm::multi_mpsc_queue<int> buffer(alloc, 3, 2, 8);
+
+    // Access different lanes and priorities
+    auto &lane_0_pri_0 = buffer.GetLane(0, 0);
+    auto &lane_1_pri_0 = buffer.GetLane(1, 0);
+    auto &lane_2_pri_0 = buffer.GetLane(2, 0);
+    auto &lane_0_pri_1 = buffer.GetLane(0, 1);
+
+    // Push to different lanes
+    lane_0_pri_0.emplace(1);
+    lane_1_pri_0.emplace(2);
+    lane_2_pri_0.emplace(3);
+    lane_0_pri_1.emplace(4);
+
+    REQUIRE(lane_0_pri_0.GetSize() == 1);  // Lane 0, Priority 0: value 1
+    REQUIRE(lane_1_pri_0.GetSize() == 1);  // Lane 1, Priority 0: value 2
+    REQUIRE(lane_2_pri_0.GetSize() == 1);  // Lane 2, Priority 0: value 3
+    REQUIRE(lane_0_pri_1.GetSize() == 1);  // Lane 0, Priority 1: value 4
+
+    // Pop from individual lanes
+    int val;
+    auto tok1 = lane_0_pri_0.pop(val);
+    REQUIRE(!tok1.IsNull());
+    REQUIRE(val == 1);
+
+    auto tok2 = lane_1_pri_0.pop(val);
+    REQUIRE(!tok2.IsNull());
+    REQUIRE(val == 2);
+
+    auto tok3 = lane_2_pri_0.pop(val);
+    REQUIRE(!tok3.IsNull());
+    REQUIRE(val == 3);
+
+    auto tok4 = lane_0_pri_1.pop(val);
+    REQUIRE(!tok4.IsNull());
+    REQUIRE(val == 4);
+
+  }
+
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+}
+
+TEST_CASE("TestMultiRingBufferBoundsChecking") {
+  auto *alloc = HSHM_DEFAULT_ALLOC;
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+
+  PAGE_DIVIDE("TEST") {
+    // Create a multi-ring buffer with 2 lanes, 2 priorities
+    hshm::multi_mpsc_queue<int> buffer(alloc, 2, 2, 8);
+
+    // Valid access should work
+    auto &valid_lane = buffer.GetLane(1, 1);
+    valid_lane.emplace(400);
+    REQUIRE(valid_lane.GetSize() == 1);
+
+    int val;
+    auto tok = valid_lane.pop(val);
+    REQUIRE(!tok.IsNull());
+    REQUIRE(val == 400);
+  }
+
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+}
+
+TEST_CASE("TestMultiRingBufferResize") {
+  auto *alloc = HSHM_DEFAULT_ALLOC;
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+
+  PAGE_DIVIDE("TEST") {
+    // Create a small multi-ring buffer
+    hshm::multi_mpsc_queue<int> buffer(alloc, 2, 2, 4);
+
+    // Fill it up using lane access
+    auto &lane_0_0 = buffer.GetLane(0, 0);
+    auto &lane_0_1 = buffer.GetLane(0, 1);
+    auto &lane_1_0 = buffer.GetLane(1, 0);
+    auto &lane_1_1 = buffer.GetLane(1, 1);
+
+    for (int i = 0; i < 2; ++i) {  // Fill each lane with 2 items
+      lane_0_0.emplace(i);
+      lane_0_1.emplace(i + 10);
+      lane_1_0.emplace(i + 20);
+      lane_1_1.emplace(i + 30);
+    }
+
+  }
+
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+}
+
+TEST_CASE("TestMultiRingBufferDirectLaneAccess") {
+  auto *alloc = HSHM_DEFAULT_ALLOC;
+  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
+
+  PAGE_DIVIDE("TEST") {
+    // Create a multi-ring buffer
+    hshm::multi_mpsc_queue<int> buffer(alloc, 2, 2, 8);
+
+    // Get direct access to a specific lane
+    auto &lane_0_1 = buffer.GetLane(0, 1);  // Lane 0, Priority 1
+
+    // Use the lane directly
+    lane_0_1.emplace(42);
+    REQUIRE(lane_0_1.GetSize() == 1);
+    REQUIRE(lane_0_1.GetSize() == 1);
+
+    // Pop using direct access
+    int val;
+    auto tok = lane_0_1.pop(val);
+    REQUIRE(!tok.IsNull());
+    REQUIRE(val == 42);
+    REQUIRE(lane_0_1.GetSize() == 0);
+
+    // Test const access
+    const auto &const_buffer = buffer;
+    const auto &const_lane = const_buffer.GetLane(1, 0);
+    // Note: GetSize() is not const, so we can't test it on const objects
+  }
+
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
 }
