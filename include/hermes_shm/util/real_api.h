@@ -12,6 +12,7 @@
 
 #ifndef HERMES_ADAPTER_API_H
 #define HERMES_ADAPTER_API_H
+#if HSHM_ENABLE_ELF
 
 #include <fcntl.h>
 #undef DEPRECATED
@@ -224,5 +225,5 @@ struct PreloadProgress {
 }  // namespace hshm
 
 #undef DEPRECATED
-
+#endif  // HSHM_ENABLE_ELF
 #endif  // HERMES_ADAPTER_API_H

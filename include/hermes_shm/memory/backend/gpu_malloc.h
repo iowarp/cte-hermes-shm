@@ -5,6 +5,8 @@
 #ifndef GPU_MALLOC_H
 #define GPU_MALLOC_H
 
+#if HSHM_ENABLE_CUDA || HSHM_ENABLE_ROCM
+
 #include <string>
 
 #include "hermes_shm/constants/macros.h"
@@ -99,5 +101,7 @@ class GpuMalloc : public PosixShmMmap {
 };
 
 }  // namespace hshm::ipc
+
+#endif  // HSHM_ENABLE_CUDA || HSHM_ENABLE_ROCM
 
 #endif  // GPU_MALLOC_H

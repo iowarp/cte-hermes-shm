@@ -14,7 +14,7 @@
 #define HSHM_TEST_UNIT_ALLOCATORS_TEST_INIT_H_
 
 #include "basic_test.h"
-#include "hermes_shm/memory/memory_manager.h"
+// hermes_shm/memory/memory_manager.h is now included via hermes_shm.h in basic_test.h
 
 using hshm::ipc::Allocator;
 using hshm::ipc::AllocatorId;

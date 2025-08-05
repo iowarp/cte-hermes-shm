@@ -1,6 +1,5 @@
 #include "basic_test.h"
-#include "hermes_shm/data_structures/ipc/hash.h"
-#include "hermes_shm/types/atomic.h"
+// All hermes_shm headers are now included via hermes_shm.h in basic_test.h
 
 template <typename AtomicT>
 class AtomicTest {

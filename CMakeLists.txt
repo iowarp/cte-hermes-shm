@@ -177,6 +177,8 @@ target_link_libraries(host_deps INTERFACE
     ${ELF_LIBS}
     ${ZMQ_LIBS}
     ${LIBFABRIC_LIBS}
+    ${MPI_LIBS}
+    ${OpenMP_LIBS}
 )
 target_link_directories(host_deps INTERFACE
     ${COMPRESS_LIB_DIRS} ${ENCRYPT_LIB_DIRS} ${Boost_LIBRARY_DIRS}

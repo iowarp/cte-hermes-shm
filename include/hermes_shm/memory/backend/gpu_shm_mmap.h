@@ -13,6 +13,8 @@
 #ifndef HSHM_INCLUDE_MEMORY_BACKEND_GPU_SHM_MMAP_H
 #define HSHM_INCLUDE_MEMORY_BACKEND_GPU_SHM_MMAP_H
 
+#if HSHM_ENABLE_CUDA || HSHM_ENABLE_ROCM
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -98,5 +100,7 @@ class GpuShmMmap : public PosixShmMmap {
 };
 
 }  // namespace hshm::ipc
+
+#endif  // HSHM_ENABLE_CUDA || HSHM_ENABLE_ROCM
 
 #endif  // HSHM_INCLUDE_MEMORY_BACKEND_GPU_SHM_MMAP_H

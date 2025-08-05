@@ -13,6 +13,8 @@
 #ifndef HSHM_SHM_INCLUDE_HSHM_SHM_UTIL_TIMER_MPI_H_
 #define HSHM_SHM_INCLUDE_HSHM_SHM_UTIL_TIMER_MPI_H_
 
+#if HSHM_ENABLE_MPI
+
 #include <mpi.h>
 
 #include "timer.h"
@@ -58,5 +60,5 @@ class MpiTimer : public Timer {
 };
 
 }  // namespace hshm
-
+#endif  // HSHM_ENABLE_MPI
 #endif  // HSHM_SHM_INCLUDE_HSHM_SHM_UTIL_TIMER_MPI_H_

@@ -15,19 +15,10 @@ class stringstream {
 
   template <typename T>
   stringstream& operator<<(const T& value) {
-    ss_ << value;
     return *this;
   }
 
-  char* c_str() const { return data_; }
-
-  void clear() {
-    ss_.str(std::string());
-    ss_.clear();
-  }
-
- private:
-  char data_[SSO];
+  void clear() {}
 };
 
 }  // namespace hhshm::ipc
