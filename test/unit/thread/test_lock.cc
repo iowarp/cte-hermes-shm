@@ -80,7 +80,7 @@ TEST_CASE("RwLock") {
   RwLockTest(4, 4, 1000000);
 }
 
-#ifdef HSHM_RPC_THALLIUM
+#ifdef HSHM_ENABLE_THALLIUM
 TEST_CASE("AbtThread") {
   hshm::thread::Argobots argobots;
   hshm::thread::ThreadGroup group = argobots.CreateThreadGroup({});

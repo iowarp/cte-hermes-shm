@@ -25,7 +25,7 @@
 #ifdef HSHM_ENABLE_PTHREADS
 #include <pthread.h>
 #endif
-#ifdef HSHM_RPC_THALLIUM
+#ifdef HSHM_ENABLE_THALLIUM
 #include <thallium.hpp>
 #endif
 #ifdef HSHM_ENABLE_CUDA
@@ -46,7 +46,7 @@ union ThreadLocalKey {
 #ifdef HSHM_ENABLE_PTHREADS
   pthread_key_t pthread_key_;
 #endif
-#ifdef HSHM_RPC_THALLIUM
+#ifdef HSHM_ENABLE_THALLIUM
   ABT_key argobots_key_;
 #endif
 #ifdef HSHM_ENABLE_WINDOWS_THREADS
@@ -62,7 +62,7 @@ struct ThreadGroupContext {
 
 /** Thread group */
 struct ThreadGroup {
-#ifdef HSHM_RPC_THALLIUM
+#ifdef HSHM_ENABLE_THALLIUM
   ABT_xstream abtxstream_ = nullptr;
 #endif
 };
@@ -79,7 +79,7 @@ struct ThreadParams {
 /** Thread */
 struct Thread {
   ThreadGroup group_;
-#ifdef HSHM_RPC_THALLIUM
+#ifdef HSHM_ENABLE_THALLIUM
   ABT_thread abt_thread_ = nullptr;
 #endif
 #ifdef HSHM_ENABLE_PTHREADS

@@ -20,7 +20,7 @@
 #ifdef HSHM_ENABLE_PTHREADS
 #include "thread_model/pthread.h"
 #endif
-#ifdef HSHM_RPC_THALLIUM
+#ifdef HSHM_ENABLE_THALLIUM
 #include "thread_model/argobots.h"
 #endif
 #ifdef HSHM_ENABLE_CUDA

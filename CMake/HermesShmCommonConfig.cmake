@@ -56,7 +56,7 @@ if(HSHM_ENABLE_OPENMP)
 endif()
 
 # thallium
-if(HSHM_RPC_THALLIUM)
+if(HSHM_ENABLE_THALLIUM)
     find_package(thallium CONFIG REQUIRED)
 
     if(thallium_FOUND)
