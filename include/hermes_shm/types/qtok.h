@@ -13,6 +13,8 @@
 #ifndef HSHM_SHM_INCLUDE_HSHM_SHM_DATA_STRUCTURES_IPC_QUEUE_H_
 #define HSHM_SHM_INCLUDE_HSHM_SHM_DATA_STRUCTURES_IPC_QUEUE_H_
 
+#include "numbers.h"
+
 namespace hshm {
 
 /** Represents the internal qtok type */
