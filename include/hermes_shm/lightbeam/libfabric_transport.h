@@ -1,16 +1,19 @@
 #pragma once
+#if HSHM_ENABLE_LIBFABRIC
 #include <rdma/fabric.h>
+#include <rdma/fi_cm.h>
 #include <rdma/fi_endpoint.h>
 #include <rdma/fi_errno.h>
-#include <rdma/fi_cm.h>
+
 #include <cstring>
-#include <queue>
-#include <mutex>
-#include <memory>
-#include <iostream>
-#include <sstream>
 #include <iomanip>
+#include <iostream>
+#include <memory>
+#include <mutex>
+#include <queue>
+#include <sstream>
 #include <vector>
+
 #include "lightbeam.h"
 
 namespace hshm::lbm {
@@ -54,7 +57,8 @@ class LibfabricClient : public Client {
     hints->fabric_attr->prov_name = strdup("sockets");
     struct fi_info* info = nullptr;
     int ret = fi_getinfo(FI_VERSION(1, 11), nullptr, nullptr, 0, hints, &info);
-    if (ret) throw std::runtime_error("fi_getinfo failed: " + std::to_string(ret));
+    if (ret)
+      throw std::runtime_error("fi_getinfo failed: " + std::to_string(ret));
     supports_rdma_ = (info->caps & FI_RMA) != 0;
     std::cout << "[LibfabricClient] supports_rdma_=" << supports_rdma_
               << std::endl;
@@ -87,7 +91,8 @@ class LibfabricClient : public Client {
     ret = fi_av_insert(av_, server_addr.data(), 1, &server_fi_addr, 0, nullptr);
     std::cout << "[LibfabricClient] fi_av_insert ret=" << ret
               << ", server_fi_addr=" << server_fi_addr << "\n";
-    if (ret != 1) throw std::runtime_error("fi_av_insert failed: " + std::to_string(ret));
+    if (ret != 1)
+      throw std::runtime_error("fi_av_insert failed: " + std::to_string(ret));
     server_fi_addr_ = server_fi_addr;
     fi_freeinfo(info);
     fi_freeinfo(hints);
@@ -113,7 +118,8 @@ class LibfabricClient : public Client {
       int ret = fi_mr_reg(domain_, (void*)data, data_size,
                           FI_SEND | FI_RECV | FI_READ | FI_WRITE, 0, 0, 0, &mr,
                           nullptr);
-      if (ret) throw std::runtime_error("fi_mr_reg failed: " + std::to_string(ret));
+      if (ret)
+        throw std::runtime_error("fi_mr_reg failed: " + std::to_string(ret));
       bulk.desc = fi_mr_desc(mr);
       bulk.mr = mr;
     }
@@ -129,8 +135,8 @@ class LibfabricClient : public Client {
     std::cout << "[LibfabricClient] About to fi_send: ptr="
               << static_cast<void*>(bulk.data) << ", size=" << bulk.size
               << std::endl;
-    ssize_t ret = fi_send(ep_, bulk.data, bulk.size, bulk.desc, server_fi_addr_,
-                          nullptr);
+    ssize_t ret =
+        fi_send(ep_, bulk.data, bulk.size, bulk.desc, server_fi_addr_, nullptr);
     std::cout << "[LibfabricClient] fi_send returned " << ret << std::endl;
     if (ret < 0) {
       event->is_done = true;
@@ -193,7 +199,8 @@ class LibfabricServer : public Server {
     struct fi_info* info = nullptr;
     int ret = fi_getinfo(FI_VERSION(1, 11), addr.c_str(),
                          std::to_string(port).c_str(), FI_SOURCE, hints, &info);
-    if (ret) throw std::runtime_error("fi_getinfo failed: " + std::to_string(ret));
+    if (ret)
+      throw std::runtime_error("fi_getinfo failed: " + std::to_string(ret));
     supports_rdma_ = (info->caps & FI_RMA) != 0;
     std::cout << "[LibfabricServer] supports_rdma_=" << supports_rdma_
               << std::endl;
@@ -222,7 +229,8 @@ class LibfabricServer : public Server {
     char addr_buf[128] = {0};
     size_t addrlen = sizeof(addr_buf);
     ret = fi_getname(&ep_->fid, addr_buf, &addrlen);
-    if (ret) throw std::runtime_error("fi_getname failed: " + std::to_string(ret));
+    if (ret)
+      throw std::runtime_error("fi_getname failed: " + std::to_string(ret));
     std::cout << "[LibfabricServer] fi_getname addrlen=" << addrlen << "\n";
     addr_hex_ = AddrToHex(addr_buf, addrlen);
     std::cout << "[LibfabricServer] addr_hex_=" << addr_hex_ << "\n";
@@ -250,7 +258,8 @@ class LibfabricServer : public Server {
       int ret = fi_mr_reg(domain_, data, data_size,
                           FI_SEND | FI_RECV | FI_READ | FI_WRITE, 0, 0, 0, &mr,
                           nullptr);
-      if (ret) throw std::runtime_error("fi_mr_reg failed: " + std::to_string(ret));
+      if (ret)
+        throw std::runtime_error("fi_mr_reg failed: " + std::to_string(ret));
       bulk.desc = fi_mr_desc(mr);
       bulk.mr = mr;
     }
@@ -266,8 +275,8 @@ class LibfabricServer : public Server {
     std::cout << "[LibfabricServer] About to fi_recv: ptr="
               << static_cast<void*>(bulk.data) << ", size=" << bulk.size
               << std::endl;
-    ssize_t ret = fi_recv(ep_, bulk.data, bulk.size, bulk.desc, FI_ADDR_UNSPEC,
-                          nullptr);
+    ssize_t ret =
+        fi_recv(ep_, bulk.data, bulk.size, bulk.desc, FI_ADDR_UNSPEC, nullptr);
     std::cout << "[LibfabricServer] fi_recv returned " << ret << std::endl;
     if (ret < 0) {
       event->is_done = true;
@@ -311,4 +320,6 @@ class LibfabricServer : public Server {
   bool supports_rdma_;
 };
 
-}  // namespace hshm::lbm 
+}  // namespace hshm::lbm
+
+#endif  // HSHM_ENABLE_LIBFABRIC

@@ -1,6 +1,7 @@
-#ifndef HSHM_SHM_THREAD_THREAD_MODEL_WINDOWS_H_
-#define HSHM_SHM_THREAD_THREAD_MODEL_WINDOWS_H_
+#ifndef HSHM_THREAD_STD_THREAD_H_
+#define HSHM_THREAD_STD_THREAD_H_
 
+// StdThread is always available as it uses standard C++ features
 #include <thread>
 
 #include "hermes_shm/introspect/system_info.h"
@@ -32,7 +33,7 @@ class StdThread : public ThreadModel {
   /** Create thread-local storage */
   template <typename TLS>
   HSHM_CROSS_FUN bool CreateTls(ThreadLocalKey &key, TLS *data) {
-#ifdef HSHM_IS_HOST
+#if HSHM_IS_HOST
     return SystemInfo::CreateTls(key, (void *)data);
 #else
     return false;
@@ -42,7 +43,7 @@ class StdThread : public ThreadModel {
   /** Create thread-local storage */
   template <typename TLS>
   HSHM_CROSS_FUN bool SetTls(ThreadLocalKey &key, TLS *data) {
-#ifdef HSHM_IS_HOST
+#if HSHM_IS_HOST
     return SystemInfo::SetTls(key, (void *)data);
 #else
     return false;
@@ -52,7 +53,7 @@ class StdThread : public ThreadModel {
   /** Get thread-local storage */
   template <typename TLS>
   HSHM_CROSS_FUN TLS *GetTls(const ThreadLocalKey &key) {
-#ifdef HSHM_IS_HOST
+#if HSHM_IS_HOST
     return static_cast<TLS *>(SystemInfo::GetTls(key));
 #else
     return nullptr;
@@ -94,4 +95,4 @@ class StdThread : public ThreadModel {
 
 }  // namespace hshm::thread
 
-#endif  // HSHM_SHM_THREAD_THREAD_MODEL_WINDOWS_H_
+#endif  // HSHM_THREAD_STD_THREAD_H_

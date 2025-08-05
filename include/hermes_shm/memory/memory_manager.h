@@ -22,7 +22,7 @@
 
 namespace hshm::ipc {
 
-#if defined(HSHM_ENABLE_CUDA) || defined(HSHM_ENABLE_ROCM)
+#if HSHM_ENABLE_CUDA || HSHM_ENABLE_ROCM
 /** Copy the memory manager */
 static HSHM_GPU_KERNEL void CopyMemoryManager(MemoryManager **mm) {
   memcpy(HSHM_MEMORY_MANAGER, *mm, sizeof(MemoryManager));
@@ -38,7 +38,7 @@ static HSHM_GPU_KERNEL void GetMemoryManagerGpuKern(MemoryManager **mm) {
 static HSHM_GPU_KERNEL void RegisterBackendGpuKern(MemoryBackendId backend_id,
                                                    char *region, size_t size) {
   // printf("HSHM: Registering backend on a GPU: %u\n", backend_id.id_);
-#ifdef HSHM_IS_GPU
+#if HSHM_IS_GPU
   HSHM_MEMORY_MANAGER;
   HSHM_THREAD_MODEL;
   HSHM_SYSTEM_INFO;
@@ -126,8 +126,8 @@ HSHM_CROSS_FUN void MemoryManager::Init() {
   RegisterAllocatorNoScan(root_alloc_);
 
 // Get the memory manager GPU pointer
-#if defined(HSHM_ENABLE_CUDA) || defined(HSHM_ENABLE_ROCM)
-#ifdef HSHM_IS_HOST
+#if HSHM_ENABLE_CUDA || HSHM_ENABLE_ROCM
+#if HSHM_IS_HOST
   int ngpu = GpuApi::GetDeviceCount();
   for (int gpu_id = 0; gpu_id < ngpu; ++gpu_id) {
     GpuApi::SetDevice(gpu_id);
@@ -179,7 +179,7 @@ MemoryBackend *MemoryManager::CreateBackend(const MemoryBackendId &backend_id,
 template <int>
 HSHM_CROSS_FUN MemoryBackend *MemoryManager::AttachBackend(
     MemoryBackendType type, const hshm::chararr &url) {
-#ifdef HSHM_IS_HOST
+#if HSHM_IS_HOST
   MemoryBackend *backend = MemoryBackendFactory::shm_deserialize(type, url);
   RegisterBackend(backend);
   if (backend->IsCopyGpu()) {
@@ -249,7 +249,7 @@ HSHM_CROSS_FUN void MemoryManager::ScanBackends() {
     backend->SetScanned();
     RegisterAllocatorNoScan(alloc);
   }
-#ifdef HSHM_IS_HOST
+#if HSHM_IS_HOST
   ScanBackendsAllGpu();
 #endif
 }
@@ -270,7 +270,7 @@ void MemoryManager::ScanBackendsAllGpu() {
  */
 template <int nothing>
 void MemoryManager::ScanBackendsGpu(int gpu_id) {
-#if defined(HSHM_ENABLE_CUDA) || defined(HSHM_ENABLE_ROCM)
+#if HSHM_ENABLE_CUDA || HSHM_ENABLE_ROCM
   GpuApi::SetDevice(gpu_id);
   ScanBackendGpuKern<<<1, 1>>>();
   GpuApi::Synchronize();
@@ -313,7 +313,7 @@ void MemoryManager::CreateAllocatorGpu(int gpu_id,
                                        const AllocatorId &alloc_id,
                                        size_t custom_header_size,
                                        Args &&...args) {
-#if defined(HSHM_ENABLE_CUDA) || defined(HSHM_ENABLE_ROCM)
+#if HSHM_ENABLE_CUDA || HSHM_ENABLE_ROCM
   if (alloc_id.IsNull()) {
     HELOG(kFatal, "Allocator cannot be created with a NIL ID");
   }
@@ -348,7 +348,7 @@ HSHM_CROSS_FUN void MemoryManager::DestroyAllocator(
 /** Default backend size */
 template <int>
 HSHM_CROSS_FUN size_t MemoryManager::GetDefaultBackendSize() {
-#ifdef HSHM_IS_HOST
+#if HSHM_IS_HOST
   return HSHM_SYSTEM_INFO->ram_size_;
 #else
   // TODO(llogan)
@@ -376,7 +376,7 @@ template <int>
 void MemoryManager::CreateBackendGpu(int gpu_id,
                                      const MemoryBackendId &backend_id,
                                      char *accel_data, size_t accel_data_size) {
-#if defined(HSHM_ENABLE_CUDA) || defined(HSHM_ENABLE_ROCM)
+#if HSHM_ENABLE_CUDA || HSHM_ENABLE_ROCM
   GpuApi::SetDevice(gpu_id);
   RegisterBackendGpuKern<<<1, 1>>>(backend_id, accel_data, accel_data_size);
   GpuApi::Synchronize();
@@ -386,7 +386,7 @@ void MemoryManager::CreateBackendGpu(int gpu_id,
 /** Set a backend as having an allocator */
 template <int>
 void MemoryManager::SetBackendHasAllocGpu(const MemoryBackendId &backend_id) {
-#if defined(HSHM_ENABLE_CUDA) || defined(HSHM_ENABLE_ROCM)
+#if HSHM_ENABLE_CUDA || HSHM_ENABLE_ROCM
   MemoryBackend *backend = GetBackend(backend_id);
   if (!backend) {
     return;

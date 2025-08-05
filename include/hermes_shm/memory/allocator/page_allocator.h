@@ -39,7 +39,7 @@ struct PageId {
   HSHM_INLINE_CROSS_FUN
   explicit PageId(size_t size) {
     orig_ = size;
-#ifdef HSHM_IS_HOST
+#if HSHM_IS_HOST
     exp_ = (size_t)std::ceil(std::log2(size - sizeof(MpPage)));
 #else
     exp_ = ceil(log2(size - sizeof(MpPage)));

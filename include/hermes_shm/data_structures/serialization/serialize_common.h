@@ -15,7 +15,7 @@
 
 #include <stddef.h>
 
-#ifdef HSHM_ENABLE_CEREAL
+#if HSHM_ENABLE_CEREAL
 #include <cereal/archives/binary.hpp>
 #endif
 
@@ -106,7 +106,7 @@ inline constexpr bool is_serializeable_v =
 
 template <typename Ar, typename T>
 HSHM_CROSS_FUN void write_binary(Ar &ar, const T *data, size_t size) {
-#ifdef HSHM_ENABLE_CEREAL
+#if HSHM_ENABLE_CEREAL
   auto binary = cereal::binary_data(data, size);
   ar(binary);
 #else
@@ -115,7 +115,7 @@ HSHM_CROSS_FUN void write_binary(Ar &ar, const T *data, size_t size) {
 }
 template <typename Ar, typename T>
 HSHM_CROSS_FUN void read_binary(Ar &ar, T *data, size_t size) {
-#ifdef HSHM_ENABLE_CEREAL
+#if HSHM_ENABLE_CEREAL
   auto binary = cereal::binary_data(data, size);
   ar(binary);
 #else

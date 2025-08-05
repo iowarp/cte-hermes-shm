@@ -10,8 +10,10 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HSHM_SHM_INCLUDE_HSHM_SHM_THREAD_CUDA_H__
-#define HSHM_SHM_INCLUDE_HSHM_SHM_THREAD_CUDA_H__
+#ifndef HSHM_THREAD_CUDA_H_
+#define HSHM_THREAD_CUDA_H_
+
+#if HSHM_ENABLE_CUDA
 
 #include <errno.h>
 
@@ -38,7 +40,7 @@ class Cuda : public ThreadModel {
   /** Yield thread time slice */
   HSHM_CROSS_FUN
   void Yield() {
-#ifdef HSHM_IS_GPU
+#if HSHM_IS_GPU
     __nanosleep(100);
 #endif
   }
@@ -68,4 +70,6 @@ class Cuda : public ThreadModel {
 
 }  // namespace hshm::thread
 
-#endif  // HSHM_SHM_INCLUDE_HSHM_SHM_THREAD_CUDA_H__
+#endif  // HSHM_ENABLE_CUDA
+
+#endif  // HSHM_THREAD_CUDA_H_

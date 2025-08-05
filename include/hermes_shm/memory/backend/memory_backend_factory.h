@@ -20,7 +20,7 @@
 #include "memory_backend.h"
 #include "posix_mmap.h"
 #include "posix_shm_mmap.h"
-#if defined(HSHM_ENABLE_CUDA) or defined(HSHM_ENABLE_ROCM)
+#if HSHM_ENABLE_CUDA || HSHM_ENABLE_ROCM
 #include "gpu_malloc.h"
 #include "gpu_shm_mmap.h"
 #endif
@@ -54,7 +54,7 @@ class MemoryBackendFactory {
   static MemoryBackend *shm_init(const MemoryBackendId &backend_id, size_t size,
                                  Args... args) {
     HSHM_CREATE_BACKEND(PosixShmMmap)
-#if defined(HSHM_ENABLE_CUDA) or defined(HSHM_ENABLE_ROCM)
+#if HSHM_ENABLE_CUDA || HSHM_ENABLE_ROCM
     HSHM_CREATE_BACKEND(GpuShmMmap)
     HSHM_CREATE_BACKEND(GpuMalloc)
 #endif
@@ -72,7 +72,7 @@ class MemoryBackendFactory {
                                         const hshm::chararr &url) {
     switch (type) {
       HSHM_DESERIALIZE_BACKEND(PosixShmMmap)
-#if defined(HSHM_ENABLE_CUDA) or defined(HSHM_ENABLE_ROCM)
+#if HSHM_ENABLE_CUDA || HSHM_ENABLE_ROCM
       HSHM_DESERIALIZE_BACKEND(GpuShmMmap)
       HSHM_DESERIALIZE_BACKEND(GpuMalloc)
 #endif

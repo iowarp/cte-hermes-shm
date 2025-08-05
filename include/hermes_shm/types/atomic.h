@@ -18,10 +18,10 @@
 
 #include "hermes_shm/constants/macros.h"
 #include "numbers.h"
-#ifdef HSHM_ENABLE_CUDA
+#if HSHM_ENABLE_CUDA
 #include <cuda/atomic>
 #endif
-#ifdef HSHM_ENABLE_ROCM
+#if HSHM_ENABLE_ROCM
 #include <hip/hip_runtime.h>
 #endif
 
@@ -247,7 +247,7 @@ struct nonatomic {
 };
 
 /** A wrapper for CUDA atomic operations */
-#if defined(HSHM_ENABLE_CUDA) || defined(HSHM_ENABLE_ROCM)
+#if HSHM_ENABLE_CUDA || HSHM_ENABLE_ROCM
 template <typename T>
 struct rocm_atomic {
   T x;
@@ -656,7 +656,7 @@ struct std_atomic {
   }
 };
 
-#ifdef HSHM_IS_HOST
+#if HSHM_IS_HOST
 template <typename T>
 using atomic = std_atomic<T>;
 #else

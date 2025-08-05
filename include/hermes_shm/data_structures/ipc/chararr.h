@@ -198,7 +198,7 @@ class chararr_templ {
 #undef HSHM_STR_CMP_OPERATOR
 };
 
-#ifdef HSHM_IS_HOST
+#if HSHM_IS_HOST
 typedef chararr_templ<4095, true> chararr;
 #else
 typedef chararr_templ<31, true> chararr;

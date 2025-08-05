@@ -22,16 +22,16 @@
 #include "hermes_shm/types/bitfield.h"
 #include "hermes_shm/types/numbers.h"
 
-#ifdef HSHM_ENABLE_PTHREADS
+#if HSHM_ENABLE_PTHREADS
 #include <pthread.h>
 #endif
-#ifdef HSHM_ENABLE_THALLIUM
+#if HSHM_ENABLE_THALLIUM
 #include <thallium.hpp>
 #endif
-#ifdef HSHM_ENABLE_CUDA
+#if HSHM_ENABLE_CUDA
 #include <cuda_runtime.h>
 #endif
-#ifdef HSHM_ENABLE_ROCM
+#if HSHM_ENABLE_ROCM
 #include <hip/hip_runtime.h>
 #endif
 #include <thread>
@@ -43,13 +43,13 @@ enum class ThreadType { kNone, kPthread, kArgobots, kCuda, kRocm, kStdThread };
 
 /** Thread-local key */
 union ThreadLocalKey {
-#ifdef HSHM_ENABLE_PTHREADS
+#if HSHM_ENABLE_PTHREADS
   pthread_key_t pthread_key_;
 #endif
-#ifdef HSHM_ENABLE_THALLIUM
+#if HSHM_ENABLE_THALLIUM
   ABT_key argobots_key_;
 #endif
-#ifdef HSHM_ENABLE_WINDOWS_THREADS
+#if HSHM_ENABLE_WINDOWS_THREADS
   DWORD windows_key_;
 #endif
 };
@@ -62,7 +62,7 @@ struct ThreadGroupContext {
 
 /** Thread group */
 struct ThreadGroup {
-#ifdef HSHM_ENABLE_THALLIUM
+#if HSHM_ENABLE_THALLIUM
   ABT_xstream abtxstream_ = nullptr;
 #endif
 };
@@ -79,10 +79,10 @@ struct ThreadParams {
 /** Thread */
 struct Thread {
   ThreadGroup group_;
-#ifdef HSHM_ENABLE_THALLIUM
+#if HSHM_ENABLE_THALLIUM
   ABT_thread abt_thread_ = nullptr;
 #endif
-#ifdef HSHM_ENABLE_PTHREADS
+#if HSHM_ENABLE_PTHREADS
   pthread_t pthread_thread_;
 #endif
   std::thread std_thread_;

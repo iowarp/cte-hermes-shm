@@ -10,8 +10,10 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HSHM_SHM_INCLUDE_HSHM_SHM_THREAD_ROCM_H__
-#define HSHM_SHM_INCLUDE_HSHM_SHM_THREAD_ROCM_H__
+#ifndef HSHM_THREAD_ROCM_H_
+#define HSHM_THREAD_ROCM_H_
+
+#if HSHM_ENABLE_ROCM
 
 #include <errno.h>
 
@@ -64,4 +66,6 @@ class Rocm : public ThreadModel {
 
 }  // namespace hshm::thread
 
-#endif  // HSHM_SHM_INCLUDE_HSHM_SHM_THREAD_ROCM_H__
+#endif  // HSHM_ENABLE_ROCM
+
+#endif  // HSHM_THREAD_ROCM_H_

@@ -95,7 +95,7 @@ class Logger {
  public:
   HSHM_CROSS_FUN
   Logger() {
-#ifdef HSHM_IS_HOST
+#if HSHM_IS_HOST
     memset(disabled_, 0, sizeof(disabled_));
     // exe_name_ = std::filesystem::path(exe_path_).filename().string();
     std::string verbosity_env = hshm::SystemInfo::Getenv(
@@ -130,7 +130,7 @@ class Logger {
 
   template <typename... Args>
   HSHM_CROSS_FUN void Print(const char *fmt, Args &&...args) {
-#ifdef HSHM_IS_HOST
+#if HSHM_IS_HOST
 
     std::string msg = hshm::Formatter::format(fmt, std::forward<Args>(args)...);
     int tid = SystemInfo::GetTid();
@@ -145,7 +145,7 @@ class Logger {
   template <int LOG_CODE, int SUB_CODE, typename... Args>
   HSHM_CROSS_FUN void Log(const char *path, const char *func, int line,
                           const char *fmt, Args &&...args) {
-#ifdef HSHM_IS_HOST
+#if HSHM_IS_HOST
     if (disabled_[LOG_CODE] || disabled_[SUB_CODE]) {
       return;
     }

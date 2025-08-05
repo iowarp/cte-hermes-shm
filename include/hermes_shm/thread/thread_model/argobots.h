@@ -10,8 +10,10 @@
  * have access to the file, you may request a copy from help@hdfgroup.org.   *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef HSHM_SHM_INCLUDE_HSHM_SHM_THREAD_THALLIUM_H_
-#define HSHM_SHM_INCLUDE_HSHM_SHM_THREAD_THALLIUM_H_
+#ifndef HSHM_THREAD_ARGOBOTS_H_
+#define HSHM_THREAD_ARGOBOTS_H_
+
+#if HSHM_ENABLE_THALLIUM
 
 #include <errno.h>
 
@@ -45,7 +47,7 @@ class Argobots : public ThreadModel {
      * tl::thread::self().sleep(*HSHM->rpc_.server_engine_,
                                HSHM->server_config_.borg_.blob_reorg_period_);
      */
-#ifdef HSHM_IS_HOST
+#if HSHM_IS_HOST
     usleep(us);
 #endif
   }
@@ -53,7 +55,7 @@ class Argobots : public ThreadModel {
   /** Yield thread time slice */
   HSHM_CROSS_FUN
   void Yield() {
-#ifdef HSHM_IS_HOST
+#if HSHM_IS_HOST
     ABT_thread_yield();
 #endif
   }
@@ -61,7 +63,7 @@ class Argobots : public ThreadModel {
   /** Create thread-local storage */
   template <typename TLS>
   HSHM_CROSS_FUN bool CreateTls(ThreadLocalKey &key, TLS *data) {
-#ifdef HSHM_IS_HOST
+#if HSHM_IS_HOST
     int ret = ABT_key_create(ThreadLocalData::template destroy_wrap<TLS>,
                              &key.argobots_key_);
     if (ret != ABT_SUCCESS) {
@@ -76,7 +78,7 @@ class Argobots : public ThreadModel {
   /** Create thread-local storage */
   template <typename TLS>
   HSHM_CROSS_FUN bool SetTls(ThreadLocalKey &key, TLS *data) {
-#ifdef HSHM_IS_HOST
+#if HSHM_IS_HOST
     int ret = ABT_key_set(key.argobots_key_, data);
     return ret == ABT_SUCCESS;
 #else
@@ -87,7 +89,7 @@ class Argobots : public ThreadModel {
   /** Get thread-local storage */
   template <typename TLS>
   HSHM_CROSS_FUN TLS *GetTls(const ThreadLocalKey &key) {
-#ifdef HSHM_IS_HOST
+#if HSHM_IS_HOST
     TLS *data;
     ABT_key_get(key.argobots_key_, (void **)&data);
     return (TLS *)data;
@@ -99,7 +101,7 @@ class Argobots : public ThreadModel {
   /** Get the TID of the current thread */
   HSHM_CROSS_FUN
   ThreadId GetTid() {
-#ifdef HSHM_IS_HOST
+#if HSHM_IS_HOST
     ABT_thread thread;
     ABT_thread_id tid;
     ABT_thread_self(&thread);
@@ -113,7 +115,7 @@ class Argobots : public ThreadModel {
   /** Create a thread group */
   HSHM_CROSS_FUN
   ThreadGroup CreateThreadGroup(const ThreadGroupContext &ctx) {
-#ifdef HSHM_IS_HOST
+#if HSHM_IS_HOST
     ABT_xstream xstream;
     ABT_xstream_create(ABT_SCHED_NULL, &xstream);
     return ThreadGroup{xstream};
@@ -125,7 +127,7 @@ class Argobots : public ThreadModel {
   /** Spawn a thread */
   template <typename FUNC, typename... Args>
   HSHM_CROSS_FUN Thread Spawn(ThreadGroup &group, FUNC &&func, Args &&...args) {
-#ifdef HSHM_IS_HOST
+#if HSHM_IS_HOST
     Thread thread;
     ThreadParams<FUNC, Args...> *params = new ThreadParams<FUNC, Args...>(
         std::forward<FUNC>(func), std::forward<Args>(args)...);
@@ -152,7 +154,7 @@ class Argobots : public ThreadModel {
   /** Join a thread */
   HSHM_CROSS_FUN
   void Join(Thread &thread) {
-#ifdef HSHM_IS_HOST
+#if HSHM_IS_HOST
     ABT_thread_join(thread.abt_thread_);
 #endif
   }
@@ -160,7 +162,7 @@ class Argobots : public ThreadModel {
   /** Set CPU affinity for thread */
   HSHM_CROSS_FUN
   void SetAffinity(Thread &thread, int cpu_id) {
-#ifdef HSHM_IS_HOST
+#if HSHM_IS_HOST
     ABT_xstream_set_affinity(thread.group_.abtxstream_, 1, &cpu_id);
 #endif
   }
@@ -168,4 +170,6 @@ class Argobots : public ThreadModel {
 
 }  // namespace hshm::thread
 
-#endif  // HSHM_SHM_INCLUDE_HSHM_SHM_THREAD_THALLIUM_H_
+#endif  // HSHM_ENABLE_THALLIUM
+
+#endif  // HSHM_THREAD_ARGOBOTS_H_

@@ -14,7 +14,7 @@
 #define HSHM_SYSINFO_INFO_H_
 
 #include "hermes_shm/constants/macros.h"
-#ifdef HSHM_ENABLE_PROCFS_SYSINFO
+#if HSHM_ENABLE_PROCFS_SYSINFO
 #ifdef __linux__
 #include <sys/sysinfo.h>
 #endif
@@ -72,7 +72,7 @@ class SystemInfo {
   int uid_;
   int gid_;
   size_t ram_size_;
-#ifdef HSHM_IS_HOST
+#if HSHM_IS_HOST
   std::vector<size_t> cur_cpu_freq_;
 #endif
 
@@ -82,7 +82,7 @@ class SystemInfo {
 
   HSHM_CROSS_FUN
   void RefreshInfo() {
-#ifdef HSHM_IS_HOST
+#if HSHM_IS_HOST
     pid_ = GetPid();
     ncpu_ = GetCpuCount();
     page_size_ = GetPageSize();

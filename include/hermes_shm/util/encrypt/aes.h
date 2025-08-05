@@ -13,6 +13,8 @@
 #ifndef HSHM_SHM_INCLUDE_HSHM_SHM_UTIL_ENCRYPT_AES_H_
 #define HSHM_SHM_INCLUDE_HSHM_SHM_UTIL_ENCRYPT_AES_H_
 
+#if HSHM_ENABLE_ENCRYPT
+
 #include <openssl/aes.h>
 #include <openssl/evp.h>
 #include <openssl/rand.h>
@@ -106,5 +108,7 @@ class AES {
 };
 
 }  // namespace hshm
+
+#endif  // HSHM_ENABLE_ENCRYPT
 
 #endif  // HSHM_SHM_INCLUDE_HSHM_SHM_UTIL_ENCRYPT_AES_H_

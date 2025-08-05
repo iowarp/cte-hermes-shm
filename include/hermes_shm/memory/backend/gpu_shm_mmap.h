@@ -41,7 +41,7 @@ class GpuShmMmap : public PosixShmMmap {
   /** Destructor */
   HSHM_CROSS_FUN
   ~GpuShmMmap() {
-#ifdef HSHM_IS_HOST
+#if HSHM_IS_HOST
     if (IsOwned()) {
       _Destroy();
     } else {
