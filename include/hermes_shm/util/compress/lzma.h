@@ -13,6 +13,8 @@
 #ifndef HSHM_SHM_INCLUDE_HSHM_SHM_COMPRESS_Lzma_H_
 #define HSHM_SHM_INCLUDE_HSHM_SHM_COMPRESS_Lzma_H_
 
+#if HSHM_ENABLE_COMPRESS
+
 #include <lzma.h>
 
 #include "compress.h"
@@ -93,5 +95,7 @@ class Lzma : public Compressor {
 };
 
 }  // namespace hshm
+
+#endif  // HSHM_ENABLE_COMPRESS
 
 #endif  // HSHM_SHM_INCLUDE_HSHM_SHM_COMPRESS_Lzma_H_

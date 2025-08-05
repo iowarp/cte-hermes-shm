@@ -13,6 +13,8 @@
 #ifndef HSHM_SHM_INCLUDE_HSHM_SHM_COMPRESS_Lz4_H_
 #define HSHM_SHM_INCLUDE_HSHM_SHM_COMPRESS_Lz4_H_
 
+#if HSHM_ENABLE_COMPRESS
+
 #include <lz4.h>
 
 #include "compress.h"
@@ -40,5 +42,7 @@ class Lz4 : public Compressor {
 };
 
 }  // namespace hshm
+
+#endif  // HSHM_ENABLE_COMPRESS
 
 #endif  // HSHM_SHM_INCLUDE_HSHM_SHM_COMPRESS_Lz4_H_

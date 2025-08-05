@@ -13,6 +13,8 @@
 #ifndef HSHM_SHM_INCLUDE_HSHM_SHM_COMPRESS_Snappy_H_
 #define HSHM_SHM_INCLUDE_HSHM_SHM_COMPRESS_Snappy_H_
 
+#if HSHM_ENABLE_COMPRESS
+
 #include <snappy-sinksource.h>
 #include <snappy.h>
 
@@ -41,5 +43,7 @@ class Snappy : public Compressor {
 };
 
 }  // namespace hshm
+
+#endif  // HSHM_ENABLE_COMPRESS
 
 #endif  // HSHM_SHM_INCLUDE_HSHM_SHM_COMPRESS_Snappy_H_

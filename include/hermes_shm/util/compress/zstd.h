@@ -13,6 +13,8 @@
 #ifndef HSHM_SHM_INCLUDE_HSHM_SHM_COMPRESS_Zstd_H_
 #define HSHM_SHM_INCLUDE_HSHM_SHM_COMPRESS_Zstd_H_
 
+#if HSHM_ENABLE_COMPRESS
+
 #include <zstd.h>
 
 #include "compress.h"
@@ -41,5 +43,7 @@ class Zstd : public Compressor {
 };
 
 }  // namespace hshm
+
+#endif  // HSHM_ENABLE_COMPRESS
 
 #endif  // HSHM_SHM_INCLUDE_HSHM_SHM_COMPRESS_Zstd_H_

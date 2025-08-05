@@ -28,12 +28,6 @@
 #if HSHM_ENABLE_THALLIUM
 #include <thallium.hpp>
 #endif
-#if HSHM_ENABLE_CUDA
-#include <cuda_runtime.h>
-#endif
-#if HSHM_ENABLE_ROCM
-#include <hip/hip_runtime.h>
-#endif
 #include <thread>
 
 namespace hshm {
