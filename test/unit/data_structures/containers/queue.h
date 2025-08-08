@@ -51,8 +51,7 @@ class VariableMaker {
       return hipc::string(std::to_string(num));
     } else if constexpr (std::is_same_v<NewT, IntEntry *>) {
       auto alloc = HSHM_DEFAULT_ALLOC;
-      return alloc->template NewObjLocal<IntEntry>(HSHM_DEFAULT_MEM_CTX, num)
-          .ptr_;
+      return alloc->template NewObj<IntEntry>(HSHM_DEFAULT_MEM_CTX, num).ptr_;
     } else {
       STATIC_ASSERT(false, "Unsupported type", NewT);
     }
@@ -82,7 +81,9 @@ class VariableMaker {
   void FreeVariable(NewT &var) {
     if constexpr (std::is_same_v<NewT, IntEntry *>) {
       auto alloc = HSHM_DEFAULT_ALLOC;
-      alloc->DelObj(HSHM_DEFAULT_MEM_CTX, var);
+      auto offset_ptr = alloc->template Convert<IntEntry, hipc::OffsetPointer>(var);
+      hipc::FullPtr<IntEntry, hipc::OffsetPointer> full_ptr(var, offset_ptr);
+      alloc->DelObj(HSHM_DEFAULT_MEM_CTX, full_ptr);
     }
   }
 
@@ -91,7 +92,9 @@ class VariableMaker {
       size_t count = count_.load();
       for (size_t i = 0; i < count; ++i) {
         auto alloc = HSHM_DEFAULT_ALLOC;
-        alloc->DelObj(HSHM_DEFAULT_MEM_CTX, vars_[i]);
+        auto offset_ptr = alloc->template Convert<IntEntry, hipc::OffsetPointer>(vars_[i]);
+        hipc::FullPtr<IntEntry, hipc::OffsetPointer> full_ptr(vars_[i], offset_ptr);
+        alloc->DelObj(HSHM_DEFAULT_MEM_CTX, full_ptr);
       }
     }
   }

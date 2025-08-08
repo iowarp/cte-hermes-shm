@@ -296,7 +296,7 @@ class VectorTest {
     if constexpr (std::is_same_v<std::vector<T>, VecT>) {
       vec_ = new std::vector<T>();
     } else if constexpr (std::is_same_v<hipc::vector<T>, VecT>) {
-      vec_ = alloc->template NewObjLocal<VecT>(HSHM_DEFAULT_MEM_CTX).ptr_;
+      vec_ = alloc->template NewObj<VecT>(HSHM_DEFAULT_MEM_CTX).ptr_;
     } else if constexpr (std::is_same_v<bipc_vector<T>, VecT>) {
       vec_ = BOOST_SEGMENT->construct<VecT>("BoostVector")(
           BOOST_ALLOCATOR((std::pair<int, T>)));

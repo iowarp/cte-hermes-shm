@@ -200,19 +200,19 @@ class QueueTest {
       queue_ = new std::queue<T>();
     } else if constexpr (std::is_same_v<QueueT, hipc::mpsc_queue<T>>) {
       queue_ =
-          alloc->template NewObjLocal<QueueT>(HSHM_DEFAULT_MEM_CTX, count).ptr_;
+          alloc->template NewObj<QueueT>(HSHM_DEFAULT_MEM_CTX, count).ptr_;
     } else if constexpr (std::is_same_v<QueueT, hipc::mpsc_ptr_queue<T>>) {
       queue_ =
-          alloc->template NewObjLocal<QueueT>(HSHM_DEFAULT_MEM_CTX, count).ptr_;
+          alloc->template NewObj<QueueT>(HSHM_DEFAULT_MEM_CTX, count).ptr_;
     } else if constexpr (std::is_same_v<QueueT, hipc::spsc_queue<T>>) {
       queue_ =
-          alloc->template NewObjLocal<QueueT>(HSHM_DEFAULT_MEM_CTX, count).ptr_;
+          alloc->template NewObj<QueueT>(HSHM_DEFAULT_MEM_CTX, count).ptr_;
     } else if constexpr (std::is_same_v<QueueT, hipc::ticket_queue<T>>) {
       queue_ =
-          alloc->template NewObjLocal<QueueT>(HSHM_DEFAULT_MEM_CTX, count).ptr_;
+          alloc->template NewObj<QueueT>(HSHM_DEFAULT_MEM_CTX, count).ptr_;
     } else if constexpr (std::is_same_v<QueueT, hipc::split_ticket_queue<T>>) {
       queue_ =
-          alloc->template NewObjLocal<QueueT>(count_per_rank, nthreads).ptr_;
+          alloc->template NewObj<QueueT>(count_per_rank, nthreads).ptr_;
     }
   }
 

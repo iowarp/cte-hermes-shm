@@ -340,7 +340,8 @@ class string_templ : public ShmContainer {
   /** Destroy the shared-memory data. */
   HSHM_INLINE_CROSS_FUN void shm_destroy_main() {
     if (max_length_ > SSO && !is_wrap_) {
-      GetAllocator()->Free(GetMemCtx(), text_);
+      FullPtr<void> full_ptr(GetAllocator()->template Convert<void>(text_), text_);
+      GetAllocator()->template Free<void>(GetMemCtx(), full_ptr);
     }
   }
 
@@ -438,13 +439,16 @@ class string_templ : public ShmContainer {
     // Buffer cases
     if (new_size > orig_length) {
       // Make the current buffer larger
-      GetAllocator()->template Reallocate<Pointer>(GetMemCtx(), text_,
+      FullPtr<void> old_full_ptr(GetAllocator()->template Convert<void>(text_), text_);
+      auto new_full_ptr = GetAllocator()->template Reallocate<void, Pointer>(GetMemCtx(), old_full_ptr,
                                                    new_size);
+      text_ = new_full_ptr.shm_;
       max_length_ = new_size;
     } else if (new_size <= SSO) {
       // Free current buffer & use SSO
       _create_str(orig_data, orig_length, new_size);
-      GetAllocator()->Free(GetMemCtx(), orig_text);
+      FullPtr<void> full_ptr(GetAllocator()->template Convert<void>(orig_text), orig_text);
+      GetAllocator()->template Free<void>(GetMemCtx(), full_ptr);
     }
   }
 
@@ -502,7 +506,8 @@ class string_templ : public ShmContainer {
       length_ = length;
       max_length_ = SSO;
     } else {
-      text_ = GetAllocator()->Allocate(GetMemCtx(), length);
+      auto full_ptr = GetAllocator()->template Allocate<void>(GetMemCtx(), length);
+      text_ = full_ptr.shm_;
       length_ = length;
       max_length_ = length;
     }

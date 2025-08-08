@@ -30,7 +30,8 @@ namespace hshm::ipc {
 #define HSHM_CREATE_BACKEND(T)                                               \
   if constexpr (std::is_same_v<T, BackendT>) {                               \
     auto alloc = HSHM_ROOT_ALLOC;                                            \
-    auto backend = alloc->template NewObj<T>(HSHM_DEFAULT_MEM_CTX);          \
+    auto full_ptr = alloc->template NewObj<T>(HSHM_DEFAULT_MEM_CTX);         \
+    auto backend = full_ptr.ptr_;                                            \
     if (!backend->shm_init(backend_id, size, std::forward<Args>(args)...)) { \
       HSHM_THROW_ERROR(MEMORY_BACKEND_CREATE_FAILED);                        \
     }                                                                        \
@@ -40,7 +41,8 @@ namespace hshm::ipc {
 #define HSHM_DESERIALIZE_BACKEND(T)                                 \
   case MemoryBackendType::k##T: {                                   \
     auto alloc = HSHM_ROOT_ALLOC;                                   \
-    auto backend = alloc->template NewObj<T>(HSHM_DEFAULT_MEM_CTX); \
+    auto full_ptr = alloc->template NewObj<T>(HSHM_DEFAULT_MEM_CTX);\
+    auto backend = full_ptr.ptr_;                                   \
     if (!backend->shm_deserialize(url)) {                           \
       HSHM_THROW_ERROR(MEMORY_BACKEND_NOT_FOUND);                   \
     }                                                               \

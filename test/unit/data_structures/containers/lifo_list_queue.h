@@ -33,9 +33,8 @@ class lifo_list_queueTestSuite {
   /// Enqueue elements
   void EnqueueTest(size_t count = 30) {
     for (size_t i = 0; i < count; ++i) {
-      hipc::OffsetPointer p;
-      auto page =
-          alloc_->template AllocateConstructObjs<T>(HSHM_DEFAULT_MEM_CTX, 1, p);
+      auto full_ptr = alloc_->template NewObjs<T>(HSHM_DEFAULT_MEM_CTX, 1);
+      auto page = full_ptr.ptr_;
       page->page_size_ = count - i - 1;
       obj_.enqueue(page);
     }
@@ -100,7 +99,9 @@ class lifo_list_queueTestSuite {
     }
     obj_.clear();
     for (T *page : tmp) {
-      alloc_->FreePtr(HSHM_DEFAULT_MEM_CTX, page);
+      auto offset_ptr = alloc_->template Convert<T, hipc::OffsetPointer>(page);
+      hipc::FullPtr<void, hipc::OffsetPointer> full_ptr(reinterpret_cast<void*>(page), offset_ptr);
+      alloc_->Free(HSHM_DEFAULT_MEM_CTX, full_ptr);
     }
     REQUIRE(obj_.size() == 0);
   }

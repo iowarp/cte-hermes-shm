@@ -83,9 +83,8 @@ class PageAllocator {
     }
     HSHM_MAKE_AR0(fallback_list_, alloc);
     if constexpr (LOCAL_HEAP) {
-      heap_.shm_init(
-          alloc->Allocate<OffsetPointer>(HSHM_DEFAULT_MEM_CTX, local_heap_size),
-          local_heap_size);
+      auto full_ptr = alloc->template Allocate<void, OffsetPointer>(HSHM_DEFAULT_MEM_CTX, local_heap_size);
+      heap_.shm_init(full_ptr.shm_, local_heap_size);
     }
   }
 

@@ -145,10 +145,11 @@ class _StackAllocator : public Allocator {
     void *src = Convert<void>(p);
     auto hdr = Convert<MpPage>(p - sizeof(MpPage));
     size_t old_size = hdr->page_size_ - sizeof(MpPage);
-    void *dst = ((AllocT *)this)
-                    ->AllocatePtr<void, OffsetPointer>(ctx, new_size, new_p);
+    auto full_ptr = ((AllocT *)this)->template Allocate<void, OffsetPointer>(ctx, new_size);
+    new_p = full_ptr.shm_;
+    void *dst = full_ptr.ptr_;
     memcpy((void *)dst, (void *)src, old_size);
-    ((AllocT *)this)->Free(ctx, p);
+    FreeOffsetNoNullCheck(ctx, p);
     return new_p;
   }
 

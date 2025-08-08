@@ -43,8 +43,9 @@ static HSHM_GPU_KERNEL void RegisterBackendGpuKern(MemoryBackendId backend_id,
   HSHM_THREAD_MODEL;
   HSHM_SYSTEM_INFO;
   auto alloc = HSHM_ROOT_ALLOC;
-  auto backend =
+  auto full_ptr =
       alloc->template NewObj<hipc::ArrayBackend>(HSHM_DEFAULT_MEM_CTX);
+  auto backend = full_ptr.ptr_;
   backend->local_hdr_.id_ = backend_id;
   if (!backend->shm_init(backend_id, size, region)) {
     HSHM_THROW_ERROR(MEMORY_BACKEND_CREATE_FAILED);
@@ -221,7 +222,7 @@ HSHM_CROSS_FUN void MemoryManager::DestroyBackend(
   FullPtr<MemoryBackend> ptr(backend);
   backend->Own();
   auto alloc = GetAllocator<HSHM_ROOT_ALLOC_T>(ptr.shm_.alloc_id_);
-  alloc->DelObjLocal(HSHM_DEFAULT_MEM_CTX, ptr);
+  alloc->DelObj(HSHM_DEFAULT_MEM_CTX, ptr);
 }
 
 /**
@@ -342,7 +343,7 @@ HSHM_CROSS_FUN void MemoryManager::DestroyAllocator(
   }
   FullPtr<AllocT> ptr((AllocT *)dead_alloc);
   auto alloc = GetAllocator<HSHM_ROOT_ALLOC_T>(ptr.shm_.alloc_id_);
-  alloc->template DelObjLocal<AllocT>(HSHM_DEFAULT_MEM_CTX, ptr);
+  alloc->template DelObj<AllocT>(HSHM_DEFAULT_MEM_CTX, ptr);
 }
 
 /** Default backend size */
