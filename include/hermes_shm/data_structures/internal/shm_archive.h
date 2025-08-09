@@ -24,6 +24,9 @@ namespace hshm::ipc {
 
 /**
  * Represents the layout of a data structure in shared memory.
+ * This class is used to delay the initialization of a data structure
+ * until it is needed. It treats ShmContainer types differently from
+ * regular types.
  * */
 template <typename T>
 class delay_ar {
@@ -88,14 +91,17 @@ class delay_ar {
     Allocator::ConstructObj<T>(get_ref(), std::forward<Args>(args)...);
   }
 
-  /** Initialize with allocator for SHM_ARCHIVEABLE, without allocator for others */
+  /** Initialize with allocator for SHM_ARCHIVEABLE, without allocator for
+   * others */
   template <typename AllocT, typename... Args>
   HSHM_INLINE_CROSS_FUN void shm_init(AllocT&& alloc, Args&&... args) {
     if constexpr (IS_SHM_ARCHIVEABLE(T)) {
       // For SHM archiveable types: pass allocator + args
-      Allocator::ConstructObj<T>(get_ref(), std::forward<AllocT>(alloc), std::forward<Args>(args)...);
+      Allocator::ConstructObj<T>(get_ref(), std::forward<AllocT>(alloc),
+                                 std::forward<Args>(args)...);
     } else {
-      // For non-SHM archiveable types: skip the allocator, pass only remaining args
+      // For non-SHM archiveable types: skip the allocator, pass only remaining
+      // args
       if constexpr (sizeof...(args) > 0) {
         Allocator::ConstructObj<T>(get_ref(), std::forward<Args>(args)...);
       } else {
@@ -140,7 +146,6 @@ class delay_ar {
 #define HSHM_AR_GET_TYPE(AR) \
   (typename std::remove_reference<decltype(AR)>::type::internal_t)
 
-
 /** Construct a piecewise archive */
 #define HSHM_MAKE_AR_PW(AR, ALLOC, ...)                        \
   if constexpr (IS_SHM_ARCHIVEABLE(HSHM_AR_GET_TYPE(AR))) {    \
@@ -162,7 +167,6 @@ void HSHM_CROSS_FUN load(Ar& ar, delay_ar<T>& obj) {
   obj.shm_init(HSHM_DEFAULT_ALLOC);
   ar & obj.get_ref();
 }
-
 
 }  // namespace hshm::ipc
 
