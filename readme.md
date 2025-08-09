@@ -92,7 +92,7 @@ ctest -VV -R test_mpsc_queue_mpi
 
 ## Project Structure
 
-- `include/cte-hermes-shm/` - Core library headers
+- `include/hermes_shm/` - Core library headers
   - `data_structures/` - Shared memory data structures
   - `memory/` - Memory management and allocators
   - `thread/` - Threading and synchronization primitives
