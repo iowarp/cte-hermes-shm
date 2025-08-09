@@ -34,7 +34,7 @@ struct slist_entry {
   template <typename... Args>
   HSHM_CROSS_FUN explicit slist_entry(const hipc::CtxAllocator<AllocT> &alloc,
                                       Args &&...args) {
-    HSHM_MAKE_AR(data_, alloc, std::forward<Args>(args)...)
+    data_.shm_init(alloc, std::forward<Args>(args)...);
   }
 };
 
@@ -576,7 +576,7 @@ class slist : public ShmContainer {
                 GetMemCtx(), 1);
     auto entry = full_ptr.ptr_;
     p = full_ptr.shm_;
-    HSHM_MAKE_AR(entry->data_, GetCtxAllocator(), std::forward<Args>(args)...)
+    entry->data_.shm_init(GetCtxAllocator(), std::forward<Args>(args)...);
     return entry;
   }
 };

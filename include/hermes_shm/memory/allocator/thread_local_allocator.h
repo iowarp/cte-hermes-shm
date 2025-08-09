@@ -54,8 +54,8 @@ struct _ThreadLocalAllocatorHeader : public AllocatorHeader {
                  size_t max_threads) {
     AllocatorHeader::Configure(alloc_id, AllocatorType::kThreadLocalAllocator,
                                custom_header_size);
-    HSHM_MAKE_AR(tls_, alloc, max_threads, alloc);
-    HSHM_MAKE_AR(free_tids_, alloc, max_threads);
+    tls_.shm_init(alloc, max_threads, alloc);
+    free_tids_.shm_init(alloc, max_threads);
     free_tids_->resize(0);
     total_alloc_ = 0;
     tid_heap_ = 0;

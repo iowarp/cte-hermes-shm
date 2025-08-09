@@ -109,8 +109,8 @@ TEST_CASE("SerializeHipcVecString") {
 TEST_CASE("SerializeHipcShmArchive") {
   std::stringstream ss;
   {
-    hipc::ShmArchive<hipc::vector<int>> x;
-    HSHM_MAKE_AR0(x, HSHM_DEFAULT_ALLOC);
+    hipc::delay_ar<hipc::vector<int>> x;
+    x.shm_init(HSHM_DEFAULT_ALLOC);
     x->reserve(5);
     for (int i = 0; i < 5; ++i) {
       x->emplace_back(i);
@@ -119,8 +119,8 @@ TEST_CASE("SerializeHipcShmArchive") {
     ar << x;
   }
   {
-    hipc::ShmArchive<hipc::vector<int>> x;
-    HSHM_MAKE_AR0(x, HSHM_DEFAULT_ALLOC);
+    hipc::delay_ar<hipc::vector<int>> x;
+    x.shm_init(HSHM_DEFAULT_ALLOC);
     std::vector<int> y{0, 1, 2, 3, 4};
     cereal::BinaryInputArchive ar(ss);
     ar >> x;

@@ -79,9 +79,9 @@ class PageAllocator {
       StackAllocator *alloc,
       size_t local_heap_size = hshm::Unit<size_t>::Kilobytes(1)) {
     for (size_t i = 0; i < PageId::num_caches_; ++i) {
-      HSHM_MAKE_AR0(free_lists_[i], alloc);
+      free_lists_[i].shm_init(alloc);
     }
-    HSHM_MAKE_AR0(fallback_list_, alloc);
+    fallback_list_.shm_init(alloc);
     if constexpr (LOCAL_HEAP) {
       auto full_ptr = alloc->template Allocate<void, OffsetPointer>(HSHM_DEFAULT_MEM_CTX, local_heap_size);
       heap_.shm_init(full_ptr.shm_, local_heap_size);

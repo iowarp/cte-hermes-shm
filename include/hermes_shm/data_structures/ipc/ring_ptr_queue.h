@@ -68,7 +68,7 @@ class ring_ptr_queue_base : public ShmContainer {
   HSHM_INLINE_CROSS_FUN
   void shm_init(const hipc::CtxAllocator<AllocT> &alloc, size_t depth = 1024) {
     init_shm_container(alloc);
-    HSHM_MAKE_AR(queue_, GetCtxAllocator(), depth);
+    queue_.shm_init(GetCtxAllocator(), depth);
     flags_.Clear();
     SetNull();
   }

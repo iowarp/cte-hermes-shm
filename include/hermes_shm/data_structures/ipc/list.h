@@ -546,7 +546,7 @@ class list : public ShmContainer {
         GetAllocator()->template AllocateObjs<list_entry<T>, OffsetPointer>(GetMemCtx(), 1);
     auto entry = full_ptr.ptr_;
     p = full_ptr.shm_;
-    HSHM_MAKE_AR(entry->data_, GetCtxAllocator(), std::forward<Args>(args)...)
+    entry->data_.shm_init(GetCtxAllocator(), std::forward<Args>(args)...);
     return entry;
   }
 };

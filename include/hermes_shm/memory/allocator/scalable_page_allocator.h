@@ -47,7 +47,9 @@ struct _ScalablePageAllocatorHeader : public AllocatorHeader {
     AllocatorHeader::Configure(alloc_id, AllocatorType::kScalablePageAllocator,
                                custom_header_size);
     total_alloc_ = 0;
-    HSHM_MAKE_AR(global_, alloc, alloc);
+    // TODO: Fix this specific case - PageAllocator needs special handling
+    // global_.shm_init(alloc, hshm::Unit<size_t>::Kilobytes(1));
+    Allocator::ConstructObj(global_.get_ref(), alloc, hshm::Unit<size_t>::Kilobytes(1));
   }
 };
 

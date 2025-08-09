@@ -63,7 +63,7 @@ class ticket_queue : public ShmContainer {
   /** SHM Constructor. */
   void shm_init(const hipc::CtxAllocator<AllocT> &alloc, size_t depth = 1024) {
     init_shm_container(alloc);
-    HSHM_MAKE_AR(queue_, GetCtxAllocator(), depth);
+    queue_.shm_init(GetCtxAllocator(), depth);
     lock_.Init();
     SetNull();
   }

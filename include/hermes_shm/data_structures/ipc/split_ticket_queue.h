@@ -70,7 +70,7 @@ class split_ticket_queue : public ShmContainer {
     if (split == 0) {
       split = HSHM_SYSTEM_INFO->ncpu_;
     }
-    HSHM_MAKE_AR(splits_, GetCtxAllocator(), split, depth_per_split);
+    splits_.shm_init(GetCtxAllocator(), split, depth_per_split);
     SetNull();
   }
 

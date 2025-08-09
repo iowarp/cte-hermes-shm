@@ -61,8 +61,8 @@ class pair : public ShmContainer {
   HSHM_CROSS_FUN
   void shm_init(const hipc::CtxAllocator<AllocT> &alloc) {
     init_shm_container(alloc);
-    HSHM_MAKE_AR0(first_, GetCtxAllocator())
-    HSHM_MAKE_AR0(second_, GetCtxAllocator())
+    first_.shm_init(GetCtxAllocator());
+    second_.shm_init(GetCtxAllocator());
   }
 
   /**====================================
@@ -73,8 +73,8 @@ class pair : public ShmContainer {
   HSHM_CROSS_FUN
   explicit pair(FirstT &&first, SecondT &&second) {
     init_shm_container(HSHM_MEMORY_MANAGER->GetDefaultAllocator<AllocT>());
-    HSHM_MAKE_AR(first_, GetCtxAllocator(), std::forward<FirstT>(first))
-    HSHM_MAKE_AR(second_, GetCtxAllocator(), std::forward<SecondT>(second))
+    first_.shm_init(GetCtxAllocator(), std::forward<FirstT>(first));
+    second_.shm_init(GetCtxAllocator(), std::forward<SecondT>(second));
   }
 
   /** SHM constructor. Move parameters. */
@@ -82,16 +82,16 @@ class pair : public ShmContainer {
   explicit pair(const hipc::CtxAllocator<AllocT> &alloc, FirstT &&first,
                 SecondT &&second) {
     init_shm_container(alloc);
-    HSHM_MAKE_AR(first_, GetCtxAllocator(), std::forward<FirstT>(first))
-    HSHM_MAKE_AR(second_, GetCtxAllocator(), std::forward<SecondT>(second))
+    first_.shm_init(GetCtxAllocator(), std::forward<FirstT>(first));
+    second_.shm_init(GetCtxAllocator(), std::forward<SecondT>(second));
   }
 
   /** Constructor. Copy parameters. */
   HSHM_CROSS_FUN
   explicit pair(const FirstT &first, const SecondT &second) {
     init_shm_container(HSHM_MEMORY_MANAGER->GetDefaultAllocator<AllocT>());
-    HSHM_MAKE_AR(first_, GetCtxAllocator(), first)
-    HSHM_MAKE_AR(second_, GetCtxAllocator(), second)
+    first_.shm_init(GetCtxAllocator(), first);
+    second_.shm_init(GetCtxAllocator(), second);
   }
 
   /** SHM constructor. Copy parameters. */
@@ -99,8 +99,8 @@ class pair : public ShmContainer {
   explicit pair(const hipc::CtxAllocator<AllocT> &alloc, const FirstT &first,
                 const SecondT &second) {
     init_shm_container(alloc);
-    HSHM_MAKE_AR(first_, GetCtxAllocator(), first)
-    HSHM_MAKE_AR(second_, GetCtxAllocator(), second)
+    first_.shm_init(GetCtxAllocator(), first);
+    second_.shm_init(GetCtxAllocator(), second);
   }
 
   /** SHM constructor. Piecewise emplace. */
@@ -147,8 +147,8 @@ class pair : public ShmContainer {
   /** SHM copy constructor main */
   HSHM_CROSS_FUN
   void shm_strong_copy_construct(const pair &other){
-      HSHM_MAKE_AR(first_, GetCtxAllocator(), *other.first_)
-          HSHM_MAKE_AR(second_, GetCtxAllocator(), *other.second_)}
+      first_.shm_init(GetCtxAllocator(), *other.first_);
+          second_.shm_init(GetCtxAllocator(), *other.second_);}
 
   /** SHM copy assignment operator. From pair. */
   HSHM_CROSS_FUN pair &operator=(const pair &other) {
@@ -175,10 +175,10 @@ class pair : public ShmContainer {
   explicit pair(pair &&other) {
     init_shm_container(other.GetCtxAllocator());
     if (GetAllocator() == other.GetAllocator()) {
-      HSHM_MAKE_AR(first_, other.first_->GetCtxAllocator(),
-                   std::forward<FirstT>(*other.first_))
-      HSHM_MAKE_AR(second_, other.second_->GetCtxAllocator(),
-                   std::forward<SecondT>(*other.second_))
+      first_.shm_init(GetCtxAllocator(),
+                   std::forward<FirstT>(*other.first_));
+      second_.shm_init(GetCtxAllocator(),
+                   std::forward<SecondT>(*other.second_));
     } else {
       shm_strong_copy_construct(other);
       other.shm_destroy();
@@ -190,10 +190,10 @@ class pair : public ShmContainer {
   explicit pair(const hipc::CtxAllocator<AllocT> &alloc, pair &&other) {
     init_shm_container(alloc);
     if (GetAllocator() == other.GetAllocator()) {
-      HSHM_MAKE_AR(first_, GetCtxAllocator(),
-                   std::forward<FirstT>(*other.first_))
-      HSHM_MAKE_AR(second_, GetCtxAllocator(),
-                   std::forward<SecondT>(*other.second_))
+      first_.shm_init(GetCtxAllocator(),
+                   std::forward<FirstT>(*other.first_));
+      second_.shm_init(GetCtxAllocator(),
+                   std::forward<SecondT>(*other.second_));
     } else {
       shm_strong_copy_construct(other);
       other.shm_destroy();

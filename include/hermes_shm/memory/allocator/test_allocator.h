@@ -42,8 +42,8 @@ struct _TestAllocatorHeader : public AllocatorHeader {
                  size_t max_threads) {
     AllocatorHeader::Configure(alloc_id, AllocatorType::kTestAllocator,
                                custom_header_size);
-    HSHM_MAKE_AR(tls_, alloc, max_threads, alloc);
-    HSHM_MAKE_AR(free_tids_, alloc, max_threads);
+    tls_.shm_init(alloc, max_threads, alloc);
+    free_tids_.shm_init(alloc, max_threads);
     total_alloc_ = 0;
     tid_heap_ = 0;
   }

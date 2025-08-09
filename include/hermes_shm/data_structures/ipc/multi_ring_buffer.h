@@ -86,7 +86,7 @@ class multi_ring_buffer : public ShmContainer {
 
     // Initialize the single queue vector with size = lanes * priorities
     const size_t total_queues = num_lanes_ * num_priorities_;
-    HSHM_MAKE_AR(queues_, GetCtxAllocator(), total_queues);
+    queues_.shm_init(GetCtxAllocator(), total_queues);
 
     // Initialize each queue
     for (size_t i = 0; i < total_queues; ++i) {

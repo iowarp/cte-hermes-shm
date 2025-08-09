@@ -539,7 +539,7 @@ class vector : public ShmContainer {
     if (length_ == max_length_) {
       vec = grow_vector(vec, 0, false);
     }
-    HSHM_MAKE_AR(vec[length_], GetCtxAllocator(), std::forward<Args>(args)...)
+    vec[length_].shm_init(GetCtxAllocator(), std::forward<Args>(args)...);
     ++length_;
   }
 
@@ -578,7 +578,7 @@ class vector : public ShmContainer {
       vec = grow_vector(vec, 0, false);
     }
     shift_right(pos);
-    HSHM_MAKE_AR(vec[pos.i_], GetCtxAllocator(), std::forward<Args>(args)...)
+    vec[pos.i_].shm_init(GetCtxAllocator(), std::forward<Args>(args)...);
     ++length_;
   }
 
@@ -590,7 +590,7 @@ class vector : public ShmContainer {
     }
     delay_ar<T> *vec = data_ar();
     hipc::Allocator::DestructObj((*this)[(size_t)pos.i_]);
-    HSHM_MAKE_AR(vec[pos.i_], GetCtxAllocator(), std::forward<Args>(args)...)
+    vec[pos.i_].shm_init(GetCtxAllocator(), std::forward<Args>(args)...);
   }
 
   /** Delete the element at \a pos position */
@@ -698,7 +698,7 @@ class vector : public ShmContainer {
       OffsetPointer new_p = full_ptr.shm_;
       for (size_t i = 0; i < length_; ++i) {
         T &old_entry = (*this)[i];
-        HSHM_MAKE_AR(new_vec[i], alloc, std::move(old_entry))
+        new_vec[i].shm_init(alloc, std::move(old_entry));
       }
       if (!vec_ptr_.IsNull()) {
         FullPtr<void, OffsetPointer> old_full_ptr(alloc->template Convert<void>(vec_ptr_), vec_ptr_);
@@ -712,7 +712,7 @@ class vector : public ShmContainer {
     }
     if (resize) {
       for (size_t i = length_; i < max_length; ++i) {
-        HSHM_MAKE_AR(new_vec[i], alloc, std::forward<Args>(args)...)
+        new_vec[i].shm_init(alloc, std::forward<Args>(args)...);
       }
     }
 
