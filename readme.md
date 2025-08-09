@@ -33,7 +33,7 @@ spack install cte-hermes-shm
 
 #### Install Dependencies
 
-This will install dependencies of hermes-shm:
+This will install dependencies of cte-hermes-shm:
 ```bash
 git clone https://github.com/grc-iit/grc-repo.git
 spack repo add grc-repo
@@ -47,8 +47,8 @@ NOTE: spack load needs to be done for each new terminal.
 
 This will compile:
 ```bash
-git clone https://github.com/grc-iit/hermes-shm.git
-cd hermes-shm
+git clone https://github.com/grc-iit/cte-hermes-shm.git
+cd cte-hermes-shm
 mkdir build
 cd build
 cmake ../ -DHSHM_ENABLE_CUDA=OFF -DHSHM_ENABLE_ROCM=OFF
