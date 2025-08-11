@@ -60,46 +60,46 @@
   template <typename FirstT, typename SecondT>                               \
   using pair = HSHM_NS::pair<FirstT, SecondT, ALLOC_T>;                      \
                                                                              \
-  template <typename T>                                                      \
-  using spsc_queue = HSHM_NS::spsc_queue<T, ALLOC_T>;                        \
-  template <typename T>                                                      \
-  using mpsc_queue = HSHM_NS::mpsc_queue<T, ALLOC_T>;                        \
-  template <typename T>                                                      \
-  using fixed_spsc_queue = HSHM_NS::fixed_spsc_queue<T, ALLOC_T>;            \
-  template <typename T>                                                      \
-  using fixed_mpsc_queue = HSHM_NS::fixed_mpsc_queue<T, ALLOC_T>;            \
-  template <typename T>                                                      \
-  using circular_mpsc_queue = HSHM_NS::circular_mpsc_queue<T, ALLOC_T>;      \
-  template <typename T>                                                      \
-  using circular_spsc_queue = HSHM_NS::circular_spsc_queue<T, ALLOC_T>;      \
-  template <typename T>                                                      \
-  using ext_ring_buffer = HSHM_NS::ext_ring_buffer<T, ALLOC_T>;              \
+  template <typename T, typename HDR = hshm::ipc::EmptyHeader>                 \
+  using spsc_queue = HSHM_NS::spsc_queue<T, HDR, ALLOC_T>;                   \
+  template <typename T, typename HDR = hshm::ipc::EmptyHeader>                 \
+  using mpsc_queue = HSHM_NS::mpsc_queue<T, HDR, ALLOC_T>;                   \
+  template <typename T, typename HDR = hshm::ipc::EmptyHeader>                 \
+  using fixed_spsc_queue = HSHM_NS::fixed_spsc_queue<T, HDR, ALLOC_T>;       \
+  template <typename T, typename HDR = hshm::ipc::EmptyHeader>                 \
+  using fixed_mpsc_queue = HSHM_NS::fixed_mpsc_queue<T, HDR, ALLOC_T>;       \
+  template <typename T, typename HDR = hshm::ipc::EmptyHeader>                 \
+  using circular_mpsc_queue = HSHM_NS::circular_mpsc_queue<T, HDR, ALLOC_T>; \
+  template <typename T, typename HDR = hshm::ipc::EmptyHeader>                 \
+  using circular_spsc_queue = HSHM_NS::circular_spsc_queue<T, HDR, ALLOC_T>; \
+  template <typename T, typename HDR = hshm::ipc::EmptyHeader>                 \
+  using ext_ring_buffer = HSHM_NS::ext_ring_buffer<T, HDR, ALLOC_T>;              \
                                                                              \
-  template <typename T>                                                      \
-  using multi_mpsc_queue = HSHM_NS::multi_mpsc_queue<T, ALLOC_T>;            \
-  template <typename T>                                                      \
-  using multi_spsc_queue = HSHM_NS::multi_spsc_queue<T, ALLOC_T>;            \
-  template <typename T>                                                      \
-  using multi_fixed_mpsc_queue = HSHM_NS::multi_fixed_mpsc_queue<T, ALLOC_T>;\
-  template <typename T>                                                      \
+  template <typename T, typename HDR = hshm::ipc::EmptyHeader>                 \
+  using multi_mpsc_queue = HSHM_NS::multi_mpsc_queue<T, HDR, ALLOC_T>;       \
+  template <typename T, typename HDR = hshm::ipc::EmptyHeader>                 \
+  using multi_spsc_queue = HSHM_NS::multi_spsc_queue<T, HDR, ALLOC_T>;       \
+  template <typename T, typename HDR = hshm::ipc::EmptyHeader>                 \
+  using multi_fixed_mpsc_queue = HSHM_NS::multi_fixed_mpsc_queue<T, HDR, ALLOC_T>;\
+  template <typename T, typename HDR = hshm::ipc::EmptyHeader>                 \
   using multi_circular_mpsc_queue =                                          \
-      HSHM_NS::multi_circular_mpsc_queue<T, ALLOC_T>;                        \
+      HSHM_NS::multi_circular_mpsc_queue<T, HDR, ALLOC_T>;                        \
                                                                              \
-  template <typename T>                                                      \
-  using spsc_ptr_queue = HSHM_NS::spsc_ptr_queue<T, ALLOC_T>;                \
-  template <typename T>                                                      \
-  using mpsc_ptr_queue = HSHM_NS::mpsc_ptr_queue<T, ALLOC_T>;                \
-  template <typename T>                                                      \
-  using fixed_spsc_ptr_queue = HSHM_NS::fixed_spsc_ptr_queue<T, ALLOC_T>;    \
-  template <typename T>                                                      \
-  using fixed_mpsc_ptr_queue = HSHM_NS::fixed_mpsc_ptr_queue<T, ALLOC_T>;    \
-  template <typename T>                                                      \
+  template <typename T, typename HDR = hshm::ipc::EmptyHeader>                 \
+  using spsc_ptr_queue = HSHM_NS::spsc_ptr_queue<T, HDR, ALLOC_T>;           \
+  template <typename T, typename HDR = hshm::ipc::EmptyHeader>                 \
+  using mpsc_ptr_queue = HSHM_NS::mpsc_ptr_queue<T, HDR, ALLOC_T>;           \
+  template <typename T, typename HDR = hshm::ipc::EmptyHeader>                 \
+  using fixed_spsc_ptr_queue = HSHM_NS::fixed_spsc_ptr_queue<T, HDR, ALLOC_T>;\
+  template <typename T, typename HDR = hshm::ipc::EmptyHeader>                 \
+  using fixed_mpsc_ptr_queue = HSHM_NS::fixed_mpsc_ptr_queue<T, HDR, ALLOC_T>;\
+  template <typename T, typename HDR = hshm::ipc::EmptyHeader>                 \
   using circular_mpsc_ptr_queue =                                            \
-      HSHM_NS::circular_mpsc_ptr_queue<T, ALLOC_T>;                          \
-  template <typename T>                                                      \
-  using circular_spsc_ptr_queue = HSHM_NS::circular_spsc_queue<T, ALLOC_T>;  \
-  template <typename T>                                                      \
-  using ext_ptr_ring_buffer = HSHM_NS::ext_ring_buffer<T, ALLOC_T>;          \
+      HSHM_NS::circular_mpsc_ptr_queue<T, HDR, ALLOC_T>;                     \
+  template <typename T, typename HDR = hshm::ipc::EmptyHeader>                 \
+  using circular_spsc_ptr_queue = HSHM_NS::circular_spsc_ptr_queue<T, HDR, ALLOC_T>;  \
+  template <typename T, typename HDR = hshm::ipc::EmptyHeader>                 \
+  using ext_ptr_ring_buffer = HSHM_NS::ext_ptr_ring_buffer<T, HDR, ALLOC_T>;          \
                                                                              \
   template <typename T>                                                      \
   using slist = HSHM_NS::slist<T, ALLOC_T>;                                  \

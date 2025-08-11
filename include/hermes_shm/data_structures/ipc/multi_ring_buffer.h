@@ -14,19 +14,20 @@ namespace hshm::ipc {
  * Structure: [lane][priority][queue]
  *
  * @tparam T The type of data stored in the queues
+ * @tparam HDR Optional header type to store additional data (default: EmptyHeader)
  * @tparam RQ_FLAGS Ring queue configuration flags
  * @tparam HSHM_CLASS_TEMPL Template parameters for SHM containers
  */
-template <typename T, RingQueueFlag RQ_FLAGS, HSHM_CLASS_TEMPL_WITH_DEFAULTS>
+template <typename T, typename HDR = EmptyHeader, RingQueueFlag RQ_FLAGS = RING_BUFFER_MPSC_FLAGS, HSHM_CLASS_TEMPL_WITH_DEFAULTS>
 class multi_ring_buffer : public ShmContainer {
  public:
-  HIPC_CONTAINER_TEMPLATE((multi_ring_buffer), (T, RQ_FLAGS))
+  HIPC_CONTAINER_TEMPLATE((multi_ring_buffer), (T, HDR, RQ_FLAGS))
 
  public:
   /**====================================
    * Typedefs
    * ===================================*/
-  typedef ring_queue_base<T, RQ_FLAGS, HSHM_CLASS_TEMPL_ARGS> queue_t;
+  typedef ring_queue_base<T, HDR, RQ_FLAGS, HSHM_CLASS_TEMPL_ARGS> queue_t;
   typedef vector<queue_t, HSHM_CLASS_TEMPL_ARGS> queue_vector_t;
 
  private:
@@ -38,6 +39,7 @@ class multi_ring_buffer : public ShmContainer {
   size_t num_lanes_;
   size_t num_priorities_;
   ibitfield flags_;
+  HDR header_;
 
   /**====================================
    * Helper Methods
@@ -96,6 +98,9 @@ class multi_ring_buffer : public ShmContainer {
 
     round_robin_counter_.store(0);
     flags_.Clear();
+    if constexpr (!std::is_same_v<HDR, EmptyHeader>) {
+      header_ = HDR{};
+    }
     SetNull();
   }
 
@@ -129,6 +134,9 @@ class multi_ring_buffer : public ShmContainer {
     num_lanes_ = other.num_lanes_;
     num_priorities_ = other.num_priorities_;
     (*queues_) = (*other.queues_);
+    if constexpr (!std::is_same_v<HDR, EmptyHeader>) {
+      header_ = other.header_;
+    }
   }
 
   /**====================================
@@ -171,6 +179,9 @@ class multi_ring_buffer : public ShmContainer {
       num_lanes_ = other.num_lanes_;
       num_priorities_ = other.num_priorities_;
       (*queues_) = std::move(*other.queues_);
+      if constexpr (!std::is_same_v<HDR, EmptyHeader>) {
+        header_ = std::move(other.header_);
+      }
       other.SetNull();
     } else {
       shm_strong_copy_op(other);
@@ -228,28 +239,36 @@ class multi_ring_buffer : public ShmContainer {
    */
   HSHM_CROSS_FUN
   size_t GetNumPriorities() const { return num_priorities_; }
+
+  /** Get header reference */
+  HSHM_INLINE_CROSS_FUN
+  HDR& GetHeader() { return header_; }
+
+  /** Get const header reference */
+  HSHM_INLINE_CROSS_FUN
+  const HDR& GetHeader() const { return header_; }
 };
 
 // Multi-lane MPSC queue
-template <typename T, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
+template <typename T, typename HDR = EmptyHeader, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
 using multi_mpsc_queue =
-    multi_ring_buffer<T, RING_BUFFER_MPSC_FLAGS, HSHM_CLASS_TEMPL_ARGS>;
+    multi_ring_buffer<T, HDR, RING_BUFFER_MPSC_FLAGS, HSHM_CLASS_TEMPL_ARGS>;
 
 // Multi-lane SPSC queue
-template <typename T, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
+template <typename T, typename HDR = EmptyHeader, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
 using multi_spsc_queue =
-    multi_ring_buffer<T, RING_BUFFER_SPSC_FLAGS, HSHM_CLASS_TEMPL_ARGS>;
+    multi_ring_buffer<T, HDR, RING_BUFFER_SPSC_FLAGS, HSHM_CLASS_TEMPL_ARGS>;
 
 // Multi-lane fixed MPSC queue
-template <typename T, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
+template <typename T, typename HDR = EmptyHeader, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
 using multi_fixed_mpsc_queue =
-    multi_ring_buffer<T, RING_BUFFER_FIXED_MPMC_FLAGS,
+    multi_ring_buffer<T, HDR, RING_BUFFER_FIXED_MPMC_FLAGS,
                       HSHM_CLASS_TEMPL_ARGS>;
 
 // Multi-lane circular MPSC queue
-template <typename T, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
+template <typename T, typename HDR = EmptyHeader, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
 using multi_circular_mpsc_queue =
-    multi_ring_buffer<T, RING_BUFFER_CIRCULAR_MPMC_FLAGS,
+    multi_ring_buffer<T, HDR, RING_BUFFER_CIRCULAR_MPMC_FLAGS,
                       HSHM_CLASS_TEMPL_ARGS>;
 
 }  // namespace hshm::ipc
@@ -261,25 +280,25 @@ namespace hshm {
  */
 
 // Multi-lane MPSC queue
-template <typename T, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
+template <typename T, typename HDR = hipc::EmptyHeader, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
 using multi_mpsc_queue =
-    hipc::multi_ring_buffer<T, RING_BUFFER_MPSC_FLAGS, HSHM_CLASS_TEMPL_ARGS>;
+    hipc::multi_ring_buffer<T, HDR, RING_BUFFER_MPSC_FLAGS, HSHM_CLASS_TEMPL_ARGS>;
 
 // Multi-lane SPSC queue
-template <typename T, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
+template <typename T, typename HDR = hipc::EmptyHeader, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
 using multi_spsc_queue =
-    hipc::multi_ring_buffer<T, RING_BUFFER_SPSC_FLAGS, HSHM_CLASS_TEMPL_ARGS>;
+    hipc::multi_ring_buffer<T, HDR, RING_BUFFER_SPSC_FLAGS, HSHM_CLASS_TEMPL_ARGS>;
 
 // Multi-lane fixed MPSC queue
-template <typename T, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
+template <typename T, typename HDR = hipc::EmptyHeader, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
 using multi_fixed_mpsc_queue =
-    hipc::multi_ring_buffer<T, RING_BUFFER_FIXED_MPMC_FLAGS,
+    hipc::multi_ring_buffer<T, HDR, RING_BUFFER_FIXED_MPMC_FLAGS,
                             HSHM_CLASS_TEMPL_ARGS>;
 
 // Multi-lane circular MPSC queue
-template <typename T, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
+template <typename T, typename HDR = hipc::EmptyHeader, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
 using multi_circular_mpsc_queue =
-    hipc::multi_ring_buffer<T, RING_BUFFER_CIRCULAR_MPMC_FLAGS,
+    hipc::multi_ring_buffer<T, HDR, RING_BUFFER_CIRCULAR_MPMC_FLAGS,
                             HSHM_CLASS_TEMPL_ARGS>;
 
 }  // namespace hshm
