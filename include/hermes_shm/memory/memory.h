@@ -14,6 +14,7 @@
 #define HSHM_MEMORY_MEMORY_H_
 
 #include <cstdio>
+#include <type_traits>
 
 #include "hermes_shm/constants/macros.h"
 #include "hermes_shm/data_structures/ipc/hash.h"
@@ -168,7 +169,7 @@ struct OffsetPointerBase : public ShmPointer {
   }
 
   /** Get the offset pointer */
-  HSHM_INLINE_CROSS_FUN OffsetPointerBase<false> ToOffsetPointer() {
+  HSHM_INLINE_CROSS_FUN OffsetPointerBase<false> ToOffsetPointer() const {
     return OffsetPointerBase<false>(off_.load());
   }
 
@@ -569,10 +570,14 @@ struct FullPtr : public ShmPointer {
   }
 
   /** Overload arrow */
-  HSHM_INLINE_CROSS_FUN T *operator->() const { return ptr_; }
+  template<typename U = T>
+  HSHM_INLINE_CROSS_FUN typename std::enable_if<!std::is_void<U>::value, U*>::type
+  operator->() const { return ptr_; }
 
   /** Overload dereference */
-  HSHM_INLINE_CROSS_FUN T &operator*() const { return *ptr_; }
+  template<typename U = T>
+  HSHM_INLINE_CROSS_FUN typename std::enable_if<!std::is_void<U>::value, U&>::type
+  operator*() const { return *ptr_; }
 
   /** Equality operator */
   HSHM_INLINE_CROSS_FUN bool operator==(const FullPtr &other) const {
@@ -692,26 +697,6 @@ struct FullPtr : public ShmPointer {
 template <typename T = char, typename PointerT = Pointer>
 using LPointer = FullPtr<T, PointerT>;
 
-/** Struct containing both a pointer and its size */
-template <typename PointerT = Pointer>
-struct Array {
-  PointerT shm_;
-  size_t size_;
-};
-
-/** Struct containing a shared pointer, private pointer, and the data size */
-template <typename T = char, typename PointerT = Pointer>
-struct LArray {
-  PointerT shm_;
-  size_t size_;
-  T *ptr_;
-
-  /** Overload arrow */
-  HSHM_INLINE_CROSS_FUN T *operator->() const { return ptr_; }
-
-  /** Overload dereference */
-  HSHM_INLINE_CROSS_FUN T &operator*() const { return *ptr_; }
-};
 
 class MemoryAlignment {
  public:

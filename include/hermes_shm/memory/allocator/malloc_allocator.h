@@ -97,7 +97,7 @@ class _MallocAllocator : public Allocator {
   HSHM_CROSS_FUN
   OffsetPointer AlignedAllocateOffset(const hipc::MemContext &ctx, size_t size,
                                       size_t alignment) {
-#ifdef HSHM_IS_HOST
+#if HSHM_IS_HOST
     auto page = reinterpret_cast<MallocPage *>(
         SystemInfo::AlignedAlloc(alignment, sizeof(MallocPage) + size));
     page->page_size_ = size;
@@ -116,7 +116,7 @@ class _MallocAllocator : public Allocator {
   HSHM_CROSS_FUN
   OffsetPointer ReallocateOffsetNoNullCheck(const hipc::MemContext &ctx,
                                             OffsetPointer p, size_t new_size) {
-#ifdef HSHM_IS_HOST
+#if HSHM_IS_HOST
     // Get the input page
     auto page =
         reinterpret_cast<MallocPage *>(p.off_.load() - sizeof(MallocPage));

@@ -140,7 +140,7 @@ T GlobalSingleton<T>::obj_;
  * Makes a singleton. Constructs during initialization of program.
  * Does not require specific initialization of the static variable.
  * */
-#ifdef HSHM_IS_HOST
+#if HSHM_IS_HOST
 template <typename T>
 using GlobalCrossSingleton = GlobalSingleton<T>;
 #else
@@ -162,7 +162,7 @@ static inline T *GetGlobalVar(T &instance) {
 /**
  * Cross-device C-style singleton with global variables
  */
-#ifdef HSHM_IS_HOST
+#if HSHM_IS_HOST
 #define HSHM_DEFINE_GLOBAL_CROSS_VAR_H(T, NAME) extern __TU(T) NAME;
 #define HSHM_DEFINE_GLOBAL_CROSS_VAR_CC(T, NAME) __TU(T) NAME = T{};
 #define HSHM_GET_GLOBAL_CROSS_VAR(T, NAME) \
@@ -195,7 +195,7 @@ static inline T *GetGlobalPtrVar(T *&instance) {
 /**
  * Cross-device C-style pointer singleton with global variables
  */
-#ifdef HSHM_IS_HOST
+#if HSHM_IS_HOST
 #define HSHM_DEFINE_GLOBAL_CROSS_PTR_VAR_H(T, NAME) extern __TU(T) * NAME;
 #define HSHM_DEFINE_GLOBAL_CROSS_PTR_VAR_CC(T, NAME) __TU(T) *NAME = nullptr;
 #define HSHM_GET_GLOBAL_CROSS_PTR_VAR(T, NAME) \

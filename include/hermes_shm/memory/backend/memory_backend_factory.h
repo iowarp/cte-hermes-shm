@@ -20,7 +20,7 @@
 #include "memory_backend.h"
 #include "posix_mmap.h"
 #include "posix_shm_mmap.h"
-#if defined(HSHM_ENABLE_CUDA) or defined(HSHM_ENABLE_ROCM)
+#if HSHM_ENABLE_CUDA || HSHM_ENABLE_ROCM
 #include "gpu_malloc.h"
 #include "gpu_shm_mmap.h"
 #endif
@@ -30,7 +30,8 @@ namespace hshm::ipc {
 #define HSHM_CREATE_BACKEND(T)                                               \
   if constexpr (std::is_same_v<T, BackendT>) {                               \
     auto alloc = HSHM_ROOT_ALLOC;                                            \
-    auto backend = alloc->template NewObj<T>(HSHM_DEFAULT_MEM_CTX);          \
+    auto full_ptr = alloc->template NewObj<T>(HSHM_DEFAULT_MEM_CTX);         \
+    auto backend = full_ptr.ptr_;                                            \
     if (!backend->shm_init(backend_id, size, std::forward<Args>(args)...)) { \
       HSHM_THROW_ERROR(MEMORY_BACKEND_CREATE_FAILED);                        \
     }                                                                        \
@@ -40,7 +41,8 @@ namespace hshm::ipc {
 #define HSHM_DESERIALIZE_BACKEND(T)                                 \
   case MemoryBackendType::k##T: {                                   \
     auto alloc = HSHM_ROOT_ALLOC;                                   \
-    auto backend = alloc->template NewObj<T>(HSHM_DEFAULT_MEM_CTX); \
+    auto full_ptr = alloc->template NewObj<T>(HSHM_DEFAULT_MEM_CTX);\
+    auto backend = full_ptr.ptr_;                                   \
     if (!backend->shm_deserialize(url)) {                           \
       HSHM_THROW_ERROR(MEMORY_BACKEND_NOT_FOUND);                   \
     }                                                               \
@@ -54,7 +56,7 @@ class MemoryBackendFactory {
   static MemoryBackend *shm_init(const MemoryBackendId &backend_id, size_t size,
                                  Args... args) {
     HSHM_CREATE_BACKEND(PosixShmMmap)
-#if defined(HSHM_ENABLE_CUDA) or defined(HSHM_ENABLE_ROCM)
+#if HSHM_ENABLE_CUDA || HSHM_ENABLE_ROCM
     HSHM_CREATE_BACKEND(GpuShmMmap)
     HSHM_CREATE_BACKEND(GpuMalloc)
 #endif
@@ -72,7 +74,7 @@ class MemoryBackendFactory {
                                         const hshm::chararr &url) {
     switch (type) {
       HSHM_DESERIALIZE_BACKEND(PosixShmMmap)
-#if defined(HSHM_ENABLE_CUDA) or defined(HSHM_ENABLE_ROCM)
+#if HSHM_ENABLE_CUDA || HSHM_ENABLE_ROCM
       HSHM_DESERIALIZE_BACKEND(GpuShmMmap)
       HSHM_DESERIALIZE_BACKEND(GpuMalloc)
 #endif

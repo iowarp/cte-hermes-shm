@@ -27,7 +27,8 @@ namespace hshm::ipc {
 
 #define HSHM_ALLOC_DSRL_CASE(ALLOC_NAME)                                    \
   case AllocatorType::k##ALLOC_NAME: {                                      \
-    auto alloc = HSHM_ROOT_ALLOC->NewObj<ALLOC_NAME>(HSHM_DEFAULT_MEM_CTX); \
+    auto full_ptr = HSHM_ROOT_ALLOC->NewObj<ALLOC_NAME>(HSHM_DEFAULT_MEM_CTX); \
+    auto alloc = full_ptr.ptr_;                                             \
     alloc->shm_deserialize(backend);                                        \
     return alloc;                                                           \
   }
@@ -42,7 +43,8 @@ class AllocatorFactory {
                                          size_t custom_header_size,
                                          MemoryBackend backend,
                                          Args&&... args) {
-    auto alloc = HSHM_ROOT_ALLOC->NewObj<AllocT>(HSHM_DEFAULT_MEM_CTX);
+    auto full_ptr = HSHM_ROOT_ALLOC->NewObj<AllocT>(HSHM_DEFAULT_MEM_CTX);
+    auto alloc = full_ptr.ptr_;
     alloc->backend_ = backend;
     alloc->shm_init(alloc_id, custom_header_size, backend,
                     std::forward<Args>(args)...);

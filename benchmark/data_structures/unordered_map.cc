@@ -215,7 +215,7 @@ class UnorderedMapTest {
   void Allocate() {
     auto alloc = HSHM_DEFAULT_ALLOC;
     if constexpr (std::is_same_v<MapT, hipc::unordered_map<size_t, T>>) {
-      map_ = alloc->template NewObjLocal<MapT>(HSHM_DEFAULT_MEM_CTX, 5000).ptr_;
+      map_ = alloc->template NewObj<MapT>(HSHM_DEFAULT_MEM_CTX, 5000).ptr_;
     } else if constexpr (std::is_same_v<MapT, std::unordered_map<size_t, T>>) {
       map_ = new std::unordered_map<size_t, T>();
     } else if constexpr (std::is_same_v<MapT, bipc_unordered_map<size_t, T>>) {

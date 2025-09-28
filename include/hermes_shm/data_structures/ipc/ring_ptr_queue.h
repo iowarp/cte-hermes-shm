@@ -14,8 +14,11 @@
 
 namespace hshm::ipc {
 
+/** Forward declaration for EmptyHeader */
+struct EmptyHeader;
+
 /** Forward declaration of ring_ptr_queue_base */
-template <typename T, RingQueueFlag RQ_FLAGS, HSHM_CLASS_TEMPL_WITH_DEFAULTS>
+template <typename T, typename HDR = EmptyHeader, RingQueueFlag RQ_FLAGS = RING_BUFFER_SPSC_FLAGS, HSHM_CLASS_TEMPL_WITH_DEFAULTS>
 class ring_ptr_queue_base;
 
 /**
@@ -23,13 +26,16 @@ class ring_ptr_queue_base;
  * Used as inputs to the HIPC_CONTAINER_TEMPLATE
  * */
 #define CLASS_NAME ring_ptr_queue_base
-#define CLASS_NEW_ARGS T, RQ_FLAGS
+#define CLASS_NEW_ARGS T, HDR, RQ_FLAGS
 
 /**
  * A queue optimized for multiple producers (emplace) with a single
  * consumer (pop).
+ * @param T The type of the data to store in the queue
+ * @param HDR Optional header type to store additional data (default: EmptyHeader)
+ * @param RQ_FLAGS Configuration flags
  * */
-template <typename T, RingQueueFlag RQ_FLAGS, HSHM_CLASS_TEMPL>
+template <typename T, typename HDR, RingQueueFlag RQ_FLAGS, HSHM_CLASS_TEMPL>
 class ring_ptr_queue_base : public ShmContainer {
  public:
   HIPC_CONTAINER_TEMPLATE((CLASS_NAME), (CLASS_NEW_ARGS))
@@ -46,6 +52,7 @@ class ring_ptr_queue_base : public ShmContainer {
   hipc::opt_atomic<qtok_id, IsPushAtomic> tail_;
   hipc::opt_atomic<qtok_id, IsPopAtomic> head_;
   ibitfield flags_;
+  HDR header_;
 
  public:
   /**====================================
@@ -68,8 +75,11 @@ class ring_ptr_queue_base : public ShmContainer {
   HSHM_INLINE_CROSS_FUN
   void shm_init(const hipc::CtxAllocator<AllocT> &alloc, size_t depth = 1024) {
     init_shm_container(alloc);
-    HSHM_MAKE_AR(queue_, GetCtxAllocator(), depth);
+    queue_.shm_init(GetCtxAllocator(), depth);
     flags_.Clear();
+    if constexpr (!std::is_same_v<HDR, EmptyHeader>) {
+      header_ = HDR{};
+    }
     SetNull();
   }
 
@@ -110,6 +120,9 @@ class ring_ptr_queue_base : public ShmContainer {
     head_ = other.head_.load();
     tail_ = other.tail_.load();
     (*queue_) = (*other.queue_);
+    if constexpr (!std::is_same_v<HDR, EmptyHeader>) {
+      header_ = other.header_;
+    }
   }
 
   /**====================================
@@ -153,6 +166,9 @@ class ring_ptr_queue_base : public ShmContainer {
       head_ = other.head_.load();
       tail_ = other.tail_.load();
       (*queue_) = std::move(*other.queue_);
+      if constexpr (!std::is_same_v<HDR, EmptyHeader>) {
+        header_ = std::move(other.header_);
+      }
       other.SetNull();
     } else {
       shm_strong_copy_op(other);
@@ -395,73 +411,81 @@ class ring_ptr_queue_base : public ShmContainer {
   /** Get size (wrapper) */
   HSHM_INLINE_CROSS_FUN
   size_t Size() { return GetSize(); }
+
+  /** Get header reference */
+  HSHM_INLINE_CROSS_FUN
+  HDR& GetHeader() { return header_; }
+
+  /** Get const header reference */
+  HSHM_INLINE_CROSS_FUN
+  const HDR& GetHeader() const { return header_; }
 };
 
-template <typename T, HSHM_CLASS_TEMPL_WITH_DEFAULTS>
+template <typename T, typename HDR = EmptyHeader, HSHM_CLASS_TEMPL_WITH_DEFAULTS>
 using mpsc_ptr_queue =
-    ring_ptr_queue_base<T, RING_BUFFER_MPSC_FLAGS, HSHM_CLASS_TEMPL_ARGS>;
+    ring_ptr_queue_base<T, HDR, RING_BUFFER_MPSC_FLAGS, HSHM_CLASS_TEMPL_ARGS>;
 
-template <typename T, HSHM_CLASS_TEMPL_WITH_DEFAULTS>
+template <typename T, typename HDR = EmptyHeader, HSHM_CLASS_TEMPL_WITH_DEFAULTS>
 using spsc_ptr_queue =
-    ring_ptr_queue_base<T, RING_BUFFER_SPSC_FLAGS, HSHM_CLASS_TEMPL_ARGS>;
+    ring_ptr_queue_base<T, HDR, RING_BUFFER_SPSC_FLAGS, HSHM_CLASS_TEMPL_ARGS>;
 
-template <typename T, HSHM_CLASS_TEMPL_WITH_DEFAULTS>
+template <typename T, typename HDR = EmptyHeader, HSHM_CLASS_TEMPL_WITH_DEFAULTS>
 using fixed_spsc_ptr_queue =
-    ring_ptr_queue_base<T, RING_BUFFER_FIXED_SPSC_FLAGS, HSHM_CLASS_TEMPL_ARGS>;
+    ring_ptr_queue_base<T, HDR, RING_BUFFER_FIXED_SPSC_FLAGS, HSHM_CLASS_TEMPL_ARGS>;
 
-template <typename T, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
+template <typename T, typename HDR = EmptyHeader, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
 using fixed_mpsc_ptr_queue =
-    ring_ptr_queue_base<T, RING_BUFFER_FIXED_MPMC_FLAGS, HSHM_CLASS_TEMPL_ARGS>;
+    ring_ptr_queue_base<T, HDR, RING_BUFFER_FIXED_MPMC_FLAGS, HSHM_CLASS_TEMPL_ARGS>;
 
-template <typename T, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
+template <typename T, typename HDR = EmptyHeader, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
 using circular_spsc_ptr_queue =
-    ring_ptr_queue_base<T, RING_BUFFER_CIRCULAR_SPSC_FLAGS,
+    ring_ptr_queue_base<T, HDR, RING_BUFFER_CIRCULAR_SPSC_FLAGS,
                         HSHM_CLASS_TEMPL_ARGS>;
 
-template <typename T, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
+template <typename T, typename HDR = EmptyHeader, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
 using circular_mpsc_ptr_queue =
-    ring_ptr_queue_base<T, RING_BUFFER_CIRCULAR_MPMC_FLAGS,
+    ring_ptr_queue_base<T, HDR, RING_BUFFER_CIRCULAR_MPMC_FLAGS,
                         HSHM_CLASS_TEMPL_ARGS>;
 
-template <typename T, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
+template <typename T, typename HDR = EmptyHeader, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
 using ext_ptr_ring_buffer =
-    ring_ptr_queue_base<T, RING_BUFFER_EXTENSIBLE_FLAGS, HSHM_CLASS_TEMPL_ARGS>;
+    ring_ptr_queue_base<T, HDR, RING_BUFFER_EXTENSIBLE_FLAGS, HSHM_CLASS_TEMPL_ARGS>;
 
 }  // namespace hshm::ipc
 
 namespace hshm {
 
-template <typename T, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
+template <typename T, typename HDR = hipc::EmptyHeader, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
 using mpsc_ptr_queue =
-    hipc::ring_ptr_queue_base<T, RING_BUFFER_MPSC_FLAGS, HSHM_CLASS_TEMPL_ARGS>;
+    hipc::ring_ptr_queue_base<T, HDR, RING_BUFFER_MPSC_FLAGS, HSHM_CLASS_TEMPL_ARGS>;
 
-template <typename T, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
+template <typename T, typename HDR = hipc::EmptyHeader, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
 using spsc_ptr_queue =
-    hipc::ring_ptr_queue_base<T, RING_BUFFER_SPSC_FLAGS, HSHM_CLASS_TEMPL_ARGS>;
+    hipc::ring_ptr_queue_base<T, HDR, RING_BUFFER_SPSC_FLAGS, HSHM_CLASS_TEMPL_ARGS>;
 
-template <typename T, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
+template <typename T, typename HDR = hipc::EmptyHeader, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
 using fixed_spsc_ptr_queue =
-    hipc::ring_ptr_queue_base<T, RING_BUFFER_FIXED_SPSC_FLAGS,
+    hipc::ring_ptr_queue_base<T, HDR, RING_BUFFER_FIXED_SPSC_FLAGS,
                               HSHM_CLASS_TEMPL_ARGS>;
 
-template <typename T, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
+template <typename T, typename HDR = hipc::EmptyHeader, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
 using fixed_mpsc_ptr_queue =
-    hipc::ring_ptr_queue_base<T, RING_BUFFER_FIXED_MPMC_FLAGS,
+    hipc::ring_ptr_queue_base<T, HDR, RING_BUFFER_FIXED_MPMC_FLAGS,
                               HSHM_CLASS_TEMPL_ARGS>;
 
-template <typename T, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
+template <typename T, typename HDR = hipc::EmptyHeader, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
 using circular_spsc_ptr_queue =
-    hipc::ring_ptr_queue_base<T, RING_BUFFER_CIRCULAR_SPSC_FLAGS,
+    hipc::ring_ptr_queue_base<T, HDR, RING_BUFFER_CIRCULAR_SPSC_FLAGS,
                               HSHM_CLASS_TEMPL_ARGS>;
 
-template <typename T, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
+template <typename T, typename HDR = hipc::EmptyHeader, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
 using circular_mpsc_ptr_queue =
-    hipc::ring_ptr_queue_base<T, RING_BUFFER_CIRCULAR_MPMC_FLAGS,
+    hipc::ring_ptr_queue_base<T, HDR, RING_BUFFER_CIRCULAR_MPMC_FLAGS,
                               HSHM_CLASS_TEMPL_ARGS>;
 
-template <typename T, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
+template <typename T, typename HDR = hipc::EmptyHeader, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
 using ext_ptr_ring_buffer =
-    hipc::ring_ptr_queue_base<T, RING_BUFFER_EXTENSIBLE_FLAGS,
+    hipc::ring_ptr_queue_base<T, HDR, RING_BUFFER_EXTENSIBLE_FLAGS,
                               HSHM_CLASS_TEMPL_ARGS>;
 
 }  // namespace hshm

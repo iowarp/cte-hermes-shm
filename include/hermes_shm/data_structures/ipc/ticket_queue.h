@@ -39,7 +39,7 @@ template <typename T, HSHM_CLASS_TEMPL>
 class ticket_queue : public ShmContainer {
  public:
   HIPC_CONTAINER_TEMPLATE((CLASS_NAME), (CLASS_NEW_ARGS))
-  delay_ar<fixed_spsc_queue<T, HSHM_CLASS_TEMPL_ARGS>> queue_;
+  delay_ar<fixed_spsc_queue<T, hipc::EmptyHeader, HSHM_CLASS_TEMPL_ARGS>> queue_;
   hshm::Mutex lock_;
 
  public:
@@ -63,7 +63,7 @@ class ticket_queue : public ShmContainer {
   /** SHM Constructor. */
   void shm_init(const hipc::CtxAllocator<AllocT> &alloc, size_t depth = 1024) {
     init_shm_container(alloc);
-    HSHM_MAKE_AR(queue_, GetCtxAllocator(), depth);
+    queue_.shm_init(GetCtxAllocator(), depth);
     lock_.Init();
     SetNull();
   }

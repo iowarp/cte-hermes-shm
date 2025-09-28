@@ -84,7 +84,7 @@ void mpsc_test() {
   hipc::delay_ar<gpu::ipc::mpsc_queue<int>> &queue = header->queue_;
   hipc::CtxAllocator<AllocT> ctx_alloc(alloc);
   if (rank == ROOT_RANK) {
-    HSHM_MAKE_AR(queue, alloc, 256 * 256);
+    queue.shm_init(alloc, 256 * 256);
   }
   MPI_Barrier(MPI_COMM_WORLD);
   if (rank == ROOT_RANK) {

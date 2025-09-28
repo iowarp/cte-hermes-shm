@@ -13,7 +13,7 @@ if (HSHM_ENABLE_OPENMP)
     add_dependencies(test_thread_exec hermes_shm_host)
     target_link_libraries(test_thread_exec
             hermes_shm_host
-            $<$<BOOL:${HSHM_RPC_THALLIUM}>:thallium>
+            $<$<BOOL:${HSHM_ENABLE_THALLIUM}>:thallium>
             Catch2::Catch2
             ${OpenMP_LIBS})
 

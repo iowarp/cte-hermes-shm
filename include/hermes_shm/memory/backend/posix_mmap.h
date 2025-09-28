@@ -21,7 +21,7 @@
 #include <string>
 
 #include "hermes_shm/constants/macros.h"
-#ifdef HSHM_ENABLE_PROCFS_SYSINFO
+#if HSHM_ENABLE_PROCFS_SYSINFO
 #include <sys/mman.h>
 #include <sys/shm.h>
 #include <sys/stat.h>

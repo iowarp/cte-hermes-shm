@@ -17,12 +17,14 @@ if(HSHM_ENABLE_DOXYGEN)
     message(STATUS "found doxygen at ${DOXYGEN_EXECUTABLE}")
 endif()
 
-link_directories(${ZeroMQ_LIBRARY_DIRS})
-include_directories(${ZeroMQ_INCLUDE_DIRS})
+# ZeroMQ directories (only if ZMQ is enabled)
+# Note: ZeroMQ variables are set later in the file when HSHM_ENABLE_ZMQ is ON
 
-# Catch2
-find_package(Catch2 3.0.1 REQUIRED)
-message(STATUS "found catch2.h at ${Catch2_CXX_INCLUDE_DIRS}")
+# Catch2 (only if tests are enabled)
+if(HSHM_BUILD_TESTS)
+    find_package(Catch2 3.0.1 REQUIRED)
+    message(STATUS "found catch2.h at ${Catch2_CXX_INCLUDE_DIRS}")
+endif()
 
 # YAML-CPP
 find_package(yaml-cpp REQUIRED)
@@ -56,7 +58,7 @@ if(HSHM_ENABLE_OPENMP)
 endif()
 
 # thallium
-if(HSHM_RPC_THALLIUM)
+if(HSHM_ENABLE_THALLIUM)
     find_package(thallium CONFIG REQUIRED)
 
     if(thallium_FOUND)
@@ -175,6 +177,15 @@ if(HSHM_ENABLE_ZMQ)
     set(ZMQ_LIBS ${ZeroMQ_LIBRARIES})
     set(ZMQ_INCLUDES ${ZeroMQ_INCLUDE_DIRS})
     set(ZMQ_LIB_DIRS ${ZeroMQ_LIBRARY_DIRS})
+endif()
+
+# Libfabric
+if(HSHM_ENABLE_LIBFABRIC)
+    pkg_check_modules(Libfabric REQUIRED libfabric)
+    message(STATUS "found rdma/fabric.h at ${Libfabric_INCLUDE_DIRS}")
+    set(LIBFABRIC_LIBS ${Libfabric_LIBRARIES})
+    set(LIBFABRIC_INCLUDES ${Libfabric_INCLUDE_DIRS})
+    set(LIBFABRIC_LIB_DIRS ${Libfabric_LIBRARY_DIRS})
 endif()
 
 # ------------------------------------------------------------------------------

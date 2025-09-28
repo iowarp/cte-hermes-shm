@@ -39,7 +39,7 @@
 #define HSHM_ERROR_HANDLE_CATCH catch (HSHM_ERROR_TYPE & HSHM_ERROR_PTR)
 #define HSHM_ERROR_IS(err, check) (err->get_code() == check.get_code())
 
-#ifdef HSHM_IS_HOST
+#if HSHM_IS_HOST
 #if __HIP_DEVICE_COMPILE__
 #error "Why??"
 #endif
@@ -47,7 +47,7 @@
 #define HSHM_THROW_STD_ERROR(...) throw std::runtime_error(__VA_ARGS__);
 #endif
 
-#ifdef HSHM_IS_GPU
+#if HSHM_IS_GPU
 #define HSHM_THROW_ERROR(CODE, ...)
 #define HSHM_THROW_STD_ERROR(...)
 #endif

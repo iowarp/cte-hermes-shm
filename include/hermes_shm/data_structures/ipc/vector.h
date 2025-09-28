@@ -447,7 +447,8 @@ class vector : public ShmContainer {
   void shm_destroy_main() {
     erase(begin(), end());
     CtxAllocator<AllocT> alloc = GetCtxAllocator();
-    alloc->Free(alloc.ctx_, vec_ptr_);
+    FullPtr<void, OffsetPointer> full_ptr(alloc->template Convert<void>(vec_ptr_), vec_ptr_);
+    alloc->Free(alloc.ctx_, full_ptr);
   }
 
   /**====================================
@@ -538,7 +539,7 @@ class vector : public ShmContainer {
     if (length_ == max_length_) {
       vec = grow_vector(vec, 0, false);
     }
-    HSHM_MAKE_AR(vec[length_], GetCtxAllocator(), std::forward<Args>(args)...)
+    vec[length_].shm_init(GetCtxAllocator(), std::forward<Args>(args)...);
     ++length_;
   }
 
@@ -577,7 +578,7 @@ class vector : public ShmContainer {
       vec = grow_vector(vec, 0, false);
     }
     shift_right(pos);
-    HSHM_MAKE_AR(vec[pos.i_], GetCtxAllocator(), std::forward<Args>(args)...)
+    vec[pos.i_].shm_init(GetCtxAllocator(), std::forward<Args>(args)...);
     ++length_;
   }
 
@@ -589,7 +590,7 @@ class vector : public ShmContainer {
     }
     delay_ar<T> *vec = data_ar();
     hipc::Allocator::DestructObj((*this)[(size_t)pos.i_]);
-    HSHM_MAKE_AR(vec[pos.i_], GetCtxAllocator(), std::forward<Args>(args)...)
+    vec[pos.i_].shm_init(GetCtxAllocator(), std::forward<Args>(args)...);
   }
 
   /** Delete the element at \a pos position */
@@ -683,19 +684,25 @@ class vector : public ShmContainer {
     CtxAllocator<AllocT> alloc = GetCtxAllocator();
     if constexpr (std::is_pod<T>() && !IS_SHM_ARCHIVEABLE(T)) {
       // Use reallocate for well-behaved objects
-      new_vec = alloc->template ReallocateObjs<delay_ar<T>>(
-          alloc.ctx_, vec_ptr_, max_length);
+      FullPtr<delay_ar<T>, OffsetPointer> vec_full_ptr(
+          alloc->template Convert<delay_ar<T>>(vec_ptr_), vec_ptr_);
+      auto result_ptr = alloc->template ReallocateObjs<delay_ar<T>>(
+          alloc.ctx_, vec_full_ptr, max_length);
+      new_vec = result_ptr.ptr_;
+      vec_ptr_ = result_ptr.shm_;
     } else {
       // Use std::move for unpredictable objects
-      OffsetPointer new_p;
-      new_vec = alloc->template AllocateObjs<delay_ar<T>>(alloc.ctx_,
-                                                          max_length, new_p);
+      auto full_ptr = alloc->template AllocateObjs<delay_ar<T>, OffsetPointer>(alloc.ctx_,
+                                                          max_length);
+      new_vec = full_ptr.ptr_;
+      OffsetPointer new_p = full_ptr.shm_;
       for (size_t i = 0; i < length_; ++i) {
         T &old_entry = (*this)[i];
-        HSHM_MAKE_AR(new_vec[i], alloc, std::move(old_entry))
+        new_vec[i].shm_init(alloc, std::move(old_entry));
       }
       if (!vec_ptr_.IsNull()) {
-        alloc->Free(alloc.ctx_, vec_ptr_);
+        FullPtr<void, OffsetPointer> old_full_ptr(alloc->template Convert<void>(vec_ptr_), vec_ptr_);
+        alloc->Free(alloc.ctx_, old_full_ptr);
       }
       vec_ptr_ = new_p;
     }
@@ -705,7 +712,7 @@ class vector : public ShmContainer {
     }
     if (resize) {
       for (size_t i = length_; i < max_length; ++i) {
-        HSHM_MAKE_AR(new_vec[i], alloc, std::forward<Args>(args)...)
+        new_vec[i].shm_init(alloc, std::forward<Args>(args)...);
       }
     }
 

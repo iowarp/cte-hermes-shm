@@ -1,22 +1,26 @@
 #pragma once
+#if HSHM_ENABLE_ZMQ
 #include <zmq.h>
-#include "lightbeam.h"
-#include <queue>
-#include <mutex>
+
 #include <memory>
+#include <mutex>
+#include <queue>
+
+#include "lightbeam.h"
 
 namespace hshm::lbm {
 
 class ZeroMqClient : public Client {
  public:
-  explicit ZeroMqClient(const std::string& addr, const std::string& protocol = "tcp",
-                        int port = 8192)
+  explicit ZeroMqClient(const std::string& addr,
+                        const std::string& protocol = "tcp", int port = 8192)
       : addr_(addr),
         protocol_(protocol),
         port_(port),
         ctx_(zmq_ctx_new()),
         socket_(zmq_socket(ctx_, ZMQ_PUSH)) {
-    std::string full_url = protocol_ + "://" + addr_ + ":" + std::to_string(port_);
+    std::string full_url =
+        protocol_ + "://" + addr_ + ":" + std::to_string(port_);
     zmq_connect(socket_, full_url.c_str());
   }
 
@@ -57,14 +61,15 @@ class ZeroMqClient : public Client {
 
 class ZeroMqServer : public Server {
  public:
-  explicit ZeroMqServer(const std::string& addr, const std::string& protocol = "tcp",
-                        int port = 8192)
+  explicit ZeroMqServer(const std::string& addr,
+                        const std::string& protocol = "tcp", int port = 8192)
       : addr_(addr),
         protocol_(protocol),
         port_(port),
         ctx_(zmq_ctx_new()),
         socket_(zmq_socket(ctx_, ZMQ_PULL)) {
-    std::string full_url = protocol_ + "://" + addr_ + ":" + std::to_string(port_);
+    std::string full_url =
+        protocol_ + "://" + addr_ + ":" + std::to_string(port_);
     int rc = zmq_bind(socket_, full_url.c_str());
     if (rc == -1) {
       std::string err = "ZeroMqServer failed to bind to URL '" + full_url +
@@ -114,4 +119,6 @@ class ZeroMqServer : public Server {
   void* socket_;
 };
 
-}  // namespace hshm::lbm 
+}  // namespace hshm::lbm
+
+#endif  // HSHM_ENABLE_ZMQ

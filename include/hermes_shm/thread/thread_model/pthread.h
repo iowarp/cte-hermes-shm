@@ -13,6 +13,8 @@
 #ifndef HSHM_THREAD_PTHREAD_H_
 #define HSHM_THREAD_PTHREAD_H_
 
+#if HSHM_ENABLE_PTHREADS
+
 #include <errno.h>
 #ifdef __APPLE__
 #include <unistd.h>
@@ -48,7 +50,7 @@ class Pthread : public ThreadModel {
   /** Yield the thread for a period of time */
   HSHM_CROSS_FUN
   void SleepForUs(size_t us) {
-#ifdef HSHM_IS_HOST
+#if HSHM_IS_HOST
     usleep(us);
 #endif
   }
@@ -56,7 +58,7 @@ class Pthread : public ThreadModel {
   /** Yield thread time slice */
   HSHM_CROSS_FUN
   void Yield() {
-#ifdef HSHM_IS_HOST
+#if HSHM_IS_HOST
     sched_yield();
 #endif
   }
@@ -64,7 +66,7 @@ class Pthread : public ThreadModel {
   /** Create thread-local storage */
   template <typename TLS>
   HSHM_CROSS_FUN bool CreateTls(ThreadLocalKey &key, TLS *data) {
-#ifdef HSHM_IS_HOST
+#if HSHM_IS_HOST
     int ret = pthread_key_create(&key.pthread_key_,
                                  ThreadLocalData::destroy_wrap<TLS>);
     if (ret != 0) {
@@ -79,7 +81,7 @@ class Pthread : public ThreadModel {
   /** Create thread-local storage */
   template <typename TLS>
   HSHM_CROSS_FUN bool SetTls(ThreadLocalKey &key, TLS *data) {
-#ifdef HSHM_IS_HOST
+#if HSHM_IS_HOST
     pthread_setspecific(key.pthread_key_, data);
     return true;
 #else
@@ -90,7 +92,7 @@ class Pthread : public ThreadModel {
   /** Get thread-local storage */
   template <typename TLS>
   HSHM_CROSS_FUN TLS *GetTls(const ThreadLocalKey &key) {
-#ifdef HSHM_IS_HOST
+#if HSHM_IS_HOST
     TLS *data = (TLS *)pthread_getspecific(key.pthread_key_);
     return data;
 #else
@@ -101,7 +103,7 @@ class Pthread : public ThreadModel {
   /** Get the TID of the current thread */
   HSHM_CROSS_FUN
   ThreadId GetTid() {
-#ifdef HSHM_IS_HOST
+#if HSHM_IS_HOST
     size_t tid = (size_t)GetTls<void>(tid_key_);
     if (!tid) {
       tid = tid_counter_.fetch_add(1);
@@ -146,12 +148,14 @@ class Pthread : public ThreadModel {
   /** Join a thread */
   HSHM_CROSS_FUN
   void Join(Thread &thread) {
-#ifdef HSHM_IS_HOST
+#if HSHM_IS_HOST
     pthread_join(thread.pthread_thread_, nullptr);
 #endif
   }
 };
 
 }  // namespace hshm::thread
+
+#endif  // HSHM_ENABLE_PTHREADS
 
 #endif  // HSHM_THREAD_PTHREAD_H_

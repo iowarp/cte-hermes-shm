@@ -16,6 +16,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <iostream>
+#include <limits>
 
 #include "hermes_shm/constants/macros.h"
 
@@ -84,7 +85,7 @@ struct ThreadId {
   }
 };
 
-#if defined(HSHM_ENABLE_CUDA) or defined(HSHM_ENABLE_ROCM)
+#if HSHM_ENABLE_CUDA or HSHM_ENABLE_ROCM
 typedef reg_int min_i16;
 typedef reg_int min_i32;
 typedef big_uint min_i64;

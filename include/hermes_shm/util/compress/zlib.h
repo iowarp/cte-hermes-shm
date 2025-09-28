@@ -13,6 +13,8 @@
 #ifndef HSHM_SHM_INCLUDE_HSHM_SHM_COMPRESS_Zlib_H_
 #define HSHM_SHM_INCLUDE_HSHM_SHM_COMPRESS_Zlib_H_
 
+#if HSHM_ENABLE_COMPRESS
+
 #include <zlib.h>
 
 #include "compress.h"
@@ -81,5 +83,7 @@ class Zlib : public Compressor {
 };
 
 }  // namespace hshm
+
+#endif  // HSHM_ENABLE_COMPRESS
 
 #endif  // HSHM_SHM_INCLUDE_HSHM_SHM_COMPRESS_Zlib_H_

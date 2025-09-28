@@ -23,7 +23,7 @@ void TestCase() {
   auto test2 = hipc::string();
   auto alloc = test2->GetAllocator();
   size_t x;
-  hipc::ShmArchive<T> ar;
+  hipc::delay_ar<T> ar;
   void *ptr_; */
 
   Timer t;

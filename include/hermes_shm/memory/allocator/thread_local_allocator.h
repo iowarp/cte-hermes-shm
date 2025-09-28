@@ -54,8 +54,8 @@ struct _ThreadLocalAllocatorHeader : public AllocatorHeader {
                  size_t max_threads) {
     AllocatorHeader::Configure(alloc_id, AllocatorType::kThreadLocalAllocator,
                                custom_header_size);
-    HSHM_MAKE_AR(tls_, alloc, max_threads, alloc);
-    HSHM_MAKE_AR(free_tids_, alloc, max_threads);
+    tls_.shm_init(alloc, max_threads, alloc);
+    free_tids_.shm_init(alloc, max_threads);
     free_tids_->resize(0);
     total_alloc_ = 0;
     tid_heap_ = 0;
@@ -233,8 +233,8 @@ class _ThreadLocalAllocator : public Allocator {
   HSHM_CROSS_FUN
   OffsetPointer ReallocateOffsetNoNullCheck(const hipc::MemContext &ctx,
                                             OffsetPointer p, size_t new_size) {
-    FullPtr<char, OffsetPointer> new_ptr =
-        GetAllocator()->AllocateLocalPtr<char, OffsetPointer>(ctx, new_size);
+    auto full_ptr = GetAllocator()->template Allocate<void, OffsetPointer>(ctx, new_size);
+    FullPtr<char, OffsetPointer> new_ptr(reinterpret_cast<char*>(full_ptr.ptr_), full_ptr.shm_);
     char *old = Convert<char, OffsetPointer>(p);
     MpPage *old_hdr = (MpPage *)(old - sizeof(MpPage));
     memcpy(new_ptr.ptr_, old, old_hdr->page_size_ - sizeof(MpPage));

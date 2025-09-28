@@ -213,9 +213,9 @@ class ListTest {
   void Allocate() {
     auto alloc = HSHM_DEFAULT_ALLOC;
     if constexpr (std::is_same_v<ListT, hipc::list<T>>) {
-      lp_ = alloc->template NewObjLocal<ListT>(HSHM_DEFAULT_MEM_CTX).ptr_;
+      lp_ = alloc->template NewObj<ListT>(HSHM_DEFAULT_MEM_CTX).ptr_;
     } else if constexpr (std::is_same_v<ListT, hipc::slist<T>>) {
-      lp_ = alloc->template NewObjLocal<ListT>(HSHM_DEFAULT_MEM_CTX).ptr_;
+      lp_ = alloc->template NewObj<ListT>(HSHM_DEFAULT_MEM_CTX).ptr_;
     } else if constexpr (std::is_same_v<ListT, bipc_list<T>>) {
       lp_ = BOOST_SEGMENT->construct<ListT>("BoostList")(
           BOOST_ALLOCATOR((std::pair<int, T>)));

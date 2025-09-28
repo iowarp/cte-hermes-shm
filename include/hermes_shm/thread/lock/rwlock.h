@@ -18,6 +18,7 @@
 #include "hermes_shm/thread/thread_model_manager.h"
 #include "hermes_shm/types/atomic.h"
 #include "hermes_shm/types/numbers.h"
+#include "hermes_shm/util/logging.h"
 
 namespace hshm {
 

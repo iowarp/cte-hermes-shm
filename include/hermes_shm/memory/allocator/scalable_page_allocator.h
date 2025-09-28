@@ -47,7 +47,9 @@ struct _ScalablePageAllocatorHeader : public AllocatorHeader {
     AllocatorHeader::Configure(alloc_id, AllocatorType::kScalablePageAllocator,
                                custom_header_size);
     total_alloc_ = 0;
-    HSHM_MAKE_AR(global_, alloc, alloc);
+    // TODO: Fix this specific case - PageAllocator needs special handling
+    // global_.shm_init(alloc, hshm::Unit<size_t>::Kilobytes(1));
+    Allocator::ConstructObj(global_.get_ref(), alloc, hshm::Unit<size_t>::Kilobytes(1));
   }
 };
 
@@ -163,8 +165,8 @@ class _ScalablePageAllocator : public Allocator {
   HSHM_CROSS_FUN
   OffsetPointer ReallocateOffsetNoNullCheck(const hipc::MemContext &ctx,
                                             OffsetPointer p, size_t new_size) {
-    FullPtr<char, OffsetPointer> new_ptr =
-        GetAllocator()->AllocateLocalPtr<char, OffsetPointer>(ctx, new_size);
+    auto full_ptr = GetAllocator()->template Allocate<void, OffsetPointer>(ctx, new_size);
+    FullPtr<char, OffsetPointer> new_ptr(reinterpret_cast<char*>(full_ptr.ptr_), full_ptr.shm_);
     char *old = Convert<char, OffsetPointer>(p);
     MpPage *old_hdr = (MpPage *)(old - sizeof(MpPage));
     memcpy(new_ptr.ptr_, old, old_hdr->page_size_ - sizeof(MpPage));

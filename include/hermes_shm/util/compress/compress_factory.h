@@ -13,6 +13,8 @@
 #ifndef HSHM_SHM_INCLUDE_HSHM_SHM_UTIL_COMPRESS_COMPRESS_FACTORY_H_
 #define HSHM_SHM_INCLUDE_HSHM_SHM_UTIL_COMPRESS_COMPRESS_FACTORY_H_
 
+#if HSHM_ENABLE_COMPRESS
+
 #include "blosc.h"
 #include "brotli.h"
 #include "bzip2.h"
@@ -22,5 +24,7 @@
 #include "snappy.h"
 #include "zlib.h"
 #include "zstd.h"
+
+#endif  // HSHM_ENABLE_COMPRESS
 
 #endif  // HSHM_SHM_INCLUDE_HSHM_SHM_UTIL_COMPRESS_COMPRESS_FACTORY_H_

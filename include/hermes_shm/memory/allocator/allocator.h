@@ -365,20 +365,26 @@ class BaseAllocator : public CoreAllocT {
   /**
    * Allocate a region of memory to a specific pointer type
    * */
-  template <typename PointerT = Pointer>
-  HSHM_INLINE_CROSS_FUN PointerT Allocate(const MemContext &ctx, size_t size) {
-    return PointerT(GetId(), AllocateOffset(ctx, size).load());
+  template <typename T = void, typename PointerT = Pointer>
+  HSHM_INLINE_CROSS_FUN FullPtr<T, PointerT> Allocate(const MemContext &ctx, size_t size) {
+    FullPtr<T, PointerT> result;
+    result.shm_ = PointerT(GetId(), AllocateOffset(ctx, size).load());
+    result.ptr_ = reinterpret_cast<T*>(CoreAllocT::buffer_ + result.shm_.off_.load());
+    return result;
   }
 
   /**
    * Allocate a region of memory to a specific pointer type
    * */
-  template <typename PointerT = Pointer>
-  HSHM_INLINE_CROSS_FUN PointerT AlignedAllocate(const MemContext &ctx,
+  template <typename T = void, typename PointerT = Pointer>
+  HSHM_INLINE_CROSS_FUN FullPtr<T, PointerT> AlignedAllocate(const MemContext &ctx,
                                                  size_t size,
                                                  size_t alignment) {
-    return PointerT(GetId(),
+    FullPtr<T, PointerT> result;
+    result.shm_ = PointerT(GetId(),
                     AlignedAllocateOffset(ctx, size, alignment).load());
+    result.ptr_ = reinterpret_cast<T*>(CoreAllocT::buffer_ + result.shm_.off_.load());
+    return result;
   }
 
   /**
@@ -386,13 +392,13 @@ class BaseAllocator : public CoreAllocT {
    * alignment. Will fall back to regular Allocate if
    * alignmnet is 0.
    * */
-  template <typename PointerT = Pointer>
-  HSHM_INLINE_CROSS_FUN PointerT Allocate(const MemContext &ctx, size_t size,
+  template <typename T = void, typename PointerT = Pointer>
+  HSHM_INLINE_CROSS_FUN FullPtr<T, PointerT> Allocate(const MemContext &ctx, size_t size,
                                           size_t alignment) {
     if (alignment == 0) {
-      return Allocate<PointerT>(ctx, size);
+      return Allocate<T, PointerT>(ctx, size);
     } else {
-      return AlignedAllocate<PointerT>(ctx, size, alignment);
+      return AlignedAllocate<T, PointerT>(ctx, size, alignment);
     }
   }
 
@@ -400,313 +406,36 @@ class BaseAllocator : public CoreAllocT {
    * Reallocate \a pointer to \a new_size new size
    * If p is kNulFullPtr, will internally call Allocate.
    *
-   * @return true if p was modified.
+   * @return the reallocated FullPtr.
    * */
-  template <typename PointerT = Pointer>
-  HSHM_INLINE_CROSS_FUN bool Reallocate(const MemContext &ctx, PointerT &p,
+  template <typename T = void, typename PointerT = Pointer>
+  HSHM_INLINE_CROSS_FUN FullPtr<T, PointerT> Reallocate(const MemContext &ctx, const FullPtr<T, PointerT> &p,
                                         size_t new_size) {
     if (p.IsNull()) {
-      p = Allocate<PointerT>(ctx, new_size);
-      return true;
+      return Allocate<T, PointerT>(ctx, new_size);
     }
-    auto new_p =
-        ReallocateOffsetNoNullCheck(ctx, p.ToOffsetPointer(), new_size);
-    bool ret = new_p == p.ToOffsetPointer();
-    p.off_ = new_p.load();
-    return ret;
+    auto new_off =
+        ReallocateOffsetNoNullCheck(ctx, p.shm_.ToOffsetPointer(), new_size);
+    FullPtr<T, PointerT> result;
+    result.shm_ = PointerT(GetId(), new_off.load());
+    result.ptr_ = reinterpret_cast<T*>(CoreAllocT::buffer_ + result.shm_.off_.load());
+    return result;
   }
 
   /**
    * Free the memory pointed to by \a p Pointer
    * */
-  template <typename PointerT = Pointer>
-  HSHM_INLINE_CROSS_FUN void Free(const MemContext &ctx, PointerT &p) {
+  template <typename T = void, typename PointerT = Pointer>
+  HSHM_INLINE_CROSS_FUN void Free(const MemContext &ctx, const FullPtr<T, PointerT> &p) {
     if (p.IsNull()) {
       HSHM_THROW_ERROR(INVALID_FREE);
     }
-    FreeOffsetNoNullCheck(ctx, OffsetPointer(p.off_.load()));
+    FreeOffsetNoNullCheck(ctx, OffsetPointer(p.shm_.off_.load()));
   }
 
-  /**====================================
-   * Private Pointer Allocators
-   * ===================================*/
 
-  /**
-   * Allocate a pointer of \a size size and return \a p process-independent
-   * pointer and a process-specific pointer.
-   * */
-  template <typename T, typename PointerT = Pointer>
-  HSHM_INLINE_CROSS_FUN T *AllocatePtr(const MemContext &ctx, size_t size,
-                                       PointerT &p, size_t alignment = 0) {
-    p = Allocate<PointerT>(ctx, size, alignment);
-    if (p.IsNull()) {
-      return nullptr;
-    }
-    return reinterpret_cast<T *>(CoreAllocT::buffer_ + p.off_.load());
-  }
 
-  /**
-   * Allocate a pointer of \a size size
-   * */
-  template <typename T, typename PointerT = Pointer>
-  HSHM_INLINE_CROSS_FUN T *AllocatePtr(const MemContext &ctx, size_t size,
-                                       size_t alignment = 0) {
-    PointerT p;
-    return AllocatePtr<T, PointerT>(ctx, size, p, alignment);
-  }
 
-  /**
-   * Allocate a pointer of \a size size and return \a p process-independent
-   * pointer and a process-specific pointer.
-   * */
-  template <typename T, typename PointerT = Pointer>
-  HSHM_INLINE_CROSS_FUN T *ClearAllocatePtr(const MemContext &ctx, size_t size,
-                                            PointerT &p, size_t alignment = 0) {
-    p = Allocate<PointerT>(ctx, size, alignment);
-    if (p.IsNull()) {
-      return nullptr;
-    }
-    auto ptr = reinterpret_cast<T *>(CoreAllocT::buffer_ + p.off_.load());
-    if (ptr) {
-      memset(ptr, 0, size);
-    }
-    return ptr;
-  }
-
-  /**
-   * Allocate a pointer of \a size size
-   * */
-  template <typename T, typename PointerT = Pointer>
-  HSHM_INLINE_CROSS_FUN T *ClearAllocatePtr(const MemContext &ctx, size_t size,
-                                            size_t alignment = 0) {
-    PointerT p;
-    return ClearAllocatePtr<T, PointerT>(ctx, size, p, alignment);
-  }
-
-  /**
-   * Reallocate a pointer to a new size
-   *
-   * @param p process-independent pointer (input & output)
-   * @param new_size the new size to allocate
-   * @param modified whether or not p was modified (output)
-   * @return A process-specific pointer
-   * */
-  template <typename T, typename PointerT = Pointer>
-  HSHM_INLINE_CROSS_FUN T *ReallocatePtr(const MemContext &ctx, PointerT &p,
-                                         size_t new_size, bool &modified) {
-    modified = Reallocate<PointerT>(ctx, p, new_size);
-    return Convert<T>(p);
-  }
-
-  /**
-   * Reallocate a pointer to a new size
-   *
-   * @param p process-independent pointer (input & output)
-   * @param new_size the new size to allocate
-   * @return A process-specific pointer
-   * */
-  template <typename T, typename PointerT = Pointer>
-  HSHM_INLINE_CROSS_FUN T *ReallocatePtr(const MemContext &ctx, PointerT &p,
-                                         size_t new_size) {
-    Reallocate<PointerT>(ctx, p, new_size);
-    return Convert<T>(p);
-  }
-
-  /**
-   * Reallocate a pointer to a new size
-   *
-   * @param old_ptr process-specific pointer to reallocate
-   * @param new_size the new size to allocate
-   * @return A process-specific pointer
-   * */
-  template <typename T>
-  HSHM_INLINE_CROSS_FUN T *ReallocatePtr(const MemContext &ctx, T *old_ptr,
-                                         size_t new_size) {
-    OffsetPointer p = Convert<T, OffsetPointer>(old_ptr);
-    return ReallocatePtr<T, OffsetPointer>(ctx, p, new_size);
-  }
-
-  /**
-   * Free the memory pointed to by \a ptr Pointer
-   * */
-  template <typename T = void>
-  HSHM_INLINE_CROSS_FUN void FreePtr(const MemContext &ctx, T *ptr) {
-    if (ptr == nullptr) {
-      HSHM_THROW_ERROR(INVALID_FREE);
-    }
-    FreeOffsetNoNullCheck(ctx, Convert<T, OffsetPointer>(ptr));
-  }
-
-  /**====================================
-   * Local Pointer Allocators
-   * ===================================*/
-
-  /**
-   * Allocate a pointer of \a size size and return \a p process-independent
-   * pointer and a process-specific pointer.
-   * */
-  template <typename T, typename PointerT = Pointer>
-  HSHM_INLINE_CROSS_FUN FullPtr<T, PointerT> AllocateLocalPtr(
-      const MemContext &ctx, size_t size, size_t alignment = 0) {
-    FullPtr<T, PointerT> p;
-    p.ptr_ = AllocatePtr<T, PointerT>(ctx, size, p.shm_, alignment);
-    return p;
-  }
-
-  /**
-   * Allocate a pointer of \a size size
-   * */
-  template <typename T, typename PointerT = Pointer>
-  HSHM_INLINE_CROSS_FUN FullPtr<T, PointerT> ClearAllocateLocalPtr(
-      const MemContext &ctx, size_t size, size_t alignment = 0) {
-    FullPtr<T, PointerT> p;
-    p.ptr_ = ClearAllocatePtr<T, PointerT>(ctx, size, p.shm_, alignment);
-    return p;
-  }
-
-  /**
-   * Reallocate a pointer to a new size
-   *
-   * @param p process-independent pointer (input & output)
-   * @param new_size the new size to allocate
-   * @return A process-specific pointer
-   * */
-  template <typename T, typename PointerT = Pointer>
-  HSHM_INLINE_CROSS_FUN bool ReallocateLocalPtr(const MemContext &ctx,
-                                                FullPtr<T, PointerT> &p,
-                                                size_t new_size) {
-    bool ret = Reallocate<PointerT>(ctx, p.shm_, new_size);
-    p.ptr_ = Convert<T>(p.shm_);
-    return ret;
-  }
-
-  /**
-   * Free the memory pointed to by \a ptr Pointer
-   * */
-  template <typename T = void, typename PointerT = Pointer>
-  HSHM_INLINE_CROSS_FUN void FreeLocalPtr(const MemContext &ctx,
-                                          FullPtr<T, PointerT> &ptr) {
-    if (ptr.ptr_ == nullptr) {
-      HSHM_THROW_ERROR(INVALID_FREE);
-    }
-    FreeOffsetNoNullCheck(ctx, ptr.shm_.ToOffsetPointer());
-  }
-
-  /**====================================
-   * SHM Array Allocators
-   * ===================================*/
-
-  /**
-   * Allocate a pointer of \a size size and return \a p process-independent
-   * pointer and its size.
-   * */
-  template <typename T, typename PointerT = Pointer>
-  HSHM_INLINE_CROSS_FUN Array<PointerT> AllocateArray(const MemContext &ctx,
-                                                      size_t size,
-                                                      size_t alignment = 0) {
-    Array<PointerT> p;
-    p.shm_ = Allocate<PointerT>(ctx, size, alignment);
-    p.size_ = size;
-    return p;
-  }
-
-  /**
-   * Allocate a pointer of \a size size
-   * */
-  template <typename T, typename PointerT = Pointer>
-  HSHM_INLINE_CROSS_FUN Array<PointerT> ClearAllocateArray(
-      const MemContext &ctx, size_t size, size_t alignment = 0) {
-    Array<PointerT> p;
-    ClearAllocatePtr<T, PointerT>(ctx, size, p.shm_, alignment);
-    p.size_ = size;
-    return p;
-  }
-
-  /**
-   * Reallocate a pointer to a new size
-   *
-   * @param p process-independent pointer (input & output)
-   * @param new_size the new size to allocate
-   * @return A process-specific pointer
-   * */
-  template <typename T, typename PointerT = Pointer>
-  HSHM_INLINE_CROSS_FUN bool ReallocateArray(const MemContext &ctx,
-                                             Array<PointerT> &p,
-                                             size_t new_size) {
-    bool ret = Reallocate<PointerT>(ctx, p.shm_, new_size);
-    p.size_ = new_size;
-    return ret;
-  }
-
-  /**
-   * Free the memory pointed to by \a ptr Pointer
-   * */
-  template <typename T = void, typename PointerT = Pointer>
-  HSHM_INLINE_CROSS_FUN void FreeArray(const MemContext &ctx,
-                                       Array<PointerT> &ptr) {
-    if (ptr.shm_.IsNull()) {
-      HSHM_THROW_ERROR(INVALID_FREE);
-    }
-    FreeOffsetNoNullCheck(ctx, ptr.shm_.ToOffsetPointer());
-  }
-
-  /**====================================
-   * Local Array Allocators
-   * ===================================*/
-
-  /**
-   * Allocate a pointer of \a size size and return \a p process-independent
-   * pointer, a process-specific pointer, and its size.
-   * */
-  template <typename T, typename PointerT = Pointer>
-  HSHM_INLINE_CROSS_FUN LArray<T, PointerT> AllocateLocalArray(
-      const MemContext &ctx, size_t size, size_t alignment = 0) {
-    LArray<T, PointerT> p;
-    p.ptr_ = AllocatePtr<T, PointerT>(ctx, size, p.shm_, alignment);
-    p.size_ = size;
-    return p;
-  }
-
-  /**
-   * Allocate a pointer of \a size size
-   * */
-  template <typename T, typename PointerT = Pointer>
-  HSHM_INLINE_CROSS_FUN LArray<T, PointerT> ClearAllocateLocalArray(
-      const MemContext &ctx, size_t size, size_t alignment = 0) {
-    LArray<T, PointerT> p;
-    p.ptr_ = ClearAllocatePtr<T, PointerT>(ctx, size, p.shm_, alignment);
-    p.size_ = size;
-    return p;
-  }
-
-  /**
-   * Reallocate a pointer to a new size
-   *
-   * @param p process-independent pointer (input & output)
-   * @param new_size the new size to allocate
-   * @return A process-specific pointer
-   * */
-  template <typename T, typename PointerT = Pointer>
-  HSHM_INLINE_CROSS_FUN bool ReallocateLocalArray(const MemContext &ctx,
-                                                  LArray<T, PointerT> &p,
-                                                  size_t new_size) {
-    bool ret = Reallocate<PointerT>(ctx, p.shm_, new_size);
-    p.ptr_ = Convert<T>(p.shm_);
-    p.size_ = new_size;
-    return ret;
-  }
-
-  /**
-   * Free the memory pointed to by \a ptr Pointer
-   * */
-  template <typename T = void, typename PointerT = Pointer>
-  HSHM_INLINE_CROSS_FUN void FreeLocalArray(const MemContext &ctx,
-                                            LArray<T, PointerT> &ptr) {
-    if (ptr.ptr_ == nullptr) {
-      HSHM_THROW_ERROR(INVALID_FREE);
-    }
-    FreeOffsetNoNullCheck(ctx, ptr.shm_.ToOffsetPointer());
-  }
 
   /**====================================
    * Private Object Allocators
@@ -715,272 +444,68 @@ class BaseAllocator : public CoreAllocT {
   /**
    * Allocate an array of objects (but don't construct).
    *
-   * @param count the number of objects to allocate
-   * @param p process-independent pointer (output)
-   * @return A process-specific pointer
+   * @return A FullPtr to the allocated memory
    * */
   template <typename T, typename PointerT = Pointer>
-  HSHM_INLINE_CROSS_FUN T *AllocateObjs(const MemContext &ctx, size_t count,
-                                        PointerT &p) {
-    return AllocatePtr<T>(ctx, count * sizeof(T), p);
-  }
-
-  /**
-   * Allocate an array of objects (but don't construct).
-   *
-   * @return A process-specific pointer
-   * */
-  template <typename T>
-  HSHM_INLINE_CROSS_FUN T *AllocateObjs(const MemContext &ctx, size_t count) {
-    OffsetPointer p;
-    return AllocateObjs<T>(ctx, count, p);
-  }
-
-  /**
-   * Allocate and construct an array of objects
-   *
-   * @param count the number of objects to allocate
-   * @param p process-independent pointer (output)
-   * @param args parameters to construct object of type T
-   * @return A process-specific pointer
-   * */
-  template <typename T, typename PointerT = Pointer, typename... Args>
-  HSHM_INLINE_CROSS_FUN T *AllocateConstructObjs(const MemContext &ctx,
-                                                 size_t count, PointerT &p,
-                                                 Args &&...args) {
-    T *ptr = AllocateObjs<T>(ctx, count, p);
-    ConstructObjs<T>(ptr, 0, count, std::forward<Args>(args)...);
-    return ptr;
-  }
-
-  /**
-   * Allocate and construct an array of objects
-   *
-   * @param count the number of objects to allocate
-   * @param p process-independent pointer (output)
-   * @param args parameters to construct object of type T
-   * @return A process-specific pointer
-   * */
-  template <typename T, typename... Args>
-  HSHM_INLINE_CROSS_FUN T *AllocateConstructObjs(const MemContext &ctx,
-                                                 size_t count, Args &&...args) {
-    OffsetPointer p;
-    return AllocateConstructObjs<T, OffsetPointer>(ctx, count, p,
-                                                   std::forward<Args>(args)...);
-  }
-
-  /** Allocate + construct an array of objects */
-  template <typename T, typename PointerT = Pointer, typename... Args>
-  HSHM_INLINE_CROSS_FUN T *NewObjs(const MemContext &ctx, size_t count,
-                                   PointerT &p, Args &&...args) {
-    return AllocateConstructObjs<T>(ctx, count, p, std::forward<Args>(args)...);
+  HSHM_INLINE_CROSS_FUN FullPtr<T, PointerT> AllocateObjs(const MemContext &ctx, size_t count) {
+    return Allocate<T, PointerT>(ctx, count * sizeof(T));
   }
 
   /** Allocate + construct an array of objects */
   template <typename T, typename... Args>
-  HSHM_INLINE_CROSS_FUN T *NewObjs(const MemContext &ctx, size_t count,
+  HSHM_INLINE_CROSS_FUN FullPtr<T> NewObjs(const MemContext &ctx, size_t count,
                                    Args &&...args) {
-    OffsetPointer p;
-    return NewObjs<T>(ctx, count, p, std::forward<Args>(args)...);
-  }
-
-  /** Allocate + construct a single object */
-  template <typename T, typename PointerT = Pointer, typename... Args>
-  HSHM_INLINE_CROSS_FUN T *NewObj(const MemContext &ctx, PointerT &p,
-                                  Args &&...args) {
-    return NewObjs<T>(ctx, 1, p, std::forward<Args>(args)...);
+    auto alloc_result = AllocateObjs<T, Pointer>(ctx, count);
+    ConstructObjs<T>(alloc_result.ptr_, 0, count, std::forward<Args>(args)...);
+    return alloc_result;
   }
 
   /** Allocate + construct a single object */
   template <typename T, typename... Args>
-  HSHM_INLINE_CROSS_FUN T *NewObj(const MemContext &ctx, Args &&...args) {
-    OffsetPointer p;
-    return NewObj<T>(ctx, p, std::forward<Args>(args)...);
+  HSHM_INLINE_CROSS_FUN FullPtr<T> NewObj(const MemContext &ctx, Args &&...args) {
+    return NewObjs<T>(ctx, 1, std::forward<Args>(args)...);
   }
 
   /**
    * Reallocate a pointer of objects to a new size.
    *
-   * @param p process-independent pointer (input & output)
-   * @param old_count the original number of objects (avoids reconstruction)
+   * @param p FullPtr to reallocate (input & output)
    * @param new_count the new number of objects
    *
-   * @return A process-specific pointer
+   * @return A FullPtr to the reallocated objects
    * */
   template <typename T, typename PointerT = Pointer>
-  HSHM_INLINE_CROSS_FUN T *ReallocateObjs(const MemContext &ctx, PointerT &p,
-                                          size_t new_count) {
-    T *ptr = ReallocatePtr<T>(ctx, p, new_count * sizeof(T));
-    return ptr;
-  }
-
-  /**
-   * Reallocate a pointer of objects to a new size and construct the
-   * new elements in-place.
-   *
-   * @param p process-independent pointer (input & output)
-   * @param old_count the original number of objects (avoids reconstruction)
-   * @param new_count the new number of objects
-   * @param args parameters to construct object of type T
-   *
-   * @return A process-specific pointer
-   * */
-  template <typename T, typename PointerT = Pointer, typename... Args>
-  HSHM_INLINE_CROSS_FUN T *ReallocateConstructObjs(const MemContext &ctx,
-                                                   PointerT &p,
-                                                   size_t old_count,
-                                                   size_t new_count,
-                                                   Args &&...args) {
-    T *ptr = ReallocatePtr<T>(ctx, p, new_count * sizeof(T));
-    ConstructObjs<T>(ptr, old_count, new_count, std::forward<Args>(args)...);
-    return ptr;
+  HSHM_INLINE_CROSS_FUN FullPtr<T, PointerT> ReallocateObjs(const MemContext &ctx, 
+                                                             FullPtr<T, PointerT> &p,
+                                                             size_t new_count) {
+    FullPtr<void, PointerT> old_full_ptr(reinterpret_cast<void*>(p.ptr_), p.shm_);
+    auto new_full_ptr = Reallocate<void, PointerT>(ctx, old_full_ptr, new_count * sizeof(T));
+    p.shm_ = new_full_ptr.shm_;
+    p.ptr_ = reinterpret_cast<T*>(new_full_ptr.ptr_);
+    return p;
   }
 
   /**
    * Free + destruct objects
    * */
-  template <typename T>
-  HSHM_INLINE_CROSS_FUN void FreeDestructObjs(const MemContext &ctx, T *ptr,
-                                              size_t count) {
-    DestructObjs<T>(ptr, count);
-    auto p = Convert<T, OffsetPointer>(ptr);
-    Free(ctx, p);
-  }
-
-  /**
-   * Free + destruct objects
-   * */
-  template <typename T>
-  HSHM_INLINE_CROSS_FUN void DelObjs(const MemContext &ctx, T *ptr,
+  template <typename T, typename PointerT = Pointer>
+  HSHM_INLINE_CROSS_FUN void DelObjs(const MemContext &ctx, 
+                                     FullPtr<T, PointerT> &p,
                                      size_t count) {
-    FreeDestructObjs<T>(ctx, ptr, count);
-  }
-
-  /**
-   * Free + destruct an object
-   * */
-  template <typename T>
-  HSHM_INLINE_CROSS_FUN void DelObj(const MemContext &ctx, T *ptr) {
-    FreeDestructObjs<T>(ctx, ptr, 1);
-  }
-
-  /**====================================
-   * Local Object Allocators
-   * ===================================*/
-
-  /**
-   * Allocate an array of objects (but don't construct).
-   *
-   * @return A LocaFullPtr
-   * */
-  template <typename T, typename PointerT = Pointer>
-  HSHM_INLINE_CROSS_FUN FullPtr<T, PointerT> AllocateObjsLocal(
-      const MemContext &ctx, size_t count) {
-    FullPtr<T, PointerT> p;
-    p.ptr_ = AllocateObjs<T>(ctx, count, p.shm_);
-    return p;
-  }
-
-  /**
-   * Allocate and construct an array of objects
-   *
-   * @param count the number of objects to allocate
-   * @param p process-independent pointer (output)
-   * @param args parameters to construct object of type T
-   * @return A process-specific pointer
-   * */
-  template <typename T, typename PointerT = Pointer, typename... Args>
-  HSHM_INLINE_CROSS_FUN FullPtr<T, PointerT> AllocateConstructObjsLocal(
-      const MemContext &ctx, size_t count, Args &&...args) {
-    FullPtr<T, PointerT> p;
-    p.ptr_ = AllocateConstructObjs<T, OffsetPointer>(
-        ctx, count, p.shm_, std::forward<Args>(args)...);
-    return p;
-  }
-
-  /** Allocate + construct an array of objects */
-  template <typename T, typename PointerT = Pointer, typename... Args>
-  HSHM_INLINE_CROSS_FUN FullPtr<T, PointerT> NewObjsLocal(const MemContext &ctx,
-                                                          size_t count,
-                                                          Args &&...args) {
-    FullPtr<T, PointerT> p;
-    p.ptr_ = NewObjs<T>(ctx, count, p.shm_, std::forward<Args>(args)...);
-    return p;
-  }
-
-  /** Allocate + construct a single object */
-  template <typename T, typename PointerT = Pointer, typename... Args>
-  HSHM_INLINE_CROSS_FUN FullPtr<T, PointerT> NewObjLocal(const MemContext &ctx,
-                                                         Args &&...args) {
-    FullPtr<T, PointerT> p;
-    p.ptr_ = NewObj<T>(ctx, p.shm_, std::forward<Args>(args)...);
-    return p;
-  }
-
-  /**
-   * Reallocate a pointer of objects to a new size.
-   *
-   * @param p process-independent pointer (input & output)
-   * @param old_count the original number of objects (avoids reconstruction)
-   * @param new_count the new number of objects
-   *
-   * @return A process-specific pointer
-   * */
-  template <typename T, typename PointerT = Pointer>
-  HSHM_INLINE_CROSS_FUN void ReallocateObjsLocal(const MemContext &ctx,
-                                                 FullPtr<T, PointerT> &p,
-                                                 size_t new_count) {
-    p.ptr_ = ReallocatePtr<T>(ctx, p.shm_, new_count * sizeof(T));
-  }
-
-  /**
-   * Reallocate a pointer of objects to a new size and construct the
-   * new elements in-place.
-   *
-   * @param p process-independent pointer (input & output)
-   * @param old_count the original number of objects (avoids reconstruction)
-   * @param new_count the new number of objects
-   * @param args parameters to construct object of type T
-   *
-   * @return A process-specific pointer
-   * */
-  template <typename T, typename PointerT = Pointer, typename... Args>
-  HSHM_INLINE_CROSS_FUN void ReallocateConstructObjsLocal(
-      const MemContext &ctx, FullPtr<T, PointerT> &p, size_t old_count,
-      size_t new_count, Args &&...args) {
-    p.ptr_ = ReallocateConstructObjs<T>(ctx, p.shm_, old_count, new_count,
-                                        std::forward<Args>(args)...);
-  }
-
-  /**
-   * Free + destruct objects
-   * */
-  template <typename T, typename PointerT>
-  HSHM_INLINE_CROSS_FUN void FreeDestructObjsLocal(const MemContext &ctx,
-                                                   FullPtr<T, PointerT> &p,
-                                                   size_t count) {
     DestructObjs<T>(p.ptr_, count);
-    Free(ctx, p.shm_);
-  }
-
-  /**
-   * Free + destruct objects
-   * */
-  template <typename T, typename PointerT>
-  HSHM_INLINE_CROSS_FUN void DelObjsLocal(const MemContext &ctx,
-                                          FullPtr<T, PointerT> &p,
-                                          size_t count) {
-    FreeDestructObjsLocal<T>(ctx, p, count);
+    FullPtr<void, PointerT> void_ptr(reinterpret_cast<void*>(p.ptr_), p.shm_);
+    Free<void, PointerT>(ctx, void_ptr);
   }
 
   /**
    * Free + destruct an object
    * */
-  template <typename T, typename PointerT>
-  HSHM_INLINE_CROSS_FUN void DelObjLocal(const MemContext &ctx,
-                                         FullPtr<T, PointerT> &p) {
-    FreeDestructObjsLocal<T>(ctx, p, 1);
+  template <typename T, typename PointerT = Pointer>
+  HSHM_INLINE_CROSS_FUN void DelObj(const MemContext &ctx, 
+                                    FullPtr<T, PointerT> &p) {
+    DelObjs<T, PointerT>(ctx, p, 1);
   }
+
 
   /**====================================
    * Object Constructors

@@ -22,6 +22,8 @@ cl::Parser define_options();
 #include <cstdlib>
 #include <iostream>
 
+#include "hermes_shm/hermes_shm.h"
+
 static inline bool VerifyBuffer(char *ptr, size_t size, char nonce) {
   for (size_t i = 0; i < size; ++i) {
     if (ptr[i] != nonce) {

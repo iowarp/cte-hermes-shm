@@ -17,26 +17,26 @@
 #include "hermes_shm/introspect/system_info.h"
 #include "hermes_shm/thread/thread_model/thread_model.h"
 
-#ifdef HSHM_ENABLE_PTHREADS
+#if HSHM_ENABLE_PTHREADS
 #include "thread_model/pthread.h"
 #endif
-#ifdef HSHM_RPC_THALLIUM
+#if HSHM_ENABLE_THALLIUM
 #include "thread_model/argobots.h"
 #endif
-#ifdef HSHM_ENABLE_CUDA
+#if HSHM_ENABLE_CUDA
 #include "thread_model/cuda.h"
 #endif
-#ifdef HSHM_ENABLE_ROCM
+#if HSHM_ENABLE_ROCM
 #include "thread_model/rocm.h"
 #endif
 #include "hermes_shm/util/singleton.h"
 #include "thread_model/std_thread.h"
 
-#if defined(HSHM_IS_HOST)
+#if HSHM_IS_HOST
 #define HSHM_THREAD_MODEL \
   hshm::CrossSingleton<HSHM_DEFAULT_THREAD_MODEL>::GetInstance()
 #define HSHM_THREAD_MODEL_T hshm::HSHM_DEFAULT_THREAD_MODEL*
-#elif defined(HSHM_IS_GPU)
+#elif HSHM_IS_GPU
 #define HSHM_THREAD_MODEL \
   hshm::CrossSingleton<HSHM_DEFAULT_THREAD_MODEL_GPU>::GetInstance()
 #define HSHM_THREAD_MODEL_T hshm::HSHM_DEFAULT_THREAD_MODEL_GPU*

@@ -24,18 +24,21 @@ namespace hshm::ipc {
 
 /**
  * Represents the layout of a data structure in shared memory.
+ * This class is used to delay the initialization of a data structure
+ * until it is needed. It treats ShmContainer types differently from
+ * regular types.
  * */
 template <typename T>
-class ShmArchive {
+class delay_ar {
  public:
   typedef T internal_t;
   char obj_[sizeof(T)];
 
   /** Default constructor */
-  HSHM_INLINE_CROSS_FUN ShmArchive() = default;
+  HSHM_INLINE_CROSS_FUN delay_ar() = default;
 
   /** Destructor */
-  HSHM_INLINE_CROSS_FUN ~ShmArchive() = default;
+  HSHM_INLINE_CROSS_FUN ~delay_ar() = default;
 
   /** Pointer to internal object */
   HSHM_INLINE_CROSS_FUN T* get() { return reinterpret_cast<T*>(obj_); }
@@ -68,24 +71,46 @@ class ShmArchive {
 
   /** Copy constructor */
   HSHM_INLINE_CROSS_FUN
-  ShmArchive(const ShmArchive& other) = delete;
+  delay_ar(const delay_ar& other) = delete;
 
   /** Copy assignment operator */
   HSHM_INLINE_CROSS_FUN
-  ShmArchive& operator=(const ShmArchive& other) = delete;
+  delay_ar& operator=(const delay_ar& other) = delete;
 
   /** Move constructor */
   HSHM_INLINE_CROSS_FUN
-  ShmArchive(ShmArchive&& other) = delete;
+  delay_ar(delay_ar&& other) = delete;
 
   /** Move assignment operator */
   HSHM_INLINE_CROSS_FUN
-  ShmArchive& operator=(ShmArchive&& other) = delete;
+  delay_ar& operator=(delay_ar&& other) = delete;
 
   /** Initialize */
   template <typename... Args>
   HSHM_INLINE_CROSS_FUN void shm_init(Args&&... args) {
     Allocator::ConstructObj<T>(get_ref(), std::forward<Args>(args)...);
+  }
+
+  /** Initialize with allocator for SHM_ARCHIVEABLE, without allocator for
+   * others */
+  template <typename AllocT, typename... Args>
+  HSHM_INLINE_CROSS_FUN void shm_init(AllocT&& alloc, Args&&... args) {
+    if constexpr (IS_SHM_ARCHIVEABLE(T)) {
+      // For SHM archiveable types: pass allocator + args
+      Allocator::ConstructObj<T>(get_ref(), std::forward<AllocT>(alloc),
+                                 std::forward<Args>(args)...);
+    } else {
+      // For non-SHM archiveable types: skip the allocator, pass only remaining
+      // args
+      if constexpr (sizeof...(args) > 0) {
+        Allocator::ConstructObj<T>(get_ref(), std::forward<Args>(args)...);
+      } else {
+        // For non-SHM_ARCHIVEABLE types with no extra args, default construct
+        // This covers primitive types like size_t, int, etc.
+        // Note: PageAllocator case will fail and needs special handling
+        Allocator::ConstructObj<T>(get_ref());
+      }
+    }
   }
 
   /** Initialize piecewise */
@@ -121,22 +146,6 @@ class ShmArchive {
 #define HSHM_AR_GET_TYPE(AR) \
   (typename std::remove_reference<decltype(AR)>::type::internal_t)
 
-/** Construct the archive AR using ALLOC */
-#define HSHM_MAKE_AR0(AR, ALLOC)                            \
-  if constexpr (IS_SHM_ARCHIVEABLE(HSHM_AR_GET_TYPE(AR))) { \
-    (AR).shm_init(ALLOC);                                   \
-  } else {                                                  \
-    (AR).shm_init();                                        \
-  }
-
-/** Construct the archive AR using ALLOC and params */
-#define HSHM_MAKE_AR(AR, ALLOC, ...)                        \
-  if constexpr (IS_SHM_ARCHIVEABLE(HSHM_AR_GET_TYPE(AR))) { \
-    (AR).shm_init(ALLOC, __VA_ARGS__);                      \
-  } else {                                                  \
-    (AR).shm_init(__VA_ARGS__);                             \
-  }
-
 /** Construct a piecewise archive */
 #define HSHM_MAKE_AR_PW(AR, ALLOC, ...)                        \
   if constexpr (IS_SHM_ARCHIVEABLE(HSHM_AR_GET_TYPE(AR))) {    \
@@ -149,18 +158,15 @@ class ShmArchive {
 #define HSHM_DESTROY_AR(AR) (AR).shm_destroy();
 
 template <typename Ar, typename T>
-void HSHM_CROSS_FUN save(Ar& ar, const ShmArchive<T>& obj) {
+void HSHM_CROSS_FUN save(Ar& ar, const delay_ar<T>& obj) {
   ar & obj.get_ref();
 }
 
 template <typename Ar, typename T>
-void HSHM_CROSS_FUN load(Ar& ar, ShmArchive<T>& obj) {
-  HSHM_MAKE_AR0(obj, HSHM_DEFAULT_ALLOC);
+void HSHM_CROSS_FUN load(Ar& ar, delay_ar<T>& obj) {
+  obj.shm_init(HSHM_DEFAULT_ALLOC);
   ar & obj.get_ref();
 }
-
-template <typename T>
-using delay_ar = ShmArchive<T>;
 
 }  // namespace hshm::ipc
 

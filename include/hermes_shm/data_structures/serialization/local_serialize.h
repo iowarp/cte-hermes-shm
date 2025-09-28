@@ -11,7 +11,7 @@
 
 namespace hshm::ipc {
 
-#ifdef HSHM_ENABLE_CEREAL
+#if HSHM_ENABLE_CEREAL
 /** Save cereal binary archive */
 template <typename Ar, typename T>
 void save(Ar &ar, const cereal::BinaryData<T> &data) {

@@ -1,3 +1,4 @@
+#pragma once
 #include "hermes_shm/types/numbers.h"
 
 namespace hshm::ipc {
@@ -25,9 +26,7 @@ class CharWrap {
       : data_(const_cast<char *>(str.data())), size_(str.size()) {}
 
   HSHM_INLINE_CROSS_FUN
-  char *data() {
-    return data_;
-  }
+  char *data() { return data_; }
 
   HSHM_INLINE_CROSS_FUN
   const char *data() const { return data_; }
@@ -36,9 +35,7 @@ class CharWrap {
   const char *c_str() const { return data_; }
 
   HSHM_INLINE_CROSS_FUN
-  size_t size() const {
-    return size_;
-  }
+  size_t size() const { return size_; }
 };
 
 }  // namespace hshm::ipc

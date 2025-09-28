@@ -221,7 +221,7 @@ class unordered_map : public ShmContainer {
                 RealNumber max_capacity = RealNumber(4, 5),
                 RealNumber growth = RealNumber(5, 4)) {
     init_shm_container(alloc);
-    HSHM_MAKE_AR(buckets_, GetCtxAllocator(), num_buckets)
+    buckets_.shm_init(GetCtxAllocator(), num_buckets);
     max_capacity_ = max_capacity;
     growth_ = growth;
     length_ = 0;
@@ -250,7 +250,7 @@ class unordered_map : public ShmContainer {
   HSHM_CROSS_FUN
   void shm_strong_copy_construct(const unordered_map &other) {
     SetNull();
-    HSHM_MAKE_AR(buckets_, GetCtxAllocator(), other.GetBuckets())
+    buckets_.shm_init(GetCtxAllocator(), other.GetBuckets());
     shm_strong_copy_op(other);
   }
 
@@ -311,8 +311,8 @@ class unordered_map : public ShmContainer {
       if constexpr (IS_ASSIGN) {
         GetBuckets() = std::move(other.GetBuckets());
       } else {
-        HSHM_MAKE_AR(buckets_, GetCtxAllocator(),
-                     std::move(other.GetBuckets()));
+        buckets_.shm_init(GetCtxAllocator(),
+                           std::move(other.GetBuckets()));
       }
       max_capacity_ = other.max_capacity_;
       growth_ = other.growth_;

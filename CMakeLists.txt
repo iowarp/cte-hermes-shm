@@ -25,7 +25,8 @@ option(HSHM_ENABLE_CMAKE_DOTENV "Build benchmarks" OFF)
 
 option(HSHM_ENABLE_MPI "Enable MPI support" OFF)
 option(HSHM_ENABLE_ZMQ "Enable ZeroMQ transport" OFF)
-option(HSHM_RPC_THALLIUM "Build tests which depend on thallium" OFF)
+option(HSHM_ENABLE_LIBFABRIC "Enable Libfabric transport" OFF)
+option(HSHM_ENABLE_THALLIUM "Build tests which depend on thallium" OFF)
 option(HSHM_ENABLE_OPENMP "Enable the use of OpenMP" OFF)
 option(HSHM_ENABLE_CEREAL "Enable serialization using cereal" ON)
 option(HSHM_ENABLE_COVERAGE "Check how well tests cover code" OFF)
@@ -52,12 +53,6 @@ else()
 endif()
 
 if(HSHM_NO_COMPILE)
-    install(
-        FILES
-        ${HSHM_ROOT}/include/hermes_shm/constants/settings.h_templ
-        DESTINATION
-        ${CMAKE_INSTALL_PREFIX}/include/hermes_shm/constants/
-    )
     return()
 endif()
 
@@ -117,12 +112,12 @@ endif()
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "^(Apple)?Clang$" OR CMAKE_CXX_COMPILER_ID STREQUAL "MinGW" OR CMAKE_CXX_COMPILER_ID MATCHES "^Intel")
     if(CMAKE_BUILD_TYPE STREQUAL "Debug")
         message("IN DEBUG MODE")
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O0")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O0 -Wfatal-errors")
         set(CMAKE_HIP_FLAGS "${CMAKE_HIP_FLAGS} -g -O0")
         add_compile_definitions(HSHM_DEBUG)
     else()
         message("IN RELEASE MODE")
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O3")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O3 -Wfatal-errors")
     endif()
 
     set(HSHM_COMPILER_GNU "ON")
@@ -180,13 +175,17 @@ target_link_libraries(host_deps INTERFACE
     ${ENCRYPT_LIBS}
     ${Boost_LIBRARIES}
     ${ELF_LIBS}
+    ${ZMQ_LIBS}
+    ${LIBFABRIC_LIBS}
+    ${MPI_LIBS}
+    ${OpenMP_LIBS}
 )
 target_link_directories(host_deps INTERFACE
     ${COMPRESS_LIB_DIRS} ${ENCRYPT_LIB_DIRS} ${Boost_LIBRARY_DIRS}
-    ${ELF_LIB_DIRS} ${YAML_CPP_LIBRARY_DIR})
+    ${ELF_LIB_DIRS} ${YAML_CPP_LIBRARY_DIR} ${ZMQ_LIB_DIRS} ${LIBFABRIC_LIB_DIRS})
 target_include_directories(host_deps INTERFACE
     ${COMPRESS_INCLUDES} ${ENCRYPT_INCLUDES} ${Boost_INCLUDE_DIRS}
-    ${ELF_INCLUDES} ${YAML_CPP_INCLUDE_DIR})
+    ${ELF_INCLUDES} ${YAML_CPP_INCLUDE_DIR} ${ZMQ_INCLUDES} ${LIBFABRIC_INCLUDES})
 
 if(HSHM_ENABLE_PTHREADS)
     target_link_libraries(host_deps INTERFACE pthread)
@@ -228,6 +227,52 @@ if(NOT IS_HSHM_MAIN)
 endif()
 
 # ------------------------------------------------------------------------------
+# CMake function for target compile definitions
+# ------------------------------------------------------------------------------
+function(hshm_target_compile_definitions target)
+    get_target_property(target_type ${target} TYPE)
+    
+    # Common definitions for all target types
+    set(common_definitions
+        HSHM_COMPILER_MSVC=$<BOOL:${HSHM_COMPILER_MSVC}>
+        HSHM_COMPILER_GNU=$<BOOL:${HSHM_COMPILER_GNU}>
+        HSHM_ENABLE_MPI=$<BOOL:${HSHM_ENABLE_MPI}>
+        HSHM_ENABLE_ZMQ=$<BOOL:${HSHM_ENABLE_ZMQ}>
+        HSHM_ENABLE_LIBFABRIC=$<BOOL:${HSHM_ENABLE_LIBFABRIC}>
+        HSHM_ENABLE_THALLIUM=$<BOOL:${HSHM_ENABLE_THALLIUM}>
+        HSHM_ENABLE_OPENMP=$<BOOL:${HSHM_ENABLE_OPENMP}>
+        HSHM_ENABLE_CEREAL=$<BOOL:${HSHM_ENABLE_CEREAL}>
+        HSHM_ENABLE_WINDOWS_SYSINFO=$<BOOL:${HSHM_ENABLE_WINDOWS_SYSINFO}>
+        HSHM_ENABLE_PROCFS_SYSINFO=$<BOOL:${HSHM_ENABLE_PROCFS_SYSINFO}>
+        HSHM_ENABLE_WINDOWS_THREADS=$<BOOL:${HSHM_ENABLE_WINDOWS_THREADS}>
+        HSHM_ENABLE_PTHREADS=$<BOOL:${HSHM_ENABLE_PTHREADS}>
+        HSHM_ENABLE_COMPRESS=$<BOOL:${HSHM_ENABLE_COMPRESS}>
+        HSHM_ENABLE_ENCRYPT=$<BOOL:${HSHM_ENABLE_ENCRYPT}>
+        HSHM_ENABLE_ELF=$<BOOL:${HSHM_ENABLE_ELF}>
+        HSHM_ENABLE_COVERAGE=$<BOOL:${HSHM_ENABLE_COVERAGE}>
+        HSHM_ENABLE_DOXYGEN=$<BOOL:${HSHM_ENABLE_DOXYGEN}>
+        HSHM_DEBUG_LOCK=$<BOOL:${HSHM_DEBUG_LOCK}>
+        HSHM_DEFAULT_THREAD_MODEL=hshm::thread::$<IF:$<BOOL:${HSHM_ENABLE_PTHREADS}>,Pthread,$<IF:$<BOOL:${HSHM_ENABLE_WINDOWS_THREADS}>,StdThread,StdThread>>
+        HSHM_DEFAULT_THREAD_MODEL_GPU=hshm::thread::$<IF:$<BOOL:${HSHM_ENABLE_CUDA}>,Cuda,$<IF:$<BOOL:${HSHM_ENABLE_ROCM}>,Rocm,StdThread>>
+        HSHM_DEFAULT_ALLOC_T=hipc::ThreadLocalAllocator
+        HSHM_ENABLE_DLL_EXPORT=$<BOOL:${BUILD_SHARED_LIBS}>
+        HSHM_ENABLE_CUDA=$<BOOL:${HSHM_ENABLE_CUDA}>
+        HSHM_ENABLE_ROCM=$<BOOL:${HSHM_ENABLE_ROCM}>
+    )
+    
+    if(target_type STREQUAL "INTERFACE_LIBRARY")
+        target_compile_definitions(${target} INTERFACE ${common_definitions})
+    else()
+        target_compile_definitions(${target} PUBLIC ${common_definitions})
+        target_compile_definitions(${target} PRIVATE
+            HSHM_ENABLE_DLL_EXPORT=$<BOOL:${BUILD_SHARED_LIBS}>
+            HSHM_ENABLE_CUDA=$<BOOL:${HSHM_ENABLE_CUDA}>
+            HSHM_ENABLE_ROCM=$<BOOL:${HSHM_ENABLE_ROCM}>
+        )
+    endif()
+endfunction()
+
+# ------------------------------------------------------------------------------
 # Build hermes_shm
 # ------------------------------------------------------------------------------
 add_subdirectory(src)
@@ -260,11 +305,6 @@ endif()
 # ------------------------------------------------------------------------------
 install(DIRECTORY include DESTINATION ${CMAKE_INSTALL_PREFIX})
 
-# Configure the hermes_shm options
-configure_file(
-    ${CMAKE_CURRENT_SOURCE_DIR}/include/hermes_shm/constants/settings.h_templ
-    ${CMAKE_CURRENT_SOURCE_DIR}/include/hermes_shm/constants/settings.h @ONLY
-)
 
 configure_file(
     ${CMAKE_CURRENT_SOURCE_DIR}/CMake/HermesShmConfig.cmake

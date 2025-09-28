@@ -1,13 +1,16 @@
 #pragma once
-#include <thallium.hpp>
-#include <cereal/types/vector.hpp>
+#if HSHM_ENABLE_THALLIUM
 #include <margo.h>
-#include "lightbeam.h"
-#include <queue>
-#include <mutex>
-#include <memory>
-#include <vector>
+
 #include <algorithm>
+#include <cereal/types/vector.hpp>
+#include <memory>
+#include <mutex>
+#include <queue>
+#include <thallium.hpp>
+#include <vector>
+
+#include "lightbeam.h"
 
 namespace hshm::lbm {
 
@@ -32,7 +35,8 @@ class ThalliumUrl {
     return url;
   }
 
-  // For lookup, if addr_ already contains '://', return as is, else build full url
+  // For lookup, if addr_ already contains '://', return as is, else build full
+  // url
   std::string BuildForLookup() const {
     if (addr_.find("://") != std::string::npos) {
       return addr_;
@@ -68,8 +72,8 @@ class ThalliumClient : public Client {
       engine_ = std::make_unique<thallium::engine>(proto, THALLIUM_CLIENT_MODE,
                                                    true, 1);
     } else {
-      engine_ = std::make_unique<thallium::engine>(full_url, THALLIUM_CLIENT_MODE,
-                                                   true, 1);
+      engine_ = std::make_unique<thallium::engine>(
+          full_url, THALLIUM_CLIENT_MODE, true, 1);
     }
     std::cout << "[ThalliumClient] Created with protocol: " << proto
               << std::endl;
@@ -154,36 +158,32 @@ class ThalliumServer : public Server {
                               : full_url;
       std::cout << "[ThalliumServer] Creating server with protocol: " << proto
                 << std::endl;
-      std::cout << "[ThalliumServer] Using full URL: " << full_url
-                << std::endl;
+      std::cout << "[ThalliumServer] Using full URL: " << full_url << std::endl;
       if (proto == "ofi+tcp" || proto == "ofi+sockets") {
-        engine_ = std::make_unique<thallium::engine>(proto, THALLIUM_SERVER_MODE,
-                                                     true, 1);
+        engine_ = std::make_unique<thallium::engine>(
+            proto, THALLIUM_SERVER_MODE, true, 1);
       } else {
-        engine_ = std::make_unique<thallium::engine>(full_url,
-                                                     THALLIUM_SERVER_MODE, true,
-                                                     1);
+        engine_ = std::make_unique<thallium::engine>(
+            full_url, THALLIUM_SERVER_MODE, true, 1);
       }
       std::cout << "[ThalliumServer] Engine created, defining RPC: "
                 << rpc_name_ << std::endl;
-      engine_->define(rpc_name_,
-                      [this](const thallium::request& req,
-                             const std::vector<char>& buf) {
-                        std::lock_guard<std::mutex> lock(queue_mutex_);
-                        received_queue_.push(buf);
-                        std::cout << "[ThalliumServer] RPC handler called with "
-                                    "data size: "
-                                 << buf.size() << std::endl;
-                        std::cout << "[ThalliumServer] Data: "
-                                 << std::string(buf.begin(), buf.end())
-                                 << std::endl;
-                        std::cout << "[ThalliumServer] RPC handler: queued data, "
-                                    "queue size = "
-                                 << received_queue_.size() << std::endl;
-                        std::cout << "[ThalliumServer] RPC handler completed "
-                                    "successfully"
-                                 << std::endl;
-                      });
+      engine_->define(rpc_name_, [this](const thallium::request& req,
+                                        const std::vector<char>& buf) {
+        std::lock_guard<std::mutex> lock(queue_mutex_);
+        received_queue_.push(buf);
+        std::cout << "[ThalliumServer] RPC handler called with "
+                     "data size: "
+                  << buf.size() << std::endl;
+        std::cout << "[ThalliumServer] Data: "
+                  << std::string(buf.begin(), buf.end()) << std::endl;
+        std::cout << "[ThalliumServer] RPC handler: queued data, "
+                     "queue size = "
+                  << received_queue_.size() << std::endl;
+        std::cout << "[ThalliumServer] RPC handler completed "
+                     "successfully"
+                  << std::endl;
+      });
       std::string server_addr = engine_->self();
       std::cout << "[ThalliumServer] Server address: " << server_addr
                 << std::endl;
@@ -222,8 +222,8 @@ class ThalliumServer : public Server {
       const auto& data = received_queue_.front();
       size_t copy_size = std::min(bulk.size, data.size());
       std::memcpy(bulk.data, data.data(), copy_size);
-      std::cout << "[ThalliumServer] Recv: copied " << copy_size
-                << " bytes" << std::endl;
+      std::cout << "[ThalliumServer] Recv: copied " << copy_size << " bytes"
+                << std::endl;
       std::cout << "[ThalliumServer] Recv: data = "
                 << std::string(bulk.data, copy_size) << std::endl;
       received_queue_.pop();
@@ -254,4 +254,6 @@ class ThalliumServer : public Server {
   std::mutex queue_mutex_;
 };
 
-}  // namespace hshm::lbm 
+}  // namespace hshm::lbm
+
+#endif  // HSHM_ENABLE_THALLIUM

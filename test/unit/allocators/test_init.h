@@ -14,7 +14,7 @@
 #define HSHM_TEST_UNIT_ALLOCATORS_TEST_INIT_H_
 
 #include "basic_test.h"
-#include "hermes_shm/memory/memory_manager.h"
+// hermes_shm/memory/memory_manager.h is now included via hermes_shm.h in basic_test.h
 
 using hshm::ipc::Allocator;
 using hshm::ipc::AllocatorId;
@@ -61,8 +61,9 @@ class Workloads {
     std::vector<Pointer> ps(count);
     std::vector<void *> ptrs(count);
     for (size_t i = 0; i < count; ++i) {
-      ptrs[i] = alloc->template AllocatePtr<void>(HSHM_DEFAULT_MEM_CTX,
-                                                  page_size, ps[i]);
+      auto full_ptr = alloc->Allocate(HSHM_DEFAULT_MEM_CTX, page_size);
+      ps[i] = full_ptr.shm_;
+      ptrs[i] = full_ptr.ptr_;
       memset(ptrs[i], i, page_size);
       REQUIRE(ps[i].off_.load() != 0);
       REQUIRE(!ps[i].IsNull());
@@ -82,20 +83,23 @@ class Workloads {
 
     // Free pages
     for (size_t i = 0; i < count; ++i) {
-      alloc->Free(HSHM_DEFAULT_MEM_CTX, ps[i]);
+      hipc::FullPtr<void> full_ptr(alloc->template Convert<void>(ps[i]), ps[i]);
+      alloc->Free(HSHM_DEFAULT_MEM_CTX, full_ptr);
     }
 
     // Reallocate pages
     for (size_t i = 0; i < count; ++i) {
-      ptrs[i] = alloc->template AllocatePtr<void>(HSHM_DEFAULT_MEM_CTX,
-                                                  page_size, ps[i]);
+      auto full_ptr = alloc->Allocate(HSHM_DEFAULT_MEM_CTX, page_size);
+      ps[i] = full_ptr.shm_;
+      ptrs[i] = full_ptr.ptr_;
       REQUIRE(ps[i].off_.load() != 0);
       REQUIRE(!ps[i].IsNull());
     }
 
     // Free again
     for (size_t i = 0; i < count; ++i) {
-      alloc->Free(HSHM_DEFAULT_MEM_CTX, ps[i]);
+      hipc::FullPtr<void> full_ptr(alloc->template Convert<void>(ps[i]), ps[i]);
+      alloc->Free(HSHM_DEFAULT_MEM_CTX, full_ptr);
     }
 
     return;
@@ -114,7 +118,7 @@ class Workloads {
     {
       for (size_t r = 0; r < 4; ++r) {
         for (size_t i = 0; i < alloc_sizes.size(); ++i) {
-          Pointer ps[16];
+          hipc::FullPtr<void> ps[16];
           for (size_t j = 0; j < 16; ++j) {
             ps[j] = alloc->Allocate(HSHM_DEFAULT_MEM_CTX, alloc_sizes[i]);
           }
@@ -134,16 +138,20 @@ class Workloads {
     // Reallocate a small page to a larger page
     for (auto &[small_size, large_size] : sizes) {
       Pointer p;
-      char *ptr = alloc->template AllocatePtr<char>(HSHM_DEFAULT_MEM_CTX,
-                                                    (size_t)small_size, p);
+      auto full_ptr = alloc->Allocate(HSHM_DEFAULT_MEM_CTX, (size_t)small_size);
+      p = full_ptr.shm_;
+      char *ptr = reinterpret_cast<char*>(full_ptr.ptr_);
       memset(ptr, 10, small_size);
-      char *new_ptr = alloc->template ReallocatePtr<char>(HSHM_DEFAULT_MEM_CTX,
-                                                          p, large_size);
+      hipc::FullPtr<void> old_full_ptr(reinterpret_cast<void*>(ptr), p);
+      auto new_full_ptr = alloc->Reallocate(HSHM_DEFAULT_MEM_CTX, old_full_ptr, large_size);
+      p = new_full_ptr.shm_;
+      char *new_ptr = reinterpret_cast<char*>(new_full_ptr.ptr_);
       for (size_t i = 0; i < small_size; ++i) {
         REQUIRE(ptr[i] == 10);
       }
       memset(new_ptr, 0, large_size);
-      alloc->Free(HSHM_DEFAULT_MEM_CTX, p);
+      hipc::FullPtr<void> free_ptr(alloc->template Convert<void>(p), p);
+      alloc->Free(HSHM_DEFAULT_MEM_CTX, free_ptr);
     }
   }
 
@@ -156,11 +164,13 @@ class Workloads {
     for (auto &[size, alignment] : sizes) {
       for (size_t i = 0; i < 1024; ++i) {
         Pointer p;
-        char *ptr = alloc->template AllocatePtr<char>(HSHM_DEFAULT_MEM_CTX,
-                                                      size, p, alignment);
+        auto full_ptr = alloc->Allocate(HSHM_DEFAULT_MEM_CTX, size, alignment);
+        p = full_ptr.shm_;
+        char *ptr = reinterpret_cast<char*>(full_ptr.ptr_);
         REQUIRE(((size_t)ptr % alignment) == 0);
         memset(alloc->template Convert<void>(p), 0, size);
-        alloc->Free(HSHM_DEFAULT_MEM_CTX, p);
+        hipc::FullPtr<void> free_ptr(alloc->template Convert<void>(p), p);
+        alloc->Free(HSHM_DEFAULT_MEM_CTX, free_ptr);
       }
     }
   }

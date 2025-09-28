@@ -74,8 +74,8 @@ class AllocatorTestSuite {
   void AllocateAndFreeFixedSize(size_t count, size_t size) {
     StartTimer();
     for (size_t i = 0; i < count; ++i) {
-      Pointer p = alloc_->Allocate(alloc_.ctx_, size);
-      alloc_->Free(alloc_.ctx_, p);
+      auto full_ptr = alloc_->Allocate(alloc_.ctx_, size);
+      alloc_->Free(alloc_.ctx_, full_ptr);
     }
     StopTimer();
 
@@ -85,7 +85,7 @@ class AllocatorTestSuite {
   /** Allocate a fixed size in a loop, and then free in another loop */
   void AllocateThenFreeFixedSize(size_t count, size_t size) {
     StartTimer();
-    std::vector<Pointer> cache(count);
+    std::vector<FullPtr<void>> cache(count);
     for (size_t i = 0; i < count; ++i) {
       cache[i] = alloc_->Allocate(alloc_.ctx_, size);
     }
@@ -119,7 +119,7 @@ class AllocatorTestSuite {
     seq(sizes_, hshm::Unit<size_t>::Megabytes(1),
         hshm::Unit<size_t>::Megabytes(64) / hshm::Unit<size_t>::Megabytes(1));
     std::shuffle(std::begin(sizes_), std::end(sizes_), rng);
-    std::vector<Pointer> window(sizes_.size());
+    std::vector<FullPtr<void>> window(sizes_.size());
     size_t num_windows = 500;
 
     StartTimer();

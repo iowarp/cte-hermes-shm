@@ -30,12 +30,12 @@ class TimepointBase {
 
  public:
   HSHM_INLINE_CROSS_FUN void Now() {
-#ifdef HSHM_IS_HOST
+#if HSHM_IS_HOST
     start_ = T::now();
 #endif
   }
   HSHM_INLINE_CROSS_FUN double GetNsecFromStart(TimepointBase &now) const {
-#ifdef HSHM_IS_HOST
+#if HSHM_IS_HOST
     double elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(
                          now.start_ - start_)
                          .count();
@@ -54,7 +54,7 @@ class TimepointBase {
     return GetNsecFromStart(now) / 1000000000;
   }
   HSHM_INLINE_CROSS_FUN double GetNsecFromStart() const {
-#ifdef HSHM_IS_HOST
+#if HSHM_IS_HOST
     std::chrono::time_point<T> end = T::now();
     double elapsed =
         (double)std::chrono::duration_cast<std::chrono::nanoseconds>(end -
@@ -113,7 +113,7 @@ class TimerBase : public TimepointBase<T>, public NsecTimer {
 
   /** Get microseconds since timer started */
   HSHM_INLINE_CROSS_FUN double GetUsFromEpoch() const {
-#ifdef HSHM_IS_HOST
+#if HSHM_IS_HOST
     std::chrono::time_point<std::chrono::system_clock> point =
         std::chrono::system_clock::now();
     return std::chrono::duration_cast<std::chrono::microseconds>(

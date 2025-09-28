@@ -19,12 +19,12 @@ TEST_CASE("FullPtr") {
 
   auto alloc = Pretest<hipc::PosixShmMmap, hipc::StackAllocator>();
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
-  hipc::FullPtr<int> ret = alloc->NewObjLocal<int>(HSHM_DEFAULT_MEM_CTX);
+  hipc::FullPtr<int> ret = alloc->NewObj<int>(HSHM_DEFAULT_MEM_CTX);
   hipc::FullPtr<int> ret2(ret.ptr_);
   REQUIRE(ret == ret2);
   hipc::FullPtr<int> ret3(ret.shm_);
   REQUIRE(ret == ret3);
-  alloc->DelObjLocal(HSHM_DEFAULT_MEM_CTX, ret);
+  alloc->DelObj(HSHM_DEFAULT_MEM_CTX, ret);
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
 }
 
@@ -87,64 +87,38 @@ TEST_CASE("LocaFullPtrs") {
   auto alloc = Pretest<hipc::PosixShmMmap, hipc::ScalablePageAllocator>();
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
   // Allocate API
-  hipc::FullPtr<char> p1 =
-      alloc->AllocateLocalPtr<char>(HSHM_DEFAULT_MEM_CTX, 256);
+  auto full_ptr1 = alloc->Allocate(HSHM_DEFAULT_MEM_CTX, 256);
+  hipc::FullPtr<char> p1(reinterpret_cast<char*>(full_ptr1.ptr_), full_ptr1.shm_);
   REQUIRE(!p1.shm_.IsNull());
   REQUIRE(p1.ptr_ != nullptr);
-  hipc::FullPtr<char> p2 =
-      alloc->ClearAllocateLocalPtr<char>(HSHM_DEFAULT_MEM_CTX, 256);
+  auto full_ptr2 = alloc->Allocate(HSHM_DEFAULT_MEM_CTX, 256);
+  hipc::FullPtr<char> p2(reinterpret_cast<char*>(full_ptr2.ptr_), full_ptr2.shm_);
+  memset(p2.ptr_, 0, 256); // ClearAllocate equivalent
   REQUIRE(!p2.shm_.IsNull());
   REQUIRE(p2.ptr_ != nullptr);
   REQUIRE(*p2 == 0);
-  alloc->ReallocateLocalPtr<char>(HSHM_DEFAULT_MEM_CTX, p1, 256);
+  hipc::FullPtr<void> old_p1(reinterpret_cast<void*>(p1.ptr_), p1.shm_);
+  auto reallocated = alloc->Reallocate(HSHM_DEFAULT_MEM_CTX, old_p1, 256);
+  p1.ptr_ = reinterpret_cast<char*>(reallocated.ptr_);
+  p1.shm_ = reallocated.shm_;
   REQUIRE(!p1.shm_.IsNull());
   REQUIRE(p1.ptr_ != nullptr);
-  alloc->FreeLocalPtr(HSHM_DEFAULT_MEM_CTX, p1);
-  alloc->FreeLocalPtr(HSHM_DEFAULT_MEM_CTX, p2);
+  hipc::FullPtr<void> void_p1(reinterpret_cast<void*>(p1.ptr_), p1.shm_);
+  alloc->Free(HSHM_DEFAULT_MEM_CTX, void_p1);
+  hipc::FullPtr<void> void_p2(reinterpret_cast<void*>(p2.ptr_), p2.shm_);
+  alloc->Free(HSHM_DEFAULT_MEM_CTX, void_p2);
 
   // OBJ API
   hipc::FullPtr<std::vector<int>> p4 =
-      alloc->NewObjLocal<std::vector<int>>(HSHM_DEFAULT_MEM_CTX);
-  alloc->DelObjLocal(HSHM_DEFAULT_MEM_CTX, p4);
+      alloc->NewObj<std::vector<int>>(HSHM_DEFAULT_MEM_CTX);
+  alloc->DelObj(HSHM_DEFAULT_MEM_CTX, p4);
   hipc::FullPtr<std::vector<int>> p5 =
-      alloc->NewObjsLocal<std::vector<int>>(HSHM_DEFAULT_MEM_CTX, 4);
-  alloc->ReallocateObjsLocal<std::vector<int>>(HSHM_DEFAULT_MEM_CTX, p5, 5);
-  alloc->ReallocateConstructObjsLocal<std::vector<int>>(HSHM_DEFAULT_MEM_CTX,
-                                                        p5, 4, 5);
-  alloc->DelObjsLocal(HSHM_DEFAULT_MEM_CTX, p5, 5);
+      alloc->NewObjs<std::vector<int>>(HSHM_DEFAULT_MEM_CTX, 4);
+  alloc->ReallocateObjs<std::vector<int>>(HSHM_DEFAULT_MEM_CTX, p5, 5);
+  alloc->ConstructObjs<std::vector<int>>(p5.ptr_, 4, 5);
+  alloc->DelObjs(HSHM_DEFAULT_MEM_CTX, p5, 5);
   REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
   Posttest();
 }
 
-TEST_CASE("Arrays") {
-  auto alloc = Pretest<hipc::PosixShmMmap, hipc::ScalablePageAllocator>();
-  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
-  // Allocate API
-  hipc::Array p1 = alloc->AllocateArray<char>(HSHM_DEFAULT_MEM_CTX, 256);
-  REQUIRE(!p1.shm_.IsNull());
-  hipc::Array p2 = alloc->ClearAllocateArray<char>(HSHM_DEFAULT_MEM_CTX, 256);
-  REQUIRE(!p2.shm_.IsNull());
-  alloc->ReallocateArray<char>(HSHM_DEFAULT_MEM_CTX, p1, 256);
-  REQUIRE(!p1.shm_.IsNull());
-  alloc->FreeArray(HSHM_DEFAULT_MEM_CTX, p1);
-  Posttest();
-}
 
-TEST_CASE("LocalArrays") {
-  auto alloc = Pretest<hipc::PosixShmMmap, hipc::ScalablePageAllocator>();
-  REQUIRE(alloc->GetCurrentlyAllocatedSize() == 0);
-  // Allocate API
-  hipc::LArray<char> p1 =
-      alloc->AllocateLocalArray<char>(HSHM_DEFAULT_MEM_CTX, 256);
-  REQUIRE(!p1.shm_.IsNull());
-  REQUIRE(p1.ptr_ != nullptr);
-  hipc::LArray<char> p2 =
-      alloc->ClearAllocateLocalArray<char>(HSHM_DEFAULT_MEM_CTX, 256);
-  REQUIRE(!p2.shm_.IsNull());
-  REQUIRE(p2.ptr_ != nullptr);
-  REQUIRE(*p2 == 0);
-  alloc->ReallocateLocalArray<char>(HSHM_DEFAULT_MEM_CTX, p1, 256);
-  REQUIRE(!p1.shm_.IsNull());
-  REQUIRE(p1.ptr_ != nullptr);
-  alloc->FreeLocalArray(HSHM_DEFAULT_MEM_CTX, p1);
-}
