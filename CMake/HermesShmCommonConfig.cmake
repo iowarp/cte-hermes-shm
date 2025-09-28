@@ -421,14 +421,14 @@ macro(find_first_path_python)
 
             if(PYTHON_SCAN)
                 message(STATUS "Found Python in PATH: ${PYTHON_SCAN}")
-                set(Python3_EXECUTABLE ${PYTHON_SCAN})
-                set(Python3_ROOT_DIR ${PATH_ENTRY})
-                set(Python3_ROOT ${PATH_ENTRY})
+                set(Python3_EXECUTABLE ${PYTHON_SCAN} CACHE FILEPATH "Python executable" FORCE)
+                set(Python3_ROOT_DIR ${PATH_ENTRY} CACHE FILEPATH "Python executable" FORCE)
+                set(Python3_ROOT ${PATH_ENTRY} CACHE FILEPATH "Python executable" FORCE)
                 break()
             endif()
         endforeach()
     endif()
-
+    
     set(Python_FIND_STRATEGY LOCATION)
     find_package(Python3 COMPONENTS Interpreter Development)
 

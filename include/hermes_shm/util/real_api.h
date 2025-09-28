@@ -26,6 +26,7 @@
 #include "singleton.h"
 
 #define HERMES_DECL(F) F
+#define WRP_CTE_DECL(F) F
 
 #define REQUIRE_API(api_name)                                            \
   if (!(api_name)) {                                                     \

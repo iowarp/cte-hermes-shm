@@ -659,7 +659,9 @@ struct std_atomic {
 #if HSHM_IS_HOST
 template <typename T>
 using atomic = std_atomic<T>;
-#else
+#endif
+
+#if HSHM_IS_GPU && HSHM_ENABLE_CUDA_OR_ROCM
 template <typename T>
 using atomic = rocm_atomic<T>;
 #endif

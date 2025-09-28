@@ -75,7 +75,7 @@
 #define __TU(X) TYPE_UNWRAP(X)
 
 #if HSHM_ENABLE_CUDA || HSHM_ENABLE_ROCM
-#define HSHM_ENABLE_CUDA_OR_ROCM
+#define HSHM_ENABLE_CUDA_OR_ROCM 1
 #endif
 
 /** Includes for CUDA and ROCm */
