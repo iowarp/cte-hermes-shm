@@ -250,23 +250,23 @@ class multi_ring_buffer : public ShmContainer {
 };
 
 // Multi-lane MPSC queue
-template <typename T, typename HDR = EmptyHeader, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
+template <typename T, typename HDR = EmptyHeader, HSHM_CLASS_TEMPL_WITH_IPC_DEFAULTS>
 using multi_mpsc_queue =
     multi_ring_buffer<T, HDR, RING_BUFFER_MPSC_FLAGS, HSHM_CLASS_TEMPL_ARGS>;
 
 // Multi-lane SPSC queue
-template <typename T, typename HDR = EmptyHeader, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
+template <typename T, typename HDR = EmptyHeader, HSHM_CLASS_TEMPL_WITH_IPC_DEFAULTS>
 using multi_spsc_queue =
     multi_ring_buffer<T, HDR, RING_BUFFER_SPSC_FLAGS, HSHM_CLASS_TEMPL_ARGS>;
 
 // Multi-lane fixed MPSC queue
-template <typename T, typename HDR = EmptyHeader, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
+template <typename T, typename HDR = EmptyHeader, HSHM_CLASS_TEMPL_WITH_IPC_DEFAULTS>
 using multi_fixed_mpsc_queue =
     multi_ring_buffer<T, HDR, RING_BUFFER_FIXED_MPMC_FLAGS,
                       HSHM_CLASS_TEMPL_ARGS>;
 
 // Multi-lane circular MPSC queue
-template <typename T, typename HDR = EmptyHeader, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
+template <typename T, typename HDR = EmptyHeader, HSHM_CLASS_TEMPL_WITH_IPC_DEFAULTS>
 using multi_circular_mpsc_queue =
     multi_ring_buffer<T, HDR, RING_BUFFER_CIRCULAR_MPMC_FLAGS,
                       HSHM_CLASS_TEMPL_ARGS>;

@@ -433,21 +433,21 @@ template <typename T, typename HDR = EmptyHeader, HSHM_CLASS_TEMPL_WITH_DEFAULTS
 using fixed_spsc_ptr_queue =
     ring_ptr_queue_base<T, HDR, RING_BUFFER_FIXED_SPSC_FLAGS, HSHM_CLASS_TEMPL_ARGS>;
 
-template <typename T, typename HDR = EmptyHeader, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
+template <typename T, typename HDR = EmptyHeader, HSHM_CLASS_TEMPL_WITH_IPC_DEFAULTS>
 using fixed_mpsc_ptr_queue =
     ring_ptr_queue_base<T, HDR, RING_BUFFER_FIXED_MPMC_FLAGS, HSHM_CLASS_TEMPL_ARGS>;
 
-template <typename T, typename HDR = EmptyHeader, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
+template <typename T, typename HDR = EmptyHeader, HSHM_CLASS_TEMPL_WITH_IPC_DEFAULTS>
 using circular_spsc_ptr_queue =
     ring_ptr_queue_base<T, HDR, RING_BUFFER_CIRCULAR_SPSC_FLAGS,
                         HSHM_CLASS_TEMPL_ARGS>;
 
-template <typename T, typename HDR = EmptyHeader, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
+template <typename T, typename HDR = EmptyHeader, HSHM_CLASS_TEMPL_WITH_IPC_DEFAULTS>
 using circular_mpsc_ptr_queue =
     ring_ptr_queue_base<T, HDR, RING_BUFFER_CIRCULAR_MPMC_FLAGS,
                         HSHM_CLASS_TEMPL_ARGS>;
 
-template <typename T, typename HDR = EmptyHeader, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
+template <typename T, typename HDR = EmptyHeader, HSHM_CLASS_TEMPL_WITH_IPC_DEFAULTS>
 using ext_ptr_ring_buffer =
     ring_ptr_queue_base<T, HDR, RING_BUFFER_EXTENSIBLE_FLAGS, HSHM_CLASS_TEMPL_ARGS>;
 

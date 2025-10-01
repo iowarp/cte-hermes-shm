@@ -20,31 +20,31 @@
 
 namespace hshm::ipc {
 
-/** forward pointer for vector */
+/** forward pointer for vector_base */
 template <typename T, HSHM_CLASS_TEMPL_WITH_DEFAULTS>
-class vector;
+class vector_base;
 
 /**
- * The vector iterator implementation
+ * The vector_base iterator implementation
  * */
 template <typename T, bool FORWARD_ITER, HSHM_CLASS_TEMPL>
 struct vector_iterator_templ {
  public:
-  vector<T, HSHM_CLASS_TEMPL_ARGS> *vec_;
+  vector_base<T, HSHM_CLASS_TEMPL_ARGS> *vec_;
   i64 i_;
 
   /** Default constructor */
   HSHM_INLINE_CROSS_FUN vector_iterator_templ() = default;
 
-  /** Construct an iterator (called from vector class) */
+  /** Construct an iterator (called from vector_base class) */
   template <typename SizeT>
   HSHM_INLINE_CROSS_FUN explicit vector_iterator_templ(
-      vector<T, HSHM_CLASS_TEMPL_ARGS> *vec, SizeT i)
+      vector_base<T, HSHM_CLASS_TEMPL_ARGS> *vec, SizeT i)
       : vec_(vec), i_(static_cast<i64>(i)) {}
 
   /** Construct an iterator (called from iterator) */
   HSHM_INLINE_CROSS_FUN explicit vector_iterator_templ(
-      vector<T, HSHM_CLASS_TEMPL_ARGS> *vec, i64 i)
+      vector_base<T, HSHM_CLASS_TEMPL_ARGS> *vec, i64 i)
       : vec_(vec), i_(i) {}
 
   /** Copy constructor */
@@ -237,17 +237,17 @@ struct vector_iterator_templ {
 };
 
 /**
- * MACROS used to simplify the vector namespace
+ * MACROS used to simplify the vector_base namespace
  * Used as inputs to the HIPC_CONTAINER_TEMPLATE
  * */
-#define CLASS_NAME vector
+#define CLASS_NAME vector_base
 #define CLASS_NEW_ARGS T
 
 /**
- * The vector class
+ * The vector_base class
  * */
 template <typename T, HSHM_CLASS_TEMPL>
-class vector : public ShmContainer {
+class vector_base : public ShmContainer {
  public:
   HIPC_CONTAINER_TEMPLATE((CLASS_NAME), (CLASS_NEW_ARGS))
 
@@ -279,28 +279,28 @@ class vector : public ShmContainer {
 
   /** SHM constructor. Default. */
   HSHM_CROSS_FUN
-  explicit vector() {
+  explicit vector_base() {
     init_shm_container(HSHM_MEMORY_MANAGER->GetDefaultAllocator<AllocT>());
     SetNull();
   }
 
   /** SHM constructor. Default. */
   HSHM_CROSS_FUN
-  explicit vector(const hipc::CtxAllocator<AllocT> &alloc) {
+  explicit vector_base(const hipc::CtxAllocator<AllocT> &alloc) {
     init_shm_container(alloc);
     SetNull();
   }
 
   /** Constructor. Resize + construct. */
   template <typename... Args>
-  HSHM_CROSS_FUN explicit vector(size_t length, Args &&...args) {
+  HSHM_CROSS_FUN explicit vector_base(size_t length, Args &&...args) {
     shm_init(HSHM_MEMORY_MANAGER->GetDefaultAllocator<AllocT>(), length,
              std::forward<Args>(args)...);
   }
 
   /** SHM constructor. Resize + construct. */
   template <typename... Args>
-  HSHM_CROSS_FUN explicit vector(const hipc::CtxAllocator<AllocT> &alloc,
+  HSHM_CROSS_FUN explicit vector_base(const hipc::CtxAllocator<AllocT> &alloc,
                                  size_t length, Args &&...args) {
     shm_init(alloc, length, std::forward<Args>(args)...);
   }
@@ -318,36 +318,36 @@ class vector : public ShmContainer {
    * Copy Constructors
    * ===================================*/
 
-  /** Copy constructor. From vector. */
+  /** Copy constructor. From vector_base. */
   HSHM_CROSS_FUN
-  explicit vector(const vector &other) {
+  explicit vector_base(const vector_base &other) {
     init_shm_container(other.GetCtxAllocator());
     SetNull();
-    shm_strong_copy_main<vector<T, HSHM_CLASS_TEMPL_ARGS>>(other);
+    shm_strong_copy_main<vector_base<T, HSHM_CLASS_TEMPL_ARGS>>(other);
   }
 
-  /** SHM copy constructor. From vector. */
+  /** SHM copy constructor. From vector_base. */
   HSHM_CROSS_FUN
-  explicit vector(const hipc::CtxAllocator<AllocT> &alloc,
-                  const vector &other) {
+  explicit vector_base(const hipc::CtxAllocator<AllocT> &alloc,
+                  const vector_base &other) {
     init_shm_container(alloc);
     SetNull();
-    shm_strong_copy_main<vector<T, HSHM_CLASS_TEMPL_ARGS>>(other);
+    shm_strong_copy_main<vector_base<T, HSHM_CLASS_TEMPL_ARGS>>(other);
   }
 
-  /** SHM copy assignment operator. From vector. */
+  /** SHM copy assignment operator. From vector_base. */
   HSHM_CROSS_FUN
-  vector &operator=(const vector &other) {
+  vector_base &operator=(const vector_base &other) {
     if (this != &other) {
       shm_destroy();
-      shm_strong_copy_main<vector>(other);
+      shm_strong_copy_main<vector_base>(other);
     }
     return *this;
   }
 
   /** Copy constructor. From std::vector */
   HSHM_HOST_FUN
-  explicit vector(const std::vector<T> &other) {
+  explicit vector_base(const std::vector<T> &other) {
     init_shm_container(other.GetCtxAllocator());
     SetNull();
     shm_strong_copy_main<std::vector<T>>(other);
@@ -355,7 +355,7 @@ class vector : public ShmContainer {
 
   /** SHM copy constructor. From std::vector */
   HSHM_HOST_FUN
-  explicit vector(const hipc::CtxAllocator<AllocT> &alloc,
+  explicit vector_base(const hipc::CtxAllocator<AllocT> &alloc,
                   const std::vector<T> &other) {
     init_shm_container(alloc);
     SetNull();
@@ -364,7 +364,7 @@ class vector : public ShmContainer {
 
   /** SHM copy assignment operator. From std::vector */
   HSHM_HOST_FUN
-  vector &operator=(const std::vector<T> &other) {
+  vector_base &operator=(const std::vector<T> &other) {
     shm_destroy();
     shm_strong_copy_main<std::vector<T>>(other);
     return *this;
@@ -390,20 +390,20 @@ class vector : public ShmContainer {
 
   /** Move constructor. */
   HSHM_CROSS_FUN
-  vector(vector &&other) {
+  vector_base(vector_base &&other) {
     shm_move_op<false>(HSHM_MEMORY_MANAGER->GetDefaultAllocator<AllocT>(),
                        std::move(other));
   }
 
   /** SHM move constructor. */
   HSHM_CROSS_FUN
-  vector(const hipc::CtxAllocator<AllocT> &alloc, vector &&other) {
+  vector_base(const hipc::CtxAllocator<AllocT> &alloc, vector_base &&other) {
     shm_move_op<false>(alloc, std::move(other));
   }
 
   /** SHM move assignment operator. */
   HSHM_CROSS_FUN
-  vector &operator=(vector &&other) noexcept {
+  vector_base &operator=(vector_base &&other) noexcept {
     if (this != &other) {
       shm_move_op<true>(other.GetCtxAllocator(), std::move(other));
     }
@@ -413,7 +413,7 @@ class vector : public ShmContainer {
   /** SHM move assignment operator. */
   template <bool IS_ASSIGN>
   HSHM_CROSS_FUN void shm_move_op(const hipc::CtxAllocator<AllocT> &alloc,
-                                  vector &&other) noexcept {
+                                  vector_base &&other) noexcept {
     if constexpr (!IS_ASSIGN) {
       init_shm_container(alloc);
     }
@@ -421,7 +421,7 @@ class vector : public ShmContainer {
       memcpy((void *)this, (void *)&other, sizeof(*this));
       other.SetNull();
     } else {
-      shm_strong_copy_main<vector>(other);
+      shm_strong_copy_main<vector_base>(other);
       other.shm_destroy();
     }
   }
@@ -775,12 +775,12 @@ class vector : public ShmContainer {
 
   /** Beginning of the constant forward iterator */
   HSHM_INLINE_CROSS_FUN citerator_t cbegin() const {
-    return citerator_t(const_cast<vector *>(this), 0);
+    return citerator_t(const_cast<vector_base *>(this), 0);
   }
 
   /** End of the forward iterator */
   HSHM_INLINE_CROSS_FUN citerator_t cend() const {
-    return citerator_t(const_cast<vector *>(this), size<i64>());
+    return citerator_t(const_cast<vector_base *>(this), size<i64>());
   }
 
   /** Beginning of the reverse iterator */
@@ -795,33 +795,36 @@ class vector : public ShmContainer {
 
   /** Beginning of the constant reverse iterator */
   HSHM_INLINE_CROSS_FUN criterator_t crbegin() const {
-    return criterator_t(const_cast<vector *>(this), size<i64>() - 1);
+    return criterator_t(const_cast<vector_base *>(this), size<i64>() - 1);
   }
 
   /** End of the constant reverse iterator */
   HSHM_INLINE_CROSS_FUN criterator_t crend() const {
-    return criterator_t(const_cast<vector *>(this), (i64)-1);
+    return criterator_t(const_cast<vector_base *>(this), (i64)-1);
   }
 
-  /** Lets Thallium know how to serialize an hipc::vector. */
+  /** Lets Thallium know how to serialize an hipc::vector_base. */
   template <typename Ar>
   HSHM_CROSS_FUN void save(Ar &ar) const {
-    save_vec<Ar, hipc::vector<T, HSHM_CLASS_TEMPL_ARGS>, T>(ar, *this);
+    save_vec<Ar, hipc::vector_base<T, HSHM_CLASS_TEMPL_ARGS>, T>(ar, *this);
   }
 
-  /** Lets Thallium know how to deserialize an hipc::vector. */
+  /** Lets Thallium know how to deserialize an hipc::vector_base. */
   template <typename Ar>
   HSHM_CROSS_FUN void load(Ar &ar) {
-    load_vec<Ar, hipc::vector<T, HSHM_CLASS_TEMPL_ARGS>, T>(ar, *this);
+    load_vec<Ar, hipc::vector_base<T, HSHM_CLASS_TEMPL_ARGS>, T>(ar, *this);
   }
 };
+
+template <typename T, HSHM_CLASS_TEMPL_WITH_IPC_DEFAULTS>
+using vector = vector_base<T, HSHM_CLASS_TEMPL_ARGS>;
 
 }  // namespace hshm::ipc
 
 namespace hshm {
 
 template <typename T, HSHM_CLASS_TEMPL_WITH_PRIV_DEFAULTS>
-using vector = hipc::vector<T, HSHM_CLASS_TEMPL_ARGS>;
+using vector = hipc::vector_base<T, HSHM_CLASS_TEMPL_ARGS>;
 
 }  // namespace hshm
 
