@@ -36,12 +36,12 @@
 namespace hshm {
 
 struct RealApi {
-  const char *symbol_name_;
-  const char *intercept_var_;
-  const char *real_lib_path_;
-  const char *intercepted_lib_path_;
-  void *real_lib_;
-  void *interceptor_lib_;
+  const char *symbol_name_ = nullptr;
+  const char *intercept_var_ = nullptr;
+  const char *real_lib_path_ = nullptr;
+  const char *intercepted_lib_path_ = nullptr;
+  void *real_lib_ = nullptr;
+  void *interceptor_lib_ = nullptr;
   bool is_loaded_ = false;
 
   /** Locates the interceptor library and real library */
