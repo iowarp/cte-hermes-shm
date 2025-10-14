@@ -43,16 +43,12 @@ void Clients(std::vector<std::unique_ptr<Client>>& clients,
     std::cout << "[Rank " << my_rank << "] [Clients] Sending to server " << i
               << std::endl;
     LbmMeta meta;
-    Bulk bulk = clients[i]->Expose(magic.data(), magic.size(), 0);
-    meta.bulks.push_back(bulk);
-    Event* event = clients[i]->Send(meta);
-    while (!event->is_done) {
-      std::this_thread::sleep_for(std::chrono::milliseconds(1));
-    }
+    Bulk bulk = clients[i]->Expose(magic.data(), magic.size(), BULK_WRITE);
+    meta.send.push_back(bulk);
+    int rc = clients[i]->Send(meta);
     std::cout << "[Rank " << my_rank << "] [Clients] Sent to server " << i
-              << ", error_code=" << event->error_code << std::endl;
-    assert(event->error_code == 0);
-    delete event;
+              << ", rc=" << rc << std::endl;
+    assert(rc == 0);
   }
 }
 
@@ -65,31 +61,27 @@ void ServerThread(Server& server, size_t num_clients, const std::string& magic) 
 
     // Receive metadata
     LbmMeta meta;
-    Event* event = nullptr;
-    while (!event || !event->is_done) {
-      if (event) delete event;
-      event = server.RecvMetadata(meta);
-      if (!event->is_done) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    int rc;
+    while (true) {
+      rc = server.RecvMetadata(meta);
+      if (rc == 0) break;
+      if (rc != EAGAIN) {
+        std::cerr << "[Server] RecvMetadata failed with error: " << rc << "\n";
+        return;
       }
-    }
-    assert(event->error_code == 0);
-    delete event;
-
-    // Allocate buffer and receive bulks
-    std::vector<char> y(meta.bulks[0].size);
-    meta.bulks[0] = server.Expose(y.data(), y.size(), 0);
-
-    event = server.RecvBulks(meta);
-    while (!event->is_done) {
-      delete event;
-      event = server.RecvBulks(meta);
       std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
-    std::cout << "[Server] Received message " << i
-              << ", error_code=" << event->error_code << std::endl;
-    assert(event->error_code == 0);
-    delete event;
+
+    // Allocate buffer and receive bulks
+    std::vector<char> y(meta.send[0].size);
+    meta.recv.push_back(server.Expose(y.data(), y.size(), BULK_EXPOSE));
+
+    rc = server.RecvBulks(meta);
+    if (rc != 0) {
+      std::cerr << "[Server] RecvBulks failed with error: " << rc << "\n";
+      return;
+    }
+    std::cout << "[Server] Received message " << i << ", rc=" << rc << std::endl;
 
     std::string received(y.begin(), y.end());
     std::cout << "[Server] Received: " << received << std::endl;
@@ -202,28 +194,27 @@ int main(int argc, char** argv) {
 
       // Receive metadata
       LbmMeta meta;
-      Event* event = nullptr;
-      while (!event || !event->is_done) {
-        if (event) delete event;
-        event = server_ptr->RecvMetadata(meta);
-        if (!event->is_done) {
-          std::this_thread::sleep_for(std::chrono::milliseconds(1));
+      int rc;
+      while (true) {
+        rc = server_ptr->RecvMetadata(meta);
+        if (rc == 0) break;
+        if (rc != EAGAIN) {
+          std::cerr << "[Server] RecvMetadata failed with error: " << rc << "\n";
+          return;
         }
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
       }
-      delete event;
 
       // Allocate buffer and receive bulks
       std::vector<char> y(msg_size);
-      meta.bulks[0] = server_ptr->Expose(y.data(), y.size(), 0);
+      meta.recv.push_back(server_ptr->Expose(y.data(), y.size(), BULK_EXPOSE));
 
-      event = server_ptr->RecvBulks(meta);
-      while (!event->is_done) {
-        delete event;
-        event = server_ptr->RecvBulks(meta);
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+      rc = server_ptr->RecvBulks(meta);
+      if (rc != 0) {
+        std::cerr << "[Server] RecvBulks failed with error: " << rc << "\n";
+        return;
       }
       received++;
-      delete event;
 
       double t = std::chrono::duration<double>(recv_time - global_start).count();
       std::cout << "[Rank " << my_rank << "] Received message " << received
@@ -260,14 +251,10 @@ int main(int argc, char** argv) {
     for (size_t i = 0; i < clients.size(); ++i) {
       auto send_time = std::chrono::high_resolution_clock::now();
       LbmMeta meta;
-      Bulk bulk = clients[i]->Expose(magic.data(), magic.size(), 0);
-      meta.bulks.push_back(bulk);
-      Event* event = clients[i]->Send(meta);
-      while (!event->is_done) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
-      }
-      assert(event->error_code == 0);
-      delete event;
+      Bulk bulk = clients[i]->Expose(magic.data(), magic.size(), BULK_WRITE);
+      meta.send.push_back(bulk);
+      int rc = clients[i]->Send(meta);
+      assert(rc == 0);
       sent++;
       double t = std::chrono::duration<double>(send_time - global_start).count();
       std::cout << "[Rank " << my_rank << "] Sent message " << sent

@@ -34,123 +34,141 @@ namespace hshm::lbm {
 
 ## Data Structures
 
-### Event
-
-Represents the status of an asynchronous operation:
-
-```cpp
-struct Event {
-    bool is_done = false;              // Operation completion flag
-    int error_code = 0;                // 0 for success, non-zero for errors
-    std::string error_message;         // Human-readable error description
-    size_t bytes_transferred = 0;      // Total bytes transferred
-};
-```
-
-### Bulk
+### hshm::lbm::Bulk
 
 Describes a memory region for data transfer:
 
 ```cpp
+namespace hshm::lbm {
+// Bulk flags
+#define BULK_EXPOSE  // Bulk is exposed (receiver exposes buffers)
+#define BULK_WRITE   // Bulk is marked for transmission (sender)
+
 struct Bulk {
-    hipc::FullPtr<char> data;    // Pointer to data (supports shared memory)
-    size_t size;                 // Size of data in bytes
-    int flags;                   // Transfer flags
-    void* desc = nullptr;        // RDMA memory registration descriptor
-    void* mr = nullptr;          // Memory region handle (for future RDMA support)
+    hipc::FullPtr<char> data;       // Pointer to data (supports shared memory)
+    size_t size;                    // Size of data in bytes
+    hshm::bitfield32_t flags;       // BULK_EXPOSE or BULK_WRITE
+    void* desc = nullptr;           // RDMA memory registration descriptor
+    void* mr = nullptr;             // Memory region handle (for future RDMA support)
 };
+}
 ```
 
 **Key Features:**
 - Uses `hipc::FullPtr` for shared memory compatibility
 - Can be created from raw pointers, `hipc::Pointer`, or `hipc::FullPtr`
+- Flags control bulk behavior:
+  - **BULK_EXPOSE**: Used by receiver to expose buffers for receiving data
+  - **BULK_WRITE**: Used by sender to mark bulks for transmission (only BULK_WRITE bulks are sent)
 - Prepared for future RDMA transport extensions
 
-### LbmMeta
+### hshm::lbm::LbmMeta
 
 Base class for message metadata:
 
 ```cpp
+namespace hshm::lbm {
 class LbmMeta {
  public:
-    std::vector<Bulk> bulks;  // Collection of bulk data descriptors
+    std::vector<Bulk> send;  // Bulks marked BULK_WRITE (sender side)
+    std::vector<Bulk> recv;  // Bulks marked BULK_EXPOSE (receiver side)
 };
+}
 ```
 
 **Usage:**
 - Extend `LbmMeta` to include custom metadata fields
 - Must implement cereal serialization for custom fields
-- The `bulks` vector describes all data payloads in the message
+- **send vector**: Contains bulks for transmission (client populates with BULK_WRITE)
+- **recv vector**: Contains buffers for receiving (server populates with BULK_EXPOSE)
+- Server can inspect `send` sizes after `RecvMetadata()` to allocate appropriate `recv` buffers
 
 ## API Reference
 
-### Client Interface
+### hshm::lbm::Client Interface
 
 The client initiates data transfers:
 
 ```cpp
+namespace hshm::lbm {
 class Client {
  public:
     // Expose memory for transfer (creates Bulk descriptor)
-    virtual Bulk Expose(const char* data, size_t data_size, int flags) = 0;
-    virtual Bulk Expose(const hipc::Pointer& ptr, size_t data_size, int flags) = 0;
-    virtual Bulk Expose(const hipc::FullPtr<char>& ptr, size_t data_size, int flags) = 0;
+    virtual Bulk Expose(const char* data, size_t data_size, u32 flags) = 0;
+    virtual Bulk Expose(const hipc::Pointer& ptr, size_t data_size, u32 flags) = 0;
+    virtual Bulk Expose(const hipc::FullPtr<char>& ptr, size_t data_size, u32 flags) = 0;
 
     // Send metadata and bulk data
     template<typename MetaT>
-    Event* Send(MetaT &meta);
+    int Send(MetaT &meta);
 };
+}
 ```
 
 **Methods:**
 - `Expose()`: Registers memory for transfer, returns `Bulk` descriptor
   - Accepts raw pointers, `hipc::Pointer`, or `hipc::FullPtr`
+  - **flags**: Use `BULK_WRITE` to mark bulk for transmission
   - Returns immediately (no actual data transfer)
-- `Send()`: Transmits metadata and all associated bulks
+- `Send()`: Transmits metadata and bulks in the send vector
   - Template method accepting any `LbmMeta`-derived type
-  - Serializes metadata using cereal
-  - Returns `Event*` for tracking operation status
+  - Serializes metadata using cereal (includes both send and recv vectors)
+  - **Only transmits bulks in `meta.send` vector**
+  - Validates all send bulks have `BULK_WRITE` flag
+  - **Synchronous**: Blocks until send completes
+  - **Returns**: `0` on success, `-1` if send bulk missing BULK_WRITE, other error codes on failure
 
-### Server Interface
+### hshm::lbm::Server Interface
 
 The server receives data transfers:
 
 ```cpp
+namespace hshm::lbm {
 class Server {
  public:
     // Expose memory for receiving data
-    virtual Bulk Expose(char* data, size_t data_size, int flags) = 0;
-    virtual Bulk Expose(const hipc::Pointer& ptr, size_t data_size, int flags) = 0;
-    virtual Bulk Expose(const hipc::FullPtr<char>& ptr, size_t data_size, int flags) = 0;
+    virtual Bulk Expose(char* data, size_t data_size, u32 flags) = 0;
+    virtual Bulk Expose(const hipc::Pointer& ptr, size_t data_size, u32 flags) = 0;
+    virtual Bulk Expose(const hipc::FullPtr<char>& ptr, size_t data_size, u32 flags) = 0;
 
     // Two-phase receive
     template<typename MetaT>
-    Event* RecvMetadata(MetaT &meta);
+    int RecvMetadata(MetaT &meta);
 
     template<typename MetaT>
-    Event* RecvBulks(MetaT &meta);
+    int RecvBulks(MetaT &meta);
 
     // Get server address
     virtual std::string GetAddress() const = 0;
 };
+}
 ```
 
 **Methods:**
 - `Expose()`: Registers receive buffers, returns `Bulk` descriptor
+  - **flags**: Use `BULK_EXPOSE` to mark buffer for receiving
+  - Must be called after `RecvMetadata()` to populate `meta.recv` with local buffers
 - `RecvMetadata()`: Receives and deserializes message metadata
-  - Returns immediately with `is_done=false` if no message available
-  - Populates `meta.bulks` with sender's bulk descriptors
+  - **Non-blocking**: Returns immediately if no message available
+  - Populates `meta.send` with sender's bulk descriptors (size and flags)
+  - Server inspects `meta.send` to determine buffer sizes needed
+  - **Returns**: `0` on success, `EAGAIN` if no message, other error codes on failure
+  - Typically used in polling loop until message arrives
 - `RecvBulks()`: Receives actual data into exposed buffers
-  - Must be called after `RecvMetadata()` completes
-  - Requires buffers to be exposed with matching sizes
-  - Returns immediately if no data available
+  - Must be called after `RecvMetadata()` succeeds and `meta.recv` is populated
+  - **Only receives into bulks in `meta.recv` vector**
+  - Validates all recv bulks have `BULK_EXPOSE` flag
+  - Number of bulks received must match `meta.send.size()`
+  - **Synchronous**: Blocks until all bulks received
+  - **Returns**: `0` on success, `-1` if recv bulk missing BULK_EXPOSE, other error codes on failure
 - `GetAddress()`: Returns the server's bind address
 
-### TransportFactory
+### hshm::lbm::TransportFactory
 
 Factory for creating client and server instances:
 
 ```cpp
+namespace hshm::lbm {
 class TransportFactory {
  public:
     static std::unique_ptr<Client> GetClient(
@@ -161,6 +179,7 @@ class TransportFactory {
         const std::string& addr, Transport t,
         const std::string& protocol = "", int port = 0);
 };
+}
 ```
 
 ## Examples
@@ -173,6 +192,7 @@ class TransportFactory {
 #include <vector>
 #include <thread>
 #include <chrono>
+#include <errno.h>
 
 using namespace hshm::lbm;
 
@@ -182,9 +202,9 @@ void basic_example() {
     std::string protocol = "tcp";
     int port = 8888;
 
-    auto server = TransportFactory::GetServer(addr, Transport::kZeroMq,
+    auto server = hshm::lbm::TransportFactory::GetServer(addr, hshm::lbm::Transport::kZeroMq,
                                              protocol, port);
-    auto client = TransportFactory::GetClient(addr, Transport::kZeroMq,
+    auto client = hshm::lbm::TransportFactory::GetClient(addr, hshm::lbm::Transport::kZeroMq,
                                              protocol, port);
 
     // Give ZMQ time to establish connection
@@ -195,44 +215,41 @@ void basic_example() {
     size_t message_size = strlen(message);
 
     LbmMeta send_meta;
-    Bulk bulk = client->Expose(message, message_size, 0);
-    send_meta.bulks.push_back(bulk);
+    Bulk bulk = client->Expose(message, message_size, BULK_WRITE);
+    send_meta.send.push_back(bulk);
 
-    Event* send_event = client->Send(send_meta);
-    assert(send_event->is_done);
-    assert(send_event->error_code == 0);
-    std::cout << "Client sent " << send_event->bytes_transferred << " bytes\n";
-    delete send_event;
-
-    // SERVER: Receive metadata
-    LbmMeta recv_meta;
-    Event* recv_event = nullptr;
-    while (!recv_event || !recv_event->is_done) {
-        if (recv_event) delete recv_event;
-        recv_event = server->RecvMetadata(recv_meta);
-        if (!recv_event->is_done) {
-            std::this_thread::sleep_for(std::chrono::milliseconds(1));
-        }
+    int rc = client->Send(send_meta);
+    if (rc != 0) {
+        std::cerr << "Send failed with error: " << rc << "\n";
+        return;
     }
-    assert(recv_event->error_code == 0);
-    std::cout << "Server received metadata with "
-              << recv_meta.bulks.size() << " bulks\n";
-    delete recv_event;
+    std::cout << "Client sent data successfully\n";
 
-    // SERVER: Allocate buffer and receive data
-    std::vector<char> buffer(recv_meta.bulks[0].size);
-    recv_meta.bulks[0] = server->Expose(buffer.data(), buffer.size(), 0);
-
-    recv_event = server->RecvBulks(recv_meta);
-    while (!recv_event->is_done) {
-        delete recv_event;
-        recv_event = server->RecvBulks(recv_meta);
+    // SERVER: Receive metadata (poll until available)
+    LbmMeta recv_meta;
+    while (true) {
+        rc = server->RecvMetadata(recv_meta);
+        if (rc == 0) break;
+        if (rc != EAGAIN) {
+            std::cerr << "RecvMetadata failed with error: " << rc << "\n";
+            return;
+        }
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
-    assert(recv_event->error_code == 0);
+    std::cout << "Server received metadata with "
+              << recv_meta.send.size() << " bulks\n";
+
+    // SERVER: Allocate buffer based on sender's bulk size and receive data
+    std::vector<char> buffer(recv_meta.send[0].size);
+    recv_meta.recv.push_back(server->Expose(buffer.data(), buffer.size(), BULK_EXPOSE));
+
+    rc = server->RecvBulks(recv_meta);
+    if (rc != 0) {
+        std::cerr << "RecvBulks failed with error: " << rc << "\n";
+        return;
+    }
     std::cout << "Server received: "
               << std::string(buffer.data(), buffer.size()) << "\n";
-    delete recv_event;
 }
 ```
 
@@ -258,13 +275,13 @@ class RequestMeta : public LbmMeta {
 namespace cereal {
     template<class Archive>
     void serialize(Archive& ar, RequestMeta& meta) {
-        ar(meta.bulks, meta.request_id, meta.operation, meta.client_name);
+        ar(meta.send, meta.recv, meta.request_id, meta.operation, meta.client_name);
     }
 }
 
 void custom_metadata_example() {
-    auto server = std::make_unique<ZeroMqServer>("127.0.0.1", "tcp", 8889);
-    auto client = std::make_unique<ZeroMqClient>("127.0.0.1", "tcp", 8889);
+    auto server = std::make_unique<hshm::lbm::ZeroMqServer>("127.0.0.1", "tcp", 8889);
+    auto client = std::make_unique<hshm::lbm::ZeroMqClient>("127.0.0.1", "tcp", 8889);
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
     // CLIENT: Send multiple data chunks with metadata
@@ -276,46 +293,50 @@ void custom_metadata_example() {
     send_meta.operation = "write";
     send_meta.client_name = "client_01";
 
-    send_meta.bulks.push_back(client->Expose(data1, strlen(data1), 0));
-    send_meta.bulks.push_back(client->Expose(data2, strlen(data2), 0));
+    send_meta.send.push_back(client->Expose(data1, strlen(data1), BULK_WRITE));
+    send_meta.send.push_back(client->Expose(data2, strlen(data2), BULK_WRITE));
 
-    Event* send_event = client->Send(send_meta);
-    assert(send_event->is_done);
-    delete send_event;
+    int rc = client->Send(send_meta);
+    if (rc != 0) {
+        std::cerr << "Send failed\n";
+        return;
+    }
 
-    // SERVER: Receive metadata
+    // SERVER: Receive metadata (poll until available)
     RequestMeta recv_meta;
-    Event* recv_event = nullptr;
-    while (!recv_event || !recv_event->is_done) {
-        if (recv_event) delete recv_event;
-        recv_event = server->RecvMetadata(recv_meta);
+    while (true) {
+        rc = server->RecvMetadata(recv_meta);
+        if (rc == 0) break;
+        if (rc != EAGAIN) {
+            std::cerr << "RecvMetadata failed: " << rc << "\n";
+            return;
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
 
     std::cout << "Request ID: " << recv_meta.request_id << "\n";
     std::cout << "Operation: " << recv_meta.operation << "\n";
     std::cout << "Client: " << recv_meta.client_name << "\n";
-    std::cout << "Number of bulks: " << recv_meta.bulks.size() << "\n";
-    delete recv_event;
+    std::cout << "Number of bulks: " << recv_meta.send.size() << "\n";
 
-    // SERVER: Allocate buffers and receive bulks
+    // SERVER: Allocate buffers based on sender's bulk sizes and receive bulks
     std::vector<std::vector<char>> buffers;
-    for (size_t i = 0; i < recv_meta.bulks.size(); ++i) {
-        buffers.emplace_back(recv_meta.bulks[i].size);
-        recv_meta.bulks[i] = server->Expose(buffers[i].data(),
-                                            buffers[i].size(), 0);
+    for (size_t i = 0; i < recv_meta.send.size(); ++i) {
+        buffers.emplace_back(recv_meta.send[i].size);
+        recv_meta.recv.push_back(server->Expose(buffers[i].data(),
+                                                 buffers[i].size(), BULK_EXPOSE));
     }
 
-    recv_event = server->RecvBulks(recv_meta);
-    while (!recv_event->is_done) {
-        delete recv_event;
-        recv_event = server->RecvBulks(recv_meta);
+    rc = server->RecvBulks(recv_meta);
+    if (rc != 0) {
+        std::cerr << "RecvBulks failed\n";
+        return;
     }
 
     for (size_t i = 0; i < buffers.size(); ++i) {
         std::cout << "Chunk " << i << ": "
                   << std::string(buffers[i].begin(), buffers[i].end()) << "\n";
     }
-    delete recv_event;
 }
 ```
 
@@ -340,15 +361,16 @@ void shared_memory_example() {
     memcpy(full_ptr.ptr_, "Shared memory data", 18);
 
     // Create client and expose shared memory
-    auto client = std::make_unique<ZeroMqClient>("127.0.0.1", "tcp", 8890);
+    auto client = std::make_unique<hshm::lbm::ZeroMqClient>("127.0.0.1", "tcp", 8890);
 
     LbmMeta meta;
     // Can use either hipc::Pointer or hipc::FullPtr directly
-    meta.bulks.push_back(client->Expose(full_ptr, data_size, 0));
+    meta.send.push_back(client->Expose(full_ptr, data_size, BULK_WRITE));
 
-    Event* event = client->Send(meta);
-    assert(event->is_done);
-    delete event;
+    int rc = client->Send(meta);
+    if (rc != 0) {
+        std::cerr << "Send failed\n";
+    }
 
     // Free shared memory
     alloc->Free(shm_ptr);
@@ -374,15 +396,15 @@ void distributed_example() {
     int base_port = 9000;
 
     // Each rank creates a server on a unique port
-    auto server = TransportFactory::GetServer(
-        addr, Transport::kZeroMq, "tcp", base_port + my_rank);
+    auto server = hshm::lbm::TransportFactory::GetServer(
+        addr, hshm::lbm::Transport::kZeroMq, "tcp", base_port + my_rank);
 
     // Rank 0 sends to all other ranks
     if (my_rank == 0) {
-        std::vector<std::unique_ptr<Client>> clients;
+        std::vector<std::unique_ptr<hshm::lbm::Client>> clients;
         for (int i = 1; i < world_size; ++i) {
-            clients.push_back(TransportFactory::GetClient(
-                addr, Transport::kZeroMq, "tcp", base_port + i));
+            clients.push_back(hshm::lbm::TransportFactory::GetClient(
+                addr, hshm::lbm::Transport::kZeroMq, "tcp", base_port + i));
         }
 
         std::this_thread::sleep_for(std::chrono::milliseconds(200));
@@ -391,35 +413,39 @@ void distributed_example() {
             std::string msg = "Message to rank " + std::to_string(i + 1);
 
             LbmMeta meta;
-            meta.bulks.push_back(clients[i]->Expose(msg.data(), msg.size(), 0));
+            meta.send.push_back(clients[i]->Expose(msg.data(), msg.size(), BULK_WRITE));
 
-            Event* event = clients[i]->Send(meta);
-            assert(event->is_done);
-            delete event;
+            int rc = clients[i]->Send(meta);
+            if (rc != 0) {
+                std::cerr << "Send failed to rank " << (i + 1) << "\n";
+            }
         }
     } else {
         // Other ranks receive from rank 0
         LbmMeta meta;
-        Event* event = nullptr;
-
-        while (!event || !event->is_done) {
-            if (event) delete event;
-            event = server->RecvMetadata(meta);
+        int rc = server->RecvMetadata(meta);
+        while (rc == EAGAIN) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            rc = server->RecvMetadata(meta);
+        }
+        if (rc != 0) {
+            std::cerr << "RecvMetadata failed\n";
+            MPI_Finalize();
+            return;
         }
 
-        std::vector<char> buffer(meta.bulks[0].size);
-        meta.bulks[0] = server->Expose(buffer.data(), buffer.size(), 0);
+        std::vector<char> buffer(meta.send[0].size);
+        meta.recv.push_back(server->Expose(buffer.data(), buffer.size(), BULK_EXPOSE));
 
-        delete event;
-        event = server->RecvBulks(meta);
-        while (!event->is_done) {
-            delete event;
-            event = server->RecvBulks(meta);
+        rc = server->RecvBulks(meta);
+        if (rc != 0) {
+            std::cerr << "RecvBulks failed\n";
+            MPI_Finalize();
+            return;
         }
 
         std::cout << "Rank " << my_rank << " received: "
                   << std::string(buffer.begin(), buffer.end()) << "\n";
-        delete event;
     }
 
     MPI_Finalize();
@@ -441,90 +467,156 @@ std::vector<std::unique_ptr<Client>> client_pool;
 ### 2. Error Handling
 
 ```cpp
-Event* event = client->Send(meta);
-if (event->error_code != 0) {
-    std::cerr << "Send failed: " << event->error_message << "\n";
+int rc = client->Send(meta);
+if (rc != 0) {
+    std::cerr << "Send failed with error code: " << rc << "\n";
     // Implement retry logic
 }
-assert(event->is_done);  // For synchronous operations
-delete event;
 ```
 
-### 3. Non-Blocking Operations
+### 3. Polling for Receive
 
 ```cpp
-// Poll for completion instead of blocking
-Event* recv_event = nullptr;
-while (!recv_event || !recv_event->is_done) {
-    if (recv_event) delete recv_event;
-    recv_event = server->RecvMetadata(meta);
-    if (!recv_event->is_done) {
-        // Do other work or sleep briefly
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
-    }
+// Poll for metadata until available
+int rc = server->RecvMetadata(meta);
+while (rc == EAGAIN) {
+    // Do other work or sleep briefly
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    rc = server->RecvMetadata(meta);
+}
+if (rc != 0) {
+    std::cerr << "Error: " << rc << "\n";
 }
 ```
 
 ### 4. Memory Management
 
 ```cpp
-// Always delete Event objects
-Event* event = client->Send(meta);
-// ... use event ...
-delete event;
-
 // Ensure data lifetime during transfer
 {
     std::vector<char> data(1024);
-    Bulk bulk = client->Expose(data.data(), data.size(), 0);
+    Bulk bulk = client->Expose(data.data(), data.size(), BULK_WRITE);
+    LbmMeta meta;
+    meta.send.push_back(bulk);
     // data must remain valid until Send() completes
-    Event* event = client->Send(meta);
-    delete event;
+    int rc = client->Send(meta);
 } // data destroyed after Send completes
 ```
 
-### 5. Custom Metadata Serialization
+### 5. Send and Recv Vector Usage
 
 ```cpp
-// Always serialize bulks first in custom metadata
+// CLIENT: Populate send vector with BULK_WRITE bulks
+LbmMeta send_meta;
+send_meta.send.push_back(client->Expose(data1, size1, BULK_WRITE));
+send_meta.send.push_back(client->Expose(data2, size2, BULK_WRITE));
+
+// Send transmits only bulks in send vector
+int rc = client->Send(send_meta);
+
+// SERVER: Receive metadata and inspect send vector for sizes
+LbmMeta recv_meta;
+while ((rc = server->RecvMetadata(recv_meta)) == EAGAIN) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+}
+
+// Allocate buffers based on sender's bulk sizes in send vector
+for (size_t i = 0; i < recv_meta.send.size(); ++i) {
+    std::vector<char> buffer(recv_meta.send[i].size);
+    recv_meta.recv.push_back(server->Expose(buffer.data(), buffer.size(), BULK_EXPOSE));
+}
+
+// RecvBulks receives into recv vector only
+server->RecvBulks(recv_meta);
+```
+
+### 6. Custom Metadata Serialization
+
+```cpp
+// Always serialize send and recv vectors first in custom metadata
 namespace cereal {
     template<class Archive>
     void serialize(Archive& ar, CustomMeta& meta) {
-        ar(meta.bulks);  // Serialize base class bulks first
+        ar(meta.send, meta.recv);  // Serialize base class vectors first
         ar(meta.custom_field1, meta.custom_field2);  // Then custom fields
     }
 }
 ```
 
-### 6. Buffer Allocation Strategy
+### 7. Buffer Allocation Strategy
 
 ```cpp
-// Allocate receive buffers based on metadata
+// Receive metadata and inspect send vector for sizes
 LbmMeta meta;
-Event* event = server->RecvMetadata(meta);
-// ... wait for completion ...
+int rc = server->RecvMetadata(meta);
+while (rc == EAGAIN) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    rc = server->RecvMetadata(meta);
+}
+if (rc != 0) {
+    return;
+}
 
-// Now we know exact sizes needed
+// Allocate buffers based on sender's bulk sizes in send vector
 std::vector<std::vector<char>> buffers;
-for (const auto& bulk : meta.bulks) {
-    buffers.emplace_back(bulk.size);  // Allocate exact size
+for (const auto& bulk : meta.send) {
+    buffers.emplace_back(bulk.size);  // Allocate exact size from sender
+}
+
+// Populate recv vector with exposed buffers
+for (size_t i = 0; i < buffers.size(); ++i) {
+    meta.recv.push_back(server->Expose(buffers[i].data(), buffers[i].size(), BULK_EXPOSE));
 }
 ```
 
-### 7. Multi-Threading
+### 8. Multi-Threading
 
 ```cpp
 // Use separate server thread for receiving
-std::thread server_thread([&server]() {
+std::atomic<bool> running{true};
+std::thread server_thread([&server, &running]() {
     while (running) {
         LbmMeta meta;
-        Event* event = server->RecvMetadata(meta);
-        if (event->is_done && event->error_code == 0) {
+        int rc = server->RecvMetadata(meta);
+        if (rc == 0) {
             // Process message
+        } else if (rc != EAGAIN) {
+            std::cerr << "Error: " << rc << "\n";
+            break;
         }
-        delete event;
     }
 });
+```
+
+## Error Codes
+
+### Return Values
+
+All operations return an integer error code:
+
+- **0**: Success
+- **EAGAIN**: No data available (RecvMetadata only)
+- **Positive values**: System error codes (from `errno.h` or `zmq_errno()`)
+- **-1**: Generic error (e.g., deserialization failure, message part mismatch)
+
+### Common ZMQ Error Codes
+
+- **EAGAIN (11)**: Resource temporarily unavailable (non-blocking operation would block)
+- **EINTR (4)**: Interrupted system call
+- **ETERM (156384763)**: Context was terminated
+- **ENOTSOCK (88)**: Invalid socket
+- **EMSGSIZE (90)**: Message too large
+
+### Checking Errors
+
+```cpp
+int rc = server->RecvMetadata(meta);
+if (rc == EAGAIN) {
+    // No data available, try again later
+} else if (rc != 0) {
+    // Error occurred
+    std::cerr << "Error " << rc << ": " << strerror(rc) << "\n";
+}
 ```
 
 ## Performance Considerations
@@ -539,20 +631,27 @@ std::thread server_thread([&server]() {
 
 5. **Serialization Cost**: Use efficient serialization for custom metadata
 
-6. **ZMQ Socket Options**: Configure ZMQ for your use case (high water marks, linger, etc.)
+6. **Polling Interval**: Balance between responsiveness and CPU usage when polling
+   - Too frequent: Wastes CPU cycles
+   - Too infrequent: Adds latency
+
+7. **Blocking vs Polling**:
+   - `Send()` and `RecvBulks()` are synchronous/blocking
+   - `RecvMetadata()` can be polled with EAGAIN handling
 
 ## Limitations and Future Work
 
 **Current Limitations:**
 - Only ZeroMQ transport is implemented
-- Synchronous operations only (non-blocking via polling)
+- RecvMetadata polling required (returns EAGAIN)
 - No built-in timeout mechanism
 - Limited to TCP protocol
 
 **Future Enhancements:**
 - Thallium/Mercury transport for RPC-style communication
 - Libfabric transport for RDMA operations
-- Async/await style API
-- Built-in timeout and retry mechanisms
+- Timeout support for operations
+- Built-in retry mechanisms
 - Protocol negotiation and versioning
 - Connection multiplexing
+- Async/await style API with callbacks

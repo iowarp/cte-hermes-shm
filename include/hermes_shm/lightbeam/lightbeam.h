@@ -8,29 +8,28 @@
 #include <cstring>
 #include <cassert>
 #include "hermes_shm/memory/memory_manager.h"
+#include "hermes_shm/types/bitfield.h"
 
 namespace hshm::lbm {
 
-// --- Types ---
-struct Event {
-  bool is_done = false;
-  int error_code = 0;
-  std::string error_message;
-  size_t bytes_transferred = 0;
-};
+// --- Bulk Flags ---
+#define BULK_EXPOSE BIT_OPT(hshm::u32, 0)  // Bulk is exposed (sender exposes for reading)
+#define BULK_WRITE BIT_OPT(hshm::u32, 1)   // Bulk is exposed for writing (receiver)
 
+// --- Types ---
 struct Bulk {
   hipc::FullPtr<char> data;
   size_t size;
-  int flags;
-  void* desc = nullptr;  // For RDMA memory registration
-  void* mr = nullptr;    // For RDMA memory region handle (fid_mr*)
+  hshm::bitfield32_t flags;  // BULK_READ or BULK_WRITE
+  void* desc = nullptr;      // For RDMA memory registration
+  void* mr = nullptr;        // For RDMA memory region handle (fid_mr*)
 };
 
 // --- Metadata Base Class ---
 class LbmMeta {
  public:
-  std::vector<Bulk> bulks;
+  std::vector<Bulk> send;  // Bulks marked BULK_WRITE (sender side)
+  std::vector<Bulk> recv;  // Bulks marked BULK_EXPOSE (receiver side)
 };
 
 // --- Interfaces ---
@@ -39,16 +38,16 @@ class Client {
   virtual ~Client() = default;
 
   // Expose from raw pointer
-  virtual Bulk Expose(const char* data, size_t data_size, int flags) = 0;
+  virtual Bulk Expose(const char* data, size_t data_size, u32 flags) = 0;
 
   // Expose from hipc::Pointer
-  virtual Bulk Expose(const hipc::Pointer& ptr, size_t data_size, int flags) = 0;
+  virtual Bulk Expose(const hipc::Pointer& ptr, size_t data_size, u32 flags) = 0;
 
   // Expose from hipc::FullPtr
-  virtual Bulk Expose(const hipc::FullPtr<char>& ptr, size_t data_size, int flags) = 0;
+  virtual Bulk Expose(const hipc::FullPtr<char>& ptr, size_t data_size, u32 flags) = 0;
 
   template<typename MetaT>
-  Event* Send(MetaT &meta);
+  int Send(MetaT &meta);
 };
 
 class Server {
@@ -56,19 +55,19 @@ class Server {
   virtual ~Server() = default;
 
   // Expose from raw pointer
-  virtual Bulk Expose(char* data, size_t data_size, int flags) = 0;
+  virtual Bulk Expose(char* data, size_t data_size, u32 flags) = 0;
 
   // Expose from hipc::Pointer
-  virtual Bulk Expose(const hipc::Pointer& ptr, size_t data_size, int flags) = 0;
+  virtual Bulk Expose(const hipc::Pointer& ptr, size_t data_size, u32 flags) = 0;
 
   // Expose from hipc::FullPtr
-  virtual Bulk Expose(const hipc::FullPtr<char>& ptr, size_t data_size, int flags) = 0;
+  virtual Bulk Expose(const hipc::FullPtr<char>& ptr, size_t data_size, u32 flags) = 0;
 
   template<typename MetaT>
-  Event* RecvMetadata(MetaT &meta);
+  int RecvMetadata(MetaT &meta);
 
   template<typename MetaT>
-  Event* RecvBulks(MetaT &meta);
+  int RecvBulks(MetaT &meta);
 
   virtual std::string GetAddress() const = 0;
 };

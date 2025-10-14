@@ -19,7 +19,7 @@ class TestMeta : public LbmMeta {
 namespace cereal {
   template<class Archive>
   void serialize(Archive& ar, TestMeta& meta) {
-    ar(meta.bulks, meta.request_id, meta.operation);
+    ar(meta.send, meta.recv, meta.request_id, meta.operation);
   }
 }
 
@@ -49,54 +49,48 @@ void TestBasicTransfer() {
   send_meta.request_id = 42;
   send_meta.operation = "test_op";
 
-  Bulk bulk1 = client->Expose(data1, size1, 0);
-  Bulk bulk2 = client->Expose(data2, size2, 0);
+  Bulk bulk1 = client->Expose(data1, size1, BULK_WRITE);
+  Bulk bulk2 = client->Expose(data2, size2, BULK_WRITE);
 
-  send_meta.bulks.push_back(bulk1);
-  send_meta.bulks.push_back(bulk2);
+  send_meta.send.push_back(bulk1);
+  send_meta.send.push_back(bulk2);
 
   // Send metadata and bulks
-  Event* send_event = client->Send(send_meta);
-  assert(send_event->is_done);
-  assert(send_event->error_code == 0);
-  std::cout << "Client sent " << send_event->bytes_transferred << " bytes\n";
-  delete send_event;
+  int rc = client->Send(send_meta);
+  assert(rc == 0);
+  std::cout << "Client sent data successfully\n";
 
   // Server receives metadata
   TestMeta recv_meta;
-  Event* recv_event = nullptr;
-  while (!recv_event || !recv_event->is_done) {
-    if (recv_event) delete recv_event;
-    recv_event = server->RecvMetadata(recv_meta);
-    if (!recv_event->is_done) {
-      std::this_thread::sleep_for(std::chrono::milliseconds(1));
+  while (true) {
+    rc = server->RecvMetadata(recv_meta);
+    if (rc == 0) break;
+    if (rc != EAGAIN) {
+      std::cerr << "RecvMetadata failed with error: " << rc << "\n";
+      return;
     }
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
   }
-  assert(recv_event->error_code == 0);
   std::cout << "Server received metadata: request_id=" << recv_meta.request_id
             << ", operation=" << recv_meta.operation << "\n";
   assert(recv_meta.request_id == 42);
   assert(recv_meta.operation == "test_op");
-  assert(recv_meta.bulks.size() == 2);
-  delete recv_event;
+  assert(recv_meta.send.size() == 2);
 
   // Allocate buffers for receiving bulks
-  std::vector<char> recv_buf1(recv_meta.bulks[0].size);
-  std::vector<char> recv_buf2(recv_meta.bulks[1].size);
+  std::vector<char> recv_buf1(recv_meta.send[0].size);
+  std::vector<char> recv_buf2(recv_meta.send[1].size);
 
-  recv_meta.bulks[0] = server->Expose(recv_buf1.data(), recv_buf1.size(), 0);
-  recv_meta.bulks[1] = server->Expose(recv_buf2.data(), recv_buf2.size(), 0);
+  recv_meta.recv.push_back(server->Expose(recv_buf1.data(), recv_buf1.size(), BULK_EXPOSE));
+  recv_meta.recv.push_back(server->Expose(recv_buf2.data(), recv_buf2.size(), BULK_EXPOSE));
 
   // Receive bulks
-  recv_event = server->RecvBulks(recv_meta);
-  while (!recv_event->is_done) {
-    delete recv_event;
-    recv_event = server->RecvBulks(recv_meta);
-    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+  rc = server->RecvBulks(recv_meta);
+  if (rc != 0) {
+    std::cerr << "RecvBulks failed with error: " << rc << "\n";
+    return;
   }
-  assert(recv_event->error_code == 0);
-  std::cout << "Server received " << recv_event->bytes_transferred << " bytes of bulk data\n";
-  delete recv_event;
+  std::cout << "Server received bulk data successfully\n";
 
   // Verify received data
   std::string received1(recv_buf1.begin(), recv_buf1.end());
@@ -138,45 +132,40 @@ void TestMultipleBulks() {
   // Create metadata
   LbmMeta send_meta;
   for (const auto& chunk : data_chunks) {
-    Bulk bulk = client->Expose(chunk.data(), chunk.size(), 0);
-    send_meta.bulks.push_back(bulk);
+    Bulk bulk = client->Expose(chunk.data(), chunk.size(), BULK_WRITE);
+    send_meta.send.push_back(bulk);
   }
 
   // Send
-  Event* send_event = client->Send(send_meta);
-  assert(send_event->is_done && send_event->error_code == 0);
-  delete send_event;
+  int rc = client->Send(send_meta);
+  assert(rc == 0);
 
   // Receive metadata
   LbmMeta recv_meta;
-  Event* recv_event = nullptr;
-  while (!recv_event || !recv_event->is_done) {
-    if (recv_event) delete recv_event;
-    recv_event = server->RecvMetadata(recv_meta);
-    if (!recv_event->is_done) {
-      std::this_thread::sleep_for(std::chrono::milliseconds(1));
+  while (true) {
+    rc = server->RecvMetadata(recv_meta);
+    if (rc == 0) break;
+    if (rc != EAGAIN) {
+      std::cerr << "RecvMetadata failed with error: " << rc << "\n";
+      return;
     }
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
   }
-  assert(recv_event->error_code == 0);
-  assert(recv_meta.bulks.size() == data_chunks.size());
-  delete recv_event;
+  assert(recv_meta.send.size() == data_chunks.size());
 
   // Allocate buffers and receive bulks
   std::vector<std::vector<char>> recv_buffers;
-  for (size_t i = 0; i < recv_meta.bulks.size(); ++i) {
-    recv_buffers.emplace_back(recv_meta.bulks[i].size);
-    recv_meta.bulks[i] = server->Expose(recv_buffers[i].data(),
-                                        recv_buffers[i].size(), 0);
+  for (size_t i = 0; i < recv_meta.send.size(); ++i) {
+    recv_buffers.emplace_back(recv_meta.send[i].size);
+    recv_meta.recv.push_back(server->Expose(recv_buffers[i].data(),
+                                            recv_buffers[i].size(), BULK_EXPOSE));
   }
 
-  recv_event = server->RecvBulks(recv_meta);
-  while (!recv_event->is_done) {
-    delete recv_event;
-    recv_event = server->RecvBulks(recv_meta);
-    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+  rc = server->RecvBulks(recv_meta);
+  if (rc != 0) {
+    std::cerr << "RecvBulks failed with error: " << rc << "\n";
+    return;
   }
-  assert(recv_event->error_code == 0);
-  delete recv_event;
 
   // Verify all chunks
   for (size_t i = 0; i < data_chunks.size(); ++i) {
