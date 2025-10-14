@@ -1,18 +1,19 @@
-#include <hermes_shm/lightbeam/zmq_transport.h>
-#include <cassert>
-#include <iostream>
-#include <fstream>
-#include <vector>
-#include <thread>
-#include <chrono>
-#include <sys/stat.h>
-#include <unistd.h>
-#include <mpi.h>
-#include <sstream>
-#include <ifaddrs.h>
 #include <arpa/inet.h>
+#include <hermes_shm/lightbeam/zmq_transport.h>
+#include <ifaddrs.h>
+#include <mpi.h>
 #include <net/if.h>
 #include <netdb.h>
+#include <sys/stat.h>
+#include <unistd.h>
+
+#include <cassert>
+#include <chrono>
+#include <fstream>
+#include <iostream>
+#include <sstream>
+#include <thread>
+#include <vector>
 
 using namespace hshm::lbm;
 
@@ -43,7 +44,7 @@ void Clients(std::vector<std::unique_ptr<Client>>& clients,
     std::cout << "[Rank " << my_rank << "] [Clients] Sending to server " << i
               << std::endl;
     LbmMeta meta;
-    Bulk bulk = clients[i]->Expose(magic.data(), magic.size(), BULK_WRITE);
+    Bulk bulk = clients[i]->Expose(magic.data(), magic.size(), BULK_XFER);
     meta.send.push_back(bulk);
     int rc = clients[i]->Send(meta);
     std::cout << "[Rank " << my_rank << "] [Clients] Sent to server " << i
@@ -52,7 +53,8 @@ void Clients(std::vector<std::unique_ptr<Client>>& clients,
   }
 }
 
-void ServerThread(Server& server, size_t num_clients, const std::string& magic) {
+void ServerThread(Server& server, size_t num_clients,
+                  const std::string& magic) {
   std::ostringstream oss;
   oss << std::this_thread::get_id();
   std::cout << "[ServerThread] Thread ID: " << oss.str() << std::endl;
@@ -74,14 +76,16 @@ void ServerThread(Server& server, size_t num_clients, const std::string& magic) 
 
     // Allocate buffer and receive bulks
     std::vector<char> y(meta.send[0].size);
-    meta.recv.push_back(server.Expose(y.data(), y.size(), BULK_EXPOSE));
+    meta.recv.push_back(
+        server.Expose(y.data(), y.size(), meta.send[0].flags.bits_));
 
     rc = server.RecvBulks(meta);
     if (rc != 0) {
       std::cerr << "[Server] RecvBulks failed with error: " << rc << "\n";
       return;
     }
-    std::cout << "[Server] Received message " << i << ", rc=" << rc << std::endl;
+    std::cout << "[Server] Received message " << i << ", rc=" << rc
+              << std::endl;
 
     std::string received(y.begin(), y.end());
     std::cout << "[Server] Received: " << received << std::endl;
@@ -104,7 +108,7 @@ std::string WaitForServerAddr(const std::string& filename) {
     usleep(100000);  // 100ms
   }
   throw std::runtime_error("Timeout waiting for server address file: " +
-                          filename);
+                           filename);
 }
 
 std::string GetPrimaryIp() {
@@ -141,16 +145,17 @@ int main(int argc, char** argv) {
   int my_rank = 0, world_size = 0;
   MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
   MPI_Comm_size(MPI_COMM_WORLD, &world_size);
-  int num_msgs = 10;   // default
-  int msg_size = 32;   // default small message
+  int num_msgs = 10;  // default
+  int msg_size = 32;  // default small message
   if (argc < 6) {
     std::cerr << "Usage: " << argv[0]
               << " <zeromq|thallium|libfabric> <hostfile> <protocol> <domain> "
                  "<port> [num_msgs] [msg_size]\n";
-    std::cerr << "All parameters are required except [num_msgs] and [msg_size]. "
-                 "Number of MPI processes (mpirun -n) should match the number "
-                 "of hosts in the hostfile."
-              << std::endl;
+    std::cerr
+        << "All parameters are required except [num_msgs] and [msg_size]. "
+           "Number of MPI processes (mpirun -n) should match the number "
+           "of hosts in the hostfile."
+        << std::endl;
     MPI_Finalize();
     return 1;
   }
@@ -199,7 +204,8 @@ int main(int argc, char** argv) {
         rc = server_ptr->RecvMetadata(meta);
         if (rc == 0) break;
         if (rc != EAGAIN) {
-          std::cerr << "[Server] RecvMetadata failed with error: " << rc << "\n";
+          std::cerr << "[Server] RecvMetadata failed with error: " << rc
+                    << "\n";
           return;
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
@@ -207,7 +213,8 @@ int main(int argc, char** argv) {
 
       // Allocate buffer and receive bulks
       std::vector<char> y(msg_size);
-      meta.recv.push_back(server_ptr->Expose(y.data(), y.size(), BULK_EXPOSE));
+      meta.recv.push_back(
+          server_ptr->Expose(y.data(), y.size(), meta.send[0].flags.bits_));
 
       rc = server_ptr->RecvBulks(meta);
       if (rc != 0) {
@@ -216,7 +223,8 @@ int main(int argc, char** argv) {
       }
       received++;
 
-      double t = std::chrono::duration<double>(recv_time - global_start).count();
+      double t =
+          std::chrono::duration<double>(recv_time - global_start).count();
       std::cout << "[Rank " << my_rank << "] Received message " << received
                 << " at " << t << " s" << std::endl;
     }
@@ -251,12 +259,13 @@ int main(int argc, char** argv) {
     for (size_t i = 0; i < clients.size(); ++i) {
       auto send_time = std::chrono::high_resolution_clock::now();
       LbmMeta meta;
-      Bulk bulk = clients[i]->Expose(magic.data(), magic.size(), BULK_WRITE);
+      Bulk bulk = clients[i]->Expose(magic.data(), magic.size(), BULK_XFER);
       meta.send.push_back(bulk);
       int rc = clients[i]->Send(meta);
       assert(rc == 0);
       sent++;
-      double t = std::chrono::duration<double>(send_time - global_start).count();
+      double t =
+          std::chrono::duration<double>(send_time - global_start).count();
       std::cout << "[Rank " << my_rank << "] Sent message " << sent
                 << " to server " << i << " at " << t << " s" << std::endl;
     }
@@ -272,4 +281,4 @@ int main(int argc, char** argv) {
             << global_elapsed << " s" << std::endl;
   MPI_Finalize();
   return 0;
-} 
+}

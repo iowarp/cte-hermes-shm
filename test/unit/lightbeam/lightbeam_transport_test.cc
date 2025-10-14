@@ -1,9 +1,10 @@
 #include <hermes_shm/lightbeam/zmq_transport.h>
+
 #include <cassert>
-#include <iostream>
-#include <vector>
-#include <thread>
 #include <chrono>
+#include <iostream>
+#include <thread>
+#include <vector>
 
 using namespace hshm::lbm;
 
@@ -25,7 +26,7 @@ void TestZeroMQ() {
 
   // Client creates metadata and sends
   LbmMeta send_meta;
-  Bulk send_bulk = client->Expose(magic.data(), magic.size(), BULK_WRITE);
+  Bulk send_bulk = client->Expose(magic.data(), magic.size(), BULK_XFER);
   send_meta.send.push_back(send_bulk);
 
   int rc = client->Send(send_meta);
@@ -47,7 +48,8 @@ void TestZeroMQ() {
 
   // Allocate buffer and receive bulks
   std::vector<char> recv_buf(recv_meta.send[0].size);
-  recv_meta.recv.push_back(server->Expose(recv_buf.data(), recv_buf.size(), BULK_EXPOSE));
+  recv_meta.recv.push_back(server->Expose(recv_buf.data(), recv_buf.size(),
+                                          recv_meta.send[0].flags.bits_));
 
   rc = server->RecvBulks(recv_meta);
   if (rc != 0) {
@@ -69,4 +71,4 @@ int main() {
   TestZeroMQ();
   std::cout << "\nAll transport tests passed!" << std::endl;
   return 0;
-} 
+}

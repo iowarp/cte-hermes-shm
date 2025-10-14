@@ -41,13 +41,13 @@ Describes a memory region for data transfer:
 ```cpp
 namespace hshm::lbm {
 // Bulk flags
-#define BULK_EXPOSE  // Bulk is exposed (receiver exposes buffers)
-#define BULK_WRITE   // Bulk is marked for transmission (sender)
+#define BULK_EXPOSE  // Bulk is exposed (metadata only, no data transfer)
+#define BULK_XFER   // Bulk is marked for data transmission
 
 struct Bulk {
     hipc::FullPtr<char> data;       // Pointer to data (supports shared memory)
     size_t size;                    // Size of data in bytes
-    hshm::bitfield32_t flags;       // BULK_EXPOSE or BULK_WRITE
+    hshm::bitfield32_t flags;       // BULK_EXPOSE or BULK_XFER
     void* desc = nullptr;           // RDMA memory registration descriptor
     void* mr = nullptr;             // Memory region handle (for future RDMA support)
 };
@@ -58,8 +58,10 @@ struct Bulk {
 - Uses `hipc::FullPtr` for shared memory compatibility
 - Can be created from raw pointers, `hipc::Pointer`, or `hipc::FullPtr`
 - Flags control bulk behavior:
-  - **BULK_EXPOSE**: Used by receiver to expose buffers for receiving data
-  - **BULK_WRITE**: Used by sender to mark bulks for transmission (only BULK_WRITE bulks are sent)
+  - **BULK_EXPOSE**: Bulk metadata is sent but no data is transferred (useful for shared memory)
+  - **BULK_XFER**: Bulk marked for data transmission (data is transferred over network)
+  - Sender's `send` vector can contain bulks with either flag
+  - Only BULK_XFER bulks are actually transmitted via Send() and received via RecvBulks()
 - Prepared for future RDMA transport extensions
 
 ### hshm::lbm::LbmMeta
@@ -70,7 +72,7 @@ Base class for message metadata:
 namespace hshm::lbm {
 class LbmMeta {
  public:
-    std::vector<Bulk> send;  // Bulks marked BULK_WRITE (sender side)
+    std::vector<Bulk> send;  // Bulks marked BULK_XFER (sender side)
     std::vector<Bulk> recv;  // Bulks marked BULK_EXPOSE (receiver side)
 };
 }
@@ -79,9 +81,14 @@ class LbmMeta {
 **Usage:**
 - Extend `LbmMeta` to include custom metadata fields
 - Must implement cereal serialization for custom fields
-- **send vector**: Contains bulks for transmission (client populates with BULK_WRITE)
-- **recv vector**: Contains buffers for receiving (server populates with BULK_EXPOSE)
-- Server can inspect `send` sizes after `RecvMetadata()` to allocate appropriate `recv` buffers
+- **send vector**: Contains sender's bulk descriptors (can have BULK_EXPOSE or BULK_XFER flags)
+  - Only bulks marked BULK_XFER will be transmitted over the network
+  - Sender populates this vector with bulks to send
+- **recv vector**: Receiver's copy of send with local data pointers
+  - Server receives metadata, inspects all bulks in `send` (regardless of flag) to see data sizes
+  - Server allocates local buffers and creates `recv` bulks copying flags from `send`
+  - Only bulks marked BULK_XFER will receive data via `RecvBulks()`
+  - `recv` should mirror `send` structure but with receiver's local pointers
 
 ## API Reference
 
@@ -108,15 +115,15 @@ class Client {
 **Methods:**
 - `Expose()`: Registers memory for transfer, returns `Bulk` descriptor
   - Accepts raw pointers, `hipc::Pointer`, or `hipc::FullPtr`
-  - **flags**: Use `BULK_WRITE` to mark bulk for transmission
+  - **flags**: Use `BULK_XFER` to mark bulk for transmission
   - Returns immediately (no actual data transfer)
 - `Send()`: Transmits metadata and bulks in the send vector
   - Template method accepting any `LbmMeta`-derived type
   - Serializes metadata using cereal (includes both send and recv vectors)
   - **Only transmits bulks in `meta.send` vector**
-  - Validates all send bulks have `BULK_WRITE` flag
+  - Validates all send bulks have `BULK_XFER` flag
   - **Synchronous**: Blocks until send completes
-  - **Returns**: `0` on success, `-1` if send bulk missing BULK_WRITE, other error codes on failure
+  - **Returns**: `0` on success, `-1` if send bulk missing BULK_XFER, other error codes on failure
 
 ### hshm::lbm::Server Interface
 
@@ -146,21 +153,21 @@ class Server {
 
 **Methods:**
 - `Expose()`: Registers receive buffers, returns `Bulk` descriptor
-  - **flags**: Use `BULK_EXPOSE` to mark buffer for receiving
+  - **flags**: Copy flags from corresponding `send` bulk to maintain consistency
   - Must be called after `RecvMetadata()` to populate `meta.recv` with local buffers
 - `RecvMetadata()`: Receives and deserializes message metadata
   - **Non-blocking**: Returns immediately if no message available
   - Populates `meta.send` with sender's bulk descriptors (size and flags)
-  - Server inspects `meta.send` to determine buffer sizes needed
+  - Server can inspect all bulks in `meta.send` (regardless of flag) to determine buffer sizes
   - **Returns**: `0` on success, `EAGAIN` if no message, other error codes on failure
   - Typically used in polling loop until message arrives
 - `RecvBulks()`: Receives actual data into exposed buffers
   - Must be called after `RecvMetadata()` succeeds and `meta.recv` is populated
-  - **Only receives into bulks in `meta.recv` vector**
-  - Validates all recv bulks have `BULK_EXPOSE` flag
-  - Number of bulks received must match `meta.send.size()`
-  - **Synchronous**: Blocks until all bulks received
-  - **Returns**: `0` on success, `-1` if recv bulk missing BULK_EXPOSE, other error codes on failure
+  - **Only receives data into bulks marked BULK_XFER in `meta.recv` vector**
+  - Iterates over `meta.recv` and receives only into bulks with BULK_XFER flag
+  - Bulks marked BULK_EXPOSE in recv will be skipped (no data transfer)
+  - **Synchronous**: Blocks until all WRITE bulks received
+  - **Returns**: `0` on success, error codes on failure
 - `GetAddress()`: Returns the server's bind address
 
 ### hshm::lbm::TransportFactory
@@ -215,7 +222,7 @@ void basic_example() {
     size_t message_size = strlen(message);
 
     LbmMeta send_meta;
-    Bulk bulk = client->Expose(message, message_size, BULK_WRITE);
+    Bulk bulk = client->Expose(message, message_size, BULK_XFER);
     send_meta.send.push_back(bulk);
 
     int rc = client->Send(send_meta);
@@ -239,9 +246,10 @@ void basic_example() {
     std::cout << "Server received metadata with "
               << recv_meta.send.size() << " bulks\n";
 
-    // SERVER: Allocate buffer based on sender's bulk size and receive data
+    // SERVER: Allocate buffer based on sender's bulk size and copy flags from send
     std::vector<char> buffer(recv_meta.send[0].size);
-    recv_meta.recv.push_back(server->Expose(buffer.data(), buffer.size(), BULK_EXPOSE));
+    recv_meta.recv.push_back(server->Expose(buffer.data(), buffer.size(),
+                                            recv_meta.send[0].flags.bits_));
 
     rc = server->RecvBulks(recv_meta);
     if (rc != 0) {
@@ -293,8 +301,8 @@ void custom_metadata_example() {
     send_meta.operation = "write";
     send_meta.client_name = "client_01";
 
-    send_meta.send.push_back(client->Expose(data1, strlen(data1), BULK_WRITE));
-    send_meta.send.push_back(client->Expose(data2, strlen(data2), BULK_WRITE));
+    send_meta.send.push_back(client->Expose(data1, strlen(data1), BULK_XFER));
+    send_meta.send.push_back(client->Expose(data2, strlen(data2), BULK_XFER));
 
     int rc = client->Send(send_meta);
     if (rc != 0) {
@@ -319,12 +327,13 @@ void custom_metadata_example() {
     std::cout << "Client: " << recv_meta.client_name << "\n";
     std::cout << "Number of bulks: " << recv_meta.send.size() << "\n";
 
-    // SERVER: Allocate buffers based on sender's bulk sizes and receive bulks
+    // SERVER: Allocate buffers based on sender's bulk sizes and copy flags from send
     std::vector<std::vector<char>> buffers;
     for (size_t i = 0; i < recv_meta.send.size(); ++i) {
         buffers.emplace_back(recv_meta.send[i].size);
         recv_meta.recv.push_back(server->Expose(buffers[i].data(),
-                                                 buffers[i].size(), BULK_EXPOSE));
+                                                 buffers[i].size(),
+                                                 recv_meta.send[i].flags.bits_));
     }
 
     rc = server->RecvBulks(recv_meta);
@@ -365,7 +374,7 @@ void shared_memory_example() {
 
     LbmMeta meta;
     // Can use either hipc::Pointer or hipc::FullPtr directly
-    meta.send.push_back(client->Expose(full_ptr, data_size, BULK_WRITE));
+    meta.send.push_back(client->Expose(full_ptr, data_size, BULK_XFER));
 
     int rc = client->Send(meta);
     if (rc != 0) {
@@ -413,7 +422,7 @@ void distributed_example() {
             std::string msg = "Message to rank " + std::to_string(i + 1);
 
             LbmMeta meta;
-            meta.send.push_back(clients[i]->Expose(msg.data(), msg.size(), BULK_WRITE));
+            meta.send.push_back(clients[i]->Expose(msg.data(), msg.size(), BULK_XFER));
 
             int rc = clients[i]->Send(meta);
             if (rc != 0) {
@@ -435,7 +444,7 @@ void distributed_example() {
         }
 
         std::vector<char> buffer(meta.send[0].size);
-        meta.recv.push_back(server->Expose(buffer.data(), buffer.size(), BULK_EXPOSE));
+        meta.recv.push_back(server->Expose(buffer.data(), buffer.size(), meta.send[0].flags.bits_));
 
         rc = server->RecvBulks(meta);
         if (rc != 0) {
@@ -495,7 +504,7 @@ if (rc != 0) {
 // Ensure data lifetime during transfer
 {
     std::vector<char> data(1024);
-    Bulk bulk = client->Expose(data.data(), data.size(), BULK_WRITE);
+    Bulk bulk = client->Expose(data.data(), data.size(), BULK_XFER);
     LbmMeta meta;
     meta.send.push_back(bulk);
     // data must remain valid until Send() completes
@@ -506,10 +515,10 @@ if (rc != 0) {
 ### 5. Send and Recv Vector Usage
 
 ```cpp
-// CLIENT: Populate send vector with BULK_WRITE bulks
+// CLIENT: Populate send vector with BULK_XFER bulks
 LbmMeta send_meta;
-send_meta.send.push_back(client->Expose(data1, size1, BULK_WRITE));
-send_meta.send.push_back(client->Expose(data2, size2, BULK_WRITE));
+send_meta.send.push_back(client->Expose(data1, size1, BULK_XFER));
+send_meta.send.push_back(client->Expose(data2, size2, BULK_XFER));
 
 // Send transmits only bulks in send vector
 int rc = client->Send(send_meta);
@@ -520,10 +529,11 @@ while ((rc = server->RecvMetadata(recv_meta)) == EAGAIN) {
     std::this_thread::sleep_for(std::chrono::milliseconds(1));
 }
 
-// Allocate buffers based on sender's bulk sizes in send vector
+// Allocate buffers based on sender's bulk sizes and copy flags from send
 for (size_t i = 0; i < recv_meta.send.size(); ++i) {
     std::vector<char> buffer(recv_meta.send[i].size);
-    recv_meta.recv.push_back(server->Expose(buffer.data(), buffer.size(), BULK_EXPOSE));
+    recv_meta.recv.push_back(server->Expose(buffer.data(), buffer.size(),
+                                            recv_meta.send[i].flags.bits_));
 }
 
 // RecvBulks receives into recv vector only
@@ -563,9 +573,10 @@ for (const auto& bulk : meta.send) {
     buffers.emplace_back(bulk.size);  // Allocate exact size from sender
 }
 
-// Populate recv vector with exposed buffers
+// Populate recv vector with exposed buffers, copying flags from send
 for (size_t i = 0; i < buffers.size(); ++i) {
-    meta.recv.push_back(server->Expose(buffers[i].data(), buffers[i].size(), BULK_EXPOSE));
+    meta.recv.push_back(server->Expose(buffers[i].data(), buffers[i].size(),
+                                       meta.send[i].flags.bits_));
 }
 ```
 

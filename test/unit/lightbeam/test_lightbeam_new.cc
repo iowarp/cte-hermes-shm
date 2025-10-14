@@ -1,10 +1,11 @@
 #include <hermes_shm/lightbeam/zmq_transport.h>
+
 #include <cassert>
-#include <iostream>
-#include <vector>
-#include <thread>
 #include <chrono>
 #include <cstring>
+#include <iostream>
+#include <thread>
+#include <vector>
 
 using namespace hshm::lbm;
 
@@ -17,11 +18,11 @@ class TestMeta : public LbmMeta {
 
 // Cereal serialization for TestMeta
 namespace cereal {
-  template<class Archive>
-  void serialize(Archive& ar, TestMeta& meta) {
-    ar(meta.send, meta.recv, meta.request_id, meta.operation);
-  }
+template <class Archive>
+void serialize(Archive& ar, TestMeta& meta) {
+  ar(meta.send, meta.recv, meta.request_id, meta.operation);
 }
+}  // namespace cereal
 
 void TestBasicTransfer() {
   std::cout << "\n==== Testing Basic Transfer with New API ====\n";
@@ -49,8 +50,8 @@ void TestBasicTransfer() {
   send_meta.request_id = 42;
   send_meta.operation = "test_op";
 
-  Bulk bulk1 = client->Expose(data1, size1, BULK_WRITE);
-  Bulk bulk2 = client->Expose(data2, size2, BULK_WRITE);
+  Bulk bulk1 = client->Expose(data1, size1, BULK_XFER);
+  Bulk bulk2 = client->Expose(data2, size2, BULK_XFER);
 
   send_meta.send.push_back(bulk1);
   send_meta.send.push_back(bulk2);
@@ -77,12 +78,14 @@ void TestBasicTransfer() {
   assert(recv_meta.operation == "test_op");
   assert(recv_meta.send.size() == 2);
 
-  // Allocate buffers for receiving bulks
+  // Allocate buffers for receiving bulks and copy flags from send
   std::vector<char> recv_buf1(recv_meta.send[0].size);
   std::vector<char> recv_buf2(recv_meta.send[1].size);
 
-  recv_meta.recv.push_back(server->Expose(recv_buf1.data(), recv_buf1.size(), BULK_EXPOSE));
-  recv_meta.recv.push_back(server->Expose(recv_buf2.data(), recv_buf2.size(), BULK_EXPOSE));
+  recv_meta.recv.push_back(server->Expose(recv_buf1.data(), recv_buf1.size(),
+                                          recv_meta.send[0].flags.bits_));
+  recv_meta.recv.push_back(server->Expose(recv_buf2.data(), recv_buf2.size(),
+                                          recv_meta.send[1].flags.bits_));
 
   // Receive bulks
   rc = server->RecvBulks(recv_meta);
@@ -122,17 +125,13 @@ void TestMultipleBulks() {
   std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
   // Prepare multiple data chunks
-  std::vector<std::string> data_chunks = {
-    "Chunk 1",
-    "Chunk 2 is longer",
-    "Chunk 3",
-    "Final chunk 4"
-  };
+  std::vector<std::string> data_chunks = {"Chunk 1", "Chunk 2 is longer",
+                                          "Chunk 3", "Final chunk 4"};
 
   // Create metadata
   LbmMeta send_meta;
   for (const auto& chunk : data_chunks) {
-    Bulk bulk = client->Expose(chunk.data(), chunk.size(), BULK_WRITE);
+    Bulk bulk = client->Expose(chunk.data(), chunk.size(), BULK_XFER);
     send_meta.send.push_back(bulk);
   }
 
@@ -158,7 +157,8 @@ void TestMultipleBulks() {
   for (size_t i = 0; i < recv_meta.send.size(); ++i) {
     recv_buffers.emplace_back(recv_meta.send[i].size);
     recv_meta.recv.push_back(server->Expose(recv_buffers[i].data(),
-                                            recv_buffers[i].size(), BULK_EXPOSE));
+                                            recv_buffers[i].size(),
+                                            recv_meta.send[i].flags.bits_));
   }
 
   rc = server->RecvBulks(recv_meta);

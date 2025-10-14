@@ -2,25 +2,25 @@
 #if HSHM_ENABLE_ZMQ
 #include <zmq.h>
 
+#include <cereal/archives/binary.hpp>
+#include <cereal/types/string.hpp>
+#include <cereal/types/vector.hpp>
 #include <memory>
 #include <sstream>
-#include <cereal/archives/binary.hpp>
-#include <cereal/types/vector.hpp>
-#include <cereal/types/string.hpp>
 
 #include "lightbeam.h"
 
 // Cereal serialization for Bulk
 namespace cereal {
-  template<class Archive>
-  void serialize(Archive& ar, hshm::lbm::Bulk& bulk) {
-    ar(bulk.size, bulk.flags);
-  }
+template <class Archive>
+void serialize(Archive& ar, hshm::lbm::Bulk& bulk) {
+  ar(bulk.size, bulk.flags);
+}
 
-  template<class Archive>
-  void serialize(Archive& ar, hshm::lbm::LbmMeta& meta) {
-    ar(meta.send, meta.recv);
-  }
+template <class Archive>
+void serialize(Archive& ar, hshm::lbm::LbmMeta& meta) {
+  ar(meta.send, meta.recv);
+}
 }  // namespace cereal
 
 namespace hshm::lbm {
@@ -67,14 +67,7 @@ class ZeroMqClient : public Client {
 
   template <typename MetaT>
   int Send(MetaT& meta) {
-    // Validate all send bulks have BULK_WRITE flag
-    for (const auto& bulk : meta.send) {
-      if (!bulk.flags.Any(BULK_WRITE)) {
-        return -1;  // Error: send bulk without BULK_WRITE flag
-      }
-    }
-
-    // Serialize metadata
+    // Serialize metadata (includes both send and recv vectors)
     std::ostringstream oss(std::ios::binary);
     {
       cereal::BinaryOutputArchive ar(oss);
@@ -82,9 +75,17 @@ class ZeroMqClient : public Client {
     }
     std::string meta_str = oss.str();
 
-    // Send metadata - use ZMQ_SNDMORE only if there are send bulks to follow
+    // Count bulks marked for WRITE
+    size_t write_bulk_count = 0;
+    for (const auto& bulk : meta.send) {
+      if (bulk.flags.Any(BULK_XFER)) {
+        write_bulk_count++;
+      }
+    }
+
+    // Send metadata - use ZMQ_SNDMORE only if there are WRITE bulks to follow
     int flags = 0;
-    if (!meta.send.empty()) {
+    if (write_bulk_count > 0) {
       flags |= ZMQ_SNDMORE;
     }
 
@@ -93,10 +94,16 @@ class ZeroMqClient : public Client {
       return zmq_errno();
     }
 
-    // Send all bulks in send vector
+    // Send only bulks marked with BULK_XFER
+    size_t sent_count = 0;
     for (size_t i = 0; i < meta.send.size(); ++i) {
+      if (!meta.send[i].flags.Any(BULK_XFER)) {
+        continue;  // Skip bulks not marked for WRITE
+      }
+
       flags = 0;
-      if (i < meta.send.size() - 1) {
+      sent_count++;
+      if (sent_count < write_bulk_count) {
         flags |= ZMQ_SNDMORE;
       }
 
@@ -195,37 +202,45 @@ class ZeroMqServer : public Server {
 
   template <typename MetaT>
   int RecvBulks(MetaT& meta) {
-    // Validate all recv bulks have BULK_EXPOSE flag
+    // Count bulks marked with BULK_XFER (only these will be received)
+    size_t write_bulk_count = 0;
     for (const auto& bulk : meta.recv) {
-      if (!bulk.flags.Any(BULK_EXPOSE)) {
-        return -1;  // Error: recv bulk without BULK_EXPOSE flag
+      if (bulk.flags.Any(BULK_XFER)) {
+        write_bulk_count++;
       }
     }
 
-    // If no recv bulks, return immediately
-    if (meta.recv.empty()) {
+    // If no WRITE bulks, return immediately
+    if (write_bulk_count == 0) {
       return 0;
     }
 
-    // Receive each bulk
+    // Receive only bulks marked with BULK_XFER
+    size_t recv_count = 0;
     for (size_t i = 0; i < meta.recv.size(); ++i) {
+      if (!meta.recv[i].flags.Any(BULK_XFER)) {
+        continue;  // Skip bulks not marked for WRITE
+      }
+
       int rc = zmq_recv(socket_, meta.recv[i].data.ptr_, meta.recv[i].size, 0);
       if (rc == -1) {
         return zmq_errno();
       }
+      recv_count++;
 
       // Check if there are more message parts
       int more = 0;
       size_t more_size = sizeof(more);
       zmq_getsockopt(socket_, ZMQ_RCVMORE, &more, &more_size);
 
-      // If this is the last expected bulk but more parts exist, it's an error
-      if (i == meta.recv.size() - 1 && more) {
+      // If this is the last expected WRITE bulk but more parts exist, it's an
+      // error
+      if (recv_count == write_bulk_count && more) {
         return -1;  // More parts than expected
       }
 
-      // If we expect more bulks but no more parts, it's incomplete
-      if (i < meta.recv.size() - 1 && !more) {
+      // If we expect more WRITE bulks but no more parts, it's incomplete
+      if (recv_count < write_bulk_count && !more) {
         return -1;  // Fewer parts than expected
       }
     }
@@ -245,25 +260,26 @@ class ZeroMqServer : public Server {
 
 // --- Base Class Template Implementations ---
 // These delegate to the derived class implementations
-template<typename MetaT>
-int Client::Send(MetaT &meta) {
+template <typename MetaT>
+int Client::Send(MetaT& meta) {
   // This will be resolved through the vtable to the actual implementation
   return static_cast<ZeroMqClient*>(this)->Send(meta);
 }
 
-template<typename MetaT>
-int Server::RecvMetadata(MetaT &meta) {
+template <typename MetaT>
+int Server::RecvMetadata(MetaT& meta) {
   return static_cast<ZeroMqServer*>(this)->RecvMetadata(meta);
 }
 
-template<typename MetaT>
-int Server::RecvBulks(MetaT &meta) {
+template <typename MetaT>
+int Server::RecvBulks(MetaT& meta) {
   return static_cast<ZeroMqServer*>(this)->RecvBulks(meta);
 }
 
 // --- TransportFactory Implementations ---
 inline std::unique_ptr<Client> TransportFactory::GetClient(
-    const std::string& addr, Transport t, const std::string& protocol, int port) {
+    const std::string& addr, Transport t, const std::string& protocol,
+    int port) {
   if (t == Transport::kZeroMq) {
     return std::make_unique<ZeroMqClient>(addr, protocol, port);
   }
@@ -280,7 +296,8 @@ inline std::unique_ptr<Client> TransportFactory::GetClient(
 }
 
 inline std::unique_ptr<Server> TransportFactory::GetServer(
-    const std::string& addr, Transport t, const std::string& protocol, int port) {
+    const std::string& addr, Transport t, const std::string& protocol,
+    int port) {
   if (t == Transport::kZeroMq) {
     return std::make_unique<ZeroMqServer>(addr, protocol, port);
   }
