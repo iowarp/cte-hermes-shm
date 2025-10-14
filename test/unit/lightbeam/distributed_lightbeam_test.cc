@@ -1,5 +1,4 @@
-#include <hermes_shm/lightbeam/lightbeam.h>
-#include <hermes_shm/lightbeam/transport_factory_impl.h>
+#include <hermes_shm/lightbeam/zmq_transport.h>
 #include <cassert>
 #include <iostream>
 #include <fstream>
@@ -29,8 +28,6 @@ std::vector<std::string> ReadHosts(const std::string& hostfile) {
 
 Transport ParseTransport(const std::string& s) {
   if (s == "zeromq") return Transport::kZeroMq;
-  if (s == "thallium") return Transport::kThallium;
-  if (s == "libfabric") return Transport::kLibfabric;
   throw std::runtime_error("Unknown transport type: " + s);
 }
 
@@ -45,8 +42,10 @@ void Clients(std::vector<std::unique_ptr<Client>>& clients,
   for (size_t i = 0; i < clients.size(); ++i) {
     std::cout << "[Rank " << my_rank << "] [Clients] Sending to server " << i
               << std::endl;
+    LbmMeta meta;
     Bulk bulk = clients[i]->Expose(magic.data(), magic.size(), 0);
-    Event* event = clients[i]->Send(bulk);
+    meta.bulks.push_back(bulk);
+    Event* event = clients[i]->Send(meta);
     while (!event->is_done) {
       std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
@@ -63,23 +62,38 @@ void ServerThread(Server& server, size_t num_clients, const std::string& magic) 
   std::cout << "[ServerThread] Thread ID: " << oss.str() << std::endl;
   for (size_t i = 0; i < num_clients; ++i) {
     std::cout << "[Server] Waiting for message " << i << std::endl;
-    std::vector<char> y(magic.size());
-    Bulk bulk = server.Expose(y.data(), y.size(), 0);
+
+    // Receive metadata
+    LbmMeta meta;
     Event* event = nullptr;
     while (!event || !event->is_done) {
       if (event) delete event;
-      event = server.Recv(bulk);
+      event = server.RecvMetadata(meta);
       if (!event->is_done) {
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
       }
     }
+    assert(event->error_code == 0);
+    delete event;
+
+    // Allocate buffer and receive bulks
+    std::vector<char> y(meta.bulks[0].size);
+    meta.bulks[0] = server.Expose(y.data(), y.size(), 0);
+
+    event = server.RecvBulks(meta);
+    while (!event->is_done) {
+      delete event;
+      event = server.RecvBulks(meta);
+      std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
     std::cout << "[Server] Received message " << i
               << ", error_code=" << event->error_code << std::endl;
     assert(event->error_code == 0);
-    std::string received(bulk.data, bulk.size);
+    delete event;
+
+    std::string received(y.begin(), y.end());
     std::cout << "[Server] Received: " << received << std::endl;
     assert(received == magic);
-    delete event;
   }
   std::cout << "[ServerThread] Exiting after receiving all messages"
             << std::endl;
@@ -167,9 +181,9 @@ int main(int argc, char** argv) {
     return 1;
   }
 
-  int my_port = (transport == Transport::kThallium) ? 0 : port + my_rank;
+  int my_port = port + my_rank;
   std::string bind_addr = GetPrimaryIp();
-  std::string domain_arg = (transport == Transport::kThallium) ? "" : domain;
+  std::string domain_arg = domain;
   auto server_ptr = TransportFactory::GetServer(bind_addr, transport, protocol,
                                                 my_port, domain_arg);
   std::string actual_addr = server_ptr->GetAddress();
@@ -185,18 +199,32 @@ int main(int argc, char** argv) {
     int received = 0;
     for (int i = 0; i < num_msgs * world_size; ++i) {
       auto recv_time = std::chrono::high_resolution_clock::now();
-      std::vector<char> y(msg_size);
-      Bulk bulk = server_ptr->Expose(y.data(), y.size(), 0);
+
+      // Receive metadata
+      LbmMeta meta;
       Event* event = nullptr;
       while (!event || !event->is_done) {
         if (event) delete event;
-        event = server_ptr->Recv(bulk);
+        event = server_ptr->RecvMetadata(meta);
         if (!event->is_done) {
           std::this_thread::sleep_for(std::chrono::milliseconds(1));
         }
       }
+      delete event;
+
+      // Allocate buffer and receive bulks
+      std::vector<char> y(msg_size);
+      meta.bulks[0] = server_ptr->Expose(y.data(), y.size(), 0);
+
+      event = server_ptr->RecvBulks(meta);
+      while (!event->is_done) {
+        delete event;
+        event = server_ptr->RecvBulks(meta);
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+      }
       received++;
       delete event;
+
       double t = std::chrono::duration<double>(recv_time - global_start).count();
       std::cout << "[Rank " << my_rank << "] Received message " << received
                 << " at " << t << " s" << std::endl;
@@ -231,8 +259,10 @@ int main(int argc, char** argv) {
   for (int m = 0; m < num_msgs; ++m) {
     for (size_t i = 0; i < clients.size(); ++i) {
       auto send_time = std::chrono::high_resolution_clock::now();
+      LbmMeta meta;
       Bulk bulk = clients[i]->Expose(magic.data(), magic.size(), 0);
-      Event* event = clients[i]->Send(bulk);
+      meta.bulks.push_back(bulk);
+      Event* event = clients[i]->Send(meta);
       while (!event->is_done) {
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
       }

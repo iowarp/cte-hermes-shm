@@ -142,11 +142,7 @@
 #include "solver/nonlinear_least_squares.h"
 
 // Lightbeam transport layer (guarded by respective HSHM_ENABLE_* macros)
-#include "lightbeam/libfabric_transport.h"
 #include "lightbeam/lightbeam.h"
-#include "lightbeam/thallium_transport.h"
-#include "lightbeam/transport_factory_impl.h"
-#include "lightbeam/utils.h"
 #include "lightbeam/zmq_transport.h"
 
 #endif  // HSHM_SHM_INCLUDE_HSHM_SHM_HSHM_SHM_H_

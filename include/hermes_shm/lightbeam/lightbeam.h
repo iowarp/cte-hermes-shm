@@ -1,14 +1,13 @@
 #pragma once
 // Common types, interfaces, and factory for lightbeam transports.
-// Users must include the appropriate transport header (zmq_transport.h or
-// thallium_transport.h) before using the factory for that transport.
+// Users must include the appropriate transport header (zmq_transport.h)
+// before using the factory for that transport.
 #include <string>
 #include <memory>
-#include <queue>
-#include <mutex>
+#include <vector>
 #include <cstring>
 #include <cassert>
-#include <iostream>
+#include "hermes_shm/memory/memory_manager.h"
 
 namespace hshm::lbm {
 
@@ -21,31 +20,61 @@ struct Event {
 };
 
 struct Bulk {
-  char* data;
+  hipc::FullPtr<char> data;
   size_t size;
   int flags;
   void* desc = nullptr;  // For RDMA memory registration
   void* mr = nullptr;    // For RDMA memory region handle (fid_mr*)
 };
 
+// --- Metadata Base Class ---
+class LbmMeta {
+ public:
+  std::vector<Bulk> bulks;
+};
+
 // --- Interfaces ---
 class Client {
  public:
   virtual ~Client() = default;
+
+  // Expose from raw pointer
   virtual Bulk Expose(const char* data, size_t data_size, int flags) = 0;
-  virtual Event* Send(const Bulk& bulk) = 0;
+
+  // Expose from hipc::Pointer
+  virtual Bulk Expose(const hipc::Pointer& ptr, size_t data_size, int flags) = 0;
+
+  // Expose from hipc::FullPtr
+  virtual Bulk Expose(const hipc::FullPtr<char>& ptr, size_t data_size, int flags) = 0;
+
+  template<typename MetaT>
+  Event* Send(MetaT &meta);
 };
 
 class Server {
  public:
   virtual ~Server() = default;
+
+  // Expose from raw pointer
   virtual Bulk Expose(char* data, size_t data_size, int flags) = 0;
-  virtual Event* Recv(const Bulk& bulk) = 0;
+
+  // Expose from hipc::Pointer
+  virtual Bulk Expose(const hipc::Pointer& ptr, size_t data_size, int flags) = 0;
+
+  // Expose from hipc::FullPtr
+  virtual Bulk Expose(const hipc::FullPtr<char>& ptr, size_t data_size, int flags) = 0;
+
+  template<typename MetaT>
+  Event* RecvMetadata(MetaT &meta);
+
+  template<typename MetaT>
+  Event* RecvBulks(MetaT &meta);
+
   virtual std::string GetAddress() const = 0;
 };
 
 // --- Transport Enum ---
-enum class Transport { kZeroMq, kThallium, kLibfabric };
+enum class Transport { kZeroMq };
 
 // --- Factory ---
 class TransportFactory {
