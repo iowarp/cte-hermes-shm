@@ -181,7 +181,7 @@ class ZeroMqServer : public Server {
     if (rc == -1) {
       int err = zmq_errno();
       zmq_msg_close(&msg);
-      return err;  // Returns EAGAIN if no message available
+      return err;
     }
 
     // Deserialize metadata
@@ -222,7 +222,7 @@ class ZeroMqServer : public Server {
         continue;  // Skip bulks not marked for WRITE
       }
 
-      int rc = zmq_recv(socket_, meta.recv[i].data.ptr_, meta.recv[i].size, ZMQ_DONTWAIT);
+      int rc = zmq_recv(socket_, meta.recv[i].data.ptr_, meta.recv[i].size, 0);
       if (rc == -1) {
         return zmq_errno();
       }
