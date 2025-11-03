@@ -84,7 +84,7 @@ class ZeroMqClient : public Client {
     }
 
     // Send metadata - use ZMQ_SNDMORE only if there are WRITE bulks to follow
-    int flags = 0;
+    int flags = ZMQ_DONTWAIT;
     if (write_bulk_count > 0) {
       flags |= ZMQ_SNDMORE;
     }
@@ -101,7 +101,7 @@ class ZeroMqClient : public Client {
         continue;  // Skip bulks not marked for WRITE
       }
 
-      flags = 0;
+      flags = ZMQ_DONTWAIT;
       sent_count++;
       if (sent_count < write_bulk_count) {
         flags |= ZMQ_SNDMORE;
@@ -222,7 +222,7 @@ class ZeroMqServer : public Server {
         continue;  // Skip bulks not marked for WRITE
       }
 
-      int rc = zmq_recv(socket_, meta.recv[i].data.ptr_, meta.recv[i].size, 0);
+      int rc = zmq_recv(socket_, meta.recv[i].data.ptr_, meta.recv[i].size, ZMQ_DONTWAIT);
       if (rc == -1) {
         return zmq_errno();
       }
