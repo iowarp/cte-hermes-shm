@@ -1,0 +1,24 @@
+{
+  "name": "IoWarp Development",
+  "image": "iowarp/iowarp:latest",
+
+  "workspaceFolder": "/workspace",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached",
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-vscode.cpptools",
+        "ms-vscode.cmake-tools",
+        "twxs.cmake"
+      ],
+      "settings": {
+        "cmake.configureOnOpen": false
+      }
+    }
+  },
+
+  "postCreateCommand": "git config --global --add safe.directory /workspace",
+
+  "remoteUser": "root"
+}

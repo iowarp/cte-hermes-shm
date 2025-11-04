@@ -1,0 +1,88 @@
+{
+    "version": 3,
+    "cmakeMinimumRequired": {
+        "major": 3,
+        "minor": 19,
+        "patch": 0
+    },
+    "configurePresets": [
+        {
+            "name": "debug",
+            "hidden": false,
+            "generator": "Unix Makefiles",
+            "binaryDir": "${sourceDir}/build",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug", 
+                "HSHM_ENABLE_COMPRESS": "OFF",
+                "HSHM_ENABLE_ENCRYPT": "OFF",
+                "HSHM_ENABLE_THALLIUM": "OFF",
+                "HSHM_ENABLE_ZMQ": "ON",
+                "HSHM_BUILD_TESTS": "ON",
+                "HSHM_ENABLE_OPENMP": "ON",
+                "HSHM_ENABLE_MPI": "ON",
+                "HSHM_ENABLE_ROCM": "OFF",
+                "HSHM_BUILD_BENCHMARKS": "OFF",
+                "HSHM_ENABLE_ELF": "ON",
+                "HSHM_ENABLE_CMAKE_DOTENV": "ON"
+            }
+        },
+        {
+            "name": "rocm",
+            "hidden": false,
+            "generator": "Unix Makefiles",
+            "binaryDir": "${sourceDir}/build",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug", 
+                "HSHM_ENABLE_COMPRESS": "OFF",
+                "HSHM_ENABLE_ENCRYPT": "OFF",
+                "HSHM_ENABLE_ROCM": "ON",
+                "HSHM_ENABLE_CUDA": "OFF",
+                "HSHM_ENABLE_THALLIUM": "ON",
+                "HSHM_BUILD_TESTS": "ON",
+                "BUILD_SHARED_LIBS": "ON",
+                "HSHM_ENABLE_OPENMP": "ON",
+                "HSHM_ENABLE_MPI": "ON",
+                "HSHM_BUILD_BENCHMARKS": "OFF",
+                "HSHM_ENABLE_ELF": "ON",
+                "HSHM_ENABLE_CMAKE_DOTENV": "ON"
+            }
+        },
+        {
+            "name": "cuda",
+            "hidden": false,
+            "generator": "Unix Makefiles",
+            "binaryDir": "${sourceDir}/build",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug", 
+                "HSHM_ENABLE_COMPRESS": "OFF",
+                "HSHM_ENABLE_ENCRYPT": "OFF",
+                "HSHM_ENABLE_ROCM": "OFF",
+                "HSHM_ENABLE_CUDA": "ON",
+                "HSHM_ENABLE_THALLIUM": "ON",
+                "HSHM_BUILD_TESTS": "ON",
+                "BUILD_SHARED_LIBS": "ON",
+                "HSHM_ENABLE_OPENMP": "ON",
+                "HSHM_ENABLE_MPI": "ON",
+                "HSHM_BUILD_BENCHMARKS": "OFF",
+                "HSHM_ENABLE_ELF": "ON",
+                "CMAKE_CUDA_ARCHITECTURES": "75"
+            }
+        },
+        {
+            "name": "release",
+            "hidden": false,
+            "generator": "Unix Makefiles",
+            "binaryDir": "${sourceDir}/build",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release", 
+                "HSHM_ENABLE_COMPRESS": "OFF",
+                "HSHM_ENABLE_ENCRYPT": "OFF",
+                "HSHM_ENABLE_ROCM": "OFF",
+                "HSHM_ENABLE_MPI": "ON",
+                "HSHM_BUILD_TESTS": "OFF",
+                "HSHM_ENABLE_ELF": "ON",
+                "HSHM_ENABLE_CMAKE_DOTENV": "ON"
+            }
+        }
+    ]
+}
