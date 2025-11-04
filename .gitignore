@@ -17,5 +17,4 @@ Testing
 *.env.cmake
 vcpkg_installed
 
-.vscode/launch.json
 include/hermes_shm/constants/settings.h
