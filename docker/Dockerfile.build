@@ -1,0 +1,7 @@
+FROM iowarp/iowarp:latest
+
+COPY . /workspace
+
+WORKDIR /workspace
+
+RUN cd build && make install
