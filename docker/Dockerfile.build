@@ -1,7 +1,7 @@
-FROM iowarp/iowarp:latest
+FROM iowarp/ppi-jarvis-cd:latest
 
 COPY . /workspace
 
 WORKDIR /workspace
 
-RUN cd build && make install
+RUN cd build && make -j8 install
