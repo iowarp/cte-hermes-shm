@@ -100,7 +100,7 @@ endif()
 # CMake Modules
 # ------------------------------------------------------------------------------
 if(NOT IS_HSHM_MAIN)
-    set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/CMake)
+    set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
     message(${CMAKE_MODULE_PATH})
 endif()
 
@@ -147,7 +147,7 @@ endif()
 # ------------------------------------------------------------------------------
 # External libraries
 # ------------------------------------------------------------------------------
-include(CMake/HermesShmCommonConfig.cmake)
+include(cmake/HermesShmCommonConfig.cmake)
 
 # This is for compatability with CLANG + Spack
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -307,12 +307,12 @@ install(DIRECTORY include DESTINATION ${CMAKE_INSTALL_PREFIX})
 
 
 configure_file(
-    ${CMAKE_CURRENT_SOURCE_DIR}/CMake/HermesShmConfig.cmake
+    ${CMAKE_CURRENT_SOURCE_DIR}/cmake/HermesShmConfig.cmake
     ${PROJECT_BINARY_DIR}/CMakeFiles/HermesShmConfig.cmake @ONLY
 )
 
 configure_file(
-    ${CMAKE_CURRENT_SOURCE_DIR}/CMake/HermesShmCommonConfig.cmake
+    ${CMAKE_CURRENT_SOURCE_DIR}/cmake/HermesShmCommonConfig.cmake
     ${PROJECT_BINARY_DIR}/CMakeFiles/HermesShmCommonConfig.cmake @ONLY
 )
 
@@ -321,13 +321,13 @@ install(
     ${PROJECT_BINARY_DIR}/CMakeFiles/HermesShmConfig.cmake
     ${PROJECT_BINARY_DIR}/CMakeFiles/HermesShmCommonConfig.cmake
     DESTINATION
-    ${CMAKE_INSTALL_PREFIX}/cmake
+    ${CMAKE_INSTALL_PREFIX}/lib/cmake/HermesShm
 )
 
 install(EXPORT ${HSHM_EXPORTED_TARGETS}
     FILE ${HSHM_EXPORTED_TARGETS}CoreConfig.cmake
     NAMESPACE hshm::
-    DESTINATION cmake
+    DESTINATION lib/cmake/HermesShm
 )
 
 jarvis_repo_add("${HSHM_ROOT}/test/jarvis_hshm" "")

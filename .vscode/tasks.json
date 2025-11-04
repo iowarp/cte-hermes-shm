@@ -2,26 +2,68 @@
   "version": "2.0.0",
   "tasks": [
     {
+      "label": "build",
+      "type": "shell",
+      "command": "docker",
+      "args": [
+        "exec",
+        "iowarp",
+        "bash",
+        "-c",
+        "cd /cte-hermes-shm && mkdir -p build && cd build && cmake .. && make -j$(nproc)"
+      ],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": ["$gcc"],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "clean",
+      "type": "shell",
+      "command": "docker",
+      "args": [
+        "exec",
+        "iowarp",
+        "bash",
+        "-c",
+        "cd /cte-hermes-shm && rm -rf build"
+      ],
+      "problemMatcher": []
+    },
+    {
       "label": "bench-allocators",
       "type": "shell",
-      "command": "${workspaceFolder}/build/bin/benchmark_allocators_exec",
+      "command": "docker",
       "args": [
-        ""
+        "exec",
+        "iowarp",
+        "/cte-hermes-shm/build/bin/benchmark_allocators_exec"
       ]
     },
     {
       "label": "bench-data-structures",
       "type": "shell",
-      "command": "${workspaceFolder}/build/bin/benchmark_data_structures_exec",
+      "command": "docker",
       "args": [
+        "exec",
+        "iowarp",
+        "/cte-hermes-shm/build/bin/benchmark_data_structures_exec",
         "StringBenchmark"
       ]
     },
     {
       "label": "bench-queues",
       "type": "shell",
-      "command": "${workspaceFolder}/build/bin/benchmark_data_structures_exec",
+      "command": "docker",
       "args": [
+        "exec",
+        "iowarp",
+        "/cte-hermes-shm/build/bin/benchmark_data_structures_exec",
         "QueueBenchmark"
       ]
     }

@@ -1,9 +1,7 @@
 {
-  "name": "IoWarp Development",
-  "image": "iowarp/iowarp:latest",
-
-  "workspaceFolder": "/workspace",
-  "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached",
+  "name": "IoWarp Attach",
+  "image": "iowarp/iowarp:latest", 
+  "workspaceFolder": "/cte-hermes-shm",
 
   "customizations": {
     "vscode": {
@@ -18,8 +16,6 @@
       }
     }
   },
-
-  "postCreateCommand": "git config --global --add safe.directory /workspace",
 
   "remoteUser": "root"
 }
