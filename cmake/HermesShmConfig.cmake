@@ -47,8 +47,8 @@ endif()
 set(REAL_TIME_FLAGS @REAL_TIME_FLAGS@)
 
 # Find the HermesShm Package
-include(@CMAKE_INSTALL_PREFIX@/lib/cmake/HermesShmCoreConfig.cmake)
-include(@CMAKE_INSTALL_PREFIX@/lib/cmake/HermesShmCommonConfig.cmake)
+include(@CMAKE_INSTALL_PREFIX@/lib/cmake/HermesShm/HermesShmCoreConfig.cmake)
+include(@CMAKE_INSTALL_PREFIX@/lib/cmake/HermesShm/HermesShmCommonConfig.cmake)
 include_directories(${HSHM_INCLUDE_DIR})
 link_directories(${HSHM_LIB_DIR})
 
