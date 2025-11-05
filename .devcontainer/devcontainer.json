@@ -22,6 +22,6 @@
             }
         }
     },
-    "postCreateCommand": "git config --global --add safe.directory /workspace && cp -r /tmp/host-ssh /root/.ssh && chmod 700 /root/.ssh && chmod 600 /root/.ssh/* && chmod 644 /root/.ssh/*.pub 2>/dev/null || true && rm -rf /root/.claude && cp -r /tmp/host-claude /root/.claude && cp /tmp/host-claude.json /root/.claude.json",
-    "remoteUser": "root"
+    "postCreateCommand": "git config --global --add safe.directory /workspace && cp -r /tmp/host-ssh /home/iowarp/.ssh && chmod 700 /home/iowarp/.ssh && chmod 600 /home/iowarp/.ssh/* && chmod 644 /home/iowarp/.ssh/*.pub 2>/dev/null || true && sudo cp -r /tmp/host-claude /home/iowarp/.claude && sudo cp /tmp/host-claude.json /home/iowarp/.claude.json && sudo chown -R iowarp:iowarp /home/iowarp/.claude /home/iowarp/.claude.json",
+    "remoteUser": "iowarp"
 }
