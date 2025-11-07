@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(sudo systemctl status:*)",
+      "Bash(sudo service ssh:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
