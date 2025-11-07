@@ -1,4 +1,4 @@
-name: cte-hermes-shm
+name: Build Containers
 on:
   workflow_dispatch:
 
