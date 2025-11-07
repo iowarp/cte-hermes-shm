@@ -4,15 +4,15 @@ COPY . /workspace
 
 WORKDIR /workspace
 
+# Configure with release preset and build
+# Install to both /usr/local and /cte-hermes-shm for flexibility
 RUN sudo chown -R $(whoami):$(whoami) /workspace && \
     mkdir -p build && \
-    cmake --preset=release -DCMAKE_INSTALL_PREFIX=/usr/local && \
-    cd build && \
-    sudo make -j$(nproc) install && \
-    cmake -DCMAKE_INSTALL_PREFIX=/cte-hermes-shm . && \
-    sudo make -j$(nproc) install && \
-    cd .. && \
-    sudo rm -rf /workspace
+    cmake --preset release && \
+    cmake --build build -j$(nproc) && \
+    sudo cmake --install build --prefix /usr/local && \
+    sudo cmake --install build --prefix /cte-hermes-shm && \
+    rm -rf /workspace
 
 # Add cte-hermes-shm to Spack configuration
 RUN echo "  cte-hermes-shm:" >> ~/.spack/packages.yaml && \
