@@ -1,4 +1,4 @@
-FROM iowarp/ppi-jarvis-cd:latest
+FROM iowarp/ppi-jarvis-cd-build:latest
 
 COPY . /workspace
 

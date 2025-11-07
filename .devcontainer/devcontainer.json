@@ -1,6 +1,6 @@
 {
     "name": "HSHM",
-    "image": "iowarp/ppi-jarvis-cd:latest",
+    "image": "iowarp/ppi-jarvis-cd-build:latest",
     "workspaceFolder": "/workspace",
     "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached",
     "mounts": [
