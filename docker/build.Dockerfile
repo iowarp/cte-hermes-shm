@@ -4,7 +4,8 @@ COPY . /workspace
 
 WORKDIR /workspace
 
-RUN cmake --preset=release -DCMAKE_INSTALL_PREFIX=/usr/local && \
+RUN mkdir -p build && \
+    cmake --preset=release -DCMAKE_INSTALL_PREFIX=/usr/local && \
     cd build && \
     sudo make -j$(nproc) install && \
     cmake -DCMAKE_INSTALL_PREFIX=/cte-hermes-shm . && \
