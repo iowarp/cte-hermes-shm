@@ -4,7 +4,8 @@ COPY . /workspace
 
 WORKDIR /workspace
 
-RUN mkdir -p build && \
+RUN sudo chown -R $(whoami):$(whoami) /workspace && \
+    mkdir -p build && \
     cmake --preset=release -DCMAKE_INSTALL_PREFIX=/usr/local && \
     cd build && \
     sudo make -j$(nproc) install && \
