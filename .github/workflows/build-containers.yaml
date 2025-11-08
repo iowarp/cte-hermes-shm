@@ -18,6 +18,7 @@ jobs:
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
       - name: Set up Docker Buildx
+        id: buildx
         uses: docker/setup-buildx-action@v3
       - name: Build and push build Dockerfile
         uses: docker/build-push-action@v6
@@ -25,7 +26,7 @@ jobs:
           context: .
           file: ./docker/build.Dockerfile
           builder: ${{ steps.buildx.outputs.name }}
-          platforms: linux/amd64
+          platforms: linux/amd64,linux/arm64
           push: true
           tags: iowarp/cte-hermes-shm-build:latest
       - name: Build and push deploy Dockerfile
@@ -34,6 +35,6 @@ jobs:
           context: .
           file: ./docker/deploy.Dockerfile
           builder: ${{ steps.buildx.outputs.name }}
-          platforms: linux/amd64
+          platforms: linux/amd64,linux/arm64
           push: true
           tags: iowarp/cte-hermes-shm:latest
