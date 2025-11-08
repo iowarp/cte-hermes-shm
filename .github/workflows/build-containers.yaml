@@ -25,7 +25,7 @@ jobs:
           context: .
           file: ./docker/build.Dockerfile
           builder: ${{ steps.buildx.outputs.name }}
-          platforms: linux/amd64
+          platforms: linux/amd64,linux/arm64
           push: true
           tags: iowarp/cte-hermes-shm-build:latest
       - name: Build and push deploy Dockerfile
@@ -34,6 +34,6 @@ jobs:
           context: .
           file: ./docker/deploy.Dockerfile
           builder: ${{ steps.buildx.outputs.name }}
-          platforms: linux/amd64
+          platforms: linux/amd64,linux/arm64
           push: true
           tags: iowarp/cte-hermes-shm:latest
