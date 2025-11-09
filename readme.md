@@ -20,32 +20,6 @@ A high-performance shared memory library containing data structures and synchron
 
 ## Installation
 
-### Spack Installation (Users)
-
-For those installing this component (rather than all of iowarp):
-```bash
-git clone https://github.com/grc-iit/grc-repo.git
-spack repo add grc-repo
-spack install cte-hermes-shm
-```
-
-### Manual Installation (Developers)
-
-#### Install Dependencies
-
-This will install dependencies of cte-hermes-shm:
-```bash
-git clone https://github.com/grc-iit/grc-repo.git
-spack repo add grc-repo
-spack install cte-hermes-shm +nocompile
-spack load cte-hermes-shm +nocompile
-```
-
-NOTE: spack load needs to be done for each new terminal.
-
-#### Build from Source
-
-This will compile:
 ```bash
 git clone https://github.com/grc-iit/cte-hermes-shm.git
 cd cte-hermes-shm
