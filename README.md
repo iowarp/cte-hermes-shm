@@ -18,8 +18,6 @@ A high-performance shared memory library containing data structures and synchron
 - Optional: ROCm (for AMD GPU support)
 - Optional: MPI, ZeroMQ, Thallium (for distributed computing)
 
-## Dependencies
-
 Our docker container has all dependencies installed for you.
 ```bash
 docker pull iowarp/iowarp-build:latest
