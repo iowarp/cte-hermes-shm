@@ -36,29 +36,6 @@ cmake ../ -DHSHM_ENABLE_CUDA=OFF -DHSHM_ENABLE_ROCM=OFF
 make -j8
 ```
 
-## CMake
-
-### For CPU-Only Version
-```
-find_package(HermesShm CONFIG REQUIRED)
-message(STATUS "found cte-hermes-shm.h at ${HermesShm_INCLUDE_DIRS}")
-target_link_libraries(hshm::cxx)
-```
-
-### For CUDA Version
-```
-find_package(HermesShm CONFIG REQUIRED)
-message(STATUS "found cte-hermes-shm.h at ${HermesShm_INCLUDE_DIRS}")
-target_link_libraries(hshm::cudacxx)
-```
-
-### For ROCM Version
-```
-find_package(HermesShm CONFIG REQUIRED)
-message(STATUS "found cte-hermes-shm.h at ${HermesShm_INCLUDE_DIRS}")
-target_link_libraries(hshm::rocmcxx_gpu)
-```
-
 ## Tests
 
 To run the tests, do the following:
